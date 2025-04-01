@@ -63,7 +63,7 @@ jobs:
           poetry publish -r pypi-uml-mcp
 
       - name: Create release artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: uml-mcp-package
           path: dist/
