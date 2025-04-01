@@ -1,71 +1,29 @@
+# Smithery.ai configuration
 version: "1.0"
-name: "uml-mcp"
-description: "UML diagram generation server with MCP interface"
-
-# This is the main Smithery configuration section
 startCommand:
   type: stdio
-  configSchema: {
-    "type": "object",
-    "properties": {
-      "api_port": {
-        "type": "integer",
-        "default": 8000,
-        "description": "Port for the UML-MCP server API"
-      },
-      "kroki_port": {
-        "type": "integer",
-        "default": 8001,
-        "description": "Port for the Kroki API server"
-      },
-      "output_dir": {
-        "type": "string",
-        "default": "./output",
-        "description": "Directory for output files"
-      }
-    }
-  }
+  configSchema:
+    type: "object"
+    properties:
+      api_port:
+        type: "integer"
+        default: 8000
+        description: "Port for the UML-MCP server API"
+      kroki_port:
+        type: "integer"
+        default: 8001
+        description: "Port for the Kroki API server"
+      output_dir:
+        type: "string"
+        default: "./output"
+        description: "Directory for output files"
   commandFunction: |
     (config) => ({
-      command: "poetry",
-      args: ["run", "python", "mcp_server.py"],
+      command: "python",
+      args: ["mcp_server.py"],
       env: {
         API_PORT: config.api_port || 8000,
         KROKI_PORT: config.kroki_port || 8001,
         MCP_OUTPUT_DIR: config.output_dir || "./output"
-      },
-    });
-
-# These environment configurations are for local development/testing
-# and not directly used by Smithery deployment
-environments:
-  development:
-    docker:
-      compose: "docker-compose.yml"
-    setup:
-      - cmd: "poetry install --with dev"
-    commands:
-      start:
-        - cmd: "poetry run python mcp_server.py"
-  
-  test:
-    docker:
-      compose: "docker-compose.yml"
-    setup:
-      - cmd: "poetry install --with dev"
-    commands:
-      test:
-        - cmd: "poetry run pytest -xvs"
-      lint:
-        - cmd: "poetry run pre-commit run --all-files"
-      coverage:
-        - cmd: "poetry run pytest --cov=mcp --cov-report=term --cov-report=html"
-
-  production:
-    docker:
-      compose: "docker-compose.yml"
-    setup:
-      - cmd: "poetry install --without dev"
-    commands:
-      start:
-        - cmd: "poetry run python mcp_server.py"
+      }
+    })

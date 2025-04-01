@@ -11,7 +11,6 @@ starlette>=0.27.0
 
 # Diagram libraries
 plantUML>=0.3.0
-mermaid-cli>=0.0.1
 graphviz>=0.20.1
 
 # Additional utilities
