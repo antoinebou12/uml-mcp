@@ -32,6 +32,15 @@ UML-MCP supports a wide variety of diagram types:
 
 ### Installation
 
+### Installing via Smithery
+
+To install UML Model Context Protocol for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@antoinebou12/uml):
+
+```bash
+npx -y @smithery/cli install @antoinebou12/uml --client claude
+```
+
+### Manual Installation
 1. Clone the repository:
 
 ```bash
@@ -143,4 +152,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Kroki](https://kroki.io/) - Unified diagram generation service
 - [Mermaid](https://mermaid.js.org/) - Generation of diagrams from text
 - [D2](https://d2lang.com/) - Modern diagram scripting language
-

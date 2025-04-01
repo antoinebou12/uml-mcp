@@ -1,134 +1,42 @@
-# Smithery.ai configuration
-name: uml-mcp
-version: "1.2.0"
-description: "UML diagram generation server with MCP interface supporting PlantUML, Mermaid, Kroki, and D2"
+# Smithery configuration file: https://smithery.ai/docs/config#smitheryyaml
 
 startCommand:
   type: stdio
   configSchema:
-    type: "object"
+    # JSON Schema defining the configuration options for the MCP.
+    type: object
     properties:
       debug:
-        type: "boolean"
-        description: "Enable debug mode for verbose logging"
+        type: boolean
         default: false
+        description: Enable debug mode for verbose logging
       output_dir:
-        type: "string"
-        description: "Directory to store generated diagram files"
-        default: "/app/output"
-      transport:
-        type: "string" 
-        description: "Transport protocol to use (stdio or http)"
-        enum: ["stdio", "http"]
-        default: "stdio"
-      host:
-        type: "string"
-        description: "Host to bind to when using HTTP transport"
-        default: "127.0.0.1"
-      port:
-        type: "integer"
-        description: "Port to bind to when using HTTP transport"
-        default: 8000
-        minimum: 1024
-        maximum: 65535
-      log_level:
-        type: "string"
-        description: "Logging level"
-        enum: ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
-        default: "INFO"
-      kroki_server:
-        type: "string"
-        description: "Kroki server URL for diagram rendering"
-        default: "https://kroki.io"
-      plantuml_server:
-        type: "string"
-        description: "PlantUML server URL for diagram rendering (leave empty to use Kroki)"
-        default: ""
-      enabled_formats:
-        type: "array"
-        description: "Enabled diagram formats (leave empty for all formats)"
-        items:
-          type: "string"
-          enum: ["plantuml", "mermaid", "d2", "graphviz", "erd"]
-        default: []
-    required: []
-    additionalProperties: false
-    description: "Configuration for UML diagram generation server"
-  commandFunction: |-
+        type: string
+        default: /app/output
+        description: Directory to store generated diagram files (if applicable)
+    description: UML diagram generation server with MCP interface supporting
+      PlantUML, Mermaid, Kroki, and D2
+  exampleConfig:
+    debug: false
+    output_dir: /app/output
+  commandFunction:
+    # A JS function that produces the CLI command based on the given config to start the MCP on stdio.
+    |-
     (config) => {
       // Build command arguments
-      const args = ["mcp_server.py"];
-      
-      // Add transport option
-      if (config.transport) {
-        args.push("--transport", config.transport);
-      }
+      const args = ["mcp_server.py", "--transport", "stdio"];
       
       // Add debug flag if enabled
       if (config.debug) {
         args.push("--debug");
       }
       
-      // Add host and port if using http transport
-      if (config.transport === "http") {
-        if (config.host) {
-          args.push("--host", config.host);
-        }
-        if (config.port) {
-          args.push("--port", config.port.toString());
-        }
-      }
-      
-      // Build environment variables
-      const env = {
-        "PYTHONUNBUFFERED": "1"  // Ensure unbuffered Python output
-      };
-      
-      // Add output directory
-      if (config.output_dir) {
-        env.UML_MCP_OUTPUT_DIR = config.output_dir;
-      }
-      
-      // Add log level
-      if (config.log_level) {
-        env.LOG_LEVEL = config.log_level;
-      }
-      
-      // Add Kroki server
-      if (config.kroki_server) {
-        env.KROKI_SERVER = config.kroki_server;
-      }
-      
-      // Add PlantUML server
-      if (config.plantuml_server) {
-        env.PLANTUML_SERVER = config.plantuml_server;
-      }
-      
-      // Add enabled formats
-      if (config.enabled_formats && config.enabled_formats.length > 0) {
-        env.ENABLED_FORMATS = config.enabled_formats.join(",");
-      }
-      
       // Return command configuration
       return {
         command: "python",
         args: args,
-        env: env
+        env: {
+          "UML_MCP_OUTPUT_DIR": config.output_dir
+        }
       };
     }
-  exampleConfig: {
-    "debug": false,
-    "output_dir": "/app/output",
-    "transport": "stdio",
-    "log_level": "INFO"
-  }
-  healthCheck:
-    interval: "30s"
-    timeout: "5s"
-    retries: 3
-    startPeriod: "10s"
-
-# Build configuration
-build:
-  dockerBuildPath: "../../"
-  dockerfile: "./Dockerfile"
