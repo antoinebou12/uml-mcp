@@ -21,7 +21,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.9"
-fastapi = "^0.103.1"
+fastapi = "^0.115.0"
 uvicorn = "^0.23.2"
 pydantic = "^2.3.0"
 rich = "^13.5.2"
