@@ -35,7 +35,7 @@ UML-MCP supports a wide variety of diagram types:
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/uml-mcp.git
+git clone https://github.com/antoinebou12/uml-mcp.git
 cd uml-mcp
 ```
 
