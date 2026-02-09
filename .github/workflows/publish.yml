@@ -90,7 +90,7 @@ jobs:
           ls -la dist/
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: uml-mcp-dist-${{ matrix.python-version }}
           path: dist/
@@ -204,7 +204,7 @@ jobs:
           echo "Published version ${{ env.NEW_VERSION }} to PyPI"
 
       - name: Create release artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: uml-mcp-${{ env.NEW_VERSION }}
           path: dist/
