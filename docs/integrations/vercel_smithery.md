@@ -154,7 +154,7 @@ MCP Streamable HTTP keeps a **long-lived GET** connection open (Server-Sent Even
 **Mitigations:**
 
 1. **Increase max duration (Pro/Enterprise)**  
-   This repo sets `maxDuration: 800` in `vercel.json` for `app.py`. On **Pro** or **Enterprise** (with Fluid Compute), that allows the GET `/mcp` connection to stay open up to **800 seconds** (~13 minutes) instead of 300. On **Hobby**, the platform cap is 300s, so the setting has no effect beyond the default.
+   This repo sets `maxDuration: 200` in `vercel.json` for `api/app.py`, which is the Vercel serverless entrypoint. On **Pro** or **Enterprise** (with Fluid Compute), you can raise that value further if you need longer-lived `/mcp` sessions. On **Hobby**, the platform cap is still 300s, so long-lived MCP streams will eventually time out regardless.
 
 2. **Reconnect on timeout**  
    Clients should reconnect when the stream ends. Cursor and Smithery typically retry or allow re-adding the server; after a timeout, reconnect to `/mcp` to start a new session.

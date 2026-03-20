@@ -101,7 +101,7 @@ uv run python server.py
 
 You can also use the [FastMCP CLI](https://gofastmcp.com/) when `fastmcp.json` is present: run `fastmcp run` or `fastmcp run fastmcp.json` to start the server using the config file (CLI options override the config). For the full local CLI with options like `--list-tools`, use `python server.py` instead.
 
-The server uses stdio by default. For HTTP:
+The server uses stdio by default and keeps stdout reserved for MCP JSON-RPC traffic. Human-readable Rich output is suppressed in stdio mode unless you explicitly enable it with `UML_MCP_STDIO_UI=true`. For HTTP:
 
 ```bash
 python server.py --transport http --host 127.0.0.1 --port 8000
@@ -111,6 +111,12 @@ List available tools and exit:
 
 ```bash
 python server.py --list-tools
+```
+
+To show the Rich banner/tables while still using stdio, send that UI to stderr explicitly:
+
+```bash
+UML_MCP_STDIO_UI=true python server.py --list-tools
 ```
 
 ### Deploy to Vercel and publish on Smithery
