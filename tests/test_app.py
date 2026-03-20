@@ -260,8 +260,12 @@ def test_vercel_functions_patterns_target_existing_api_files():
 
     assert "api/app.py" in function_patterns
     for pattern in function_patterns:
-        assert pattern.startswith("api/"), f"Function pattern must be under api/: {pattern}"
-        assert (repo_root / pattern).is_file(), f"Missing Vercel function file: {pattern}"
+        assert pattern.startswith("api/"), (
+            f"Function pattern must be under api/: {pattern}"
+        )
+        assert (repo_root / pattern).is_file(), (
+            f"Missing Vercel function file: {pattern}"
+        )
 
 
 def test_vercel_rewrites_still_target_api_app():

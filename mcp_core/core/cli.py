@@ -274,7 +274,9 @@ def run():
 
         if show_human_output:
             console.print(
-                Panel(f"[bold green]UML-MCP Server v{MCP_SETTINGS.version}[/bold green]")
+                Panel(
+                    f"[bold green]UML-MCP Server v{MCP_SETTINGS.version}[/bold green]"
+                )
             )
             table = Table(title="Server Configuration")
             table.add_column("Setting", style="cyan")

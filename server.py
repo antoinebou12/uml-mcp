@@ -21,5 +21,6 @@ def __getattr__(name):
         return get_mcp_server()
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
+
 if __name__ == "__main__":
     main()

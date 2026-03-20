@@ -111,7 +111,9 @@ class TestServerBootstrap:
     ):
         """Importing server.py should not write anything to stdout."""
         server_path = Path(__file__).resolve().parents[1] / "server.py"
-        spec = importlib.util.spec_from_file_location("isolated_server_module", server_path)
+        spec = importlib.util.spec_from_file_location(
+            "isolated_server_module", server_path
+        )
         module = importlib.util.module_from_spec(spec)
 
         stdout = StringIO()

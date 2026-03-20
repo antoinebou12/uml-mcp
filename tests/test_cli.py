@@ -123,8 +123,9 @@ class TestSafeImport:
 
     def test_nonexistent_module_returns_none(self):
         """safe_import of nonexistent module returns None."""
-        with patch.object(cli.console, "print"), patch.object(
-            logging.getLogger("mcp_core.core.cli"), "error"
+        with (
+            patch.object(cli.console, "print"),
+            patch.object(logging.getLogger("mcp_core.core.cli"), "error"),
         ):
             result = cli.safe_import("_nonexistent_module_xyz_123")
         assert result is None
