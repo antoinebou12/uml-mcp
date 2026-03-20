@@ -3,6 +3,7 @@ Tests for mcp_core.core.cli.
 """
 
 import logging
+import os
 import sys
 from unittest.mock import MagicMock, patch
 
@@ -122,7 +123,9 @@ class TestSafeImport:
 
     def test_nonexistent_module_returns_none(self):
         """safe_import of nonexistent module returns None."""
-        with patch.object(cli.console, "print"):
+        with patch.object(cli.console, "print"), patch.object(
+            logging.getLogger("mcp_core.core.cli"), "error"
+        ):
             result = cli.safe_import("_nonexistent_module_xyz_123")
         assert result is None
 
@@ -243,3 +246,78 @@ class TestRun:
         start_server_mock.assert_called_once_with(
             transport="http", host="0.0.0.0", port=9999
         )
+
+    @patch("mcp_core.core.server.start_server")
+    @patch("mcp_core.core.server.get_mcp_server")
+    @patch(
+        "mcp_core.core.config.MCP_SETTINGS",
+        MagicMock(
+            version="1.0",
+            server_name="Test",
+            tools=[],
+            prompts=[],
+            resources=[],
+        ),
+    )
+    @patch("mcp_core.core.cli.safe_import", return_value=MagicMock())
+    @patch("mcp_core.core.cli.setup_logging", return_value=MagicMock())
+    @patch("mcp_core.core.cli.parse_args")
+    def test_run_stdio_skips_human_output_by_default(
+        self,
+        parse_mock,
+        setup_mock,
+        safe_import_mock,
+        get_server_mock,
+        start_server_mock,
+    ):
+        """run() with stdio transport does not emit Rich console output by default."""
+        parse_mock.return_value = MagicMock(
+            debug=False,
+            transport="stdio",
+            host="127.0.0.1",
+            port=8000,
+            list_tools=False,
+        )
+        with patch.object(cli.console, "print") as print_mock:
+            cli.run()
+        print_mock.assert_not_called()
+        start_server_mock.assert_called_once_with(
+            transport="stdio", host="127.0.0.1", port=8000
+        )
+
+    @patch("mcp_core.core.server.start_server")
+    @patch("mcp_core.core.server.get_mcp_server")
+    @patch(
+        "mcp_core.core.config.MCP_SETTINGS",
+        MagicMock(
+            version="1.0",
+            server_name="Test",
+            tools=["generate_uml"],
+            prompts=["uml_diagram"],
+            resources=["uml://types"],
+        ),
+    )
+    @patch("mcp_core.core.cli.safe_import", return_value=MagicMock())
+    @patch("mcp_core.core.cli.setup_logging", return_value=MagicMock())
+    @patch("mcp_core.core.cli.parse_args")
+    def test_run_stdio_can_render_human_output_when_explicitly_enabled(
+        self,
+        parse_mock,
+        setup_mock,
+        safe_import_mock,
+        get_server_mock,
+        start_server_mock,
+    ):
+        """run() can render stderr UI in stdio mode only when explicitly enabled."""
+        parse_mock.return_value = MagicMock(
+            debug=False,
+            transport="stdio",
+            host="127.0.0.1",
+            port=8000,
+            list_tools=True,
+        )
+        with patch.dict(os.environ, {"UML_MCP_STDIO_UI": "true"}, clear=False):
+            with patch.object(cli.console, "print") as print_mock:
+                cli.run()
+        assert print_mock.call_count >= 4
+        start_server_mock.assert_not_called()

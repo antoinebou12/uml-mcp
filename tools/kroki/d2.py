@@ -81,8 +81,6 @@ for keyword in sorted(reserved_keywords):
 
 # -><--<->3danimatedboldborder-radiusbottomclassclassesconstraintdescdirectiondouble-borderfillfill-patternfilledfontfont-colorfont-sizegrid-columnsgrid-gapgrid-rowsheighthorizontal-gapiconitaliclabellayersleftlinevarslinkmultiplenearopacityrightscenariosshadowshapesource-arrowheadstepsstrokestroke-dashstroke-widthstyletarget-arrowheadtext-transformtooltiptopunderlinevertical-gapwidth
 
-print("Compression dictionary:", compression_dict)
-
 compression_dict = "-><---<->3danimatedboldborder-radiusclassclassesconstraintdescdirectiondouble-borderfillfill-patternfilledfontfont-colorfont-sizegrid-columnsgrid-gapgrid-rowsheighthorizontal-gapiconitaliclabellayersleftlinkmultiplenearopacityscenariosshadowshapesource-arrowheadstepsstrokestroke-dashstroke-widthstyletarget-arrowheadtext-transformtooltiptopunderlinevarsvertical-gapwidth"
 
 

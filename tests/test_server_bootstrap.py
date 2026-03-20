@@ -5,7 +5,11 @@ When pytest runs, the FastMCP wrapper uses the mock implementation (pytest in sy
 so create_mcp_server() returns a mock server with _tools, _prompts, _resources populated.
 """
 
+import contextlib
+import importlib.util
 import os
+from io import StringIO
+from pathlib import Path
 
 import pytest
 
@@ -101,3 +105,19 @@ class TestServerBootstrap:
         server = create_mcp_server()
         for name, func in server._prompts.items():
             assert callable(func), f"Prompt {name} handler should be callable"
+
+    def test_importing_server_module_keeps_stdout_silent(
+        self, reset_mcp_server_singleton
+    ):
+        """Importing server.py should not write anything to stdout."""
+        server_path = Path(__file__).resolve().parents[1] / "server.py"
+        spec = importlib.util.spec_from_file_location("isolated_server_module", server_path)
+        module = importlib.util.module_from_spec(spec)
+
+        stdout = StringIO()
+        stderr = StringIO()
+        with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+            spec.loader.exec_module(module)
+
+        assert stdout.getvalue() == ""
+        assert hasattr(module, "__getattr__")

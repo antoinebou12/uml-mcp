@@ -4,7 +4,7 @@
   "installCommand": "pip install --upgrade pip",
   "framework": null,
   "functions": {
-    "app.py": {
+    "api/app.py": {
       "maxDuration": 200
     }
   },

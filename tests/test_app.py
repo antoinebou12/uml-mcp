@@ -4,6 +4,7 @@ Tests for the FastAPI application.
 
 import json
 import os
+from pathlib import Path
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
@@ -249,3 +250,27 @@ def test_kroki_encode_unsupported_format():
     data = response.json()
     assert "detail" in data
     assert "Format" in data["detail"] or "not supported" in data["detail"].lower()
+
+
+def test_vercel_functions_patterns_target_existing_api_files():
+    """vercel.json function patterns should point to real files under api/."""
+    repo_root = Path(__file__).resolve().parents[1]
+    vercel_config = json.loads((repo_root / "vercel.json").read_text())
+    function_patterns = vercel_config.get("functions", {})
+
+    assert "api/app.py" in function_patterns
+    for pattern in function_patterns:
+        assert pattern.startswith("api/"), f"Function pattern must be under api/: {pattern}"
+        assert (repo_root / pattern).is_file(), f"Missing Vercel function file: {pattern}"
+
+
+def test_vercel_rewrites_still_target_api_app():
+    """Vercel rewrites should continue routing app traffic to /api/app."""
+    repo_root = Path(__file__).resolve().parents[1]
+    vercel_config = json.loads((repo_root / "vercel.json").read_text())
+    rewrites = vercel_config.get("rewrites", [])
+
+    rewrite_map = {rewrite["source"]: rewrite["destination"] for rewrite in rewrites}
+    assert rewrite_map["/mcp"] == "/api/app"
+    assert rewrite_map["/mcp/(.*)"] == "/api/app"
+    assert rewrite_map["/(.*)"] == "/api/app"
