@@ -257,7 +257,7 @@ jobs:
           echo "Docker image test completed"
 
       - name: Log in to Smithery Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ${{ secrets.SMITHERY_REGISTRY }}
           username: ${{ secrets.SMITHERY_USERNAME }}
