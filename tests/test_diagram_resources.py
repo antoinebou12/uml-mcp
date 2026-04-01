@@ -2,6 +2,7 @@
 Unit tests for MCP diagram resources.
 """
 
+import json
 from unittest.mock import MagicMock
 
 from mcp_core.resources.diagram_resources import (
@@ -19,8 +20,8 @@ class TestGetDiagramTypes:
     """Tests for get_diagram_types resource."""
 
     def test_returns_dict_keyed_by_diagram_type(self):
-        """get_diagram_types returns a dict with diagram type keys."""
-        result = get_diagram_types()
+        """get_diagram_types returns a JSON string with diagram type keys."""
+        result = json.loads(get_diagram_types())
         assert isinstance(result, dict)
         assert "class" in result
         assert "sequence" in result
@@ -28,7 +29,7 @@ class TestGetDiagramTypes:
 
     def test_each_entry_has_backend_description_formats(self):
         """Each diagram type has backend, description, formats."""
-        result = get_diagram_types()
+        result = json.loads(get_diagram_types())
         for name, config in result.items():
             assert "backend" in config
             assert "description" in config
@@ -40,14 +41,14 @@ class TestGetDiagramTemplates:
     """Tests for get_diagram_templates resource."""
 
     def test_returns_dict_keyed_by_diagram_type(self):
-        """get_diagram_templates returns a dict with template strings."""
-        result = get_diagram_templates()
+        """get_diagram_templates returns a JSON string with template strings."""
+        result = json.loads(get_diagram_templates())
         assert isinstance(result, dict)
         assert len(result) > 0
 
     def test_values_are_strings(self):
         """Each template value is a non-empty string."""
-        result = get_diagram_templates()
+        result = json.loads(get_diagram_templates())
         for name, template in result.items():
             assert isinstance(template, str)
             assert len(template) > 0
@@ -57,22 +58,22 @@ class TestGetDiagramExamples:
     """Tests for get_diagram_examples resource."""
 
     def test_returns_dict_keyed_by_diagram_type(self):
-        """get_diagram_examples returns a dict with example strings."""
-        result = get_diagram_examples()
+        """get_diagram_examples returns a JSON string with example strings."""
+        result = json.loads(get_diagram_examples())
         assert isinstance(result, dict)
         assert len(result) > 0
 
     def test_values_are_strings(self):
         """Each example value is a string."""
-        result = get_diagram_examples()
+        result = json.loads(get_diagram_examples())
         for name, example in result.items():
             assert isinstance(example, str)
 
     def test_every_diagram_type_has_template_and_example(self):
         """Every diagram type from get_diagram_types has non-default template and example."""
-        types_result = get_diagram_types()
-        templates_result = get_diagram_templates()
-        examples_result = get_diagram_examples()
+        types_result = json.loads(get_diagram_types())
+        templates_result = json.loads(get_diagram_templates())
+        examples_result = json.loads(get_diagram_examples())
         for diagram_type in types_result:
             assert diagram_type in templates_result, (
                 f"Missing template for {diagram_type}"
@@ -98,8 +99,8 @@ class TestGetOutputFormats:
     """Tests for get_output_formats resource."""
 
     def test_returns_dict_mapping_type_to_formats_list(self):
-        """get_output_formats returns diagram type -> list of formats."""
-        result = get_output_formats()
+        """get_output_formats returns JSON with diagram type -> list of formats."""
+        result = json.loads(get_output_formats())
         assert isinstance(result, dict)
         assert "class" in result
         assert isinstance(result["class"], list)
@@ -110,8 +111,8 @@ class TestGetServerInfo:
     """Tests for get_server_info resource."""
 
     def test_contains_expected_keys(self):
-        """get_server_info returns server_name, version, description, tools, prompts, kroki_server, plantuml_server."""
-        result = get_server_info()
+        """get_server_info returns JSON with server_name, version, description, tools, prompts, kroki_server, plantuml_server."""
+        result = json.loads(get_server_info())
         assert "server_name" in result
         assert "version" in result
         assert "description" in result
@@ -122,7 +123,7 @@ class TestGetServerInfo:
 
     def test_tools_and_prompts_are_lists(self):
         """tools and prompts are lists (may be empty before server bootstrap)."""
-        result = get_server_info()
+        result = json.loads(get_server_info())
         assert isinstance(result["tools"], list)
         assert isinstance(result["prompts"], list)
 
@@ -132,7 +133,7 @@ class TestGetRecommendedWorkflow:
 
     def test_contains_workflow_and_prompt(self):
         """Result has workflow and prompt strings."""
-        result = get_recommended_workflow()
+        result = json.loads(get_recommended_workflow())
         assert "workflow" in result
         assert "prompt" in result
         assert isinstance(result["workflow"], str)

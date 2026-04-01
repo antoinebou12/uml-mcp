@@ -2,6 +2,7 @@
 MCP resources for diagram information
 """
 
+import json
 import logging
 from typing import Any, Callable, Dict, List, Optional, TypeVar, cast
 
@@ -62,7 +63,7 @@ def mcp_resource(
     "uml://types",
     description="Returns available diagram types with backend, description, and supported formats (e.g. class, sequence, mermaid, d2). Use before generating to verify diagram_type.",
 )
-def get_diagram_types():
+def get_diagram_types() -> str:
     """Get available diagram types"""
     types = {}
     for name, config in MCP_SETTINGS.diagram_types.items():
@@ -71,52 +72,52 @@ def get_diagram_types():
             "description": config.description,
             "formats": config.formats,
         }
-    return types
+    return json.dumps(types, indent=2)
 
 
 @mcp_resource(
     "uml://templates",
     description="Returns starter templates (PlantUML, Mermaid, D2, etc.) for each diagram type. Use to get minimal valid code to customize.",
 )
-def get_diagram_templates():
+def get_diagram_templates() -> str:
     """Get diagram templates for different diagram types"""
     templates = {}
     for name in MCP_SETTINGS.diagram_types:
         templates[name] = DiagramTemplates.get_template(name)
-    return templates
+    return json.dumps(templates, indent=2)
 
 
 @mcp_resource(
     "uml://examples",
     description="Returns example diagrams for each type (class, sequence, activity, etc.). Use as reference for syntax and structure.",
 )
-def get_diagram_examples():
+def get_diagram_examples() -> str:
     """Get diagram examples for different diagram types"""
     examples = {}
     for name in MCP_SETTINGS.diagram_types:
         examples[name] = DiagramExamples.get_example(name)
-    return examples
+    return json.dumps(examples, indent=2)
 
 
 @mcp_resource(
     "uml://formats",
     description="Returns supported output formats (svg, png, pdf) per diagram type. Use to choose valid output_format for generate_uml.",
 )
-def get_output_formats():
+def get_output_formats() -> str:
     """Get supported output formats for each diagram type"""
     formats = {}
     for name, config in MCP_SETTINGS.diagram_types.items():
         formats[name] = config.formats
-    return formats
+    return json.dumps(formats, indent=2)
 
 
 @mcp_resource(
     "uml://server-info",
     description="Returns server metadata: name, version, tools, prompts, Kroki URL. Use for discovery and health checks.",
 )
-def get_server_info():
+def get_server_info() -> str:
     """Get MCP server information"""
-    return {
+    return json.dumps({
         "server_name": MCP_SETTINGS.server_name,
         "version": MCP_SETTINGS.version,
         "description": MCP_SETTINGS.description,
@@ -124,28 +125,28 @@ def get_server_info():
         "prompts": MCP_SETTINGS.prompts,
         "kroki_server": MCP_SETTINGS.kroki_server,
         "plantuml_server": MCP_SETTINGS.plantuml_server,
-    }
+    }, indent=2)
 
 
 @mcp_resource(
     "uml://mermaid-examples",
     description="Returns named Mermaid examples (sequence_api, gantt) for API-call flows and Gantt charts. Reference for mermaid_sequence_api and mermaid_gantt prompts.",
 )
-def get_mermaid_examples():
+def get_mermaid_examples() -> str:
     """Return named Mermaid examples (sequence_api, gantt) for API-call and Gantt prompts."""
-    return {
+    return json.dumps({
         "sequence_api": DiagramExamples.get_example("mermaid_api"),
         "gantt": DiagramExamples.get_example("mermaid_gantt"),
-    }
+    }, indent=2)
 
 
 @mcp_resource(
     "uml://bpmn-guide",
     description="Structured reference for BPMN 2.0.2: start/end events, tasks, gateways, sequence flow, lanes, pools. Use with generate_uml (diagram_type 'bpmn') or bpmn_process_guide prompt.",
 )
-def get_bpmn_guide():
+def get_bpmn_guide() -> str:
     """Return a short guide to BPMN process modeling aligned with BPMN 2.0.2."""
-    return {
+    return json.dumps({
         "title": "BPMN process model guide (BPMN 2.0.2)",
         "core_elements": {
             "start_event": "Start Event (circle, single border): process trigger.",
@@ -165,23 +166,23 @@ def get_bpmn_guide():
         ],
         "tool": "Use generate_uml with diagram_type 'bpmn' for BPMN XML.",
         "template_uri": "uml://templates (key: bpmn) for a minimal BPMN XML starter.",
-    }
+    }, indent=2)
 
 
 @mcp_resource(
     "uml://workflow",
     description="Recommended workflow: plan first (diagram type, elements, relationships), then call generate_uml with the final code. Use uml_diagram or uml_diagram_with_thinking prompt.",
 )
-def get_recommended_workflow():
+def get_recommended_workflow() -> str:
     """Return the recommended workflow: plan first, then call generate_uml."""
-    return {
+    return json.dumps({
         "workflow": (
             "Plan first: decide diagram type, purpose (communication, design, documentation, etc.), "
             "and key elements (actors, messages, classes, states, etc.) and relationships. "
             "Then output the diagram code and call generate_uml with the chosen diagram_type and the final code."
         ),
         "prompt": "Use the uml_diagram or uml_diagram_with_thinking prompt for plan-then-generate instructions.",
-    }
+    }, indent=2)
 
 
 def register_resources_with_server(server: FastMCP) -> List[str]:
