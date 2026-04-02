@@ -13,7 +13,9 @@ from rich.logging import RichHandler
 from rich.panel import Panel
 from rich.table import Table
 
-console = Console()
+# Default to stderr so import-time output never pollutes MCP stdio.
+# Switched to stdout in run() for non-stdio transports.
+console = Console(stderr=True)
 
 
 def parse_args():
@@ -56,7 +58,8 @@ def setup_logging(debug=False):
         logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
     )
 
-    console_handler = RichHandler(rich_tracebacks=True)
+    # Always log to stderr, even when the display console targets stdout.
+    console_handler = RichHandler(rich_tracebacks=True, console=Console(stderr=True))
     console_handler.setLevel(level)
 
     logging.basicConfig(
@@ -226,7 +229,17 @@ def display_tools_and_resources(mcp_settings):
 
 def run():
     """Run the CLI: parse args, setup logging, optionally list tools, then start server."""
+    global console
     args = parse_args()
+
+    # Use stdout for human-facing output when not using stdio transport
+    # or when just listing tools, so output remains pipeable.
+    # Always set explicitly so a prior run() in the same process doesn't leak.
+    if args.transport != "stdio" or args.list_tools:
+        console = Console()
+    else:
+        console = Console(stderr=True)
+
     logger = setup_logging(args.debug)
 
     logger.info("Starting UML-MCP Server with transport: %s", args.transport)
