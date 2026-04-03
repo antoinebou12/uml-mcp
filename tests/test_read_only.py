@@ -55,7 +55,6 @@ class TestReadOnlyMode:
 
     def test_default_registers_both_tools(self, _reset_tool_registry):
         """When MCP_READ_ONLY is unset/false, both tools are registered."""
-        from mcp_core.tools import tool_decorator
         from mcp_core.core import config
 
         original_read_only = config.MCP_SETTINGS.read_only
@@ -111,9 +110,13 @@ class TestReadOnlyMode:
         for truthy in ("true", "1", "yes", "True", "YES"):
             with patch.dict(os.environ, {"MCP_READ_ONLY": truthy}):
                 settings = MCPSettings()
-                assert settings.read_only is True, f"Expected True for MCP_READ_ONLY={truthy!r}"
+                assert settings.read_only is True, (
+                    f"Expected True for MCP_READ_ONLY={truthy!r}"
+                )
 
         for falsy in ("false", "0", "no", ""):
             with patch.dict(os.environ, {"MCP_READ_ONLY": falsy}):
                 settings = MCPSettings()
-                assert settings.read_only is False, f"Expected False for MCP_READ_ONLY={falsy!r}"
+                assert settings.read_only is False, (
+                    f"Expected False for MCP_READ_ONLY={falsy!r}"
+                )

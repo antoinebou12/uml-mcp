@@ -74,7 +74,7 @@ reserved_keywords = set(
     | reserved_keyword_holders
 )
 
-# Compression dictionary originally derived from "-><--<->" + sorted(reserved_keywords).
+# Official D2 playground compression dictionary — do not regenerate from reserved_keywords
 compression_dict = "-><---<->3danimatedboldborder-radiusclassclassesconstraintdescdirectiondouble-borderfillfill-patternfilledfontfont-colorfont-sizegrid-columnsgrid-gapgrid-rowsheighthorizontal-gapiconitaliclabellayersleftlinkmultiplenearopacityscenariosshadowshapesource-arrowheadstepsstrokestroke-dashstroke-widthstyletarget-arrowheadtext-transformtooltiptopunderlinevarsvertical-gapwidth"
 
 
@@ -135,12 +135,12 @@ timeline mixer: "" {
     - Served data logging
   |
 }
-People discovery: "People discovery \nservice"
+People discovery: "People discovery \\nservice"
 admixer: Ad mixer {
   style.fill: "#c1a2f3"
 }
 
-onboarding service: "Onboarding \nservice"
+onboarding service: "Onboarding \\nservice"
 timeline mixer -> People discovery
 timeline mixer -> onboarding service
 timeline mixer -> admixer
@@ -149,7 +149,7 @@ container0: "" {
   comment
   tlsapi
 }
-container0.graphql: GraphQL\nFederated Strato Column {
+container0.graphql: GraphQL\\nFederated Strato Column {
   shape: image
   icon: https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/GraphQL_Logo.svg/1200px-GraphQL_Logo.svg.png
 }
@@ -180,7 +180,7 @@ Android: {
 }
 
 web -> twitter fe
-timeline scorer: "Timeline\nScorer" {
+timeline scorer: "Timeline\\nScorer" {
   style.fill: "#ffdef1"
 }
 home ranker: Home Ranker

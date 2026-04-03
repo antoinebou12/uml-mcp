@@ -77,13 +77,25 @@ def setup_logging(debug=False):
 
 
 def safe_import(module_name, display_name=None):
-    """Try to import a module; return None and print error on failure."""
+    """Try to import a module; return None and log error on failure."""
     try:
         return __import__(module_name)
     except ImportError as e:
         display_name = display_name or module_name
-        console.print(f"[bold red]Error importing {display_name}:[/bold red] {str(e)}")
+        logging.getLogger(__name__).error("Error importing %s: %s", display_name, e)
         return None
+
+
+def _stdio_ui_enabled() -> bool:
+    """Check if human-readable UI is explicitly enabled for stdio transport."""
+    return os.environ.get("UML_MCP_STDIO_UI", "").lower() in ("true", "1", "yes")
+
+
+def _should_render_human_output(transport: str) -> bool:
+    """Return True if Rich UI output should be rendered for the given transport."""
+    if transport != "stdio":
+        return True
+    return _stdio_ui_enabled()
 
 
 def _display_tools_fallback(mcp_settings, tools_table):
@@ -272,26 +284,27 @@ def run():
 
         get_mcp_server()
 
-        console.print(
-            Panel(f"[bold green]UML-MCP Server v{MCP_SETTINGS.version}[/bold green]")
-        )
-        table = Table(title="Server Configuration")
-        table.add_column("Setting", style="cyan")
-        table.add_column("Value", style="green")
-        table.add_row("Server Name", MCP_SETTINGS.server_name)
-        table.add_row("Transport", args.transport)
-        table.add_row("Available Tools", str(len(MCP_SETTINGS.tools)))
-        table.add_row("Available Prompts", str(len(MCP_SETTINGS.prompts)))
-        table.add_row("Available Resources", str(len(MCP_SETTINGS.resources)))
-        if args.transport == "http":
-            table.add_row("Host", args.host)
-            table.add_row("Port", str(args.port))
-        console.print(table)
+        if _should_render_human_output(args.transport):
+            console.print(
+                Panel(f"[bold green]UML-MCP Server v{MCP_SETTINGS.version}[/bold green]")
+            )
+            table = Table(title="Server Configuration")
+            table.add_column("Setting", style="cyan")
+            table.add_column("Value", style="green")
+            table.add_row("Server Name", MCP_SETTINGS.server_name)
+            table.add_row("Transport", args.transport)
+            table.add_row("Available Tools", str(len(MCP_SETTINGS.tools)))
+            table.add_row("Available Prompts", str(len(MCP_SETTINGS.prompts)))
+            table.add_row("Available Resources", str(len(MCP_SETTINGS.resources)))
+            if args.transport == "http":
+                table.add_row("Host", args.host)
+                table.add_row("Port", str(args.port))
+            console.print(table)
 
         list_tools = (
             args.list_tools or os.environ.get("LIST_TOOLS", "").lower() == "true"
         )
-        if list_tools:
+        if list_tools and _should_render_human_output(args.transport):
             display_tools_and_resources(MCP_SETTINGS)
             return
 

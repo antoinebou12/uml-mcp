@@ -121,8 +121,9 @@ class TestSafeImport:
     """Tests for safe_import()."""
 
     def test_nonexistent_module_returns_none(self):
-        """safe_import of nonexistent module returns None."""
-        with patch.object(cli.console, "print"):
+        """safe_import of nonexistent module returns None and logs error."""
+        with patch("mcp_core.core.cli.logging") as log_mock:
+            log_mock.getLogger.return_value = MagicMock()
             result = cli.safe_import("_nonexistent_module_xyz_123")
         assert result is None
 
@@ -194,10 +195,10 @@ class TestRun:
         get_server_mock,
         start_server_mock,
     ):
-        """run() with --list-tools displays tools and returns without starting server."""
+        """run() with --list-tools on http transport displays tools and returns without starting server."""
         parse_mock.return_value = MagicMock(
             debug=False,
-            transport="stdio",
+            transport="http",
             host="127.0.0.1",
             port=8000,
             list_tools=True,

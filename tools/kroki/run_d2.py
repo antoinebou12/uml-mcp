@@ -10,7 +10,7 @@ _D2_BIN = os.path.join(os.path.dirname(os.path.abspath(__file__)), "d2_bin")
 
 async def run_go_script(input_data: str):
     try:
-        print("Running go script")
+        logger.info("Running go script")
         process = await asyncio.create_subprocess_exec(
             _D2_BIN,
             "encode",
