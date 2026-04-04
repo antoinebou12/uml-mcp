@@ -117,15 +117,18 @@ def get_output_formats() -> str:
 )
 def get_server_info() -> str:
     """Get MCP server information"""
-    return json.dumps({
-        "server_name": MCP_SETTINGS.server_name,
-        "version": MCP_SETTINGS.version,
-        "description": MCP_SETTINGS.description,
-        "tools": MCP_SETTINGS.tools,
-        "prompts": MCP_SETTINGS.prompts,
-        "kroki_server": MCP_SETTINGS.kroki_server,
-        "plantuml_server": MCP_SETTINGS.plantuml_server,
-    }, indent=2)
+    return json.dumps(
+        {
+            "server_name": MCP_SETTINGS.server_name,
+            "version": MCP_SETTINGS.version,
+            "description": MCP_SETTINGS.description,
+            "tools": MCP_SETTINGS.tools,
+            "prompts": MCP_SETTINGS.prompts,
+            "kroki_server": MCP_SETTINGS.kroki_server,
+            "plantuml_server": MCP_SETTINGS.plantuml_server,
+        },
+        indent=2,
+    )
 
 
 @mcp_resource(
@@ -134,10 +137,13 @@ def get_server_info() -> str:
 )
 def get_mermaid_examples() -> str:
     """Return named Mermaid examples (sequence_api, gantt) for API-call and Gantt prompts."""
-    return json.dumps({
-        "sequence_api": DiagramExamples.get_example("mermaid_api"),
-        "gantt": DiagramExamples.get_example("mermaid_gantt"),
-    }, indent=2)
+    return json.dumps(
+        {
+            "sequence_api": DiagramExamples.get_example("mermaid_api"),
+            "gantt": DiagramExamples.get_example("mermaid_gantt"),
+        },
+        indent=2,
+    )
 
 
 @mcp_resource(
@@ -146,27 +152,30 @@ def get_mermaid_examples() -> str:
 )
 def get_bpmn_guide() -> str:
     """Return a short guide to BPMN process modeling aligned with BPMN 2.0.2."""
-    return json.dumps({
-        "title": "BPMN process model guide (BPMN 2.0.2)",
-        "core_elements": {
-            "start_event": "Start Event (circle, single border): process trigger.",
-            "end_event": "End Event (circle, thick border): process end.",
-            "task": "Task (rounded rectangle): work performed in the process.",
-            "gateway": "Exclusive (X), Parallel (+), Inclusive (O): control flow branching/merge.",
-            "sequence_flow": "Solid arrow: order of flow between elements.",
-            "message_flow": "Dashed arrow: message between pools.",
-            "lane": "Lane: sub-partition of a pool (e.g. role or system).",
-            "pool": "Pool: process or participant boundary.",
+    return json.dumps(
+        {
+            "title": "BPMN process model guide (BPMN 2.0.2)",
+            "core_elements": {
+                "start_event": "Start Event (circle, single border): process trigger.",
+                "end_event": "End Event (circle, thick border): process end.",
+                "task": "Task (rounded rectangle): work performed in the process.",
+                "gateway": "Exclusive (X), Parallel (+), Inclusive (O): control flow branching/merge.",
+                "sequence_flow": "Solid arrow: order of flow between elements.",
+                "message_flow": "Dashed arrow: message between pools.",
+                "lane": "Lane: sub-partition of a pool (e.g. role or system).",
+                "pool": "Pool: process or participant boundary.",
+            },
+            "flow_rules": [
+                "Each process has at least one Start and one End Event.",
+                "Sequence flows connect activities, events, and gateways.",
+                "Gateways split or merge flows; use the correct type (exclusive, parallel, inclusive).",
+                "Lanes group tasks by role or system within a pool.",
+            ],
+            "tool": "Use generate_uml with diagram_type 'bpmn' for BPMN XML.",
+            "template_uri": "uml://templates (key: bpmn) for a minimal BPMN XML starter.",
         },
-        "flow_rules": [
-            "Each process has at least one Start and one End Event.",
-            "Sequence flows connect activities, events, and gateways.",
-            "Gateways split or merge flows; use the correct type (exclusive, parallel, inclusive).",
-            "Lanes group tasks by role or system within a pool.",
-        ],
-        "tool": "Use generate_uml with diagram_type 'bpmn' for BPMN XML.",
-        "template_uri": "uml://templates (key: bpmn) for a minimal BPMN XML starter.",
-    }, indent=2)
+        indent=2,
+    )
 
 
 @mcp_resource(
@@ -175,14 +184,17 @@ def get_bpmn_guide() -> str:
 )
 def get_recommended_workflow() -> str:
     """Return the recommended workflow: plan first, then call generate_uml."""
-    return json.dumps({
-        "workflow": (
-            "Plan first: decide diagram type, purpose (communication, design, documentation, etc.), "
-            "and key elements (actors, messages, classes, states, etc.) and relationships. "
-            "Then output the diagram code and call generate_uml with the chosen diagram_type and the final code."
-        ),
-        "prompt": "Use the uml_diagram or uml_diagram_with_thinking prompt for plan-then-generate instructions.",
-    }, indent=2)
+    return json.dumps(
+        {
+            "workflow": (
+                "Plan first: decide diagram type, purpose (communication, design, documentation, etc.), "
+                "and key elements (actors, messages, classes, states, etc.) and relationships. "
+                "Then output the diagram code and call generate_uml with the chosen diagram_type and the final code."
+            ),
+            "prompt": "Use the uml_diagram or uml_diagram_with_thinking prompt for plan-then-generate instructions.",
+        },
+        indent=2,
+    )
 
 
 def register_resources_with_server(server: FastMCP) -> List[str]:

@@ -128,6 +128,7 @@ class DiagramRequest(BaseModel):
     def validate_code_length(cls, v: str) -> str:
         try:
             from mcp_core.core.config import MCP_SETTINGS
+
             max_len = MCP_SETTINGS.max_code_length
         except ImportError:
             max_len = int(os.environ.get("MCP_MAX_CODE_LENGTH", "500000"))

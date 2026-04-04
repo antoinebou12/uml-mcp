@@ -42,8 +42,9 @@ class MCPSettings(BaseModel):
     display_name: str = "UML Diagram Generator"  # Human-readable for UI
     version: str = "1.2.0"
     read_only: bool = Field(
-        default_factory=lambda: os.environ.get("MCP_READ_ONLY", "false").lower()
-        in ("true", "1", "yes")
+        default_factory=lambda: (
+            os.environ.get("MCP_READ_ONLY", "false").lower() in ("true", "1", "yes")
+        )
     )
     description: str = "Generate UML and other diagrams through MCP"
     config_schema_url: str = (
@@ -53,8 +54,9 @@ class MCPSettings(BaseModel):
         default_factory=lambda: int(os.environ.get("MCP_MAX_CODE_LENGTH", "500000"))
     )
     read_only: bool = Field(
-        default_factory=lambda: os.environ.get("MCP_READ_ONLY", "").lower()
-        in ("true", "1", "yes")
+        default_factory=lambda: (
+            os.environ.get("MCP_READ_ONLY", "").lower() in ("true", "1", "yes")
+        )
     )
     output_dir: str = _get_output_dir()
     tools: List[str] = []

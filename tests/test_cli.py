@@ -244,3 +244,148 @@ class TestRun:
         start_server_mock.assert_called_once_with(
             transport="http", host="0.0.0.0", port=9999
         )
+
+    @patch("mcp_core.core.cli.safe_import", return_value=None)
+    @patch("mcp_core.core.cli.setup_logging", return_value=MagicMock())
+    @patch("mcp_core.core.cli.parse_args")
+    def test_run_missing_modules_exits(self, parse_mock, setup_mock, safe_import_mock):
+        """run() exits with code 1 when required modules are missing."""
+        parse_mock.return_value = MagicMock(
+            debug=False,
+            transport="stdio",
+            host="127.0.0.1",
+            port=8000,
+            list_tools=False,
+        )
+        with patch.object(cli.console, "print"), pytest.raises(SystemExit) as exc_info:
+            cli.run()
+        assert exc_info.value.code == 1
+
+    @patch("mcp_core.core.server.start_server", side_effect=KeyboardInterrupt)
+    @patch("mcp_core.core.server.get_mcp_server")
+    @patch(
+        "mcp_core.core.config.MCP_SETTINGS",
+        MagicMock(
+            version="1.0", server_name="Test", tools=[], prompts=[], resources=[]
+        ),
+    )
+    @patch("mcp_core.core.cli.safe_import", return_value=MagicMock())
+    @patch("mcp_core.core.cli.setup_logging", return_value=MagicMock())
+    @patch("mcp_core.core.cli.parse_args")
+    def test_run_handles_keyboard_interrupt(
+        self, parse_mock, setup_mock, safe_import_mock, get_server_mock, start_mock
+    ):
+        """run() catches KeyboardInterrupt gracefully."""
+        parse_mock.return_value = MagicMock(
+            debug=False, transport="http", host="127.0.0.1", port=8000, list_tools=False
+        )
+        with patch.object(cli.console, "print"):
+            cli.run()  # Should not raise
+
+    @patch("mcp_core.core.server.start_server", side_effect=RuntimeError("boom"))
+    @patch("mcp_core.core.server.get_mcp_server")
+    @patch(
+        "mcp_core.core.config.MCP_SETTINGS",
+        MagicMock(
+            version="1.0", server_name="Test", tools=[], prompts=[], resources=[]
+        ),
+    )
+    @patch("mcp_core.core.cli.safe_import", return_value=MagicMock())
+    @patch("mcp_core.core.cli.setup_logging", return_value=MagicMock())
+    @patch("mcp_core.core.cli.parse_args")
+    def test_run_handles_generic_exception(
+        self, parse_mock, setup_mock, safe_import_mock, get_server_mock, start_mock
+    ):
+        """run() catches generic exceptions and logs them."""
+        parse_mock.return_value = MagicMock(
+            debug=False, transport="http", host="127.0.0.1", port=8000, list_tools=False
+        )
+        with patch.object(cli.console, "print"):
+            cli.run()  # Should not raise
+
+
+class TestStdioUI:
+    """Tests for stdio UI rendering logic."""
+
+    def test_stdio_ui_disabled_by_default(self):
+        """_stdio_ui_enabled returns False when env var is unset."""
+        with patch.dict("os.environ", {}, clear=True):
+            assert cli._stdio_ui_enabled() is False
+
+    def test_stdio_ui_enabled_with_env_var(self):
+        """_stdio_ui_enabled returns True for truthy env values."""
+        for val in ("true", "1", "yes"):
+            with patch.dict("os.environ", {"UML_MCP_STDIO_UI": val}):
+                assert cli._stdio_ui_enabled() is True
+
+    def test_should_render_for_http(self):
+        """_should_render_human_output always returns True for http transport."""
+        assert cli._should_render_human_output("http") is True
+
+    def test_should_not_render_for_stdio_by_default(self):
+        """_should_render_human_output returns False for stdio without env var."""
+        with patch.dict("os.environ", {}, clear=True):
+            assert cli._should_render_human_output("stdio") is False
+
+    def test_should_render_for_stdio_with_env(self):
+        """_should_render_human_output returns True for stdio with UML_MCP_STDIO_UI=true."""
+        with patch.dict("os.environ", {"UML_MCP_STDIO_UI": "true"}):
+            assert cli._should_render_human_output("stdio") is True
+
+
+class TestDisplayFallbacks:
+    """Tests for display fallback methods."""
+
+    def test_display_tools_fallback_with_tools(self):
+        """_display_tools_fallback populates table with known tool names."""
+        mcp_settings = MagicMock()
+        mcp_settings.tools = ["generate_uml"]
+        table = MagicMock()
+        cli._display_tools_fallback(mcp_settings, table)
+        table.add_row.assert_called()
+
+    def test_display_tools_fallback_empty(self):
+        """_display_tools_fallback shows 'No tools found' when empty."""
+        mcp_settings = MagicMock()
+        mcp_settings.tools = []
+        table = MagicMock()
+        cli._display_tools_fallback(mcp_settings, table)
+        table.add_row.assert_called_once_with(
+            "No tools found", "Check server configuration", ""
+        )
+
+    def test_display_prompts_fallback_with_prompts(self):
+        """_display_prompts_fallback populates table with known prompts."""
+        mcp_settings = MagicMock()
+        mcp_settings.prompts = ["class_diagram"]
+        table = MagicMock()
+        cli._display_prompts_fallback(mcp_settings, table)
+        table.add_row.assert_called()
+
+    def test_display_prompts_fallback_empty(self):
+        """_display_prompts_fallback shows 'No prompts found' when empty."""
+        mcp_settings = MagicMock()
+        mcp_settings.prompts = []
+        table = MagicMock()
+        cli._display_prompts_fallback(mcp_settings, table)
+        table.add_row.assert_called_once_with(
+            "No prompts found", "Check server configuration"
+        )
+
+    def test_display_resources_fallback_with_resources(self):
+        """_display_resources_fallback populates table with known resources."""
+        mcp_settings = MagicMock()
+        mcp_settings.resources = ["uml://types"]
+        table = MagicMock()
+        cli._display_resources_fallback(mcp_settings, table)
+        table.add_row.assert_called()
+
+    def test_display_resources_fallback_empty(self):
+        """_display_resources_fallback shows 'No resources found' when empty."""
+        mcp_settings = MagicMock()
+        mcp_settings.resources = []
+        table = MagicMock()
+        cli._display_resources_fallback(mcp_settings, table)
+        table.add_row.assert_called_once_with(
+            "No resources found", "Check server configuration"
+        )

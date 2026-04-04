@@ -2,6 +2,7 @@
 Vercel serverless entrypoint: loads the root FastAPI app so the pattern
 "app.py" in vercel.json functions matches a file inside the api/ directory.
 """
+
 import importlib.util
 import os
 
