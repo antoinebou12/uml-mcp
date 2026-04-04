@@ -21,8 +21,8 @@ class TestFastMcpMockRouting:
     def server(self):
         s = FastMCP("test-server")
         s._tools["echo"] = lambda msg: {"echo": msg}
-        s._prompts["greet"] = lambda name: f"Hello, {name}"  # type: ignore[possibly-missing-attribute]
-        s._resources["test://x"] = lambda: {"data": "x"}  # type: ignore[possibly-missing-attribute]
+        s._prompts["greet"] = lambda name: f"Hello, {name}"
+        s._resources["test://x"] = lambda: {"data": "x"}
         return s
 
     def test_handle_request_tool(self, server):

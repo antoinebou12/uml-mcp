@@ -87,7 +87,7 @@ class _MCPAcceptHeaderMiddleware:
 
 
 # Configure CORS
-app.add_middleware(
+app.add_middleware(  # ty: ignore[invalid-argument-type]
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
@@ -95,7 +95,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 # Run first (outermost): normalize Accept for /mcp so MCP Streamable HTTP accepts the request.
-app.add_middleware(_MCPAcceptHeaderMiddleware)
+app.add_middleware(_MCPAcceptHeaderMiddleware)  # ty: ignore[invalid-argument-type]
 
 # Import local modules
 try:
@@ -189,7 +189,7 @@ async def generate_diagram_endpoint(request: DiagramRequest):
         if diagram_type == "":
             diagram_type = request.lang.lower()
 
-        output_format = request.output_format
+        output_format = request.output_format or "svg"
 
         # Apply theme if provided - store original code for testing purposes
         original_code = request.code

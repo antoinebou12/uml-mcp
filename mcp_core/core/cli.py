@@ -280,7 +280,9 @@ def run():
         from mcp_core.core.server import get_mcp_server, start_server
 
         if hasattr(MCP_SETTINGS, "update_from_args"):
-            MCP_SETTINGS.update_from_args(args)
+            updater = getattr(MCP_SETTINGS, "update_from_args")
+            if callable(updater):
+                updater(args)
 
         get_mcp_server()
 

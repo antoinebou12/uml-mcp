@@ -77,8 +77,19 @@ exclude = [".venv", "build", "dist", "ai_uml"]
 [tool.ruff.format]
 quote-style = "double"
 
-[tool.ty]
-exclude = ["ai_uml/", "scripts/", "examples/"]
+# Optional ML / eval code and one-off scripts are not part of the MCP package surface.
+[tool.ty.src]
+exclude = ["ai_uml/**", "scripts/**", "examples/**"]
+
+# FastMCP / Starlette typing is often stricter than runtime; relax in integration tests.
+[[tool.ty.overrides]]
+include = ["tests/**"]
+
+[tool.ty.overrides.rules]
+possibly-missing-attribute = "ignore"
+
+[tool.ty.rules]
+redundant-cast = "ignore"
 
 [tool.coverage.run]
 source = ["mcp_core", "tools"]

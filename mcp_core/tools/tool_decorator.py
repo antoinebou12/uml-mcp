@@ -111,6 +111,7 @@ def register_tools_with_server(server: FastMCP) -> List[str]:
     logger.info(f"Registering {len(_registered_tools)} tools with the MCP server")
 
     registered_tools = []
+    server_any = cast(Any, server)
 
     for tool_name, tool_info in _registered_tools.items():
         func = tool_info["function"]
@@ -123,31 +124,30 @@ def register_tools_with_server(server: FastMCP) -> List[str]:
 
         # Register with server (handle different server APIs)
         try:
-            tool_decorator = server.tool(**tool_kwargs)
-            tool_decorator(func)
+            dec = server_any.tool(**tool_kwargs)
+            dec(func)
         except TypeError:
             try:
                 # Try without annotations (server may not support them)
-                tool_decorator = server.tool(
+                dec = server_any.tool(
                     name=tool_name, description=tool_info["description"]
                 )
-                tool_decorator(func)
+                dec(func)
             except TypeError:
                 try:
                     # Try just passing the description (alternate style)
-                    tool_decorator = server.tool(tool_info["description"])
-                    tool_decorator(func)
+                    dec = server_any.tool(tool_info["description"])
+                    dec(func)
                 except TypeError:
                     # Fallback to simple decorator with no args (basic style)
-                    server.tool(func)
+                    server_any.tool(func)
 
                 # If that didn't throw an error but we need to rename the function
                 if tool_name != func.__name__:
                     # Use the _tools dictionary directly if we can access it
                     if hasattr(server, "_tools"):
-                        server._tools[tool_name] = server._tools.pop(
-                            func.__name__, func
-                        )
+                        tools_map: Any = getattr(server, "_tools")
+                        tools_map[tool_name] = tools_map.pop(func.__name__, func)
                     else:
                         logger.warning(
                             f"Could not rename tool '{func.__name__}' to '{tool_name}' - server API doesn't support it"

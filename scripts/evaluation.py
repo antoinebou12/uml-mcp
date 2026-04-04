@@ -89,7 +89,11 @@ def main():
             if not args.url:
                 print("Error: --url required for http transport")
                 sys.exit(1)
-            async with streamablehttp_client(url=args.url) as (read, write):
+            async with streamablehttp_client(url=args.url) as (
+                read,
+                write,
+                _get_session_id,
+            ):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
                     tools_resp = await session.list_tools()

@@ -88,7 +88,7 @@ if use_mock:
 
         def tool(self, *args, **kwargs):
             def decorator(func: Callable) -> Callable:
-                tool_name = kwargs.get("name", func.__name__)
+                tool_name = kwargs.get("name", getattr(func, "__name__", "tool"))
                 self._tools[tool_name] = func
                 return func
 
@@ -96,7 +96,7 @@ if use_mock:
 
         def prompt(self, prompt_name: Optional[str] = None):
             def decorator(func: Callable) -> Callable:
-                name = prompt_name or func.__name__
+                name = prompt_name or getattr(func, "__name__", "prompt")
                 self._prompts[name] = func
                 return func
 
@@ -109,11 +109,16 @@ if use_mock:
 
             return decorator
 
-        def run(self, transport: str = "stdio", host: Optional[str] = None, port: Optional[int] = None):
+        def run(
+            self,
+            transport: str = "stdio",
+            host: Optional[str] = None,
+            port: Optional[int] = None,
+        ):
             if transport == "stdio":
                 self._run_stdio()
             elif transport == "http":
-                self._run_http(host, port)
+                self._run_http(host or "127.0.0.1", port if port is not None else 8000)
             else:
                 raise ValueError(f"Unsupported transport: {transport}")
 

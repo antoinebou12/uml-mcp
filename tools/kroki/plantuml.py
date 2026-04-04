@@ -82,22 +82,26 @@ class PlantUML:
 
         # Configure authentication
         if self.auth_type == "basic_auth":
-            self.client.auth = (self.auth["username"], self.auth["password"])
+            auth = self.auth
+            assert auth is not None
+            self.client.auth = (auth["username"], auth["password"])
         elif self.auth_type == "form_auth":
-            if "url" not in self.auth:
+            auth = self.auth
+            assert auth is not None
+            if "url" not in auth:
                 raise PlantUMLError(
                     "The form_auth option 'url' must be provided and point to the login url."
                 )
-            if "body" not in self.auth:
+            if "body" not in auth:
                 raise PlantUMLError(
                     "The form_auth option 'body' must be provided and include "
                     "a dictionary with the form elements required to log in."
                 )
 
-            login_url = self.auth["url"]
-            body = self.auth["body"]
-            method = self.auth.get("method", "POST")
-            headers = self.auth.get(
+            login_url = auth["url"]
+            body = auth["body"]
+            method = auth.get("method", "POST")
+            headers = auth.get(
                 "headers", {"Content-type": "application/x-www-form-urlencoded"}
             )
 
@@ -109,7 +113,9 @@ class PlantUML:
             except httpx.HTTPError as e:
                 raise PlantUMLConnectionError(f"Error authenticating: {str(e)}")
 
-            self.request_opts["Cookie"] = response.cookies.get_dict()
+            self.request_opts["Cookie"] = "; ".join(
+                f"{name}={value}" for name, value in response.cookies.items()
+            )
 
     def get_url(self, plantuml_text):
         """Return the server URL for the image."""
