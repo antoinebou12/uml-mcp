@@ -157,6 +157,7 @@ class TestRegisterDiagramResources:
             "uml://templates",
             "uml://examples",
             "uml://formats",
+            "uml://capabilities",
             "uml://server-info",
             "uml://mermaid-examples",
             "uml://bpmn-guide",

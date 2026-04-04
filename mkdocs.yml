@@ -30,6 +30,7 @@ nav:
       - Configuration: configuration.md
       - Examples: examples.md
       - Diagram Assistant: diagram-assistant.md
+      - Experimental ai_uml package: ai_uml.md
   - Diagram types:
       - UML: diagrams/uml.md
       - TikZ: diagrams/tikz.md
@@ -41,6 +42,7 @@ nav:
       - Tools: api/tools.md
   - Fallback mechanism: fallback-mechanism.md
   - Testing: testing.md
+  - Maintainer: refactor-architecture-plan.md
 
 markdown_extensions:
   - toc:

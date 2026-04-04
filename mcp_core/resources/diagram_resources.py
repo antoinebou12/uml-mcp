@@ -112,6 +112,25 @@ def get_output_formats() -> str:
 
 
 @mcp_resource(
+    "uml://capabilities",
+    description=(
+        "Matrix of diagram_type -> backend engine and supported output_format values. "
+        "Same data the server uses for validation before render."
+    ),
+)
+def get_capabilities() -> str:
+    """Type → backend → formats matrix for tooling and clients."""
+    caps: Dict[str, Dict[str, Any]] = {}
+    for name, config in MCP_SETTINGS.diagram_types.items():
+        caps[name] = {
+            "backend": config.backend,
+            "formats": list(config.formats),
+            "description": config.description,
+        }
+    return json.dumps(caps, indent=2)
+
+
+@mcp_resource(
     "uml://server-info",
     description="Returns server metadata: name, version, tools, prompts, Kroki URL. Use for discovery and health checks.",
 )

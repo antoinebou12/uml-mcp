@@ -43,7 +43,26 @@ For Mermaid diagrams, the system falls back to [Mermaid.ink](https://mermaid.ink
 - Provides playground URLs for editing
 
 #### Other Diagram Types
-For diagram types without a fallback mechanism (D2, Graphviz, ERD, etc.), the system returns an error with details from both the primary and fallback attempts.
+For diagram types without an HTTP fallback (D2, Graphviz, ERD, etc.), the system returns an error after Kroki fails. The response includes `attempts` (Kroki plus a `none` entry) and `fallback_used: false`.
+
+## Implementation note
+
+The Kroki-first policy is implemented synchronously in **`mcp_core/core/diagram_rendering.py`**: `try_kroki_render` (Kroki only), `run_fallback_if_needed` (PlantUML server or Mermaid.ink when applicable), and `run_diagram_pipeline` (orchestrates both). The MCP tool layer validates inputs in **`mcp_core/core/diagram_service.py`** before calling **`mcp_core/core/utils.generate_diagram`**, which builds a `DiagramRenderContext` and runs the pipeline.
+
+On success, the result dictionary may include a **`source`** field indicating which path produced the image: `kroki`, `plantuml_server`, or `mermaid_ink` (useful for logs and debugging).
+
+### Response diagnostics (generate_uml / generate_diagram_url)
+
+Successful and failed renders also expose structured fields for debugging and observability:
+
+| Field | Meaning |
+|-------|---------|
+| `source` | Winning renderer: `kroki`, `plantuml_server`, or `mermaid_ink`. |
+| `fallback_used` | `true` if Kroki failed and a secondary backend succeeded. |
+| `attempts` | List of `{ "backend", "ok", "error_summary"? }` in order (Kroki first, then fallback if applicable). |
+| `render_ms` | Wall time for the pipeline call (milliseconds). |
+| `cache_hit` | `true` when the result was served from the in-memory LRU cache (memory-only requests only). |
+| `mime_type` | Normalized type for the requested format when applicable (e.g. `image/svg+xml` for SVG). |
 
 ## Configuration
 
@@ -76,12 +95,9 @@ export USE_LOCAL_PLANTUML=true
 
 ## Error Handling
 
-When both the primary method (Kroki) and the fallback fail, the system returns a detailed error message containing:
+When Kroki fails and a fallback was attempted but also failed, the error message combines both. When no fallback exists for the diagram backend, the message states that no fallback is available. Inspect the **`attempts`** array on the response for per-backend status.
 
-1. **Primary error**: Details about why Kroki failed
-2. **Fallback error**: Details about why the fallback also failed
-
-Example error message:
+Example (PlantUML fallback failed after Kroki failed):
 ```
 Primary (Kroki) failed: Cannot connect to diagram service. 
 Check KROKI_SERVER and network connectivity. 
@@ -130,11 +146,9 @@ INFO: Successfully generated class diagram via PlantUML fallback
 
 ## Architecture
 
-The fallback logic is implemented in `mcp_core/core/utils.py`:
+The Kroki-first pipeline lives in **`mcp_core/core/diagram_rendering.py`**: `try_kroki_render`, then `run_fallback_if_needed` for PlantUML or Mermaid backends. **`mcp_core/core/utils.py`** keeps **`generate_diagram()`** as the public entry (read-only handling, output directory setup, diagram type resolution, then `run_diagram_pipeline`). MCP tools validate and delegate via **`mcp_core/core/diagram_service.py`**.
 
-1. **generate_diagram()**: Main entry point, tries Kroki first
-2. **_generate_diagram_plantuml_fallback()**: PlantUML server fallback
-3. **_generate_diagram_mermaid_fallback()**: Mermaid.ink fallback
+On successful render, the result dict may include **`source`**: `kroki` (primary), `plantuml_server`, or `mermaid_ink` (fallbacks), for logging or client use.
 
 ## Benefits
 

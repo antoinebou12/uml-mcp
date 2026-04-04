@@ -55,7 +55,7 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run pytest --cov=mcp_core --cov=kroki --cov-report=term --cov-report=html
+          uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html
 
       - name: Integration tests (MCP Client)
         run: USE_REAL_FASTMCP=1 uv run pytest tests/integration -v --no-cov

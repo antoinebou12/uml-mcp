@@ -25,7 +25,7 @@ Backends: PlantUML (local or remote) and Kroki.
 
 - MCP server and entry: `mcp_core/core/server.py`, `server.py`
 - Diagram tools and FastMCP: `mcp_core/tools/diagram_tools.py`, `mcp_core/server/fastmcp_wrapper.py`
-- Backends: `kroki/`, `plantuml/`, `mermaid/`, `D2/`
+- Backends: `tools/kroki/` (PlantUML, Mermaid, D2, TikZ, etc.)
 - Configuration: `mcp_core/core/config.py`, `config/`
 - User-facing docs: `docs/`, `README.md`
 

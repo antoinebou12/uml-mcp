@@ -13,9 +13,9 @@ The Diagram Assistant is the set of MCP tools, resources, and prompts that help 
 
 ## Tools
 
-- **generate_uml** — Main entry point: pass `diagram_type` (e.g. `class`, `sequence`, `mermaid`, `bpmn`) and `code` to render via Kroki or PlantUML.
+- **generate_uml** — Main entry point: pass `diagram_type` (e.g. `class`, `sequence`, `mermaid`, `bpmn`) and `code` to render via Kroki (with optional fallbacks). Implementation: tools call **`mcp_core/core/diagram_service.py`**, which validates and calls **`generate_diagram`**; rendering is **`diagram_rendering.run_diagram_pipeline`** (Kroki first). Successful responses may include **`source`** (`kroki`, `plantuml_server`, or `mermaid_ink`).
+- **generate_diagram_url** — Same pipeline without saving a file (URL / base64 only).
 - **generate_bpmn_diagram** — BPMN-specific generator for BPMN XML.
-- **generate_uml** — Single tool; pass `diagram_type` (class, sequence, mermaid, d2, etc.) and `code`. Uses Kroki or PlantUML under the hood.
 
 ## Resources
 

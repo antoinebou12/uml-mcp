@@ -11,9 +11,32 @@ from pydantic import BaseModel, Field
 from tools.kroki.kroki import LANGUAGE_OUTPUT_SUPPORT
 
 
+def _env_bool(name: str, default: bool = False) -> bool:
+    v = os.environ.get(name, "")
+    if v == "":
+        return default
+    return v.lower() in ("true", "1", "yes")
+
+
 def _default_output_dir() -> str:
     """Default diagram output directory (current working directory / output)."""
     return str(Path.cwd() / "output")
+
+
+def _memory_only_default() -> bool:
+    """
+    When True, diagram generation never writes to disk (URL + base64 only).
+
+    On Vercel (VERCEL set), defaults to True so serverless stays within /tmp limits
+    and avoids redundant file I/O. Set MCP_MEMORY_ONLY=false to allow writes to
+    VERCEL_OUTPUT_DIR. Locally, default False unless MCP_MEMORY_ONLY=true.
+    """
+    explicit = os.environ.get("MCP_MEMORY_ONLY", "").strip().lower()
+    if explicit in ("true", "1", "yes"):
+        return True
+    if explicit in ("false", "0", "no"):
+        return False
+    return _env_bool("VERCEL", False)
 
 
 def _get_output_dir() -> str:
@@ -41,11 +64,8 @@ class MCPSettings(BaseModel):
     server_name: str = "uml_mcp"  # MCP naming: {service}_mcp (protocol)
     display_name: str = "UML Diagram Generator"  # Human-readable for UI
     version: str = "1.2.0"
-    read_only: bool = Field(
-        default_factory=lambda: (
-            os.environ.get("MCP_READ_ONLY", "false").lower() in ("true", "1", "yes")
-        )
-    )
+    read_only: bool = Field(default_factory=lambda: _env_bool("MCP_READ_ONLY", False))
+    memory_only: bool = Field(default_factory=_memory_only_default)
     description: str = "Generate UML and other diagrams through MCP"
     config_schema_url: str = (
         ""  # Optional URL for session config schema (improves Configuration UX score)
@@ -53,10 +73,11 @@ class MCPSettings(BaseModel):
     max_code_length: int = Field(
         default_factory=lambda: int(os.environ.get("MCP_MAX_CODE_LENGTH", "500000"))
     )
-    read_only: bool = Field(
-        default_factory=lambda: (
-            os.environ.get("MCP_READ_ONLY", "").lower() in ("true", "1", "yes")
-        )
+    max_render_seconds: float = Field(
+        default_factory=lambda: float(os.environ.get("MCP_MAX_RENDER_SECONDS", "30"))
+    )
+    diagram_cache_size: int = Field(
+        default_factory=lambda: int(os.environ.get("MCP_DIAGRAM_CACHE_SIZE", "32"))
     )
     output_dir: str = _get_output_dir()
     tools: List[str] = []

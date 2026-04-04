@@ -5,18 +5,14 @@ MCP tools for diagram generation using the decorator pattern
 import logging
 from typing import Any, Dict, List, Optional
 
-from pydantic import ValidationError
-
 from mcp_core.server.fastmcp_wrapper import FastMCP
 
 from ..core.config import MCP_SETTINGS
-
-# Import core utilities
-from ..core.utils import generate_diagram
+from ..core.diagram_service import DiagramRequest, generate_from_request
+from ..core.diagram_validation import validate_uml_inputs
 
 # Import the tool decorator system
 from .tool_decorator import get_tool_registry, mcp_tool, register_tools_with_server
-from .schemas import GenerateUMLInput
 
 logger = logging.getLogger(__name__)
 
@@ -35,59 +31,12 @@ ANNOTATIONS_URL_ONLY = {
     "openWorldHint": True,
 }
 
-
-def _validate_and_generate(
-    diagram_type: str,
-    code: str,
-    output_dir: Optional[str] = None,
-    output_format: str = "svg",
-    theme: Optional[str] = None,
-    scale: float = 1.0,
-) -> Dict[str, Any]:
-    """Validate inputs and generate diagram. Returns result dict with optional error."""
-    try:
-        GenerateUMLInput(
-            diagram_type=diagram_type,
-            code=code,
-            output_dir=output_dir,
-            output_format=output_format,
-            theme=theme,
-            scale=scale,
-        )
-    except ValidationError as e:
-        parts = []
-        for err in e.errors():
-            loc = err.get("loc", ())
-            name = loc[0] if loc else "input"
-            parts.append(f"{name}: {err['msg']}")
-        err_msg = "; ".join(parts)
-        return {
-            "code": code,
-            "url": None,
-            "playground": None,
-            "local_path": None,
-            "error": f"Validation error: {err_msg}",
-        }
-
-    valid_types = getattr(MCP_SETTINGS, "diagram_types", {})
-    if not valid_types:
-        valid_types = {"class": "Class diagram", "sequence": "Sequence diagram"}
-
-    if diagram_type.lower() not in valid_types:
-        error_msg = (
-            f"Unsupported diagram type: {diagram_type}. Use uml://types resource "
-            "for valid types."
-        )
-        logger.error(error_msg)
-        return {
-            "code": code,
-            "url": None,
-            "playground": None,
-            "local_path": None,
-            "error": error_msg,
-        }
-
-    return generate_diagram(diagram_type, code, output_format, output_dir, theme, scale)
+ANNOTATIONS_VALIDATE = {
+    "readOnlyHint": True,
+    "destructiveHint": False,
+    "idempotentHint": True,
+    "openWorldHint": False,
+}
 
 
 # Main UML generation tool
@@ -123,10 +72,19 @@ def generate_uml(
         Dict with code, url, playground; local_path when output_dir set; content_base64 when not saving; or error.
     """
     logger.info(
-        f"Called generate_uml tool: type={diagram_type}, code length={len(code)}"
+        "Called generate_uml tool: type=%s, code length=%s",
+        diagram_type,
+        len(code),
     )
-    return _validate_and_generate(
-        diagram_type, code, output_dir, output_format, theme, scale
+    return generate_from_request(
+        DiagramRequest(
+            diagram_type=diagram_type,
+            code=code,
+            output_dir=output_dir,
+            output_format=output_format,
+            theme=theme,
+            scale=scale,
+        )
     )
 
 
@@ -159,9 +117,56 @@ def generate_diagram_url(
         Dict with code, url, playground, content_base64 on success; or error.
     """
     logger.info(
-        f"Called generate_diagram_url tool: type={diagram_type}, code length={len(code)}"
+        "Called generate_diagram_url tool: type=%s, code length=%s",
+        diagram_type,
+        len(code),
     )
-    return _validate_and_generate(diagram_type, code, None, output_format, theme, scale)
+    return generate_from_request(
+        DiagramRequest(
+            diagram_type=diagram_type,
+            code=code,
+            output_dir=None,
+            output_format=output_format,
+            theme=theme,
+            scale=scale,
+        )
+    )
+
+
+@mcp_tool(
+    description=(
+        "Validate diagram type, format, code length, and basic syntax locally before render "
+        "(no Kroki call). Returns errors and suggestions."
+    ),
+    category="uml",
+    example="validate_uml('class', '@startuml\\nclass A\\n@enduml', 'svg')",
+    annotations=ANNOTATIONS_VALIDATE,
+)
+def validate_uml(
+    diagram_type: str,
+    code: str,
+    output_format: str = "svg",
+) -> Dict[str, Any]:
+    """Check inputs and light structure without rendering.
+
+    Use to catch unsupported types, bad output_format for the type, empty code, or obvious
+    PlantUML/Mermaid/D2 issues before calling generate_uml or generate_diagram_url.
+
+    Args:
+        diagram_type: Same as generate_uml (see uml://types).
+        code: Diagram source text.
+        output_format: Intended output format (default svg); must be allowed for the type.
+
+    Returns:
+        Dict with valid (bool), errors, suggestions, backend, diagram_type, prepared_code,
+        and optional corrected_code when only trivial wrapping changed the text.
+    """
+    logger.info(
+        "Called validate_uml tool: type=%s, code length=%s",
+        diagram_type,
+        len(code or ""),
+    )
+    return validate_uml_inputs(diagram_type, code, output_format)
 
 
 def register_diagram_tools(server: FastMCP) -> List[str]:
@@ -188,8 +193,8 @@ def register_diagram_tools(server: FastMCP) -> List[str]:
     # Store registered tools in MCP_SETTINGS.tools (which is a standard attribute)
     MCP_SETTINGS.tools = registered_tools
 
-    logger.info(f"Registered {len(registered_tools)} diagram tools successfully")
-    logger.debug(f"Registered tools: {registered_tools}")
+    logger.info("Registered %s diagram tools successfully", len(registered_tools))
+    logger.debug("Registered tools: %s", registered_tools)
 
     return registered_tools
 

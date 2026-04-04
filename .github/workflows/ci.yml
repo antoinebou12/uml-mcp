@@ -5,10 +5,7 @@ on:
     branches: [main]
     paths:
       - "mcp_core/**"
-      - "kroki/**"
-      - "mermaid/**"
-      - "plantuml/**"
-      - "D2/**"
+      - "tools/**"
       - "ai_uml/**"
       - "app.py"
       - "server.py"
@@ -45,7 +42,7 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run pytest --cov=mcp_core --cov=kroki --cov-report=term --cov-report=html
+          uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html
 
       - name: Build documentation
         run: uv run mkdocs build

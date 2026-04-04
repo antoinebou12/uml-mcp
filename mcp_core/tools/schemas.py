@@ -68,7 +68,7 @@ class GenerateUMLInput(BaseModel):
 
     diagram_type: str = Field(
         ...,
-        description="Type of diagram (e.g. class, sequence, activity, mermaid, d2)",
+        description="Type of diagram (e.g. class, sequence, activity, mermaid, d2). See uml://types.",
         min_length=1,
     )
     code: str = Field(
@@ -93,6 +93,20 @@ class GenerateUMLInput(BaseModel):
         ge=0.1,
         description="Scale factor for SVG output (e.g. 2.0 doubles size). Only applied when output_format is svg.",
     )
+
+    @field_validator("diagram_type")
+    @classmethod
+    def validate_diagram_type(cls, v: str) -> str:
+        key = (v or "").strip().lower()
+        if not key:
+            raise ValueError("diagram_type cannot be empty")
+        from ..core.config import MCP_SETTINGS
+
+        if key not in MCP_SETTINGS.diagram_types:
+            raise ValueError(
+                f"Unsupported diagram type: {v.strip()}. Use uml://types resource for valid types."
+            )
+        return key
 
     @field_validator("code")
     @classmethod
@@ -132,6 +146,17 @@ class GenerateUMLInput(BaseModel):
                 )
         return self
 
+    @model_validator(mode="after")
+    def reject_output_dir_when_read_only(self) -> "GenerateUMLInput":
+        from ..core.config import MCP_SETTINGS
+
+        if MCP_SETTINGS.read_only and self.output_dir:
+            raise ValueError(
+                "output_dir is not allowed when MCP_READ_ONLY=true; use generate_diagram_url "
+                "or omit output_dir."
+            )
+        return self
+
 
 class DiagramResult(BaseModel):
     """Structured output for diagram generation tools."""
@@ -144,3 +169,9 @@ class DiagramResult(BaseModel):
         None  # Image bytes when not writing to file (memory-only)
     )
     error: Optional[str] = None
+    source: Optional[str] = None
+    attempts: Optional[list] = None
+    fallback_used: Optional[bool] = None
+    render_ms: Optional[float] = None
+    cache_hit: Optional[bool] = None
+    mime_type: Optional[str] = None

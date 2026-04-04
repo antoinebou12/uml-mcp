@@ -11,14 +11,13 @@ requires-python = ">=3.10"
 name = "uml-mcp"
 version = "1.2.0"
 description = "UML diagram generation server with MCP interface"
-authors = ["Your Name <your.email@example.com>"]
+authors = ["antoinebou12 <antoinebou12@users.noreply.github.com>"]
 readme = "README.md"
 license = "MIT"
-repository = "https://github.com/yourusername/uml-mcp"
+repository = "https://github.com/antoinebou12/uml-mcp"
 packages = [
     { include = "mcp_core" },
     { include = "tools" },
-    { include = "ai_uml" }
 ]
 
 [tool.poetry.dependencies]

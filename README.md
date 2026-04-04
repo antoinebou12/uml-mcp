@@ -35,6 +35,8 @@ uv sync            # recommended
 # pip install -e . # alternative
 ```
 
+The published package installs **`mcp_core`** and **`tools`** only. The **`ai_uml/`** tree remains in the repository for research; it is not part of the installable distribution.
+
 ### Run
 
 ```bash
@@ -72,9 +74,10 @@ Full list with supported output formats: run `python server.py --list-tools` or 
 **Tools:**
 - `generate_uml` -- generate a diagram and optionally save to disk
 - `generate_diagram_url` -- return diagram URL + base64 without file writes
+- `validate_uml` -- structural validation before render (no network by default)
 
 **Resources** (via `uml://` URIs):
-`types`, `templates`, `examples`, `formats`, `server-info`, `mermaid-examples`, `bpmn-guide`, `workflow`
+`types`, `templates`, `examples`, `formats`, `capabilities`, `server-info`, `mermaid-examples`, `bpmn-guide`, `workflow`
 
 ## Deployment
 
@@ -125,11 +128,12 @@ server.py              -- MCP entry point (stdio/HTTP)
 app.py                 -- FastAPI REST API + MCP HTTP at /mcp
 api/app.py             -- Vercel serverless wrapper
 mcp_core/
-  core/                -- config, server, CLI, utilities
-  tools/               -- generate_uml, generate_diagram_url
+  core/                -- config, server, CLI, utilities, diagram pipeline
+  tools/               -- generate_uml, generate_diagram_url, validate_uml
   prompts/             -- diagram generation prompts
   resources/           -- uml:// resource handlers
 tools/kroki/           -- Kroki, PlantUML, Mermaid, D2 clients
+ai_uml/                -- research code in the repo only; **not** shipped in the PyPI wheel (see docs/ai_uml.md)
 ```
 
 **Fallback strategy:** Kroki (primary) -> PlantUML server (UML types) / Mermaid.ink (Mermaid) -> error with details.

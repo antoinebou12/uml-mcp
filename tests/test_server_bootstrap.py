@@ -22,7 +22,7 @@ pytestmark = pytest.mark.skipif(
 )
 
 # Expected tool names from register_diagram_tools (single diagram tool)
-EXPECTED_TOOLS = ["generate_uml", "generate_diagram_url"]
+EXPECTED_TOOLS = ["generate_uml", "generate_diagram_url", "validate_uml"]
 
 # Expected resource URIs from register_diagram_resources
 EXPECTED_RESOURCES = [

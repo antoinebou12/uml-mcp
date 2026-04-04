@@ -41,6 +41,8 @@ def test_generate_diagram_success(mock_kroki_client, tmp_path):
     assert "playground" in result
     assert "local_path" in result
 
+    assert result.get("source") == "kroki"
+
     # Verify mock was called with correct params
     mock_kroki_client.generate_diagram.assert_called_once()
     args, kwargs = mock_kroki_client.generate_diagram.call_args
@@ -104,15 +106,11 @@ def test_output_directory_creation(tmp_path):
 def test_generate_diagram_readonly_filesystem_returns_url_without_local_path(
     mock_kroki_client, tmp_path
 ):
-    """When writing to output_dir raises OSError (e.g. read-only FS), still return url and playground with local_path=None."""
-    real_open = open
-
-    def open_side_effect(path, mode="r", *args, **kwargs):
-        if mode == "wb":
-            raise OSError(errno.EROFS, "Read-only file system")
-        return real_open(path, mode, *args, **kwargs)
-
-    with patch("mcp_core.core.utils.open", side_effect=open_side_effect):
+    """When Path.write_bytes raises OSError (e.g. read-only FS), still return url with local_path=None."""
+    with patch(
+        "mcp_core.core.diagram_rendering.Path.write_bytes",
+        side_effect=OSError(errno.EROFS, "Read-only file system"),
+    ):
         result = generate_diagram(
             diagram_type="class",
             code="@startuml\nclass Test\n@enduml",

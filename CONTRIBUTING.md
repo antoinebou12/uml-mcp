@@ -70,7 +70,7 @@ uv run pytest
 With coverage:
 
 ```bash
-uv run pytest --cov=mcp_core --cov=kroki --cov-report=term-missing
+uv run pytest --cov=mcp_core --cov=tools --cov-report=term-missing
 ```
 
 ### Linting and formatting

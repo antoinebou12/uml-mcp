@@ -74,34 +74,40 @@ def uml_diagram_prompt(context: Optional[Dict[str, Any]] = None) -> str:
     """
     context = context or {}
 
-    # Generate base prompt (AIPRM-style: role, hint lists, diagram instruction)
-    # Workflow: plan first (type, elements, relationships), then output code and call generate_uml.
-    prompt = """You are a software engineer. Output the diagram code in a code block.
+    # Plan → code → tool call; Kroki renders by backend (plantuml / mermaid / d2 / …).
+    prompt = """You are a software engineer and expert in UML and diagram notation.
 
-[DIAGRAM TYPE] — Sequence, Use Case, Class, Activity, Component, State, Object, Deployment, Mermaid, D2, Graphviz, ERD, BPMN, C4.
-[ELEMENT TYPE] — Actors, Messages, Objects, Classes, Interfaces, Components, States, Nodes, Edges, Links, Frames, Constraints, Entities, Relationships, Tasks, Events, Modules.
-[PURPOSE] — Communication, Planning, Design, Analysis, Modeling, Documentation, Implementation, Testing, Debugging.
-[DIAGRAMMING TOOL] — PlantUML, Mermaid, D2 (Kroki for rendering).
+Before writing code:
+- Read the **uml://types** resource for valid `diagram_type` values and each type's Kroki backend (e.g. class/sequence → PlantUML family → backend `plantuml`; `mermaid` → `mermaid`; `d2` → `d2`). Your source syntax must match that backend.
+- Read **uml://formats** for allowed `output_format` values for the type you choose.
 
-Workflow (plan then generate):
-1. Plan first: Decide [DIAGRAM TYPE], [PURPOSE], and [DIAGRAMMING TOOL]. Identify key [ELEMENT TYPE], relationships, and constraints. For complex or ambiguous requests, briefly state your choices before writing code.
-2. Then output the full PlantUML (or Mermaid/D2) code and call generate_uml with the chosen diagram_type and the final code.
+Rendering is Kroki-first (server-side). Fallbacks exist only for some backends; correct syntax avoids HTTP 400s.
 
-You are an expert in UML diagrams. Create a UML diagram based on the description.
+Tool choice:
+- **generate_diagram_url** — URL and optional base64 only; no file write (serverless, read-only environments).
+- **generate_uml** — same rendering; pass `output_dir` only when you should save a file locally.
 
-Follow these guidelines:
-1. Use proper UML notation and syntax
-2. Include all necessary elements mentioned in the description
-3. Organize the diagram to be readable and clear
-4. Add appropriate relationships between elements
+Workflow:
+1. Plan: diagram type, notation (PlantUML / Mermaid / D2), elements, relationships. For ambiguous requests, state your choices briefly.
+2. Output complete diagram source in a fenced code block for the human reader.
+3. Call the tool with the **raw diagram string** as `code` (no markdown fences inside the argument — only the source text).
 
-Provide the diagram code that can be directly used to generate the UML diagram, then call generate_uml.
+Syntax guardrails:
+- **PlantUML**: include `@startuml` … `@enduml` in examples (the server may wrap minimal input, but full delimiters reduce Kroki errors). Use `!theme` only when appropriate for PlantUML types.
+- **Mermaid**: valid `graph` / `flowchart` / `sequenceDiagram` / etc. syntax for your diagram.
+- **D2**: valid D2 text for the chosen structure.
+
+Quality: proper notation, all requested elements, readable layout, correct relationships.
+
 """
 
     # Add diagram type specific instructions if provided in context
     if "diagram_type" in context:
         diagram_type = context["diagram_type"]
-        prompt += f"\nThis should be a {diagram_type} diagram.\n"
+        prompt += (
+            f"\nTarget: a {diagram_type} diagram. When calling generate_diagram_url or "
+            f'generate_uml, set diagram_type to "{diagram_type}" exactly.\n'
+        )
 
     return prompt
 
@@ -109,13 +115,13 @@ Provide the diagram code that can be directly used to generate the UML diagram, 
 # UML diagram with explicit planning step (alias for plan-then-generate workflow)
 @mcp_prompt(
     "uml_diagram_with_thinking",
-    description="Generate UML diagram with an explicit plan-then-generate workflow. Plan diagram type, elements, and relationships first, then output code and call generate_uml.",
+    description="Generate UML diagram with an explicit plan-then-generate workflow. Plan first, then output code and call generate_diagram_url or generate_uml as appropriate.",
     category="uml",
 )
 def uml_diagram_with_thinking_prompt(context: Optional[Dict[str, Any]] = None) -> str:
     """
     Prompt for generating UML diagrams with plan-then-generate. Same workflow as
-    uml_diagram (plan first, then generate code and call generate_uml).
+    uml_diagram (plan first, then code and generate_diagram_url / generate_uml).
     """
     return uml_diagram_prompt(context)
 
@@ -171,7 +177,9 @@ User "1" -- "*" Account : has >
 @enduml
 ```
 
-Provide the complete PlantUML code for the class diagram:
+Provide the complete PlantUML code for the class diagram.
+
+When calling **generate_uml** or **generate_diagram_url**, use `diagram_type` **class**.
 """
 
     return prompt
@@ -231,7 +239,9 @@ deactivate Browser
 @enduml
 ```
 
-Provide the complete PlantUML code for the sequence diagram:
+Provide the complete PlantUML code for the sequence diagram.
+
+When calling **generate_uml** or **generate_diagram_url**, use `diagram_type` **sequence**.
 """
 
     return prompt
@@ -289,7 +299,9 @@ stop
 @enduml
 ```
 
-Provide the complete PlantUML code for the activity diagram:
+Provide the complete PlantUML code for the activity diagram.
+
+When calling **generate_uml** or **generate_diagram_url**, use `diagram_type` **activity**.
 """
 
     return prompt
@@ -349,7 +361,9 @@ rectangle "Online Shopping System" {
 @enduml
 ```
 
-Provide the complete PlantUML code for the use case diagram:
+Provide the complete PlantUML code for the use case diagram.
+
+When calling **generate_uml** or **generate_diagram_url**, use `diagram_type` **usecase**.
 """
 
     return prompt
@@ -380,7 +394,7 @@ Syntax tips:
 - Use ->> for request and -->> for response; + / - for activation if desired.
 - Wrap conditional responses in alt ... else ... end.
 
-Put the diagram in a single mermaid code block. After producing the diagram, call generate_uml with diagram_type "mermaid" and the code as the code argument.
+Put the diagram in a single mermaid code block. Then call **generate_uml** or **generate_diagram_url** with `diagram_type` **mermaid** and pass the raw Mermaid source as `code` (no markdown fences inside the tool argument). Prefer **generate_diagram_url** when no file should be written.
 """
 
 
@@ -411,7 +425,7 @@ gantt
     Task A1    :a1, 2024-01-01, 7d
     Task A2    :a2, after a1, 5d
 
-Put the diagram in a single mermaid code block. After producing the diagram, call generate_uml with diagram_type "mermaid" and the code as the code argument.
+Put the diagram in a single mermaid code block. Then call **generate_uml** or **generate_diagram_url** with `diagram_type` **mermaid** and the raw source as `code`. Prefer **generate_diagram_url** when no file should be written.
 """
 
 
@@ -476,7 +490,7 @@ Steps:
    - Dependency: ClassA ..> ClassB
 4. Output a single Mermaid code block starting with classDiagram and containing all classes and relationships.
 
-After producing the Mermaid code, call generate_uml with diagram_type "mermaid" and the code as the code argument.
+After producing the Mermaid code, call **generate_uml** or **generate_diagram_url** with `diagram_type` **mermaid** and the raw source as `code`. Prefer **generate_diagram_url** when no file should be written.
 """
 
 

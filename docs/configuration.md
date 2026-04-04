@@ -69,7 +69,7 @@ Copy the relevant `mcpServers` block into your client’s config file and replac
 
 ### Custom Templates
 
-You can customize diagram templates by modifying the templates in the `kroki/kroki_templates.py` file.
+You can customize diagram templates by modifying the templates in the `tools/kroki/kroki_templates.py` file.
 
 ### Output Formats
 

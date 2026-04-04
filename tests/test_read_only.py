@@ -50,6 +50,7 @@ class TestReadOnlyMode:
 
             assert "generate_uml" not in registered
             assert "generate_diagram_url" in registered
+            assert "validate_uml" in registered
         finally:
             config.MCP_SETTINGS.read_only = original_read_only
 
@@ -69,6 +70,7 @@ class TestReadOnlyMode:
 
             assert "generate_uml" in registered
             assert "generate_diagram_url" in registered
+            assert "validate_uml" in registered
         finally:
             config.MCP_SETTINGS.read_only = original_read_only
 
@@ -103,6 +105,35 @@ class TestReadOnlyMode:
             config.MCP_SETTINGS.read_only = original_read_only
             set_diagram_generator(None)
 
+    def test_memory_only_forces_no_file_write(self, tmp_path):
+        """When memory_only is True, generate_diagram() must not write files even if output_dir is given."""
+        from mcp_core.core import config
+        from mcp_core.core.utils import generate_diagram, set_diagram_generator
+
+        output_dir = str(tmp_path / "diagrams")
+        captured: dict = {}
+
+        def fake_generator(
+            diagram_type, code, output_format, output_dir_arg, theme, scale
+        ):
+            captured["output_dir"] = output_dir_arg
+            return {
+                "code": code,
+                "url": "https://example.com/diagram.svg",
+                "playground": None,
+                "local_path": None,
+            }
+
+        original = config.MCP_SETTINGS.memory_only
+        set_diagram_generator(fake_generator)
+        try:
+            config.MCP_SETTINGS.memory_only = True
+            generate_diagram("class", "@startuml\nclass A\n@enduml", "svg", output_dir)
+            assert captured["output_dir"] is None
+        finally:
+            config.MCP_SETTINGS.memory_only = original
+            set_diagram_generator(None)
+
     def test_config_read_only_from_env(self):
         """MCP_READ_ONLY env var is correctly parsed into MCPSettings.read_only."""
         from mcp_core.core.config import MCPSettings
@@ -120,3 +151,14 @@ class TestReadOnlyMode:
                 assert settings.read_only is False, (
                     f"Expected False for MCP_READ_ONLY={falsy!r}"
                 )
+
+    def test_memory_only_true_when_vercel_unless_disabled(self):
+        from mcp_core.core.config import DIAGRAM_TYPES, MCPSettings
+
+        with patch.dict(os.environ, {"VERCEL": "1", "MCP_MEMORY_ONLY": ""}):
+            s = MCPSettings(diagram_types=DIAGRAM_TYPES)
+            assert s.memory_only is True
+
+        with patch.dict(os.environ, {"VERCEL": "1", "MCP_MEMORY_ONLY": "false"}):
+            s = MCPSettings(diagram_types=DIAGRAM_TYPES)
+            assert s.memory_only is False

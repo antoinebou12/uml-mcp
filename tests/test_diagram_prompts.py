@@ -27,6 +27,12 @@ class TestUmlDiagramPrompt:
         result = uml_diagram_prompt(context={})
         assert "UML" in result
         assert "notation" in result or "syntax" in result or "diagram" in result
+        assert "uml://types" in result
+        assert "generate_diagram_url" in result
+        assert "uml://types" in result
+        assert "uml://formats" in result
+        assert "generate_diagram_url" in result
+        assert "generate_uml" in result
 
     def test_with_diagram_type_in_context(self):
         """uml_diagram_prompt adds diagram type when provided in context."""
@@ -44,6 +50,7 @@ class TestClassDiagramPrompt:
         assert isinstance(result, str)
         assert "class" in result.lower()
         assert "PlantUML" in result or "@startuml" in result
+        assert "`diagram_type` **class**" in result
 
     def test_includes_visibility_and_relationships(self):
         """class_diagram_prompt mentions visibility and relationships."""
@@ -65,6 +72,7 @@ class TestSequenceDiagramPrompt:
         assert isinstance(result, str)
         assert "sequence" in result.lower()
         assert "participant" in result or "PlantUML" in result or "@startuml" in result
+        assert "`diagram_type` **sequence**" in result
 
 
 class TestRegisterDiagramPrompts:

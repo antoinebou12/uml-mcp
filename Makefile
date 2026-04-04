@@ -49,13 +49,13 @@ typecheck:
 	uv run ty check
 
 coverage:
-	uv run pytest --cov=mcp_core --cov=kroki --cov-report=term --cov-report=html
+	uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html
 
 # Same steps as .github/workflows/ci.yml (test job) for local/act runs
 ci: install-dev
 	uv run ruff check .
 	uv run ruff format --check .
-	uv run pytest --cov=mcp_core --cov=kroki --cov-report=term --cov-report=html
+	uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html
 
 # Documentation (MkDocs)
 docs: install-dev

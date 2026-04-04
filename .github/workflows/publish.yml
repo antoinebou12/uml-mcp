@@ -5,11 +5,10 @@ on:
     branches: [main]
     paths:
       - "mcp_core/**"
-      - "kroki/**"
-      - "mermaid/**"
-      - "plantuml/**"
-      - "D2/**"
+      - "tools/**"
       - "ai_uml/**"
+      - "app.py"
+      - "api/**"
       - "server.py"
       - "smithery.yaml"
       - "Dockerfile"
@@ -59,7 +58,7 @@ jobs:
 
       - name: Validate Python package structure
         run: |
-          for dir in mcp_core kroki mermaid plantuml D2 ai_uml; do
+          for dir in mcp_core tools ai_uml; do
             if [ -d "$dir" ] && [ ! -f "$dir/__init__.py" ]; then
               echo "Creating missing __init__.py in $dir"
               touch "$dir/__init__.py"

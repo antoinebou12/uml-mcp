@@ -7,6 +7,7 @@ import json
 import logging
 import os
 import warnings
+from pathlib import Path
 from typing import Any, Optional, cast
 
 from fastapi import FastAPI, HTTPException, Request
@@ -198,12 +199,12 @@ async def generate_diagram_endpoint(request: DiagramRequest):
             if "@startuml" in code and "!theme" not in code:
                 code = code.replace("@startuml", f"@startuml\n!theme {request.theme}")
 
-        # Create output directory if it doesn't exist
-        if MCP_SETTINGS.read_only:
+        # No disk writes in read-only or memory-only mode (default on Vercel via memory_only).
+        if MCP_SETTINGS.read_only or MCP_SETTINGS.memory_only:
             output_dir = None
         else:
-            output_dir = os.environ.get("VERCEL_OUTPUT_DIR", "/tmp/diagrams")
-            os.makedirs(output_dir, exist_ok=True)
+            output_dir = MCP_SETTINGS.output_dir
+            Path(output_dir).mkdir(parents=True, exist_ok=True)
 
         # Generate the diagram
         result = generate_diagram(

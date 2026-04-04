@@ -72,6 +72,8 @@ def test_fallback_plantuml_success(
     assert "url" in result
     assert "local_path" in result
     assert result["url"] is not None
+    assert result.get("fallback_used") is True
+    assert result.get("attempts")
 
     # Verify Kroki was attempted first
     mock_kroki_failure.generate_diagram.assert_called_once()
@@ -92,6 +94,7 @@ def test_fallback_mermaid_success(mock_kroki_failure, mock_mermaid_fallback, tmp
     assert "local_path" in result
     assert result["url"] is not None
     assert "mermaid.ink" in result["url"]
+    assert result.get("fallback_used") is True
 
     # Verify Kroki was attempted first
     mock_kroki_failure.generate_diagram.assert_called_once()
@@ -111,6 +114,8 @@ def test_fallback_no_fallback_available(mock_kroki_failure, tmp_path):
     assert "error" in result
     assert result["error"] is not None
     assert "Primary (Kroki) failed" in result["error"]
+    assert result.get("fallback_used") is False
+    assert any(a.get("backend") == "none" for a in (result.get("attempts") or []))
 
     # Verify Kroki was attempted
     mock_kroki_failure.generate_diagram.assert_called_once()
@@ -128,7 +133,7 @@ def test_fallback_not_triggered_on_success(tmp_path):
     with (
         patch("mcp_core.core.utils.get_kroki_client", return_value=mock_client),
         patch(
-            "mcp_core.core.utils._generate_diagram_plantuml_fallback"
+            "mcp_core.core.diagram_rendering._generate_diagram_plantuml_fallback"
         ) as mock_fallback,
     ):
         result = generate_diagram(
@@ -140,6 +145,8 @@ def test_fallback_not_triggered_on_success(tmp_path):
 
         # Verify Kroki succeeded
         assert result["url"] == "https://kroki.io/plantuml/svg/test_url"
+        assert result.get("fallback_used") is False
+        assert result.get("attempts") == [{"backend": "kroki", "ok": True}]
 
         # Verify fallback was NOT called
         mock_fallback.assert_not_called()
@@ -166,6 +173,8 @@ def test_kroki_http_error_triggers_fallback(mock_plantuml_fallback, tmp_path):
         # Verify that we got a result (fallback succeeded)
         assert "url" in result
         assert result["url"] is not None
+
+        assert result.get("fallback_used") is True
 
         # Verify Kroki was attempted
         mock_client.generate_diagram.assert_called_once()

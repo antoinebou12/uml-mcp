@@ -21,6 +21,15 @@ def _testing_env(monkeypatch):
     monkeypatch.setenv("TESTING", "1")
 
 
+@pytest.fixture(autouse=True)
+def _clear_diagram_render_cache():
+    """Isolate diagram LRU cache between tests (avoids mock bleed-through)."""
+    from mcp_core.core import diagram_rendering
+
+    diagram_rendering._render_cache.clear()
+    yield
+
+
 @pytest.fixture
 def reset_mcp_server_singleton():
     """Reset the MCP server singleton so create_mcp_server() runs fresh."""

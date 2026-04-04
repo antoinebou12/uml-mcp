@@ -16,6 +16,26 @@ from mcp_core.tools.diagram_tools import (
 class TestDiagramTools:
     """Test suite for diagram tools functionality"""
 
+    def test_generate_uml_rejects_output_dir_when_read_only(self):
+        """MCP_READ_ONLY must reject output_dir at validation time."""
+        from mcp_core.core import config
+
+        original = config.MCP_SETTINGS.read_only
+        config.MCP_SETTINGS.read_only = True
+        try:
+            result = generate_uml(
+                diagram_type="class",
+                code="@startuml\nclass A\n@enduml",
+                output_dir="/tmp/out",
+            )
+            assert "error" in result
+            assert (
+                "read_only" in result["error"].lower()
+                or "mcp_read_only" in result["error"].lower()
+            )
+        finally:
+            config.MCP_SETTINGS.read_only = original
+
     @pytest.fixture
     def mock_mcp_server(self):
         """Fixture to create a mock MCP server"""
@@ -27,7 +47,7 @@ class TestDiagramTools:
         """Test that diagram tools are registered correctly (generate_uml and generate_diagram_url)."""
         register_diagram_tools(mock_mcp_server)
 
-        expected_tools = ["generate_uml", "generate_diagram_url"]
+        expected_tools = ["generate_uml", "generate_diagram_url", "validate_uml"]
 
         for tool_name in expected_tools:
             matching_calls = [
@@ -40,7 +60,7 @@ class TestDiagramTools:
 
         assert mock_mcp_server.tool.call_count == len(expected_tools)
 
-    @patch("mcp_core.tools.diagram_tools.generate_diagram")
+    @patch("mcp_core.core.diagram_service.generate_diagram")
     def test_generate_uml_tool_returns_structure(self, mock_generate_diagram):
         """Test that generate_uml tool returns url, code, playground, and optional local_path."""
         mock_generate_diagram.return_value = {
@@ -62,7 +82,7 @@ class TestDiagramTools:
             "class", "@startuml\nclass Test\n@enduml", "svg", "/tmp/out", None, 1.0
         )
 
-    @patch("mcp_core.tools.diagram_tools.generate_diagram")
+    @patch("mcp_core.core.diagram_service.generate_diagram")
     def test_generate_uml_unsupported_diagram_type_returns_error(
         self, mock_generate_diagram
     ):
@@ -76,7 +96,7 @@ class TestDiagramTools:
         assert "invalid_type" in result["error"]
         mock_generate_diagram.assert_not_called()
 
-    @patch("mcp_core.tools.diagram_tools.generate_diagram")
+    @patch("mcp_core.core.diagram_service.generate_diagram")
     def test_generate_uml_with_different_types(self, mock_generate_diagram):
         """generate_uml accepts all diagram types via diagram_type argument."""
         mock_generate_diagram.return_value = {
@@ -96,7 +116,7 @@ class TestDiagramTools:
             call_args = mock_generate_diagram.call_args[0]
             assert call_args[0] == diagram_type
 
-    @patch("mcp_core.tools.diagram_tools.generate_diagram")
+    @patch("mcp_core.core.diagram_service.generate_diagram")
     def test_generate_diagram_url_returns_url_and_base64_no_file(
         self, mock_generate_diagram
     ):
@@ -123,7 +143,7 @@ class TestDiagramTools:
         assert args[2] == "svg"  # output_format
         assert args[3] is None  # output_dir
 
-    @patch("mcp_core.tools.diagram_tools.generate_diagram")
+    @patch("mcp_core.core.diagram_service.generate_diagram")
     def test_generate_diagram_url_validation_error_unsupported_format(
         self, mock_generate_diagram
     ):
@@ -140,7 +160,7 @@ class TestDiagramTools:
         )
         mock_generate_diagram.assert_not_called()
 
-    @patch("mcp_core.tools.diagram_tools.generate_diagram")
+    @patch("mcp_core.core.diagram_service.generate_diagram")
     def test_generate_uml_accepts_jpeg_for_graphviz(self, mock_generate_diagram):
         """generate_uml accepts output_format jpeg for diagram types that support it (e.g. graphviz)."""
         mock_generate_diagram.return_value = {

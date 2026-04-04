@@ -32,7 +32,7 @@ Commands that already use `uv run` (e.g. `uv run pytest`) do not need changing.
 
 ## Project Structure and pyproject.toml
 
-- **Layout**: Prefer a `src/` layout (package under `src/<package_name>/`). This project uses top-level packages (`mcp_core`, `kroki`, `plantuml`, etc.); when adding new packages, keep them at repo root or under a clear namespace.
+- **Layout**: Prefer a `src/` layout (package under `src/<package_name>/`). This project uses top-level packages (`mcp_core`, `tools`, `ai_uml`); when adding new packages, keep them at repo root or under a clear namespace.
 - **Config**: Single `pyproject.toml` at repo root.
 - **Python**: Prefer Python 3.11+ in `[project]` for new projects; this repo uses 3.10+.
 - **Dependency groups** (PEP 735): Put dev/test/lint deps in dependency groups where the tool supports them.
@@ -65,7 +65,7 @@ Run: `uv run ty check`
 Run:
 
 - `uv run pytest`
-- `uv run pytest --cov=mcp_core --cov-report=term-missing`
+- `uv run pytest --cov=mcp_core --cov=tools --cov-report=term-missing`
 - `uv run pytest -v tests/`
 
 **Good practices:**
