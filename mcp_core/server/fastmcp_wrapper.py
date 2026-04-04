@@ -6,7 +6,7 @@ import json
 import logging
 import os
 import sys
-from typing import Any, Callable, Dict
+from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ if use_mock:
 
             return decorator
 
-        def prompt(self, prompt_name: str = None):
+        def prompt(self, prompt_name: Optional[str] = None):
             def decorator(func: Callable) -> Callable:
                 name = prompt_name or func.__name__
                 self._prompts[name] = func
@@ -109,7 +109,7 @@ if use_mock:
 
             return decorator
 
-        def run(self, transport: str = "stdio", host: str = None, port: int = None):
+        def run(self, transport: str = "stdio", host: Optional[str] = None, port: Optional[int] = None):
             if transport == "stdio":
                 self._run_stdio()
             elif transport == "http":

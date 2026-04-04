@@ -77,6 +77,9 @@ exclude = [".venv", "build", "dist", "ai_uml"]
 [tool.ruff.format]
 quote-style = "double"
 
+[tool.ty]
+exclude = ["ai_uml/", "scripts/", "examples/"]
+
 [tool.coverage.run]
 source = ["mcp_core", "tools"]
 omit = ["tests/*", "*/__init__.py"]

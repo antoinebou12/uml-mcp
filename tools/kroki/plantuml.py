@@ -6,7 +6,7 @@ PlantUML markup into PNG images.
 """
 
 import logging
-from typing import Tuple
+from typing import Dict, Optional, Tuple
 from zlib import compress
 
 import httpx
@@ -40,10 +40,10 @@ class PlantUML:
     def __init__(
         self,
         url: str,
-        basic_auth: dict = None,
-        form_auth: dict = None,
-        http_opts: dict = None,
-        request_opts: dict = None,
+        basic_auth: Optional[Dict] = None,
+        form_auth: Optional[Dict] = None,
+        http_opts: Optional[Dict] = None,
+        request_opts: Optional[Dict] = None,
     ) -> None:
         """Initialize the PlantUML client.
 
