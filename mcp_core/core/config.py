@@ -41,6 +41,10 @@ class MCPSettings(BaseModel):
     server_name: str = "uml_mcp"  # MCP naming: {service}_mcp (protocol)
     display_name: str = "UML Diagram Generator"  # Human-readable for UI
     version: str = "1.2.0"
+    read_only: bool = Field(
+        default_factory=lambda: os.environ.get("MCP_READ_ONLY", "false").lower()
+        in ("true", "1", "yes")
+    )
     description: str = "Generate UML and other diagrams through MCP"
     config_schema_url: str = (
         ""  # Optional URL for session config schema (improves Configuration UX score)
