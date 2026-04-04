@@ -7,7 +7,7 @@ import json
 import logging
 import os
 import warnings
-from typing import Optional
+from typing import Any, Optional, cast
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -86,16 +86,16 @@ class _MCPAcceptHeaderMiddleware:
         await self.app(scope, receive, send)
 
 
-# Configure CORS
-app.add_middleware(  # ty: ignore[invalid-argument-type]
-    CORSMiddleware,
+# Configure CORS (cast: Starlette stubs expect a factory type; classes work at runtime)
+app.add_middleware(
+    cast(Any, CORSMiddleware),
     allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 # Run first (outermost): normalize Accept for /mcp so MCP Streamable HTTP accepts the request.
-app.add_middleware(_MCPAcceptHeaderMiddleware)  # ty: ignore[invalid-argument-type]
+app.add_middleware(cast(Any, _MCPAcceptHeaderMiddleware))
 
 # Import local modules
 try:
