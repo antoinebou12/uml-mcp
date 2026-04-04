@@ -74,15 +74,7 @@ reserved_keywords = set(
     | reserved_keyword_holders
 )
 
-# Build the compression dictionary
-compression_dict = "-><--<->"
-for keyword in sorted(reserved_keywords):
-    compression_dict += keyword
-
-# -><--<->3danimatedboldborder-radiusbottomclassclassesconstraintdescdirectiondouble-borderfillfill-patternfilledfontfont-colorfont-sizegrid-columnsgrid-gapgrid-rowsheighthorizontal-gapiconitaliclabellayersleftlinevarslinkmultiplenearopacityrightscenariosshadowshapesource-arrowheadstepsstrokestroke-dashstroke-widthstyletarget-arrowheadtext-transformtooltiptopunderlinevertical-gapwidth
-
-print("Compression dictionary:", compression_dict)
-
+# Compression dictionary originally derived from "-><--<->" + sorted(reserved_keywords).
 compression_dict = "-><---<->3danimatedboldborder-radiusclassclassesconstraintdescdirectiondouble-borderfillfill-patternfilledfontfont-colorfont-sizegrid-columnsgrid-gapgrid-rowsheighthorizontal-gapiconitaliclabellayersleftlinkmultiplenearopacityscenariosshadowshapesource-arrowheadstepsstrokestroke-dashstroke-widthstyletarget-arrowheadtext-transformtooltiptopunderlinevarsvertical-gapwidth"
 
 
