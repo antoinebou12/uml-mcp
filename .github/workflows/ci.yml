@@ -100,6 +100,32 @@ jobs:
           uv build
           ls -la dist/
 
+      - name: Assert wheel excludes ai_uml
+        run: |
+          python - <<'PY'
+          import glob
+          import sys
+          import zipfile
+
+          for whl in glob.glob("dist/*.whl"):
+              with zipfile.ZipFile(whl) as z:
+                  tops = {
+                      n.split("/")[0]
+                      for n in z.namelist()
+                      if n and not n.endswith("/")
+                  }
+              if "ai_uml" in tops:
+                  print(f"FAIL: {whl} must not ship ai_uml", file=sys.stderr)
+                  sys.exit(1)
+              if "mcp_core" not in tops:
+                  print(f"FAIL: {whl} must include mcp_core", file=sys.stderr)
+                  sys.exit(1)
+              if "tools" not in tops:
+                  print(f"FAIL: {whl} must include tools", file=sys.stderr)
+                  sys.exit(1)
+          print("wheel layout OK")
+          PY
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v6
         with:

@@ -162,9 +162,20 @@ MCP Streamable HTTP keeps a **long-lived GET** connection open (Server-Sent Even
 3. **Long-lived or heavy use**  
    For sessions that must stay open indefinitely (or to avoid timeouts entirely), use **Smithery-hosted** deployment (Docker) or self-host the server (e.g. Docker, a long-running process) instead of Vercel serverless.
 
+### CI or local: `pip install smithery-cli` / "No matching distribution"
+
+**Smithery does not publish a Python package on PyPI** under the name `smithery-cli`. The official CLI is **Node/npm**: [`@smithery/cli`](https://www.npmjs.com/package/@smithery/cli).
+
+**Use instead:**
+
+- One-off: `npx -y @smithery/cli <command>` (see [Smithery docs](https://smithery.ai/docs)).
+- Global: `npm install -g @smithery/cli` then run `smithery ...`.
+
+This repository’s workflow `.github/workflows/deploy.yml` uses `npx -y @smithery/cli publish ...` with **Node 20+**. If your workflow still runs `pip install smithery-cli`, remove that step, add **Node 20+** (for example `actions/setup-node`), then call the CLI via `npx` or `npm`.
+
 ### Smithery CLI: "ReferenceError: File is not defined"
 
-If `npx -y @smithery/cli deploy ...` fails with `ReferenceError: File is not defined` (in `undici`), the CLI is running on **Node.js 18**. The `File` global is only available in **Node.js 20+**.
+If `npx -y @smithery/cli` (e.g. `publish` or `deploy`) fails with `ReferenceError: File is not defined` (in `undici`), the CLI is running on **Node.js 18**. The `File` global is only available in **Node.js 20+**.
 
 **Fix (pick one):**
 

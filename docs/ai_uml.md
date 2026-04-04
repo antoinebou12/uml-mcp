@@ -1,6 +1,6 @@
 # Experimental: `ai_uml` package
 
-The `ai_uml/` directory contains **research and training code** (diagram-oriented models, evaluation utilities, and optional image-generation scripts). It is **included in the published Python package** (see `pyproject.toml`), but it is **not wired into the MCP runtime**: `mcp_core`, `server.py`, and `app.py` do not import `ai_uml`. All client-facing diagram generation goes through **`mcp_core`** and **`tools.kroki`** (Kroki, PlantUML, Mermaid, D2, etc.).
+The `ai_uml/` directory contains **research and training code** (diagram-oriented models, evaluation utilities, and optional image-generation scripts). It is **not part of the published wheel or sdist**: `[tool.poetry] packages` in `pyproject.toml` lists only `mcp_core` and `tools`. It is **not wired into the MCP runtime**: `mcp_core`, `server.py`, and `app.py` do not import `ai_uml`. All client-facing diagram generation goes through **`mcp_core`** and **`tools.kroki`** (Kroki, PlantUML, Mermaid, D2, etc.).
 
 ## What lives here
 

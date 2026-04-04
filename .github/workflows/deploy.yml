@@ -21,6 +21,15 @@ jobs:
   test-and-publish:
     runs-on: ubuntu-latest
     steps:
+      # Smithery CLI is the npm package @smithery/cli — there is no PyPI package "smithery-cli".
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
       - name: Test Vercel – health
         run: |
           curl -sf "${{ inputs.vercel_url }}/health" | jq -e '.status == "healthy"' || (echo "Health check failed" && exit 1)
