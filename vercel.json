@@ -8,16 +8,32 @@
     }
   },
   "rewrites": [
-    { "source": "/.well-known/mcp/server-card.json", "destination": "/public/.well-known/mcp/server-card.json" },
-    { "source": "/.well-known/mcp/config-schema.json", "destination": "/public/.well-known/mcp/config-schema.json" },
-    { "source": "/mcp", "destination": "/api/app" },
-    { "source": "/mcp/(.*)", "destination": "/api/app" },
-    { "source": "/(.*)", "destination": "/api/app" }
+    {
+      "source": "/.well-known/mcp/server-card.json",
+      "destination": "/public/.well-known/mcp/server-card.json"
+    },
+    {
+      "source": "/.well-known/mcp/config-schema.json",
+      "destination": "/public/.well-known/mcp/config-schema.json"
+    },
+    {
+      "source": "/mcp",
+      "destination": "/api/app"
+    },
+    {
+      "source": "/mcp/(.*)",
+      "destination": "/api/app"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/api/app"
+    }
   ],
   "env": {
     "KROKI_SERVER": "https://kroki.io",
     "VERCEL_OUTPUT_DIR": "/tmp/diagrams",
     "MCP_OUTPUT_DIR": "/tmp/diagrams",
     "FASTMCP_STATELESS_HTTP": "true"
-  }
+  },
+  "installCommand": "python -m pip install --upgrade pip && python -m pip install -r requirements.txt --no-cache-dir && python -m pip install --force-reinstall --no-cache-dir \"pydantic-core>=2.27.0,<3\" && python -c \"import pydantic_core._pydantic_core; print('pydantic_core: ok')\""
 }
