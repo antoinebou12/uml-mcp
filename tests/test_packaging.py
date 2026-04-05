@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-import tomllib
+import tomli as tomllib
 
 
 def test_poetry_packages_exclude_ai_uml() -> None:

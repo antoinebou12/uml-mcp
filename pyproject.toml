@@ -43,6 +43,7 @@ fastmcp = ">=2.3.1,<4"
 mcp = "^1.2.0"
 
 [tool.poetry.group.dev.dependencies]
+tomli = "^2.0.0"
 pytest = "^7.4.2"
 pytest-cov = "^4.1.0"
 pre-commit = "^4.0.0"
@@ -106,6 +107,7 @@ exclude_lines = [
 
 [dependency-groups]
 dev = [
+    "tomli>=2.0.0",
     "pre-commit>=4.5.1",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",

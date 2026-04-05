@@ -1,7 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "pip install -r requirements.txt && python scripts/generate_server_card.py",
-  "installCommand": "pip install --upgrade pip",
+  "buildCommand": "python scripts/generate_server_card.py",
   "framework": null,
   "functions": {
     "api/app.py": {
