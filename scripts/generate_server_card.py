@@ -9,6 +9,11 @@ import json
 import os
 import sys
 
+# Vercel build uses this script in a separate process from serverless runtime.
+# Use mock FastMCP here so we only need the @mcp_tool registry (no real fastmcp import).
+# That avoids failures when fastmcp is missing or incompatible with the builder Python (e.g. 3.14).
+os.environ["MOCK_FASTMCP"] = "true"
+
 # Ensure project root is on path (append so venv site-packages take precedence)
 repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if repo_root not in sys.path:

@@ -12,7 +12,7 @@
         "properties": {
           "diagram_type": {
             "type": "string",
-            "description": "Type of diagram (e.g. class, sequence, activity, mermaid, d2)"
+            "description": "Type of diagram (e.g. class, sequence, activity, mermaid, d2). See uml://types."
           },
           "code": {
             "type": "string",
@@ -24,11 +24,15 @@
           },
           "output_format": {
             "type": "string",
-            "description": "Output format: svg, png, or pdf"
+            "description": "Output format: svg, png, pdf, jpeg, txt, or base64 (per diagram type; see uml://formats)"
           },
           "theme": {
             "type": "string",
             "description": "PlantUML theme (only for PlantUML diagram types)"
+          },
+          "scale": {
+            "type": "string",
+            "description": "Scale factor for SVG output (e.g. 2.0 doubles size). Only applied when output_format is svg."
           }
         },
         "required": [
@@ -41,6 +45,76 @@
         "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": true
+      }
+    },
+    {
+      "name": "generate_diagram_url",
+      "description": "Get the Kroki URL (and optional base64 image) for a diagram without saving to disk.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "diagram_type": {
+            "type": "string",
+            "description": "Diagram Type"
+          },
+          "code": {
+            "type": "string",
+            "description": "Code"
+          },
+          "output_format": {
+            "type": "string",
+            "description": "Output Format"
+          },
+          "theme": {
+            "type": "string",
+            "description": "Theme"
+          },
+          "scale": {
+            "type": "string",
+            "description": "Scale"
+          }
+        },
+        "required": [
+          "diagram_type",
+          "code"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
+      "name": "validate_uml",
+      "description": "Validate diagram type, format, code length, and basic syntax locally before render (no Kroki call). Returns errors and suggestions.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "diagram_type": {
+            "type": "string",
+            "description": "Diagram Type"
+          },
+          "code": {
+            "type": "string",
+            "description": "Code"
+          },
+          "output_format": {
+            "type": "string",
+            "description": "Output Format"
+          }
+        },
+        "required": [
+          "diagram_type",
+          "code"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
       }
     }
   ],
@@ -64,6 +138,11 @@
       "uri": "uml://formats",
       "name": "uml://formats",
       "description": "Returns supported output formats (svg, png, pdf) per diagram type. Use to choose valid output_format for generate_uml."
+    },
+    {
+      "uri": "uml://capabilities",
+      "name": "uml://capabilities",
+      "description": "Matrix of diagram_type -> backend engine and supported output_format values. Same data the server uses for validation before render."
     },
     {
       "uri": "uml://server-info",
@@ -93,7 +172,7 @@
     },
     {
       "name": "uml_diagram_with_thinking",
-      "description": "Generate UML diagram with an explicit plan-then-generate workflow. Plan diagram type, elements, and relationships first, then output code and call generate_uml."
+      "description": "Generate UML diagram with an explicit plan-then-generate workflow. Plan first, then output code and call generate_diagram_url or generate_uml as appropriate."
     },
     {
       "name": "class_diagram",
