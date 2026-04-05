@@ -33,7 +33,10 @@
     "KROKI_SERVER": "https://kroki.io",
     "VERCEL_OUTPUT_DIR": "/tmp/diagrams",
     "MCP_OUTPUT_DIR": "/tmp/diagrams",
-    "FASTMCP_STATELESS_HTTP": "true"
+    "FASTMCP_STATELESS_HTTP": "true",
+    "MCP_URL_ONLY": "true",
+    "MCP_MEMORY_ONLY": "true",
+    "MCP_DIAGRAM_CACHE_SIZE": "0"
   },
-  "installCommand": "python -m pip install --upgrade pip && python -m pip install -r requirements.txt --no-cache-dir && python -m pip install --force-reinstall --no-cache-dir \"pydantic-core>=2.27.0,<3\" && python -c \"import pydantic_core._pydantic_core; print('pydantic_core: ok')\""
+  "installCommand": "bash scripts/vercel-install.sh"
 }

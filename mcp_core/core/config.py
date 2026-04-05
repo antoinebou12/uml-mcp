@@ -39,6 +39,23 @@ def _memory_only_default() -> bool:
     return _env_bool("VERCEL", False)
 
 
+def _url_only_default() -> bool:
+    """
+    When True, diagram pipeline returns Kroki/playground URLs only: no HTTP fetch of
+    rendered bytes, no content_base64, no image bytes in the serverless function.
+
+    On Vercel (VERCEL set), defaults to True. Set MCP_URL_ONLY=false to fetch and
+    return base64 when not saving to disk. Locally, default False unless
+    MCP_URL_ONLY=true.
+    """
+    explicit = os.environ.get("MCP_URL_ONLY", "").strip().lower()
+    if explicit in ("true", "1", "yes"):
+        return True
+    if explicit in ("false", "0", "no"):
+        return False
+    return _env_bool("VERCEL", False)
+
+
 def _get_output_dir() -> str:
     """Output dir: on Vercel use writable /tmp; else MCP env or cwd/output."""
     if os.environ.get("VERCEL"):
@@ -66,6 +83,7 @@ class MCPSettings(BaseModel):
     version: str = "1.2.0"
     read_only: bool = Field(default_factory=lambda: _env_bool("MCP_READ_ONLY", False))
     memory_only: bool = Field(default_factory=_memory_only_default)
+    url_only: bool = Field(default_factory=_url_only_default)
     description: str = "Generate UML and other diagrams through MCP"
     config_schema_url: str = (
         ""  # Optional URL for session config schema (improves Configuration UX score)

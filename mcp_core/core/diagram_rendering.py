@@ -175,6 +175,15 @@ def _generate_diagram_plantuml_fallback(
     url = f"{plantuml_server}/{output_format}/~1{encoded}"
     playground = f"https://www.plantuml.com/plantuml/uml/~1{encoded}"
 
+    if MCP_SETTINGS.url_only:
+        return {
+            "code": code,
+            "url": url,
+            "playground": playground,
+            "local_path": None,
+            "source": "plantuml_server",
+        }
+
     response = httpx.get(url, timeout=_http_timeout())
     response.raise_for_status()
     content = response.content
@@ -234,6 +243,15 @@ def _generate_diagram_mermaid_fallback(
     url = urls.image_url
     playground = urls.edit_url
 
+    if MCP_SETTINGS.url_only:
+        return {
+            "code": code,
+            "url": url,
+            "playground": playground,
+            "local_path": None,
+            "source": "mermaid_ink",
+        }
+
     response = httpx.get(url, timeout=_http_timeout())
     response.raise_for_status()
     content = response.content
@@ -282,6 +300,25 @@ def try_kroki_render(
 
     try:
         logger.info("Attempting Kroki for %s diagram", ctx.diagram_type)
+        if MCP_SETTINGS.url_only:
+            kroki_url = client.get_url(
+                ctx.backend_type, ctx.prepared_code, ctx.output_format
+            )
+            playground = client.get_playground_url(
+                ctx.backend_type, ctx.prepared_code
+            )
+            out_url_only: Dict[str, Any] = {
+                "code": ctx.prepared_code,
+                "url": kroki_url,
+                "playground": playground,
+                "local_path": None,
+                "source": "kroki",
+            }
+            logger.info(
+                "URL-only Kroki for %s diagram (no image fetch)", ctx.diagram_type
+            )
+            return out_url_only, None
+
         result = client.generate_diagram(
             ctx.backend_type, ctx.prepared_code, ctx.output_format
         )
@@ -453,7 +490,7 @@ def run_diagram_pipeline(
     def elapsed_ms() -> float:
         return (time.perf_counter() - t0) * 1000
 
-    if ctx.output_dir is None:
+    if ctx.output_dir is None and not MCP_SETTINGS.url_only:
         cached = _cache_get(_cache_key(ctx))
         if cached is not None:
             logger.debug("Diagram render cache hit for %s", ctx.diagram_type)
@@ -476,7 +513,11 @@ def run_diagram_pipeline(
             cache_hit=False,
             output_format=ctx.output_format,
         )
-        if ctx.output_dir is None and not out.get("error"):
+        if (
+            ctx.output_dir is None
+            and not MCP_SETTINGS.url_only
+            and not out.get("error")
+        ):
             _cache_set(_cache_key(ctx), dict(out))
         return out
 
@@ -509,6 +550,10 @@ def run_diagram_pipeline(
         cache_hit=False,
         output_format=ctx.output_format,
     )
-    if ctx.output_dir is None and not out.get("error"):
+    if (
+        ctx.output_dir is None
+        and not MCP_SETTINGS.url_only
+        and not out.get("error")
+    ):
         _cache_set(_cache_key(ctx), dict(out))
     return out
