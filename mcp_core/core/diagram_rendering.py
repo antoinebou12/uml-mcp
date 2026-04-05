@@ -304,9 +304,7 @@ def try_kroki_render(
             kroki_url = client.get_url(
                 ctx.backend_type, ctx.prepared_code, ctx.output_format
             )
-            playground = client.get_playground_url(
-                ctx.backend_type, ctx.prepared_code
-            )
+            playground = client.get_playground_url(ctx.backend_type, ctx.prepared_code)
             out_url_only: Dict[str, Any] = {
                 "code": ctx.prepared_code,
                 "url": kroki_url,
@@ -550,10 +548,6 @@ def run_diagram_pipeline(
         cache_hit=False,
         output_format=ctx.output_format,
     )
-    if (
-        ctx.output_dir is None
-        and not MCP_SETTINGS.url_only
-        and not out.get("error")
-    ):
+    if ctx.output_dir is None and not MCP_SETTINGS.url_only and not out.get("error"):
         _cache_set(_cache_key(ctx), dict(out))
     return out

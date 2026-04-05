@@ -19,9 +19,7 @@ def _restore_url_only():
 
 
 class TestUrlOnlyMode:
-    def test_url_only_skips_generate_diagram_and_omits_base64(
-        self, _restore_url_only
-    ):
+    def test_url_only_skips_generate_diagram_and_omits_base64(self, _restore_url_only):
         mock_client = MagicMock()
         mock_client.get_url.return_value = "https://kroki.example/plantuml/svg/xx"
         mock_client.get_playground_url.return_value = (
@@ -39,9 +37,7 @@ class TestUrlOnlyMode:
             scale=1.0,
         )
 
-        with patch(
-            "mcp_core.core.utils.get_kroki_client", return_value=mock_client
-        ):
+        with patch("mcp_core.core.utils.get_kroki_client", return_value=mock_client):
             out = run_diagram_pipeline(ctx)
 
         mock_client.generate_diagram.assert_not_called()
@@ -65,9 +61,7 @@ class TestUrlOnlyMode:
             scale=1.0,
         )
 
-        with patch(
-            "mcp_core.core.utils.get_kroki_client", return_value=mock_client
-        ):
+        with patch("mcp_core.core.utils.get_kroki_client", return_value=mock_client):
             with patch("mcp_core.core.diagram_rendering.httpx.get") as mock_get:
                 out = run_diagram_pipeline(ctx)
 
