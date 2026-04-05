@@ -12,11 +12,14 @@ This guide walks you through deploying the UML-MCP server to Vercel and publishi
 ### Deploy
 
 1. **Connect the repo** in the [Vercel dashboard](https://vercel.com/new): Import your `uml-mcp` repository.
-2. **Build settings** (usually auto-detected from `vercel.json`):
-   - Framework: Other
-   - Build Command: `pip install -r requirements.txt -r requirements-dev.txt && python scripts/generate_server_card.py`
-   - Output: handled by `vercel.json`
+2. **Build settings** (match [vercel.json](../../vercel.json); clear dashboard overrides if they disagree):
+   - Framework Preset: **FastAPI** (`"framework": "fastapi"`—needed so Vercel runs the custom install inside the Python build virtualenv)
+   - Install Command: `bash scripts/vercel-install.sh` (uses `uv pip` against `requirements.txt` and verifies `pydantic_core`)
+   - Build Command: `python scripts/generate_server_card.py` (writes `public/.well-known/mcp/server-card.json` and related files)
+   - Serverless entrypoint: `api/app.py` (see `functions` in `vercel.json`); routing and output are handled by `vercel.json`
 3. **Deploy** and wait for the build to finish.
+
+**Install step fails (e.g. exit code 2):** Keep `"framework": "fastapi"` in `vercel.json` (not `null` / dashboard **Framework Preset** forced to Other without the FastAPI preset), so Vercel runs `installCommand` inside the Python build virtualenv. Do not override **Install Command** in the dashboard with a bare `pip install` that targets the system interpreter (PEP 668).
 
 Your app will be available at:
 
@@ -145,7 +148,7 @@ If you see **405 Method Not Allowed** on **POST /mcp** (e.g. “Reconnect failed
    In the app startup logs, look for either “MCP HTTP app mounted at /mcp” (success) or “MCP HTTP fallback: GET/POST /mcp return 503 (MCP HTTP transport not available).” If you see the fallback message, the MCP app failed to load. Check for any exception logged in the same block (the app logs with `exc_info=True`).
 
 3. **Dependencies**  
-   Confirm that `fastmcp` and all modules used by `get_mcp_server()` (e.g. diagram tools, resources, prompts, Kroki, PlantUML) are installed and import without error. The build runs `pip install -r requirements.txt -r requirements-dev.txt`; ensure the build completes and that `fastmcp>=2.3.1` is present.
+   Confirm that `fastmcp` and all modules used by `get_mcp_server()` (e.g. diagram tools, resources, prompts, Kroki, PlantUML) are installed and import without error. Production installs use `requirements.txt` via `installCommand` and Vercel’s Python/`uv` pipeline (`requirements-dev.txt` is for local development and CI only). Ensure the build completes and that `fastmcp>=2.3.1` is present in `requirements.txt`.
 
 **405 vs 503 fallback:** When the MCP app is not mounted, this server registers both GET and POST for `/mcp` and returns **503** with `{"detail": "MCP HTTP transport is not available."}` (and OPTIONS for CORS). So if the request reaches the FastAPI app at `/mcp`, you would see 503, not 405. A 405 usually means the request is hitting a different handler (e.g. wrong URL or a proxy that only allows GET for that path).
 
@@ -158,7 +161,7 @@ MCP Streamable HTTP keeps a **long-lived GET** connection open (Server-Sent Even
 **Mitigations:**
 
 1. **Increase max duration (Pro/Enterprise)**  
-   This repo sets `maxDuration: 800` in `vercel.json` for `app.py`. On **Pro** or **Enterprise** (with Fluid Compute), that allows the GET `/mcp` connection to stay open up to **800 seconds** (~13 minutes) instead of 300. On **Hobby**, the platform cap is 300s, so the setting has no effect beyond the default.
+   This repo sets `maxDuration: 200` in `vercel.json` under `functions["api/app.py"]`. On **Pro** or **Enterprise** (with Fluid Compute), you may raise that value (for example toward **800** seconds) so the GET `/mcp` connection can stay open longer than the default **300s** platform cap on Hobby. On **Hobby**, the cap remains 300s regardless.
 
 2. **Reconnect on timeout**  
    Clients should reconnect when the stream ends. Cursor and Smithery typically retry or allow re-adding the server; after a timeout, reconnect to `/mcp` to start a new session.
@@ -189,7 +192,7 @@ If `npx -y @smithery/cli` (e.g. `publish` or `deploy`) fails with `ReferenceErro
 ### Other issues
 
 - **405 Method Not Allowed** on the server card URL: usually fixed by ensuring the server card is served as a static asset at `/.well-known/mcp/server-card.json` so GET/HEAD return 200 (see the 404/405 section above).
-- **502 / timeout**: Vercel serverless functions have a max duration (300s default; 800s on Pro when set in `vercel.json`). The MCP GET connection is long-lived and will hit this limit; see the [timeout section](#vercel-runtime-timeout-error-task-timed-out-after-300-seconds-get-mcp) above. For very long sessions or heavy use, consider Smithery-hosted Docker.
+- **502 / timeout**: Vercel serverless functions have a max duration (300s default on Hobby; Pro/Enterprise can set a higher `maxDuration` on `api/app.py` in `vercel.json`). The MCP GET connection is long-lived and will hit this limit; see the [timeout section](#vercel-runtime-timeout-error-task-timed-out-after-300-seconds-get-mcp) above. For very long sessions or heavy use, consider Smithery-hosted Docker.
 - **MCP at /mcp**: Ensure you use the path `/mcp` (e.g. `https://...vercel.app/mcp`), not the root URL.
 - **CORS**: The app allows all origins for API and MCP; restrict in production if needed.
 - **Logo or OpenAPI YAML**: `/logo.png` is served by the app (image/x-icon). `/openapi.yaml` returns the spec in YAML when PyYAML is installed (required in `requirements.txt`); if not, it returns 501 and clients should use `/openapi.json`.
