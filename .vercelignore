@@ -24,8 +24,8 @@ CONTRIBUTING.md
 SECURITY.md
 FALLBACK_IMPLEMENTATION.md
 
-# Dev / build / tooling
-scripts/
+# Dev / build / tooling (keep scripts/generate_server_card.py for Vercel buildCommand)
+scripts/evaluation.py
 Makefile
 mkdocs.yml
 renovate.json
