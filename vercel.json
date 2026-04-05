@@ -1,21 +1,13 @@
 {
   "version": 2,
   "buildCommand": "python scripts/generate_server_card.py",
-  "framework": null,
+  "framework": "fastapi",
   "functions": {
     "api/app.py": {
       "maxDuration": 200
     }
   },
   "rewrites": [
-    {
-      "source": "/.well-known/mcp/server-card.json",
-      "destination": "/public/.well-known/mcp/server-card.json"
-    },
-    {
-      "source": "/.well-known/mcp/config-schema.json",
-      "destination": "/public/.well-known/mcp/config-schema.json"
-    },
     {
       "source": "/mcp",
       "destination": "/api/app"
@@ -25,7 +17,7 @@
       "destination": "/api/app"
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!\\.well-known).*)",
       "destination": "/api/app"
     }
   ],

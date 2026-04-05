@@ -80,6 +80,9 @@ Thumbs.db
 ehthumbs.db
 Desktop.ini
 
+# Vercel (local link; use `vercel link` — IDs are account-specific)
+.vercel/
+
 # MCP and local config
 .mcp/
 .env
