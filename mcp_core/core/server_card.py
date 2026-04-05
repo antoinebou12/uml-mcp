@@ -23,8 +23,12 @@ def _param_types_for_tool(tool_name: str):
     return {}
 
 
-def build_server_card():
-    """Build server card dict from tool and resource registries."""
+def build_server_card(*, strict: bool = False):
+    """Build server card dict from tool and resource registries.
+
+    When strict is True (e.g. Vercel static generator), failures propagate so logs
+    show the real error. When False (runtime HTTP), failures return an empty stub.
+    """
     try:
         from mcp_core.core.config import MCP_SETTINGS
         from mcp_core.prompts.diagram_prompts import get_prompt_registry
@@ -119,7 +123,11 @@ def build_server_card():
     except Exception as e:
         import logging
 
-        logging.getLogger(__name__).warning("Could not build server card: %s", e)
+        log = logging.getLogger(__name__)
+        if strict:
+            log.exception("build_server_card(strict=True) failed")
+            raise
+        log.warning("Could not build server card: %s", e)
         return {
             "serverInfo": {"name": "UML Diagram Generator", "version": "1.2.0"},
             "tools": [],

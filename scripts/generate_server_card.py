@@ -38,7 +38,7 @@ def main():
                 g.write(schema_content)
             print(f"Wrote {dest}")
 
-    card = build_server_card()
+    card = build_server_card(strict=True)
     if not card.get("tools"):
         print(
             "Skipping write: build_server_card returned no tools (missing deps?).",
