@@ -3,22 +3,22 @@
   "buildCommand": "python scripts/generate_server_card.py",
   "framework": "fastapi",
   "functions": {
-    "api/app.py": {
+    "app.py": {
       "maxDuration": 200
     }
   },
   "rewrites": [
     {
       "source": "/mcp",
-      "destination": "/api/app"
+      "destination": "/"
     },
     {
       "source": "/mcp/(.*)",
-      "destination": "/api/app"
+      "destination": "/"
     },
     {
       "source": "/((?!\\.well-known).*)",
-      "destination": "/api/app"
+      "destination": "/"
     }
   ],
   "env": {
