@@ -2,7 +2,7 @@
 # Use when USE_LOCAL_LATEX=true; Kroki remains the default (no local TeX required).
 # See docs/diagrams/tikz.md for usage.
 
-FROM python:3.11-slim
+FROM python:3.14-slim
 
 ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive \
