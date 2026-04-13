@@ -2,7 +2,7 @@
 # Default image command: FastAPI + Swagger/ReDoc + Streamable HTTP MCP at /mcp (agent-friendly).
 # Stdio MCP: docker run ... python server.py --transport stdio
 # Smithery overrides the container command with python server.py (see smithery.yaml).
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 WORKDIR /app
 
