@@ -45,7 +45,8 @@ _LIBRARY_HINTS = [
     (re.compile(r"\\draw\s*\[[^\]]*?<-"), "arrows"),
     (
         re.compile(
-            r"below\s*of\s*=|above\s*of\s*=|left\s*of\s*=|right\s*of\s*=|below\s*=\s*[^]]*\s+of\s+|above\s*=\s*[^]]*\s+of\s+"
+            r"below\s*of\s*=|above\s*of\s*=|left\s*of\s*=|right\s*of\s*=|below\s*=\s*[^]]*\s+of\s+|above\s*=\s*[^]]*\s+of\s+|"
+            r"(?:^|[,{\s\[])(?:left|right|above|below)(?:\s+(?:left|right|above|below))*=\s*of\s"
         ),
         "positioning",
     ),
@@ -79,6 +80,38 @@ _USETIKZLIBRARY_RE = re.compile(
     r"\\usetikzlibrary\s*\{([^}]+)\}",
     re.IGNORECASE | re.DOTALL,
 )
+
+# Whole-line preamble directives to hoist out of the document body (snippet mode)
+_USETIKZLIBRARY_LINE_RE = re.compile(
+    r"^\s*\\usetikzlibrary\s*\{[^}]*\}\s*$", re.IGNORECASE
+)
+_USEPACKAGE_TIKZ_LINE_RE = re.compile(
+    r"^\s*\\usepackage\s*\{\s*tikz\s*\}\s*$", re.IGNORECASE
+)
+_USEPACKAGE_PGFPLOTS_LINE_RE = re.compile(
+    r"^\s*\\usepackage\s*\{\s*pgfplots\s*\}\s*$", re.IGNORECASE
+)
+
+
+def _strip_hoistable_preamble_lines(snippet: str) -> tuple[str, bool]:
+    """Remove lines that belong in the preamble, not inside \\begin{document}.
+
+    Returns (body, stripped_usepackage_pgfplots).
+    """
+    lines = snippet.splitlines()
+    out: List[str] = []
+    stripped_pgfplots = False
+    for line in lines:
+        if (
+            _USETIKZLIBRARY_LINE_RE.match(line)
+            or _USEPACKAGE_TIKZ_LINE_RE.match(line)
+            or _USEPACKAGE_PGFPLOTS_LINE_RE.match(line)
+        ):
+            if _USEPACKAGE_PGFPLOTS_LINE_RE.match(line):
+                stripped_pgfplots = True
+            continue
+        out.append(line)
+    return "\n".join(out).strip(), stripped_pgfplots
 
 
 def get_required_libraries(tikz_code: str) -> List[str]:
@@ -138,26 +171,37 @@ def wrap_tikz_standalone(
     if "\\documentclass" in code:
         return code
 
+    original = code
+    body, stripped_pgfplots_usepackage = _strip_hoistable_preamble_lines(code)
+    if not body:
+        body = original
+        stripped_pgfplots_usepackage = False
+
     if libraries is None:
-        libraries = get_required_libraries(code)
+        libraries = list(get_required_libraries(original))
+        if stripped_pgfplots_usepackage and "pgfplots" not in libraries:
+            libraries.append("pgfplots")
+    else:
+        libraries = list(libraries)
 
     lib_line = ""
     if libraries:
         lib_line = "\\usetikzlibrary{" + ",".join(libraries) + "}\n"
 
-    extra = ""
-    if extra_packages:
-        for pkg in extra_packages:
-            extra += f"\\usepackage{{{pkg}}}\n"
+    pkgs = list(extra_packages) if extra_packages else []
 
-    # pgfplots needs to be loaded for \begin{axis}
-    if "pgfplots" in libraries and "pgfplots" not in (extra_packages or []):
+    extra = ""
+    for pkg in pkgs:
+        extra += f"\\usepackage{{{pkg}}}\n"
+
+    # pgfplots needs to be loaded for \begin{axis} (or stripped \usepackage{pgfplots})
+    if "pgfplots" in libraries and "pgfplots" not in pkgs:
         extra = "\\usepackage{pgfplots}\n\\pgfplotsset{compat=1.18}\n" + extra
 
     return f"""\\documentclass[border={border}]{{standalone}}
 \\usepackage{{tikz}}
 {extra}{lib_line}\\begin{{document}}
-{code}
+{body}
 \\end{{document}}
 """
 

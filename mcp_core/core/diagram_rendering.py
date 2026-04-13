@@ -77,7 +77,7 @@ def _cache_set(key: str, value: Dict[str, Any]) -> None:
 
 
 def prepare_diagram_code(code: str, backend_type: str, theme: Optional[str]) -> str:
-    """Strip and wrap PlantUML when needed; Mermaid/D2 pass through (with strip)."""
+    """Strip and wrap PlantUML when needed; TikZ snippets get standalone wrap; else strip only."""
     prepared_code = code.strip()
     if backend_type == "plantuml":
         if "@startuml" not in prepared_code:
@@ -88,6 +88,10 @@ def prepare_diagram_code(code: str, backend_type: str, theme: Optional[str]) -> 
             prepared_code = prepared_code.replace(
                 "@startuml", f"@startuml\n!theme {theme}"
             )
+    elif backend_type == "tikz" and "\\documentclass" not in prepared_code:
+        from tools.kroki.tikz import wrap_tikz_standalone
+
+        prepared_code = wrap_tikz_standalone(prepared_code)
     return prepared_code
 
 

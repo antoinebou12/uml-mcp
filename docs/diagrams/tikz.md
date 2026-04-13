@@ -15,6 +15,7 @@ Use `diagram_type: "tikz"` with the **`generate_uml`** tool. The `code` paramete
 The TikZ module provides a template library and auto-wrapping:
 
 - **Snippets**: If you pass only `\begin{tikzpicture}...\end{tikzpicture}`, the server wraps it in a minimal standalone LaTeX document and infers required TikZ libraries where possible.
+- **Preamble lines in snippets**: If you paste `\usetikzlibrary{...}` and/or `\usepackage{tikz}` / `\usepackage{pgfplots}` on their own lines *before* the picture (without a full document), those lines are **hoisted** into the generated preamble so they are not duplicated inside `\begin{document}` (which would break LaTeX on Kroki).
 - **Full documents**: If your `code` already contains `\documentclass`, it is sent as-is to Kroki.
 
 Templates (via `tools.kroki.tikz.TikZTemplateLibrary`) include:

@@ -88,6 +88,9 @@ def test_tikz_library_detection_hints():
     libs_pos = get_required_libraries(code_pos)
     assert "positioning" in libs_pos
 
+    code_modern_of = r"\node[right=of src] (b) {};"
+    assert "positioning" in get_required_libraries(code_modern_of)
+
     code_axis = r"\begin{axis}\addplot {x^2};\end{axis}"
     libs_axis = get_required_libraries(code_axis)
     assert "pgfplots" in libs_axis
@@ -115,6 +118,22 @@ def test_tikz_standalone_wrapping_full_document_unchanged():
     full = r"\documentclass{article}\usepackage{tikz}\begin{document}x\end{document}"
     out = wrap_tikz_standalone(full)
     assert out == full
+
+
+def test_wrap_tikz_hoists_usetikzlibrary_into_preamble():
+    """\\usetikzlibrary lines must not appear inside \\begin{document} ... \\end{document}."""
+    code = (
+        r"\usetikzlibrary{positioning,shapes}"
+        "\n"
+        r"\begin{tikzpicture}\node[draw] (a) {};\node[draw, right=of a] (b) {};\end{tikzpicture}"
+    )
+    out = wrap_tikz_standalone(code)
+    doc_i = out.index("\\begin{document}")
+    end_doc_i = out.index("\\end{document}")
+    body = out[doc_i:end_doc_i]
+    assert r"\usetikzlibrary" not in body
+    assert r"\begin{tikzpicture}" in body
+    assert r"\usetikzlibrary" in out[:doc_i]
 
 
 def test_tikz_standalone_wrapping_with_libraries():

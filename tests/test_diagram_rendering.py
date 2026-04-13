@@ -48,6 +48,20 @@ def test_prepare_diagram_code_mermaid_strip_only():
     assert out == "graph TD; A-->B;"
 
 
+def test_prepare_diagram_code_tikz_wraps_snippet():
+    snippet = r"\begin{tikzpicture}\draw (0,0)--(1,1);\end{tikzpicture}"
+    out = prepare_diagram_code(snippet, "tikz", None)
+    assert out.startswith("\\documentclass")
+    assert "\\begin{document}" in out
+    assert "\\end{document}" in out
+
+
+def test_prepare_diagram_code_tikz_full_document_unchanged():
+    full = r"\documentclass{standalone}\usepackage{tikz}\begin{document}x\end{document}"
+    out = prepare_diagram_code(full, "tikz", None)
+    assert out == full
+
+
 def test_try_kroki_render_success():
     mock_client = MagicMock()
     mock_client.generate_diagram.return_value = {
