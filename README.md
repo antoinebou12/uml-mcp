@@ -11,6 +11,10 @@ Generate UML and other diagrams from AI assistants via the [Model Context Protoc
 
 **Live:** [MCP endpoint](https://umlmcp.vercel.app/mcp) | [Add via Smithery](https://smithery.ai/server/antoinebou12/uml)
 
+
+<img width="934" height="1148" alt="image" src="https://github.com/user-attachments/assets/464b5b44-710c-4688-bfdc-432036b59cd1" />
+
+
 ## Features
 
 - **30+ diagram types** -- UML (Class, Sequence, Activity, Use Case, State, Component, Deployment, Object), Mermaid, D2, Graphviz, TikZ, ERD, BlockDiag, BPMN, C4, and more via Kroki
