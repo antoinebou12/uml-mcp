@@ -2,11 +2,6 @@
   "version": 2,
   "buildCommand": "python scripts/generate_server_card.py",
   "framework": "fastapi",
-  "functions": {
-    "api/app.py": {
-      "maxDuration": 200
-    }
-  },
   "rewrites": [
     {
       "source": "/mcp",

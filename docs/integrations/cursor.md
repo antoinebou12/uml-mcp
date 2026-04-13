@@ -12,6 +12,28 @@ Cursor can connect to the UML-MCP server through the Model Context Protocol (MCP
 
 Make sure you have the UML-MCP server properly installed and configured on your system. See the [Installation](../installation.md) guide for details.
 
+#### Add the server from the registry (Smithery CLI)
+
+If you use the [Smithery CLI](https://smithery.ai/docs/concepts/cli) (Node.js 20+), you can add the published **UML** server to Cursor without hand-editing JSON:
+
+```bash
+npm install -g @smithery/cli@latest
+smithery auth login
+smithery mcp add antoinebou12/uml --client cursor
+```
+
+Restart Cursor after the command finishes. This is the supported registry flow; some docs or clients may phrase it informally as “install MCP server uml” — the server id on Smithery is **`antoinebou12/uml`** (same project as this repo’s UML-MCP).
+
+Legacy one-liner (older CLI shape):
+
+```bash
+npx -y @smithery/cli install antoinebou12/uml --client cursor
+```
+
+#### Try a backend-to-frontend diagram
+
+After the server is connected, you can render PlantUML from the repo, for example **[`examples/backend-to-frontend.puml`](https://github.com/antoinebou12/uml-mcp/blob/main/examples/backend-to-frontend.puml)** — ask the assistant to run **`generate_uml`** with `diagram_type` **`component`** (or **`deployment`**) and the file’s source, or paste the `@startuml` … `@enduml` block into the tool.
+
 ### 2. Cursor Configuration
 
 1. Open the MCP config for Cursor (or use **Cursor Settings → MCP**):
