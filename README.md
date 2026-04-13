@@ -102,10 +102,14 @@ See [docs/integrations/vercel_smithery.md](docs/integrations/vercel_smithery.md)
 
 ### Docker
 
+The default image serves **FastAPI** on port 8000: [Swagger UI](http://127.0.0.1:8000/docs), [ReDoc](http://127.0.0.1:8000/redoc), REST endpoints, and **MCP (Streamable HTTP)** at `http://127.0.0.1:8000/mcp` (set `FASTMCP_STATELESS_HTTP=true` in the image for stateless agents).
+
 ```bash
-docker compose up -d          # full stack with Kroki + PlantUML
-# or standalone:
+docker compose up -d          # full stack with local Kroki + mermaid + blockdiag
+# or API + MCP only (uses public Kroki):
 docker build -t uml-mcp . && docker run -p 8000:8000 uml-mcp
+# stdio MCP (e.g. local Claude/Cursor subprocess):
+docker run -i uml-mcp python server.py --transport stdio
 ```
 
 ## Configuration

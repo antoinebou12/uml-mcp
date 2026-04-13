@@ -3,7 +3,7 @@
   "buildCommand": "python scripts/generate_server_card.py",
   "framework": "fastapi",
   "functions": {
-    "app.py": {
+    "api/app.py": {
       "maxDuration": 200
     }
   },
