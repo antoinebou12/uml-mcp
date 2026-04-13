@@ -84,6 +84,8 @@ Full list with supported output formats: run `python server.py --list-tools` or 
 **Resources** (via `uml://` URIs):
 `types`, `templates`, `examples`, `formats`, `capabilities`, `server-info`, `mermaid-examples`, `bpmn-guide`, `workflow`
 
+**Cursor / agent skill:** [`uml-mcp-diagrams`](.cursor/skills/uml-mcp-diagrams/SKILL.md) is duplicated under [`.skill/skills/uml-mcp-diagrams/`](.skill/skills/uml-mcp-diagrams/SKILL.md). It steers assistants to choose a valid `diagram_type` (via `uml://types` when unsure), call `generate_uml` **without** `output_dir` for URL-only renders, and reply with the Kroki **`url`**, optional **`playground`**, and the diagram source.
+
 ## Deployment
 
 ### Vercel

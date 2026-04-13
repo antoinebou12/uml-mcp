@@ -11,6 +11,8 @@ from zlib import compress
 
 import httpx
 
+from .kroki import plantuml_playground_path_segment
+
 logger = logging.getLogger(__name__)
 
 
@@ -198,7 +200,7 @@ class PlantUML:
         """
         try:
             url, content = self.process(plantuml_text)
-            encoded_part = url.split("/")[-1]
+            encoded_part = plantuml_playground_path_segment(url.split("/")[-1])
             playground = f"https://www.plantuml.com/plantuml/uml/{encoded_part}"
             return url, content, playground
         except PlantUMLHTTPError as e:

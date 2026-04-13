@@ -18,6 +18,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import httpx
 
+from tools.kroki.kroki import plantuml_playground_path_segment
+
 from .config import MCP_SETTINGS
 
 logger = logging.getLogger(__name__)
@@ -173,7 +175,10 @@ def _generate_diagram_plantuml_fallback(
     plantuml_client = PlantUML(url=plantuml_server)
     encoded = plantuml_client.deflate_and_encode(code)
     url = f"{plantuml_server}/{output_format}/{encoded}"
-    playground = f"https://www.plantuml.com/plantuml/uml/{encoded}"
+    playground = (
+        "https://www.plantuml.com/plantuml/uml/"
+        f"{plantuml_playground_path_segment(encoded)}"
+    )
 
     if MCP_SETTINGS.url_only:
         return {

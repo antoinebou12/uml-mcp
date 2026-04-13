@@ -119,6 +119,20 @@ class KrokiHTTPError(KrokiError):
         super().__init__(self.message)
 
 
+def plantuml_playground_path_segment(encoded: str) -> str:
+    """
+    Normalize the path segment after ``/plantuml/uml/`` for plantuml.com.
+
+    A leading ``~1`` marks Huffman-compressed payloads on plantuml.com
+    (https://plantuml.com/text-encoding). This codebase uses DEFLATE plus
+    PlantUML's 6-bit alphabet (no ``~1``). Strip a mistaken prefix so the
+    web editor decodes the diagram instead of showing a Huffman error.
+    """
+    if encoded.startswith("~1"):
+        return encoded[2:]
+    return encoded
+
+
 class Kroki:
     """Client for the Kroki diagram generation service.
 
@@ -202,7 +216,9 @@ class Kroki:
 
         # Different encodings for different playgrounds
         if diagram_type == "plantuml":
-            encoded = self.encode_plantuml(diagram_text)
+            encoded = plantuml_playground_path_segment(
+                self.encode_plantuml(diagram_text)
+            )
             # Standard PlantUML URL: /plantuml/uml/<encoded> (see plantuml.com/text-encoding)
             return f"{base_playground}{encoded}"
         elif diagram_type == "mermaid":

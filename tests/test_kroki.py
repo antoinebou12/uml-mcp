@@ -65,6 +65,14 @@ def test_get_url():
     assert encoded in url
 
 
+def test_plantuml_playground_path_segment_strips_erroneous_prefix():
+    """Leading ~1 is Huffman on plantuml.com; deflate payloads must not use it."""
+    from tools.kroki.kroki import plantuml_playground_path_segment
+
+    assert plantuml_playground_path_segment("~1SoWkIImg") == "SoWkIImg"
+    assert plantuml_playground_path_segment("SoWkIImg") == "SoWkIImg"
+
+
 def test_get_playground_url():
     """Test playground URL generation."""
     client = Kroki()
@@ -78,6 +86,11 @@ def test_get_playground_url():
     encoded_suffix = plantuml_url.removeprefix("https://www.plantuml.com/plantuml/uml/")
     assert encoded_suffix
     assert "~1" not in plantuml_url
+
+    with patch.object(client, "encode_plantuml", return_value="~1SoWkIImgAStD"):
+        stripped = client.get_playground_url("plantuml", "x")
+        assert stripped == "https://www.plantuml.com/plantuml/uml/SoWkIImgAStD"
+        assert "~1" not in stripped
 
     # Test Mermaid playground
     mermaid_url = client.get_playground_url("mermaid", "graph TD;\nA-->B;")
