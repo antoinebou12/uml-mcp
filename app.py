@@ -250,6 +250,10 @@ class KrokiEncodeRequest(BaseModel):
     output_format: str = Field(
         default="svg", description="Output format: svg, png, or pdf."
     )
+    theme: Optional[str] = Field(
+        default=None,
+        description="PlantUML theme (e.g. cerulean). Ignored for non-PlantUML backends.",
+    )
 
 
 @app.post("/kroki_encode")
@@ -258,6 +262,7 @@ async def kroki_encode_endpoint(request: KrokiEncodeRequest):
     try:
         from tools.kroki.kroki import Kroki
         from mcp_core.core.config import MCP_SETTINGS
+        from mcp_core.core.diagram_rendering import prepare_diagram_code
     except ImportError as e:
         logger.warning("kroki_encode dependencies unavailable: %s", e)
         raise HTTPException(
@@ -278,13 +283,8 @@ async def kroki_encode_endpoint(request: KrokiEncodeRequest):
             detail=f"Format {request.output_format} not supported for {diagram_type}. Supported: {diagram_config.formats}",
         )
 
-    code = request.code.strip()
     backend = diagram_config.backend
-    if backend == "plantuml":
-        if "@startuml" not in code:
-            code = f"@startuml\n{code}"
-        if "@enduml" not in code:
-            code = f"{code}\n@enduml"
+    code = prepare_diagram_code(request.code.strip(), backend, request.theme)
 
     kroki = Kroki(base_url=os.environ.get("KROKI_SERVER", "https://kroki.io"))
     url = kroki.get_url(backend, code, request.output_format)

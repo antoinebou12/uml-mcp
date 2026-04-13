@@ -91,6 +91,12 @@ def test_tikz_library_detection_hints():
     code_modern_of = r"\node[right=of src] (b) {};"
     assert "positioning" in get_required_libraries(code_modern_of)
 
+    code_right_dist_of = r"\node[right=2cm of a] (b) {};"
+    assert "positioning" in get_required_libraries(code_right_dist_of)
+
+    code_left_dist_of = r"\node[left=1.5cm of b] (c) {};"
+    assert "positioning" in get_required_libraries(code_left_dist_of)
+
     code_axis = r"\begin{axis}\addplot {x^2};\end{axis}"
     libs_axis = get_required_libraries(code_axis)
     assert "pgfplots" in libs_axis

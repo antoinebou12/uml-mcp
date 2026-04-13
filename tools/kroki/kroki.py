@@ -209,6 +209,18 @@ class Kroki:
         Returns:
             A URL to an online playground or None if not available
         """
+        if diagram_type == "tikz":
+            from .tikz import generate_tikz_urls
+
+            urls = generate_tikz_urls(
+                diagram_text,
+                output_format="svg",
+                base_url=self.base_url,
+                wrap_standalone=True,
+                include_edit_url=True,
+            )
+            return urls.edit_url
+
         if diagram_type not in self.DIAGRAM_PLAYGROUNDS:
             return None
 

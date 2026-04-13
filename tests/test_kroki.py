@@ -97,6 +97,14 @@ def test_get_playground_url():
     assert mermaid_url is not None
     assert mermaid_url.startswith("https://mermaid.live/edit#")
 
+    # TikZ: Overleaf snip link (Kroki renders tikz; editor is external)
+    tikz_url = client.get_playground_url(
+        "tikz", r"\begin{tikzpicture}\draw (0,0) circle (0.5);\end{tikzpicture}"
+    )
+    assert tikz_url is not None
+    assert "overleaf.com" in tikz_url.lower()
+    assert "snip_uri=" in tikz_url or "data:text" in tikz_url
+
     # Test non-existent playground
     nonexistent_url = client.get_playground_url("nonexistent", "test")
     assert nonexistent_url is None

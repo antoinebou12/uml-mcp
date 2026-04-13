@@ -216,6 +216,55 @@ def test_kroki_encode_success():
     assert data["playground"] == "https://www.plantuml.com/plantuml/uml/..."
 
 
+def test_kroki_encode_tikz_snippet_wraps_standalone():
+    """POST /kroki_encode with TikZ snippet runs prepare_diagram_code (standalone wrap)."""
+    mock_kroki_instance = MagicMock()
+    mock_kroki_instance.get_url.return_value = "https://kroki.io/tikz/svg/enc"
+    mock_kroki_instance.get_playground_url.return_value = None
+
+    with patch("tools.kroki.kroki.Kroki", return_value=mock_kroki_instance):
+        response = client.post(
+            "/kroki_encode",
+            json={
+                "type": "tikz",
+                "code": r"\begin{tikzpicture}\draw (0,0) -- (1,1);\end{tikzpicture}",
+                "output_format": "svg",
+            },
+        )
+
+    assert response.status_code == 200
+    mock_kroki_instance.get_url.assert_called_once()
+    _dtype, diagram_text, _fmt = mock_kroki_instance.get_url.call_args[0]
+    assert _dtype == "tikz"
+    assert r"\documentclass" in diagram_text
+    assert r"\begin{tikzpicture}" in diagram_text
+
+
+def test_kroki_encode_plantuml_theme_in_prepared_code():
+    """Optional theme is passed through prepare_diagram_code for PlantUML."""
+    mock_kroki_instance = MagicMock()
+    mock_kroki_instance.get_url.return_value = "https://kroki.io/plantuml/svg/x"
+    mock_kroki_instance.get_playground_url.return_value = None
+
+    with patch("tools.kroki.kroki.Kroki", return_value=mock_kroki_instance):
+        response = client.post(
+            "/kroki_encode",
+            json={
+                "type": "class",
+                "code": "class A",
+                "output_format": "svg",
+                "theme": "cerulean",
+            },
+        )
+
+    assert response.status_code == 200
+    _dtype, diagram_text, _fmt = mock_kroki_instance.get_url.call_args[0]
+    assert _dtype == "plantuml"
+    assert "!theme cerulean" in diagram_text
+    assert "@startuml" in diagram_text
+    assert "@enduml" in diagram_text
+
+
 def test_kroki_encode_unsupported_type():
     """POST /kroki_encode with unsupported type returns 400."""
     response = client.post(

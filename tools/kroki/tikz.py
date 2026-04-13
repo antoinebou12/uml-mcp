@@ -45,7 +45,9 @@ _LIBRARY_HINTS = [
     (re.compile(r"\\draw\s*\[[^\]]*?<-"), "arrows"),
     (
         re.compile(
-            r"below\s*of\s*=|above\s*of\s*=|left\s*of\s*=|right\s*of\s*=|below\s*=\s*[^]]*\s+of\s+|above\s*=\s*[^]]*\s+of\s+|"
+            r"below\s*of\s*=|above\s*of\s*=|left\s*of\s*=|right\s*of\s*=|"
+            r"below\s*=\s*[^]]*\s+of\s+|above\s*=\s*[^]]*\s+of\s+|"
+            r"left\s*=\s*[^]]*\s+of\s+|right\s*=\s*[^]]*\s+of\s+|"
             r"(?:^|[,{\s\[])(?:left|right|above|below)(?:\s+(?:left|right|above|below))*=\s*of\s"
         ),
         "positioning",
