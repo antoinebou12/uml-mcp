@@ -203,8 +203,8 @@ class Kroki:
         # Different encodings for different playgrounds
         if diagram_type == "plantuml":
             encoded = self.encode_plantuml(diagram_text)
-            # PlantUML server expects ~1 prefix for 6-bit (HUFFMAN) encoding
-            return f"{base_playground}~1{encoded}"
+            # Standard PlantUML URL: /plantuml/uml/<encoded> (see plantuml.com/text-encoding)
+            return f"{base_playground}{encoded}"
         elif diagram_type == "mermaid":
             from .mermaid import generate_diagram_state, serialize_state
 

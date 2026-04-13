@@ -18,7 +18,7 @@ docker-compose.yml
 .pre-commit-config.yaml
 .env.example
 htmlcov/
-*.md
+# Root markdown only (not *.md: poetry editable install needs README.md in the upload tree).
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 SECURITY.md

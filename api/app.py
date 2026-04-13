@@ -1,8 +1,9 @@
 """
-Vercel helper: exposes the FastAPI ``app`` from repo-root ``app.py``.
+Legacy shim: re-exports the FastAPI ``app`` from the repo-root ``app.py``.
 
-Default ``vercel.json`` uses root ``app.py`` as the serverless function; keep
-this module if your Vercel ``functions`` entry is ``api/app.py`` instead.
+Vercel’s FastAPI preset discovers the app at the **project root** (``app.py``),
+not under ``api/``. Do not set ``vercel.json`` ``functions`` to ``api/app.py``;
+that pattern does not match the emitted function and breaks the build.
 """
 
 import importlib.util

@@ -62,7 +62,7 @@ class TestDiagramTools:
         mock_generate_diagram.return_value = {
             "code": "@startuml\nclass Test\n@enduml",
             "url": "https://kroki.io/plantuml/svg/abc123",
-            "playground": "https://www.plantuml.com/plantuml/uml/~1xyz",
+            "playground": "https://www.plantuml.com/plantuml/uml/xyz",
             "local_path": "/tmp/out/class_123.svg",
         }
         result = generate_uml(

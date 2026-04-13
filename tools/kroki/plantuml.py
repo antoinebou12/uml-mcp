@@ -119,9 +119,8 @@ class PlantUML:
 
     def get_url(self, plantuml_text):
         """Return the server URL for the image."""
-        # PlantUML server expects ~1 prefix for 6-bit (HUFFMAN) encoding
         encoded = self.deflate_and_encode(plantuml_text)
-        return f"{self.url}/~1{encoded}"
+        return f"{self.url}/{encoded}"
 
     def process(self, plantuml_text: str):
         """Process the plantuml text and return the URL and content."""

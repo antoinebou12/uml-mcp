@@ -172,8 +172,8 @@ def _generate_diagram_plantuml_fallback(
 
     plantuml_client = PlantUML(url=plantuml_server)
     encoded = plantuml_client.deflate_and_encode(code)
-    url = f"{plantuml_server}/{output_format}/~1{encoded}"
-    playground = f"https://www.plantuml.com/plantuml/uml/~1{encoded}"
+    url = f"{plantuml_server}/{output_format}/{encoded}"
+    playground = f"https://www.plantuml.com/plantuml/uml/{encoded}"
 
     if MCP_SETTINGS.url_only:
         return {

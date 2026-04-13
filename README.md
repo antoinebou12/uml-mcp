@@ -131,7 +131,7 @@ Full options: [docs/configuration.md](docs/configuration.md)
 ```
 server.py              -- MCP entry point (stdio/HTTP)
 app.py                 -- FastAPI REST API + MCP HTTP at /mcp
-api/app.py             -- optional Vercel entry (loads root app; default handler is root app.py)
+api/app.py             -- legacy re-export of root app (Vercel FastAPI preset uses root app.py)
 mcp_core/
   core/                -- config, server, CLI, utilities, diagram pipeline
   tools/               -- generate_uml, validate_uml

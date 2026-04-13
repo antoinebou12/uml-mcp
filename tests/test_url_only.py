@@ -23,7 +23,7 @@ class TestUrlOnlyMode:
         mock_client = MagicMock()
         mock_client.get_url.return_value = "https://kroki.example/plantuml/svg/xx"
         mock_client.get_playground_url.return_value = (
-            "https://www.plantuml.com/plantuml/uml/~1yy"
+            "https://www.plantuml.com/plantuml/uml/yy"
         )
 
         config.MCP_SETTINGS.url_only = True

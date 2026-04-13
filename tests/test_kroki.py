@@ -69,13 +69,17 @@ def test_get_playground_url():
     """Test playground URL generation."""
     client = Kroki()
 
-    # Test PlantUML playground (must include ~1 for 6-bit HUFFMAN encoding)
+    # PlantUML playground: /plantuml/uml/<encoded> (no ~1; see plantuml.com/text-encoding)
     plantuml_url = client.get_playground_url(
         "plantuml", "@startuml\nclass Test\n@enduml"
     )
     assert plantuml_url is not None
     assert plantuml_url.startswith("https://www.plantuml.com/plantuml/uml/")
-    assert "~1" in plantuml_url
+    encoded_suffix = plantuml_url.removeprefix(
+        "https://www.plantuml.com/plantuml/uml/"
+    )
+    assert encoded_suffix
+    assert "~1" not in plantuml_url
 
     # Test Mermaid playground
     mermaid_url = client.get_playground_url("mermaid", "graph TD;\nA-->B;")
@@ -150,9 +154,8 @@ def test_generate_diagram(mock_httpx_client):
     # Verify URL format
     assert result["url"].startswith("https://kroki.io/plantuml/svg/")
 
-    # Verify playground URL (PlantUML 6-bit encoding requires ~1 prefix)
     assert result["playground"].startswith("https://www.plantuml.com/plantuml/uml/")
-    assert "~1" in result["playground"]
+    assert "~1" not in result["playground"]
 
 
 def test_deflate_and_encode():
