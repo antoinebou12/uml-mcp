@@ -14,7 +14,7 @@ This guide walks you through deploying the UML-MCP server to Vercel and publishi
 1. **Connect the repo** in the [Vercel dashboard](https://vercel.com/new): Import your `uml-mcp` repository.
 2. **Build settings** (match [vercel.json](https://github.com/antoinebou12/uml-mcp/blob/main/vercel.json) in the repo root; clear dashboard overrides if they disagree):
    - Framework Preset: **FastAPI** (`"framework": "fastapi"`—needed so Vercel runs the custom install inside the Python build virtualenv)
-   - Install Command: `bash scripts/vercel-install.sh` (uses `uv pip` against `requirements.txt` and verifies `pydantic_core`)
+   - Install Command: `bash scripts/vercel-install.sh` (runs `uv pip install -r requirements.txt` only, then a quick `pydantic` / `pydantic_core` import smoke test)
    - Build Command: `python -m mcp_core.build_static_server_card` (writes `public/.well-known/mcp/server-card.json` and related files)
    - Serverless entrypoint: `app.py` at the repo root (see `functions` in `vercel.json`); routing and output are handled by `vercel.json`
 3. **Deploy** and wait for the build to finish.
