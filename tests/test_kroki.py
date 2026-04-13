@@ -75,9 +75,7 @@ def test_get_playground_url():
     )
     assert plantuml_url is not None
     assert plantuml_url.startswith("https://www.plantuml.com/plantuml/uml/")
-    encoded_suffix = plantuml_url.removeprefix(
-        "https://www.plantuml.com/plantuml/uml/"
-    )
+    encoded_suffix = plantuml_url.removeprefix("https://www.plantuml.com/plantuml/uml/")
     assert encoded_suffix
     assert "~1" not in plantuml_url
 
