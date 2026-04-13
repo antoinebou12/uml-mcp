@@ -25,6 +25,8 @@ Your app will be available at:
 
 - **Production**: `https://<your-project>.vercel.app`
 - **REST API**: `https://<your-project>.vercel.app/` (root, `/health`, `/generate_diagram`, etc.)
+- **Swagger UI** (interactive REST docs): `https://<your-project>.vercel.app/docs`
+- **OpenAPI JSON** (codegen, AI plugins, `.well-known` manifests): `https://<your-project>.vercel.app/openapi.json`
 - **MCP endpoint**: `https://<your-project>.vercel.app/mcp`
 
 Use the **MCP URL** when publishing to Smithery.

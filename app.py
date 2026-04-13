@@ -13,7 +13,7 @@ from typing import Any, Optional, cast
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, Response
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # Suppress deprecation warnings from Vercel's vendored websockets/uvicorn (not from this app).
 warnings.filterwarnings(
@@ -47,15 +47,39 @@ try:
 except Exception as e:  # noqa: BLE001
     logger.warning("MCP HTTP not available: %s", e, exc_info=True)
 
+# OpenAPI tag groups for Swagger UI / ReDoc
+TAG_REST = "rest"
+TAG_WELL_KNOWN = "well-known"
+TAG_OPENAPI_META = "openapi"
+
+_OPENAPI_TAGS = [
+    {
+        "name": TAG_REST,
+        "description": "Diagram generation, encoding, and health endpoints.",
+    },
+    {
+        "name": TAG_WELL_KNOWN,
+        "description": "Machine-readable manifests, MCP server card, and plugin metadata.",
+    },
+    {
+        "name": TAG_OPENAPI_META,
+        "description": "OpenAPI specification exports (JSON is also served by FastAPI at /openapi.json).",
+    },
+]
+
 # Initialize FastAPI (use MCP lifespan when mounted so session manager initializes)
 # Swagger UI at /docs, ReDoc at /redoc for API exploration
 app = FastAPI(
     title="UML Diagram Generator",
-    description="API for generating UML and other diagrams; MCP at /mcp. [Swagger UI](/docs) · [ReDoc](/redoc)",
+    description=(
+        "API for generating UML and other diagrams; MCP at /mcp (Streamable HTTP — use an MCP client). "
+        "[Swagger UI](/docs) · [ReDoc](/redoc) · [OpenAPI JSON](/openapi.json)"
+    ),
     version="1.3.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    openapi_tags=_OPENAPI_TAGS,
     lifespan=_mcp_http_app.lifespan if _mcp_http_app else None,
 )
 
@@ -114,6 +138,18 @@ except ImportError:
 
 # Models
 class DiagramRequest(BaseModel):
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "lang": "plantuml",
+                "type": "class",
+                "code": "@startuml\nclass Demo {\n  +name : String\n}\n@enduml",
+                "theme": "",
+                "output_format": "svg",
+            }
+        }
+    )
+
     lang: str = Field(
         description="The language of the diagram like plantuml, mermaid, etc."
     )
@@ -154,7 +190,7 @@ class DiagramResponse(BaseModel):
     )
 
 
-@app.get("/")
+@app.get("/", tags=[TAG_REST])
 async def root():
     """Root endpoint with basic information about the API"""
     return {
@@ -170,13 +206,13 @@ async def root():
     }
 
 
-@app.get("/health")
+@app.get("/health", tags=[TAG_REST])
 async def health_check():
     """Health check endpoint"""
     return {"status": "healthy", "modules_available": HAS_MODULES}
 
 
-@app.post("/generate_diagram", response_model=DiagramResponse)
+@app.post("/generate_diagram", response_model=DiagramResponse, tags=[TAG_REST])
 async def generate_diagram_endpoint(request: DiagramRequest):
     """Generate a diagram from text"""
     if not HAS_MODULES:
@@ -245,6 +281,17 @@ async def generate_diagram_endpoint(request: DiagramRequest):
 class KrokiEncodeRequest(BaseModel):
     """Request body for /kroki_encode: returns Kroki URL without writing to disk."""
 
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "type": "class",
+                "code": "@startuml\nclass A\n@enduml",
+                "output_format": "svg",
+                "theme": None,
+            }
+        }
+    )
+
     type: str = Field(description="Diagram type (class, sequence, mermaid, d2, etc.).")
     code: str = Field(description="Diagram source code.")
     output_format: str = Field(
@@ -256,7 +303,15 @@ class KrokiEncodeRequest(BaseModel):
     )
 
 
-@app.post("/kroki_encode")
+class KrokiEncodeResponse(BaseModel):
+    url: str = Field(description="Kroki URL for the rendered diagram.")
+    playground: Optional[str] = Field(
+        default=None,
+        description="Optional URL to an interactive editor when available.",
+    )
+
+
+@app.post("/kroki_encode", response_model=KrokiEncodeResponse, tags=[TAG_REST])
 async def kroki_encode_endpoint(request: KrokiEncodeRequest):
     """Return the Kroki-encoded URL for a diagram (no file write). Use when running on a read-only filesystem (e.g. serverless)."""
     try:
@@ -294,6 +349,7 @@ async def kroki_encode_endpoint(request: KrokiEncodeRequest):
 
 @app.get(
     "/logo.png",
+    tags=[TAG_WELL_KNOWN],
     responses={
         200: {
             "content": {
@@ -311,7 +367,7 @@ async def get_logo():
     raise HTTPException(status_code=404, detail="Logo not found")
 
 
-@app.get("/.well-known/ai-plugin.json")
+@app.get("/.well-known/ai-plugin.json", tags=[TAG_WELL_KNOWN])
 async def get_plugin_manifest(request: Request):
     """Return the plugin manifest for OpenAI plugins and Smithery (base URL from request)."""
     try:
@@ -344,13 +400,13 @@ def _build_server_card():
         }
 
 
-@app.get("/.well-known/mcp/server-card.json")
+@app.get("/.well-known/mcp/server-card.json", tags=[TAG_WELL_KNOWN])
 async def get_mcp_server_card():
     """MCP server metadata for Smithery and other registries (SEP-1649 server card)."""
     return JSONResponse(content=_build_server_card())
 
 
-@app.get("/.well-known/privacy.txt")
+@app.get("/.well-known/privacy.txt", tags=[TAG_WELL_KNOWN])
 async def get_privacy_policy():
     """Return the privacy policy for the plugin"""
     try:
@@ -366,7 +422,7 @@ async def get_privacy_policy():
         raise HTTPException(status_code=500, detail="Failed to load privacy policy")
 
 
-@app.get("/supported_formats")
+@app.get("/supported_formats", tags=[TAG_REST])
 async def get_supported_formats():
     """Return the supported diagram formats"""
     if HAS_MODULES:
@@ -375,13 +431,7 @@ async def get_supported_formats():
         return {"formats": {}}
 
 
-@app.get("/openapi.json")
-async def get_openapi_spec():
-    """Return the OpenAPI specification"""
-    return app.openapi()
-
-
-@app.get("/openapi.yaml")
+@app.get("/openapi.yaml", tags=[TAG_OPENAPI_META])
 async def get_openapi_yaml():
     """Return the OpenAPI specification in YAML format (for AI tools and ReDoc)."""
     try:
@@ -411,17 +461,17 @@ else:
     )
     _mcp_unavailable_detail = {"detail": "MCP HTTP transport is not available."}
 
-    @app.get("/mcp")
+    @app.get("/mcp", tags=[TAG_REST])
     async def mcp_unavailable_get():
         """Return 503 when MCP HTTP transport is not available (e.g. fastmcp missing or init failed)."""
         return JSONResponse(status_code=503, content=_mcp_unavailable_detail)
 
-    @app.post("/mcp")
+    @app.post("/mcp", tags=[TAG_REST])
     async def mcp_unavailable_post():
         """Return 503 when MCP HTTP transport is not available (Streamable HTTP uses POST)."""
         return JSONResponse(status_code=503, content=_mcp_unavailable_detail)
 
-    @app.options("/mcp")
+    @app.options("/mcp", tags=[TAG_REST])
     async def mcp_unavailable_options():
         """Allow CORS preflight for /mcp when MCP is unavailable."""
         return Response(status_code=204)
