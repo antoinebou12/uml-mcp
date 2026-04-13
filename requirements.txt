@@ -24,7 +24,7 @@ beartype==0.22.9
     # via
     #   py-key-value-aio
     #   py-key-value-shared
-cachetools==7.0.0
+cachetools==7.0.5
     # via py-key-value-aio
 certifi==2026.1.4
     # via
