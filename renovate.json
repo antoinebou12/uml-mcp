@@ -2,5 +2,25 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
     "config:base"
+  ],
+  "packageRules": [
+    {
+      "description": "Keep official Python Docker base images on the 3.12 line (matches CI / uv)",
+      "matchManagers": ["dockerfile"],
+      "matchPackageNames": ["python"],
+      "allowedVersions": "/^3\\.12/"
+    },
+    {
+      "description": "Do not auto-bump PEP 621 requires-python; align manually with CI matrix",
+      "matchManagers": ["pep621"],
+      "matchPackageNames": ["python"],
+      "enabled": false
+    },
+    {
+      "description": "Do not auto-bump Poetry python constraint; align manually with CI matrix",
+      "matchManagers": ["poetry"],
+      "matchPackageNames": ["python"],
+      "enabled": false
+    }
   ]
 }
