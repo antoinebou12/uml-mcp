@@ -1,15 +1,17 @@
 """
 Build MCP server card (tools, resources, prompts) for Smithery and static JSON.
-Used by scripts/generate_server_card.py and app.py.
+Used by ``python -m mcp_core.build_static_server_card`` and app.py.
 """
 
 
 def _param_descriptions_for_tool(tool_name: str):
     """Return a dict of param name -> description for the given tool."""
-    from mcp_core.tools.schemas import GenerateUMLInput
+    from mcp_core.tools.schemas import GenerateUMLInput, ValidateUMLInput
 
     if tool_name == "generate_uml":
         schema = GenerateUMLInput.model_json_schema()
+    elif tool_name == "validate_uml":
+        schema = ValidateUMLInput.model_json_schema()
     else:
         return {}
     props = schema.get("properties", {})
@@ -129,7 +131,7 @@ def build_server_card(*, strict: bool = False):
             raise
         log.warning("Could not build server card: %s", e)
         return {
-            "serverInfo": {"name": "UML Diagram Generator", "version": "1.2.0"},
+            "serverInfo": {"name": "UML Diagram Generator", "version": "1.3.0"},
             "tools": [],
             "resources": [],
             "prompts": [],

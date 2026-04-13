@@ -24,7 +24,7 @@ CONTRIBUTING.md
 SECURITY.md
 FALLBACK_IMPLEMENTATION.md
 
-# Dev / build / tooling (keep scripts/generate_server_card.py for Vercel buildCommand)
+# Dev / build / tooling (buildCommand: python -m mcp_core.build_static_server_card)
 scripts/evaluation.py
 Makefile
 mkdocs.yml

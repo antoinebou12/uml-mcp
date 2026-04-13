@@ -1,37 +1,27 @@
 # UML-MCP Documentation
 
-Welcome to the documentation for UML-MCP, a diagram generation server with MCP interface.
+UML-MCP is a diagram generation server that speaks the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) so AI assistants and other clients can create UML, Mermaid, D2, and many other diagram types.
 
-## Overview
+## Start here
 
-UML-MCP enables you to generate various types of diagrams through the Model Context Protocol (MCP), making it easy to integrate with AI assistants and other applications.
+**[User Manual](user-manual.md)** — End-to-end path from Smithery or local install through configuration, usage, and troubleshooting, with links to the pages below for detail.
 
-## User Manual (start here)
+## Reference
 
-**[User Manual](user-manual.md)** — Install, configure, and use UML-MCP in one place: quick start (including Smithery), local installation, client setup (Cursor / Claude Desktop), environment variables, example prompts, tools overview, diagram types, troubleshooting, and links to deeper docs.
+- [Installation](installation.md) · [Configuration](configuration.md) · [Usage examples](examples.md) · [Diagram Assistant](diagram-assistant.md)
 
-## Getting Started
+## Diagram types
 
-- [Installation](installation.md)
-- [Configuration](configuration.md)
-- [Usage Examples](examples.md)
-- [Diagram Assistant](diagram-assistant.md) — Example prompts (API sequence, Gantt, BPMN guide, convert class to Mermaid), tools, and resources.
-
-## Diagram Types
-
-- [UML Diagrams](diagrams/uml.md)
-- [TikZ](diagrams/tikz.md)
+- [UML](diagrams/uml.md) · [TikZ](diagrams/tikz.md)
 
 ## Integrations
 
-- [Claude Desktop](integrations/claude_desktop.md)
-- [Cursor](integrations/cursor.md)
-- [Vercel & Smithery](integrations/vercel_smithery.md)
+- [Claude Desktop](integrations/claude_desktop.md) · [Cursor](integrations/cursor.md) · [Vercel & Smithery](integrations/vercel_smithery.md)
 
-## API Reference
+## API
 
-- [MCP Tools](api/tools.md)
+- [MCP tools](api/tools.md)
 
 ## Development
 
-- [Contributing](https://github.com/antoinebou12/uml-mcp/blob/main/CONTRIBUTING.md) — Setup, tests, and how to send pull requests.
+- [Testing](testing.md) · [Contributing](https://github.com/antoinebou12/uml-mcp/blob/main/CONTRIBUTING.md)

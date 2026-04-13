@@ -6,7 +6,6 @@ on:
     paths:
       - "mcp_core/**"
       - "tools/**"
-      - "ai_uml/**"
       - "app.py"
       - "api/**"
       - "server.py"
@@ -41,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.12']
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -58,7 +57,7 @@ jobs:
 
       - name: Validate Python package structure
         run: |
-          for dir in mcp_core tools ai_uml; do
+          for dir in mcp_core tools; do
             if [ -d "$dir" ] && [ ! -f "$dir/__init__.py" ]; then
               echo "Creating missing __init__.py in $dir"
               touch "$dir/__init__.py"
@@ -88,7 +87,7 @@ jobs:
           echo "Built package for Python ${{ matrix.python-version }}"
           ls -la dist/
 
-      - name: Assert wheel excludes ai_uml
+      - name: Assert wheel layout
         run: |
           python - <<'PY'
           import glob
@@ -102,9 +101,6 @@ jobs:
                       for n in z.namelist()
                       if n and not n.endswith("/")
                   }
-              if "ai_uml" in tops:
-                  print(f"FAIL: {whl} must not ship ai_uml", file=sys.stderr)
-                  sys.exit(1)
               if "mcp_core" not in tops:
                   print(f"FAIL: {whl} must include mcp_core", file=sys.stderr)
                   sys.exit(1)
@@ -137,7 +133,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Bump version
         env:
@@ -200,7 +196,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           version: "latest"
-          python-version: '3.10'
+          python-version: '3.12'
           enable-cache: true
 
       - name: Get version
@@ -219,7 +215,7 @@ jobs:
           echo "Built package for version ${{ env.NEW_VERSION }}"
           ls -la dist/
 
-      - name: Assert wheel excludes ai_uml
+      - name: Assert wheel layout
         run: |
           python - <<'PY'
           import glob
@@ -233,9 +229,6 @@ jobs:
                       for n in z.namelist()
                       if n and not n.endswith("/")
                   }
-              if "ai_uml" in tops:
-                  print(f"FAIL: {whl} must not ship ai_uml", file=sys.stderr)
-                  sys.exit(1)
               if "mcp_core" not in tops:
                   print(f"FAIL: {whl} must include mcp_core", file=sys.stderr)
                   sys.exit(1)
@@ -274,7 +267,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |

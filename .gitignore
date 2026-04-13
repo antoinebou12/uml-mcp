@@ -56,7 +56,6 @@ pyrightconfig.json
 # Documentation builds
 site/
 docs/_build/
-.cache
 
 # IDE and editors
 .idea/
@@ -92,9 +91,6 @@ Desktop.ini
 .claude
 .gemini
 .cursor
-
-# MkDocs
-/site
 
 # Distribution / packaging
 *.whl

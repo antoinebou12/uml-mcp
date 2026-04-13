@@ -478,6 +478,39 @@ def run_fallback_if_needed(
     }
 
 
+def _kroki_failure_when_fallback_disabled(
+    ctx: DiagramRenderContext,
+    kroki_error: Exception,
+) -> Dict[str, Any]:
+    """Error shape when Kroki failed and PlantUML/Mermaid fallback is turned off."""
+    kroki_summary = _handle_diagram_error(kroki_error, ctx.prepared_code)
+    kroki_attempt: Dict[str, Any] = {
+        "backend": "kroki",
+        "ok": False,
+        "error_summary": kroki_summary,
+    }
+    error_msg = (
+        f"Primary (Kroki) failed: {kroki_summary}. "
+        "Diagram fallback is disabled (see MCP_DIAGRAM_FALLBACK, VERCEL, USE_LOCAL_KROKI)."
+    )
+    return {
+        "code": ctx.prepared_code,
+        "url": None,
+        "playground": None,
+        "local_path": None,
+        "error": error_msg,
+        "attempts": [
+            kroki_attempt,
+            {
+                "backend": "none",
+                "ok": False,
+                "error_summary": "Diagram fallback disabled",
+            },
+        ],
+        "fallback_used": False,
+    }
+
+
 def run_diagram_pipeline(
     ctx: DiagramRenderContext,
     kroki_client: Any = None,
@@ -525,7 +558,10 @@ def run_diagram_pipeline(
         "ok": False,
         "error_summary": _handle_diagram_error(err, ctx.prepared_code),
     }
-    result = run_fallback_if_needed(ctx, err)
+    if not MCP_SETTINGS.diagram_fallback_enabled:
+        result = _kroki_failure_when_fallback_disabled(ctx, err)
+    else:
+        result = run_fallback_if_needed(ctx, err)
 
     if result.get("error"):
         out = dict(result)

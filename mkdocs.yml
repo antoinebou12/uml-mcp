@@ -30,7 +30,7 @@ nav:
       - Configuration: configuration.md
       - Examples: examples.md
       - Diagram Assistant: diagram-assistant.md
-      - Experimental ai_uml package: ai_uml.md
+      - Diagram rendering fallback: fallback-mechanism.md
   - Diagram types:
       - UML: diagrams/uml.md
       - TikZ: diagrams/tikz.md
@@ -40,7 +40,6 @@ nav:
       - Vercel & Smithery: integrations/vercel_smithery.md
   - API:
       - Tools: api/tools.md
-  - Fallback mechanism: fallback-mechanism.md
   - Testing: testing.md
   - Maintainer: refactor-architecture-plan.md
 

@@ -28,6 +28,7 @@ Command-line options override values in `fastmcp.json` (e.g. `fastmcp run --port
 | `PLANTUML_SERVER` | URL of the PlantUML server | `http://plantuml-server:8080` |
 | `USE_LOCAL_KROKI` | Use local Kroki server (true/false) | `false` |
 | `USE_LOCAL_PLANTUML` | Use local PlantUML server (true/false) | `false` |
+| `MCP_DIAGRAM_FALLBACK` | After Kroki fails, try PlantUML server / Mermaid.ink | **On** for typical desktop; **off** when `VERCEL` is set or `USE_LOCAL_KROKI=true` unless overridden |
 | `FASTMCP_STATELESS_HTTP` | Enable stateless HTTP for multi-worker/horizontal scaling (true/false) | `false` |
 
 ## Health check (HTTP deployment)
@@ -57,13 +58,13 @@ This is recommended for multi-worker or horizontally scaled deployments. The MCP
 
 ## MCP client configuration
 
-Example MCP server config snippets for **Cursor** and **Claude Desktop** are in the **[`config/`](../config/)** folder in this repo:
+Example MCP server config snippets for **Cursor** and **Claude Desktop** are in the **[`config/`](https://github.com/antoinebou12/uml-mcp/tree/main/config)** folder in this repo:
 
 - **`config/cursor_config.json`** — Cursor
 - **`config/claude_desktop_config.json`** — Claude Desktop
 - **`config/README.md`** — Where each app stores its config and how to copy the examples
 
-Copy the relevant `mcpServers` block into your client’s config file and replace the placeholder path with your actual `uml-mcp` project path. The main server entry point is **`server.py`**.
+Copy the relevant `mcpServers` block into your client’s config file and set `cwd` to your `uml-mcp` project root. The examples use **`args`: `["-u", "server.py"]`** (unbuffered stdio, path relative to `cwd`). The main server entry point is **`server.py`**. Optional `env` keys include `KROKI_SERVER`, `MCP_OUTPUT_DIR`, and `MCP_DIAGRAM_FALLBACK` (see table above).
 
 ## Advanced Configuration
 

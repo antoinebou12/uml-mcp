@@ -28,11 +28,9 @@ class TestUmlDiagramPrompt:
         assert "UML" in result
         assert "notation" in result or "syntax" in result or "diagram" in result
         assert "uml://types" in result
-        assert "generate_diagram_url" in result
-        assert "uml://types" in result
         assert "uml://formats" in result
-        assert "generate_diagram_url" in result
         assert "generate_uml" in result
+        assert "output_dir" in result
 
     def test_with_diagram_type_in_context(self):
         """uml_diagram_prompt adds diagram type when provided in context."""

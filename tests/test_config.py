@@ -38,7 +38,7 @@ class TestMCPSettingsDefaults:
         settings = MCPSettings(diagram_types={})
         assert settings.server_name == "uml_mcp"
         assert settings.display_name == "UML Diagram Generator"
-        assert settings.version == "1.2.0"
+        assert settings.version == "1.3.0"
         assert settings.description == "Generate UML and other diagrams through MCP"
 
     @patch.dict(os.environ, {}, clear=False)
@@ -70,6 +70,46 @@ class TestMCPSettingsDefaults:
         assert settings.tools == []
         assert settings.prompts == []
         assert settings.resources == []
+
+
+class TestDiagramFallbackEnv:
+    """MCP_DIAGRAM_FALLBACK / VERCEL / USE_LOCAL_KROKI interaction."""
+
+    @patch.dict(
+        os.environ,
+        {"VERCEL": "", "USE_LOCAL_KROKI": "", "MCP_DIAGRAM_FALLBACK": ""},
+        clear=False,
+    )
+    def test_diagram_fallback_enabled_desktop_default(self):
+        settings = MCPSettings(diagram_types={})
+        assert settings.diagram_fallback_enabled is True
+
+    @patch.dict(
+        os.environ,
+        {"VERCEL": "1", "MCP_DIAGRAM_FALLBACK": ""},
+        clear=False,
+    )
+    def test_diagram_fallback_disabled_on_vercel(self):
+        settings = MCPSettings(diagram_types={})
+        assert settings.diagram_fallback_enabled is False
+
+    @patch.dict(
+        os.environ,
+        {"USE_LOCAL_KROKI": "true", "MCP_DIAGRAM_FALLBACK": ""},
+        clear=False,
+    )
+    def test_diagram_fallback_disabled_with_use_local_kroki(self):
+        settings = MCPSettings(diagram_types={})
+        assert settings.diagram_fallback_enabled is False
+
+    @patch.dict(
+        os.environ,
+        {"VERCEL": "1", "MCP_DIAGRAM_FALLBACK": "true"},
+        clear=False,
+    )
+    def test_mcp_diagram_fallback_true_overrides_vercel(self):
+        settings = MCPSettings(diagram_types={})
+        assert settings.diagram_fallback_enabled is True
 
 
 class TestMCPSettingsFromEnv:

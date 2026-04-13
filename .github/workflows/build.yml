@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.10', '3.11', '3.12']
+        python-version: ['3.12']
 
     steps:
       - name: Checkout code
@@ -34,7 +34,7 @@ jobs:
           uv build
           ls -la dist/
 
-      - name: Assert wheel excludes ai_uml
+      - name: Assert wheel layout
         run: |
           python - <<'PY'
           import glob
@@ -48,9 +48,6 @@ jobs:
                       for n in z.namelist()
                       if n and not n.endswith("/")
                   }
-              if "ai_uml" in tops:
-                  print(f"FAIL: {whl} must not ship ai_uml", file=sys.stderr)
-                  sys.exit(1)
               if "mcp_core" not in tops:
                   print(f"FAIL: {whl} must include mcp_core", file=sys.stderr)
                   sys.exit(1)

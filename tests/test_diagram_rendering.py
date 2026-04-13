@@ -168,3 +168,28 @@ def test_run_fallback_plantuml_and_kroki_message_on_double_failure():
     assert "error" in out
     assert "Primary (Kroki) failed" in out["error"]
     assert "plantuml boom" in out["error"]
+
+
+def test_run_diagram_pipeline_skips_fallback_when_disabled(tmp_path, monkeypatch):
+    """When diagram_fallback_enabled is False, Kroki failure does not call fallbacks."""
+    from mcp_core.core.config import MCP_SETTINGS
+
+    monkeypatch.setattr(MCP_SETTINGS, "diagram_fallback_enabled", False)
+    mock_client = MagicMock()
+    mock_client.generate_diagram.side_effect = KrokiConnectionError("down")
+
+    with patch(
+        "mcp_core.core.diagram_rendering._generate_diagram_plantuml_fallback"
+    ) as mock_fb:
+        out = run_diagram_pipeline(
+            _ctx(output_dir=str(tmp_path)),
+            kroki_client=mock_client,
+        )
+
+    mock_fb.assert_not_called()
+    assert "error" in out
+    assert "Diagram fallback is disabled" in out["error"]
+    assert out.get("fallback_used") is False
+    assert out.get("attempts")
+    assert out["attempts"][0]["backend"] == "kroki"
+    assert out["attempts"][0]["ok"] is False

@@ -14,28 +14,12 @@ Make sure you have the UML-MCP server properly installed and configured on your 
 
 ### 2. Cursor Configuration
 
-Cursor requires specific configuration to connect to the UML-MCP server:
+1. Open the MCP config for Cursor (or use **Cursor Settings → MCP**):
+   - **Windows:** `%APPDATA%\Cursor\User\globalStorage\cursor.mcp\mcp.json`
+   - **macOS:** `~/Library/Application Support/Cursor/User/globalStorage/cursor.mcp/mcp.json`
+   - **Linux:** `~/.config/Cursor/User/globalStorage/cursor.mcp/mcp.json`
 
-1. Locate your Cursor configuration file:
-   - Windows: `%APPDATA%\Cursor\config.json`
-   - macOS: `~/Library/Application Support/Cursor/config.json`
-   - Linux: `~/.config/Cursor/config.json`
-
-2. Add the UML-MCP server configuration to the `mcpServers` section:
-
-Example configuration (see also the **`config/cursor_config.json`** and **`config/README.md`** in the repo):
-
-```json
-{
-  "mcpServers": {
-    "UML-MCP-Server": {
-      "command": "python",
-      "args": ["/path/to/uml-mcp/server.py"],
-      "cwd": "/path/to/uml-mcp"
-    }
-  }
-}
-```
+2. Merge the `mcpServers` block from **[`config/cursor_config.json`](https://github.com/antoinebou12/uml-mcp/blob/main/config/cursor_config.json)** in this repo, or copy the same structure from **[`config/README.md`](https://github.com/antoinebou12/uml-mcp/blob/main/config/README.md)**. The example uses server key **`uml-mcp`**, **`args`**: `["-u", "server.py"]` (relative to **`cwd`**), and **`env`** for `KROKI_SERVER`, `MCP_OUTPUT_DIR`, and `MCP_DIAGRAM_FALLBACK`. Set **`cwd`** to your repo root (the sample uses `${workspaceFolder}` if your Cursor build expands it; otherwise use an absolute path). See [Configuration](../configuration.md) for environment variables.
 
 ### 3. Test the Integration
 

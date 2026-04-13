@@ -171,7 +171,7 @@ When the user asks to convert a class diagram (PlantUML or prose) into Mermaid:
 
 When the user asks how to draw a BPMN process model:
 - Describe core BPMN 2.0.2 elements: Start/End events, Task, Gateways (Exclusive, Parallel, Inclusive), Sequence Flow, Lanes, Pools.
-- Point to resource `uml://bpmn-guide` for the structured guide and to `generate_bpmn_diagram` or `generate_uml("bpmn", ...)` for generating BPMN XML.
+- Point to resource `uml://bpmn-guide` for the structured guide and to `generate_uml` with `diagram_type` **bpmn** for BPMN XML.
 
 ## Additional Resources
 

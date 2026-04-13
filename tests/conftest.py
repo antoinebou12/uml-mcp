@@ -30,6 +30,14 @@ def _clear_diagram_render_cache():
     yield
 
 
+@pytest.fixture(autouse=True)
+def _enable_diagram_fallback_for_tests(monkeypatch):
+    """Match local-desktop defaults: allow Kroki→PlantUML/Mermaid after Kroki fails."""
+    from mcp_core.core.config import MCP_SETTINGS
+
+    monkeypatch.setattr(MCP_SETTINGS, "diagram_fallback_enabled", True)
+
+
 @pytest.fixture
 def reset_mcp_server_singleton():
     """Reset the MCP server singleton so create_mcp_server() runs fresh."""

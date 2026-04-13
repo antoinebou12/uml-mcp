@@ -10,7 +10,7 @@ By participating, you agree to uphold our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.12 (matches `requires-python` in `pyproject.toml`)
 - [uv](https://docs.astral.sh/uv/), [Poetry](https://python-poetry.org/), or pip
 
 ### Development setup
@@ -100,6 +100,16 @@ Include OS, Python version, and how you run the server when relevant.
 ## Security
 
 See [SECURITY.md](SECURITY.md) for how to report vulnerabilities.
+
+## Maintaining `requirements.txt` (Vercel / pip)
+
+Production dependencies for Vercel and `pip install -r requirements.txt` are exported from the lockfile:
+
+```bash
+uv export --no-dev --no-hashes -o requirements.txt
+```
+
+Run this after changing runtime dependencies in `pyproject.toml` / `uv.lock`, then commit the updated `requirements.txt`.
 
 ## Documentation
 

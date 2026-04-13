@@ -1,7 +1,8 @@
 """
-Vercel serverless entry: loads the root FastAPI app from ``app.py``.
-Configure ``functions`` in ``vercel.json`` for the root ``app.py`` entry
-(FastAPI preset); rewrites route traffic to ``/``.
+Vercel helper: exposes the FastAPI ``app`` from repo-root ``app.py``.
+
+Default ``vercel.json`` uses root ``app.py`` as the serverless function; keep
+this module if your Vercel ``functions`` entry is ``api/app.py`` instead.
 """
 
 import importlib.util

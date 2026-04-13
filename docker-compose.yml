@@ -14,6 +14,7 @@ services:
       - MCP_OUTPUT_DIR=/app/output
       - USE_LOCAL_KROKI=true
       - KROKI_SERVER=http://kroki:8000
+      - MCP_DIAGRAM_FALLBACK=false
     depends_on:
       - kroki
       - blockdiag

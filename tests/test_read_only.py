@@ -2,11 +2,10 @@
 Tests for MCP_READ_ONLY mode.
 
 Verifies that when MCP_READ_ONLY=true:
-- generate_uml is not registered as a tool
-- generate_diagram_url is still registered
+- generate_uml remains registered (omit output_dir for URL/base64 only)
 - generate_diagram() forces output_dir=None (no file writes)
 
-And when MCP_READ_ONLY is unset, both tools are registered as usual.
+When MCP_READ_ONLY is unset, generate_uml and validate_uml are registered as usual.
 """
 
 import os
@@ -29,15 +28,13 @@ def _reset_tool_registry():
 class TestReadOnlyMode:
     """Test suite for MCP_READ_ONLY behaviour."""
 
-    def test_read_only_skips_generate_uml(self, _reset_tool_registry):
-        """With MCP_READ_ONLY=true, generate_uml must not appear in registered tools."""
+    def test_read_only_still_registers_generate_uml(self, _reset_tool_registry):
+        """With MCP_READ_ONLY=true, generate_uml stays registered; output_dir is rejected at validation."""
         from mcp_core.tools import tool_decorator
         from mcp_core.core import config
 
-        # Ensure generate_uml is present before we test
         assert "generate_uml" in tool_decorator._registered_tools
 
-        # Temporarily set read_only on the singleton
         original_read_only = config.MCP_SETTINGS.read_only
         config.MCP_SETTINGS.read_only = True
         try:
@@ -48,14 +45,14 @@ class TestReadOnlyMode:
 
             registered = register_diagram_tools(server)
 
-            assert "generate_uml" not in registered
-            assert "generate_diagram_url" in registered
+            assert "generate_uml" in registered
             assert "validate_uml" in registered
+            assert len(registered) == 2
         finally:
             config.MCP_SETTINGS.read_only = original_read_only
 
-    def test_default_registers_both_tools(self, _reset_tool_registry):
-        """When MCP_READ_ONLY is unset/false, both tools are registered."""
+    def test_default_registers_diagram_tools(self, _reset_tool_registry):
+        """When MCP_READ_ONLY is unset/false, generate_uml and validate_uml are registered."""
         from mcp_core.core import config
 
         original_read_only = config.MCP_SETTINGS.read_only
@@ -69,8 +66,8 @@ class TestReadOnlyMode:
             registered = register_diagram_tools(server)
 
             assert "generate_uml" in registered
-            assert "generate_diagram_url" in registered
             assert "validate_uml" in registered
+            assert len(registered) == 2
         finally:
             config.MCP_SETTINGS.read_only = original_read_only
 

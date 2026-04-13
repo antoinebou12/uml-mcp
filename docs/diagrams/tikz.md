@@ -8,7 +8,7 @@ UML-MCP supports [TikZ/PGF](https://tikz.dev/) graphics via [Kroki](https://krok
 - **Optional**: Local compilation with Docker; see [Optional Docker](#optional-docker) below.
 - **Output formats**: SVG, PDF, PNG, JPEG.
 
-Use `diagram_type: "tikz"` with the `generate_uml` or `generate_diagram_url` tools. The `code` parameter is your TikZ/LaTeX source (snippet or full document).
+Use `diagram_type: "tikz"` with the **`generate_uml`** tool. The `code` parameter is your TikZ/LaTeX source (snippet or full document). Omit **`output_dir`** if you only need a URL or base64.
 
 ## Available templates and examples
 

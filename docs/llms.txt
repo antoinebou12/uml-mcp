@@ -1,5 +1,7 @@
 # UML-MCP — LLM-oriented overview
 
+Human-oriented index (install, clients, troubleshooting): docs/user-manual.md
+
 Teaser
 Improve your diagramming skills with PlantUML, Mermaid, D2 (and Kroki) by creating optimized diagrams for various purposes using Sequence, Use Case, Class, Activity, Component, State, Object, Deployment, Mermaid, D2, Graphviz, ERD, BPMN, C4.
 
@@ -18,7 +20,7 @@ UML-MCP is a diagram generation server that implements the Model Context Protoco
 ## What it does
 
 - Generates diagrams from code/descriptions using PlantUML, Kroki, Mermaid, D2, Graphviz backends.
-- Exposes MCP tools generate_uml and generate_diagram_url, plus resources (uml://types, uml://templates, uml://examples, uml://formats, uml://server-info, uml://workflow).
+- Exposes MCP tools generate_uml and validate_uml, plus resources (uml://types, uml://templates, uml://examples, uml://formats, uml://server-info, uml://workflow).
 - Output formats: SVG, PNG, PDF, JPEG (and others per diagram type; see uml://formats).
 
 ## Diagram types
@@ -28,8 +30,8 @@ UML-MCP is a diagram generation server that implements the Model Context Protoco
 
 ## MCP tools (summary)
 
-- generate_uml — Generate a diagram; optionally save to output_dir. Params: diagram_type, code, output_dir, output_format, theme, scale. Use uml://types for valid types.
-- generate_diagram_url — Return diagram URL and base64 image only (no file). Params: diagram_type, code, output_format, theme, scale.
+- generate_uml — Render a diagram. Params: diagram_type, code, output_dir (optional), output_format, theme, scale. Omit output_dir for URL/base64 only. Use uml://types for valid types.
+- validate_uml — Validate inputs locally before render. Params: diagram_type, code, output_format.
 
 Full list and parameters: docs/api/tools.md
 

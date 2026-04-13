@@ -24,13 +24,6 @@ ANNOTATIONS_DIAGRAM = {
     "openWorldHint": True,  # Calls external Kroki service for rendering
 }
 
-ANNOTATIONS_URL_ONLY = {
-    "readOnlyHint": True,  # No file I/O; returns URL and optional base64
-    "destructiveHint": False,
-    "idempotentHint": True,
-    "openWorldHint": True,
-}
-
 ANNOTATIONS_VALIDATE = {
     "readOnlyHint": True,
     "destructiveHint": False,
@@ -43,7 +36,10 @@ ANNOTATIONS_VALIDATE = {
 @mcp_tool(
     description="Generate any UML or diagram by type (class, sequence, mermaid, d2, etc.)",
     category="uml",
-    example="generate_uml('class', '@startuml\\nclass User\\n@enduml', './output')",
+    example=(
+        "generate_uml('mermaid', 'graph TD; A-->B;')  # URL/base64 only; "
+        "or generate_uml('class', code, './output') to save"
+    ),
     annotations=ANNOTATIONS_DIAGRAM,
 )
 def generate_uml(
@@ -63,7 +59,8 @@ def generate_uml(
     Args:
         diagram_type: Type of diagram (class, sequence, activity, mermaid, d2, etc.)
         code: Diagram code in the syntax for the chosen type
-        output_dir: Directory to save the image (optional). Omit for url/playground/content_base64 only.
+        output_dir: Directory to save the image. Omit or None for URL, playground,
+            and content_base64 only (no file write; use in serverless / read-only).
         output_format: svg, png, pdf, jpeg, txt, or base64 (default: svg). See uml://formats per type.
         theme: PlantUML theme for UML diagrams (e.g. cerulean)
         scale: Scale factor for SVG only (default 1.0, min 0.1). Ignored for other formats.
@@ -89,51 +86,6 @@ def generate_uml(
 
 
 @mcp_tool(
-    description="Get the Kroki URL (and optional base64 image) for a diagram without saving to disk.",
-    category="uml",
-    example="generate_diagram_url('mermaid', 'graph TD; A-->B;')",
-    annotations=ANNOTATIONS_URL_ONLY,
-)
-def generate_diagram_url(
-    diagram_type: str,
-    code: str,
-    output_format: str = "svg",
-    theme: Optional[str] = None,
-    scale: float = 1.0,
-) -> Dict[str, Any]:
-    """Return the diagram URL and optional base64 image; no file is written.
-
-    Use when you only need a link or in-memory image (e.g. serverless, read-only FS).
-    To save to disk, use generate_uml with output_dir.
-
-    Args:
-        diagram_type: Type of diagram (class, sequence, mermaid, d2, etc.)
-        code: Diagram code in the syntax for the chosen type
-        output_format: svg, png, pdf, jpeg, etc. (default: svg). See uml://formats per type.
-        theme: PlantUML theme for PlantUML diagram types (e.g. cerulean)
-        scale: Scale factor for SVG only (default 1.0, min 0.1). Ignored for other formats.
-
-    Returns:
-        Dict with code, url, playground, content_base64 on success; or error.
-    """
-    logger.info(
-        "Called generate_diagram_url tool: type=%s, code length=%s",
-        diagram_type,
-        len(code),
-    )
-    return generate_from_request(
-        DiagramRequest(
-            diagram_type=diagram_type,
-            code=code,
-            output_dir=None,
-            output_format=output_format,
-            theme=theme,
-            scale=scale,
-        )
-    )
-
-
-@mcp_tool(
     description=(
         "Validate diagram type, format, code length, and basic syntax locally before render "
         "(no Kroki call). Returns errors and suggestions."
@@ -150,7 +102,7 @@ def validate_uml(
     """Check inputs and light structure without rendering.
 
     Use to catch unsupported types, bad output_format for the type, empty code, or obvious
-    PlantUML/Mermaid/D2 issues before calling generate_uml or generate_diagram_url.
+    PlantUML/Mermaid/D2 issues before calling generate_uml.
 
     Args:
         diagram_type: Same as generate_uml (see uml://types).
@@ -180,12 +132,6 @@ def register_diagram_tools(server: FastMCP) -> List[str]:
         List of registered tool names
     """
     logger.info("Registering diagram tools")
-
-    if MCP_SETTINGS.read_only:
-        from .tool_decorator import _registered_tools
-
-        _registered_tools.pop("generate_uml", None)
-        logger.info("MCP_READ_ONLY enabled: generate_uml tool removed from registry")
 
     # Register all tools that were decorated with @mcp_tool
     registered_tools = register_tools_with_server(server)

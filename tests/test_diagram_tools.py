@@ -6,11 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from mcp_core.tools.diagram_tools import (
-    generate_diagram_url,
-    generate_uml,
-    register_diagram_tools,
-)
+from mcp_core.tools.diagram_tools import generate_uml, register_diagram_tools
 
 
 class TestDiagramTools:
@@ -44,10 +40,10 @@ class TestDiagramTools:
         return server
 
     def test_register_diagram_tools(self, mock_mcp_server):
-        """Test that diagram tools are registered correctly (generate_uml and generate_diagram_url)."""
+        """Test that diagram tools are registered correctly (generate_uml and validate_uml)."""
         register_diagram_tools(mock_mcp_server)
 
-        expected_tools = ["generate_uml", "generate_diagram_url", "validate_uml"]
+        expected_tools = ["generate_uml", "validate_uml"]
 
         for tool_name in expected_tools:
             matching_calls = [
@@ -117,10 +113,10 @@ class TestDiagramTools:
             assert call_args[0] == diagram_type
 
     @patch("mcp_core.core.diagram_service.generate_diagram")
-    def test_generate_diagram_url_returns_url_and_base64_no_file(
+    def test_generate_uml_without_output_dir_returns_url_and_base64(
         self, mock_generate_diagram
     ):
-        """generate_diagram_url returns url, playground, content_base64; no local_path."""
+        """generate_uml with no output_dir returns url, playground, content_base64; no local_path."""
         mock_generate_diagram.return_value = {
             "code": "graph TD; A-->B;",
             "url": "https://kroki.io/mermaid/svg/abc",
@@ -128,7 +124,7 @@ class TestDiagramTools:
             "local_path": None,
             "content_base64": "PHN2Zz48L3N2Zz4=",
         }
-        result = generate_diagram_url(
+        result = generate_uml(
             diagram_type="mermaid",
             code="graph TD; A-->B;",
         )
@@ -144,11 +140,11 @@ class TestDiagramTools:
         assert args[3] is None  # output_dir
 
     @patch("mcp_core.core.diagram_service.generate_diagram")
-    def test_generate_diagram_url_validation_error_unsupported_format(
+    def test_generate_uml_validation_error_unsupported_format_without_output_dir(
         self, mock_generate_diagram
     ):
-        """generate_diagram_url with format not supported by type returns validation error."""
-        result = generate_diagram_url(
+        """generate_uml with format not supported by type returns validation error."""
+        result = generate_uml(
             diagram_type="mermaid",
             code="graph TD; A-->B;",
             output_format="pdf",

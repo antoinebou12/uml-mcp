@@ -52,7 +52,7 @@ except Exception as e:  # noqa: BLE001
 app = FastAPI(
     title="UML Diagram Generator",
     description="API for generating UML and other diagrams; MCP at /mcp. [Swagger UI](/docs) · [ReDoc](/redoc)",
-    version="1.2.0",
+    version="1.3.0",
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
@@ -159,7 +159,7 @@ async def root():
     """Root endpoint with basic information about the API"""
     return {
         "message": "Welcome to the UML-MCP API",
-        "version": "1.2.0",
+        "version": "1.3.0",
         "status": "operational",
         "docs": "/docs",
         "redoc": "/redoc",
@@ -329,7 +329,7 @@ async def get_plugin_manifest(request: Request):
 
 
 def _build_server_card():
-    """Build MCP server card from live tool and resource registries (shared with scripts/generate_server_card.py)."""
+    """Build MCP server card from live tool and resource registries (same data as static card build)."""
     try:
         from mcp_core.core.server_card import build_server_card
 
@@ -337,7 +337,7 @@ def _build_server_card():
     except Exception as e:
         logger.warning("Could not build dynamic server card: %s", e)
         return {
-            "serverInfo": {"name": "UML Diagram Generator", "version": "1.2.0"},
+            "serverInfo": {"name": "UML Diagram Generator", "version": "1.3.0"},
             "tools": [],
             "resources": [],
             "prompts": [],

@@ -1,7 +1,7 @@
 {
   "serverInfo": {
     "name": "UML Diagram Generator",
-    "version": "1.2.0"
+    "version": "1.3.0"
   },
   "tools": [
     {
@@ -20,7 +20,7 @@
           },
           "output_dir": {
             "type": "string",
-            "description": "Directory to save the generated image"
+            "description": "Directory to save the image; omit for URL/base64 only (no file write)"
           },
           "output_format": {
             "type": "string",
@@ -48,45 +48,6 @@
       }
     },
     {
-      "name": "generate_diagram_url",
-      "description": "Get the Kroki URL (and optional base64 image) for a diagram without saving to disk.",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "diagram_type": {
-            "type": "string",
-            "description": "Diagram Type"
-          },
-          "code": {
-            "type": "string",
-            "description": "Code"
-          },
-          "output_format": {
-            "type": "string",
-            "description": "Output Format"
-          },
-          "theme": {
-            "type": "string",
-            "description": "Theme"
-          },
-          "scale": {
-            "type": "string",
-            "description": "Scale"
-          }
-        },
-        "required": [
-          "diagram_type",
-          "code"
-        ]
-      },
-      "annotations": {
-        "readOnlyHint": true,
-        "destructiveHint": false,
-        "idempotentHint": true,
-        "openWorldHint": true
-      }
-    },
-    {
       "name": "validate_uml",
       "description": "Validate diagram type, format, code length, and basic syntax locally before render (no Kroki call). Returns errors and suggestions.",
       "inputSchema": {
@@ -94,15 +55,15 @@
         "properties": {
           "diagram_type": {
             "type": "string",
-            "description": "Diagram Type"
+            "description": "Type of diagram (e.g. class, sequence, mermaid, d2). See uml://types."
           },
           "code": {
             "type": "string",
-            "description": "Code"
+            "description": "Diagram code in the format for the chosen type"
           },
           "output_format": {
             "type": "string",
-            "description": "Output Format"
+            "description": "Output format: svg, png, pdf, jpeg, txt, or base64 (per diagram type; see uml://formats)"
           }
         },
         "required": [
@@ -172,7 +133,7 @@
     },
     {
       "name": "uml_diagram_with_thinking",
-      "description": "Generate UML diagram with an explicit plan-then-generate workflow. Plan first, then output code and call generate_diagram_url or generate_uml as appropriate."
+      "description": "Generate UML diagram with an explicit plan-then-generate workflow. Plan first, then output code and call generate_uml (omit output_dir unless saving a file)."
     },
     {
       "name": "class_diagram",

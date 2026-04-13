@@ -275,6 +275,7 @@ def run():
         console.print("Please ensure all project components are correctly installed.")
         sys.exit(1)
 
+    ran_server = False
     try:
         from mcp_core.core.config import MCP_SETTINGS
         from mcp_core.core.server import get_mcp_server, start_server
@@ -308,14 +309,17 @@ def run():
         list_tools = (
             args.list_tools or os.environ.get("LIST_TOOLS", "").lower() == "true"
         )
-        if list_tools and _should_render_human_output(args.transport):
+        if list_tools:
+            # Always print and exit (--list-tools forces stdout console above).
             display_tools_and_resources(MCP_SETTINGS)
             return
 
+        ran_server = True
         start_server(transport=args.transport, host=args.host, port=args.port)
     except KeyboardInterrupt:
         logger.info("Server stopped by user")
     except Exception as e:
         logger.critical("Server error: %s", str(e), exc_info=True)
     finally:
-        logger.info("Server shut down")
+        if ran_server:
+            logger.info("Server shut down")

@@ -1,10 +1,14 @@
 {
   "mcpServers": {
-    "UML-MCP-Server": {
+    "uml-mcp": {
       "command": "python",
-      "args": ["C:\\path\\to\\uml-mcp\\server.py"],
-      "cwd": "C:\\path\\to\\uml-mcp",
-      "env": {}
+      "args": ["-u", "server.py"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "KROKI_SERVER": "https://kroki.io",
+        "MCP_OUTPUT_DIR": "output",
+        "MCP_DIAGRAM_FALLBACK": "true"
+      }
     }
   }
 }

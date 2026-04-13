@@ -214,6 +214,41 @@ class TestRun:
         MagicMock(
             version="1.0",
             server_name="Test",
+            tools=["generate_uml", "validate_uml"],
+            prompts=[],
+            resources=[],
+        ),
+    )
+    @patch("mcp_core.core.cli.safe_import", return_value=MagicMock())
+    @patch("mcp_core.core.cli.setup_logging", return_value=MagicMock())
+    @patch("mcp_core.core.cli.parse_args")
+    def test_list_tools_stdio_exits_without_starting_server(
+        self,
+        parse_mock,
+        setup_mock,
+        safe_import_mock,
+        get_server_mock,
+        start_server_mock,
+    ):
+        """run() with --list-tools and default stdio transport prints tools and exits."""
+        parse_mock.return_value = MagicMock(
+            debug=False,
+            transport="stdio",
+            host="127.0.0.1",
+            port=8000,
+            list_tools=True,
+        )
+        with patch.object(cli.console, "print"):
+            cli.run()
+        start_server_mock.assert_not_called()
+
+    @patch("mcp_core.core.server.start_server")
+    @patch("mcp_core.core.server.get_mcp_server")
+    @patch(
+        "mcp_core.core.config.MCP_SETTINGS",
+        MagicMock(
+            version="1.0",
+            server_name="Test",
             tools=[],
             prompts=[],
             resources=[],

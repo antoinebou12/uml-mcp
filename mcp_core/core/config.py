@@ -18,6 +18,34 @@ def _env_bool(name: str, default: bool = False) -> bool:
     return v.lower() in ("true", "1", "yes")
 
 
+def _env_use_local_kroki() -> bool:
+    return os.environ.get("USE_LOCAL_KROKI", "false").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
+
+
+def _diagram_fallback_default() -> bool:
+    """
+    When False, a Kroki failure does not try PlantUML server or Mermaid.ink.
+
+    MCP_DIAGRAM_FALLBACK overrides when set. Otherwise disabled on Vercel or when
+    USE_LOCAL_KROKI=true (Docker / local Kroki stack). Enabled for typical desktop
+    use with public Kroki.
+    """
+    explicit = os.environ.get("MCP_DIAGRAM_FALLBACK", "").strip().lower()
+    if explicit in ("true", "1", "yes"):
+        return True
+    if explicit in ("false", "0", "no"):
+        return False
+    if _env_bool("VERCEL", False):
+        return False
+    if _env_use_local_kroki():
+        return False
+    return True
+
+
 def _default_output_dir() -> str:
     """Default diagram output directory (current working directory / output)."""
     return str(Path.cwd() / "output")
@@ -80,10 +108,11 @@ class MCPSettings(BaseModel):
 
     server_name: str = "uml_mcp"  # MCP naming: {service}_mcp (protocol)
     display_name: str = "UML Diagram Generator"  # Human-readable for UI
-    version: str = "1.2.0"
+    version: str = "1.3.0"
     read_only: bool = Field(default_factory=lambda: _env_bool("MCP_READ_ONLY", False))
     memory_only: bool = Field(default_factory=_memory_only_default)
     url_only: bool = Field(default_factory=_url_only_default)
+    diagram_fallback_enabled: bool = Field(default_factory=_diagram_fallback_default)
     description: str = "Generate UML and other diagrams through MCP"
     config_schema_url: str = (
         ""  # Optional URL for session config schema (improves Configuration UX score)
@@ -299,11 +328,7 @@ DIAGRAM_TYPES = {
 MCP_SETTINGS = MCPSettings(diagram_types=DIAGRAM_TYPES)
 
 # Override servers when local backends are requested
-_use_local_kroki = os.environ.get("USE_LOCAL_KROKI", "false").lower() in (
-    "true",
-    "1",
-    "yes",
-)
+_use_local_kroki = _env_use_local_kroki()
 _use_local_plantuml = os.environ.get("USE_LOCAL_PLANTUML", "false").lower() in (
     "true",
     "1",

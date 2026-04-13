@@ -83,9 +83,8 @@ Before writing code:
 
 Rendering is Kroki-first (server-side). Fallbacks exist only for some backends; correct syntax avoids HTTP 400s.
 
-Tool choice:
-- **generate_diagram_url** — URL and optional base64 only; no file write (serverless, read-only environments).
-- **generate_uml** — same rendering; pass `output_dir` only when you should save a file locally.
+Tool:
+- **generate_uml** — pass `output_dir` only when you must save a file locally; omit `output_dir` for URL, playground, and base64 only (serverless / read-only).
 
 Workflow:
 1. Plan: diagram type, notation (PlantUML / Mermaid / D2), elements, relationships. For ambiguous requests, state your choices briefly.
@@ -104,10 +103,7 @@ Quality: proper notation, all requested elements, readable layout, correct relat
     # Add diagram type specific instructions if provided in context
     if "diagram_type" in context:
         diagram_type = context["diagram_type"]
-        prompt += (
-            f"\nTarget: a {diagram_type} diagram. When calling generate_diagram_url or "
-            f'generate_uml, set diagram_type to "{diagram_type}" exactly.\n'
-        )
+        prompt += f'\nTarget: a {diagram_type} diagram. When calling generate_uml, set diagram_type to "{diagram_type}" exactly.\n'
 
     return prompt
 
@@ -115,13 +111,13 @@ Quality: proper notation, all requested elements, readable layout, correct relat
 # UML diagram with explicit planning step (alias for plan-then-generate workflow)
 @mcp_prompt(
     "uml_diagram_with_thinking",
-    description="Generate UML diagram with an explicit plan-then-generate workflow. Plan first, then output code and call generate_diagram_url or generate_uml as appropriate.",
+    description="Generate UML diagram with an explicit plan-then-generate workflow. Plan first, then output code and call generate_uml (omit output_dir unless saving a file).",
     category="uml",
 )
 def uml_diagram_with_thinking_prompt(context: Optional[Dict[str, Any]] = None) -> str:
     """
     Prompt for generating UML diagrams with plan-then-generate. Same workflow as
-    uml_diagram (plan first, then code and generate_diagram_url / generate_uml).
+    uml_diagram (plan first, then code and generate_uml).
     """
     return uml_diagram_prompt(context)
 
@@ -179,7 +175,7 @@ User "1" -- "*" Account : has >
 
 Provide the complete PlantUML code for the class diagram.
 
-When calling **generate_uml** or **generate_diagram_url**, use `diagram_type` **class**.
+When calling **generate_uml**, use `diagram_type` **class**.
 """
 
     return prompt
@@ -241,7 +237,7 @@ deactivate Browser
 
 Provide the complete PlantUML code for the sequence diagram.
 
-When calling **generate_uml** or **generate_diagram_url**, use `diagram_type` **sequence**.
+When calling **generate_uml**, use `diagram_type` **sequence**.
 """
 
     return prompt
@@ -301,7 +297,7 @@ stop
 
 Provide the complete PlantUML code for the activity diagram.
 
-When calling **generate_uml** or **generate_diagram_url**, use `diagram_type` **activity**.
+When calling **generate_uml**, use `diagram_type` **activity**.
 """
 
     return prompt
@@ -363,7 +359,7 @@ rectangle "Online Shopping System" {
 
 Provide the complete PlantUML code for the use case diagram.
 
-When calling **generate_uml** or **generate_diagram_url**, use `diagram_type` **usecase**.
+When calling **generate_uml**, use `diagram_type` **usecase**.
 """
 
     return prompt
@@ -394,7 +390,7 @@ Syntax tips:
 - Use ->> for request and -->> for response; + / - for activation if desired.
 - Wrap conditional responses in alt ... else ... end.
 
-Put the diagram in a single mermaid code block. Then call **generate_uml** or **generate_diagram_url** with `diagram_type` **mermaid** and pass the raw Mermaid source as `code` (no markdown fences inside the tool argument). Prefer **generate_diagram_url** when no file should be written.
+Put the diagram in a single mermaid code block. Then call **generate_uml** with `diagram_type` **mermaid** and pass the raw Mermaid source as `code` (no markdown fences inside the tool argument). Omit **output_dir** when no file should be written.
 """
 
 
@@ -425,7 +421,7 @@ gantt
     Task A1    :a1, 2024-01-01, 7d
     Task A2    :a2, after a1, 5d
 
-Put the diagram in a single mermaid code block. Then call **generate_uml** or **generate_diagram_url** with `diagram_type` **mermaid** and the raw source as `code`. Prefer **generate_diagram_url** when no file should be written.
+Put the diagram in a single mermaid code block. Then call **generate_uml** with `diagram_type` **mermaid** and the raw source as `code`. Omit **output_dir** when no file should be written.
 """
 
 
@@ -439,7 +435,7 @@ def bpmn_process_guide_prompt(context: Optional[Dict[str, Any]] = None) -> str:
     """
     Prompt that instructs the model to explain how to draw a BPMN process model:
     start/end events, tasks, gateways, sequence flow, lanes, aligned with BPMN 2.0.2.
-    Optionally point to uml://bpmn-guide and the BPMN template/example and generate_bpmn_diagram.
+    Optionally point to uml://bpmn-guide and the BPMN template/example.
     """
     context = context or {}
     return """You are a process modeling expert. Explain how to draw a BPMN process model.
@@ -456,7 +452,7 @@ Provide concise guidance that covers:
 
 Optionally point the user to:
 - The resource uml://bpmn-guide for a structured reference.
-- The tool generate_bpmn_diagram to produce BPMN XML, or generate_uml with diagram_type "bpmn".
+- **generate_uml** with diagram_type **bpmn** to produce BPMN XML.
 - The uml://templates resource (key "bpmn") for a minimal BPMN XML starter.
 """
 
@@ -490,7 +486,7 @@ Steps:
    - Dependency: ClassA ..> ClassB
 4. Output a single Mermaid code block starting with classDiagram and containing all classes and relationships.
 
-After producing the Mermaid code, call **generate_uml** or **generate_diagram_url** with `diagram_type` **mermaid** and the raw source as `code`. Prefer **generate_diagram_url** when no file should be written.
+After producing the Mermaid code, call **generate_uml** with `diagram_type` **mermaid** and the raw source as `code`. Omit **output_dir** when no file should be written.
 """
 
 

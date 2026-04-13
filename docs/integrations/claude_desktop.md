@@ -19,21 +19,26 @@ Claude Desktop requires specific configuration to connect to the UML-MCP server:
 1. Open Claude Desktop
 2. Go to Settings (gear icon) → Advanced → MCP Servers
 3. Add a new MCP server with the following details:
-   - **Name**: UML-MCP-Server
-   - **Command**: python (or the full path to your Python executable)
-   - **Arguments**: `/path/to/uml-mcp/server.py` (replace with actual path)
-   - **Working Directory**: `/path/to/uml-mcp` (replace with actual path)
-   - **Output Directory**: Directory where you want diagrams to be saved
+   - **Name**: `uml-mcp` (or any label; must match the JSON key under `mcpServers`)
+   - **Command**: `python` (or the full path to your Python executable)
+   - **Arguments**: `-u` and `server.py` (working directory must be the repo root so `server.py` resolves)
+   - **Working Directory**: absolute path to your `uml-mcp` clone
+   - Optional environment: `KROKI_SERVER`, `MCP_OUTPUT_DIR`, `MCP_DIAGRAM_FALLBACK` (see [Configuration](../configuration.md))
 
 Example configuration (see also **`config/claude_desktop_config.json`** and **`config/README.md`** in the repo):
 
 ```json
 {
   "mcpServers": {
-    "UML-MCP-Server": {
+    "uml-mcp": {
       "command": "python",
-      "args": ["/path/to/uml-mcp/server.py"],
-      "cwd": "/path/to/uml-mcp"
+      "args": ["-u", "server.py"],
+      "cwd": "/path/to/uml-mcp",
+      "env": {
+        "KROKI_SERVER": "https://kroki.io",
+        "MCP_OUTPUT_DIR": "output",
+        "MCP_DIAGRAM_FALLBACK": "true"
+      }
     }
   }
 }

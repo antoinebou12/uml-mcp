@@ -8,14 +8,13 @@ The Diagram Assistant is the set of MCP tools, resources, and prompts that help 
 |-------------|------------------|--------|-----------|
 | "Show me a Mermaid sequence diagram for an API call" | Return valid Mermaid `sequenceDiagram` (client → API → backend) and optionally call `generate_uml("mermaid", code)`. | `generate_uml` | `uml://examples` (mermaid), `uml://mermaid-examples` (sequence_api) |
 | "Generate a Gantt chart using Mermaid syntax" | Return valid Mermaid `gantt` block and optionally call `generate_uml("mermaid", code)`. | `generate_uml` | `uml://mermaid-examples` (gantt), `uml://templates` |
-| "Explain how to draw a BPMN process model" | Return concise guidance (elements, flow, BPMN 2.0.2 alignment) and optionally point to BPMN template/example. | `generate_bpmn_diagram`, `generate_uml` | `uml://bpmn-guide`, `uml://templates` (bpmn) |
+| "Explain how to draw a BPMN process model" | Return concise guidance (elements, flow, BPMN 2.0.2 alignment) and optionally point to BPMN template/example. | `generate_uml` (`diagram_type` **bpmn**) | `uml://bpmn-guide`, `uml://templates` (bpmn) |
 | "Convert this class diagram into Mermaid code" | Take PlantUML or description and output Mermaid `classDiagram`; optionally call `generate_uml("mermaid", code)`. | `generate_uml` | `uml://templates`, `uml://examples` |
 
 ## Tools
 
-- **generate_uml** — Main entry point: pass `diagram_type` (e.g. `class`, `sequence`, `mermaid`, `bpmn`) and `code` to render via Kroki (with optional fallbacks). Implementation: tools call **`mcp_core/core/diagram_service.py`**, which validates and calls **`generate_diagram`**; rendering is **`diagram_rendering.run_diagram_pipeline`** (Kroki first). Successful responses may include **`source`** (`kroki`, `plantuml_server`, or `mermaid_ink`).
-- **generate_diagram_url** — Same pipeline without saving a file (URL / base64 only).
-- **generate_bpmn_diagram** — BPMN-specific generator for BPMN XML.
+- **generate_uml** — Pass `diagram_type` (e.g. `class`, `sequence`, `mermaid`, `bpmn`) and `code`. Omit **`output_dir`** for URL / base64 only; set **`output_dir`** to save a file. Rendering goes through **`mcp_core/core/diagram_service.py`** → **`generate_diagram`** → **`diagram_rendering.run_diagram_pipeline`** (Kroki first, with optional fallbacks). Responses may include **`source`** (`kroki`, `plantuml_server`, or `mermaid_ink`).
+- **validate_uml** — Local validation of type, format, and light syntax before render (no network).
 
 ## Resources
 
@@ -34,7 +33,7 @@ Registered prompts that support the four scenarios above:
 
 - **mermaid_sequence_api** — Produce a Mermaid sequence diagram for an API call (client, API, auth/DB, request/response, optional `alt`); then call `generate_uml("mermaid", code)`.
 - **mermaid_gantt** — Produce a Mermaid Gantt chart with title, dateFormat, sections, and tasks; then call `generate_uml("mermaid", code)`.
-- **bpmn_process_guide** — Explain how to draw a BPMN process (elements, flow, BPMN 2.0.2); point to `uml://bpmn-guide` and `generate_bpmn_diagram` / `generate_uml("bpmn", ...)`.
+- **bpmn_process_guide** — Explain how to draw a BPMN process (elements, flow, BPMN 2.0.2); point to `uml://bpmn-guide` and `generate_uml("bpmn", ...)`.
 - **convert_class_to_mermaid** — Convert a class diagram (PlantUML or prose) into Mermaid `classDiagram` and optionally call `generate_uml("mermaid", code)`.
 
 Other diagram prompts (e.g. `class_diagram`, `sequence_diagram`, `uml_diagram_with_thinking`) remain available for general UML generation.

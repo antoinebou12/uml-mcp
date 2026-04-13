@@ -2,22 +2,22 @@
 
 This guide explains how to install and set up the UML-MCP server.
 
-## System Requirements
+## System requirements
 
-- Python 3.10 or higher
-- [uv](https://docs.astral.sh/uv/), [Poetry](https://python-poetry.org/), or pip
-- Optional: Docker for running local PlantUML or Kroki servers
+- Python **3.12** (see `requires-python` in `pyproject.toml`)
+- [uv](https://docs.astral.sh/uv/) (recommended), [Poetry](https://python-poetry.org/), or pip
+- Optional: Docker for local PlantUML or Kroki
 
-## Installation Steps
+## Installation steps
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/uml-mcp.git
+git clone https://github.com/antoinebou12/uml-mcp.git
 cd uml-mcp
 ```
 
-2. Install the dependencies:
+2. Install dependencies:
 
 **With uv (recommended):**
 
@@ -34,10 +34,12 @@ poetry install
 **With pip:**
 
 ```bash
-pip install -r requirements.txt
+pip install -e .
 ```
 
-3. For development (tests, linting):
+Alternatively: `pip install -r requirements.txt` (generated from the lockfile; see [CONTRIBUTING.md](https://github.com/antoinebou12/uml-mcp/blob/main/CONTRIBUTING.md)).
+
+3. For development (tests, linting, docs):
 
 ```bash
 uv sync --all-groups
@@ -45,59 +47,66 @@ uv sync --all-groups
 # or: pip install -r requirements-dev.txt
 ```
 
-## Verifying Installation
+## Run the server
 
-To verify your installation:
+From the project root:
 
 ```bash
-python server.py --list-tools
+python server.py
 ```
 
-You should see output similar to:
+Default transport is **stdio** (for MCP clients). For local HTTP:
 
-```
-Starting UML-MCP Server v1.2.0
-Server Name: UML Diagram Generator
-Available Tools: 12
-Available Prompts: 3
+```bash
+python server.py --transport http --host 127.0.0.1 --port 8000
 ```
 
-## IDE Integration
+With uv: `uv run python server.py` (same flags).
 
-### Cursor and other MCP clients
+## Verifying installation
 
-Configure your IDE to run the UML-MCP server. Use **manual configuration**:
+```bash
+uv run python server.py --list-tools
+```
 
-- **Command**: `python` (or full path to your venv Python if using uv/Poetry)
-- **Arguments**: `["/path/to/uml-mcp/server.py"]` — use the **full path** to `server.py`
-- **Working directory**: `/path/to/uml-mcp` (project root)
-- **Output directory**: Optional; set `MCP_OUTPUT_DIR` in env or use default `./output`
+You should see a table listing **`generate_uml`** and **`validate_uml`**, plus registered prompts/resources in logs or `--list-tools` output depending on UI settings.
 
-See [config/README.md](../config/README.md) for where each app stores its config, and [Cursor integration](integrations/cursor.md) or [Claude Desktop integration](integrations/claude_desktop.md) for step-by-step setup.
+## IDE integration
 
-## Optional Components
+Point your MCP client at `server.py` with **absolute** paths for `args` and `cwd` (project root); optional `MCP_OUTPUT_DIR` in `env`. **[config/README.md](https://github.com/antoinebou12/uml-mcp/blob/main/config/README.md)** has example JSON; **[User Manual – Configuration](user-manual.md#configuration)** summarizes Cursor and Claude Desktop. Step-by-step: [Cursor](integrations/cursor.md), [Claude Desktop](integrations/claude_desktop.md).
 
-### Local Diagram Servers
+## Optional components
 
-For better performance or offline use, you can set up local servers:
+### Local diagram servers
 
-#### PlantUML Server
+For better performance or offline use:
+
+#### PlantUML server
 
 ```bash
 docker run -d -p 8080:8080 plantuml/plantuml-server
 ```
 
-#### Kroki Server
+#### Kroki server
 
 ```bash
 docker run -d -p 8000:8000 yuzutech/kroki
 ```
 
+Then point UML-MCP at the local instances:
+
+```bash
+export USE_LOCAL_PLANTUML=true
+export PLANTUML_SERVER=http://localhost:8080
+export USE_LOCAL_KROKI=true
+export KROKI_SERVER=http://localhost:8000
+```
+
+(On Windows, use `set` in `cmd` or `$env:VAR = "value"` in PowerShell instead of `export`.)
+
 ## Troubleshooting
 
-If you encounter issues during installation:
-
-1. Ensure Python 3.10+ is installed and in your PATH
-2. Check that all required dependencies are installed
-3. Verify any local servers are running correctly
-4. Ensure proper permissions for the output directory
+1. Ensure Python **3.12** is installed and on your PATH
+2. Confirm dependencies installed (`uv sync` or equivalent)
+3. Verify any local servers are running
+4. Ensure write permissions if you use `output_dir` with `generate_uml`

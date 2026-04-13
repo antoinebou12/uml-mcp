@@ -3,7 +3,7 @@
 # UML-MCP: Diagram Generation via MCP
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
 [![smithery badge](https://smithery.ai/badge/antoinebou12/uml)](https://smithery.ai/server/antoinebou12/uml)
 [![MseeP.ai Security Assessment](https://img.shields.io/badge/MseeP.ai-Security%20Assessment-green)](https://mseep.ai/app/antoinebou12-uml-mcp)
 
@@ -17,7 +17,7 @@ Generate UML and other diagrams from AI assistants via the [Model Context Protoc
 - **MCP integration** -- works with Cursor, Claude Desktop, and any MCP client
 - **Multiple output formats** -- SVG, PNG, PDF, JPEG, base64 (varies by diagram type)
 - **Automatic fallback** -- Kroki first, then PlantUML server or Mermaid.ink if unavailable
-- **Read-only mode** -- `MCP_READ_ONLY=true` disables file writes (URL + base64 only)
+- **Read-only mode** -- `MCP_READ_ONLY=true` rejects `output_dir`; use `generate_uml` without `output_dir` for URL + base64
 - **Flexible deployment** -- stdio, HTTP, Vercel serverless, Docker, or Smithery
 
 ## Quick start
@@ -35,7 +35,9 @@ uv sync            # recommended
 # pip install -e . # alternative
 ```
 
-The published package installs **`mcp_core`** and **`tools`** only. The **`ai_uml/`** tree remains in the repository for research; it is not part of the installable distribution.
+The published package installs **`mcp_core`** and **`tools`** only.
+
+**Breaking change (v1.3):** The separate MCP tool `generate_diagram_url` was removed. Use **`generate_uml`** and omit **`output_dir`** when you only need a URL or base64.
 
 ### Run
 
@@ -72,8 +74,7 @@ Full list with supported output formats: run `python server.py --list-tools` or 
 ## MCP tools and resources
 
 **Tools:**
-- `generate_uml` -- generate a diagram and optionally save to disk
-- `generate_diagram_url` -- return diagram URL + base64 without file writes
+- `generate_uml` -- render a diagram; pass `output_dir` only to save a file (omit for URL + base64 only)
 - `validate_uml` -- structural validation before render (no network by default)
 
 **Resources** (via `uml://` URIs):
@@ -126,14 +127,13 @@ Full options: [docs/configuration.md](docs/configuration.md)
 ```
 server.py              -- MCP entry point (stdio/HTTP)
 app.py                 -- FastAPI REST API + MCP HTTP at /mcp
-api/app.py             -- Vercel serverless wrapper
+api/app.py             -- optional Vercel entry (loads root app; default handler is root app.py)
 mcp_core/
   core/                -- config, server, CLI, utilities, diagram pipeline
-  tools/               -- generate_uml, generate_diagram_url, validate_uml
+  tools/               -- generate_uml, validate_uml
   prompts/             -- diagram generation prompts
   resources/           -- uml:// resource handlers
 tools/kroki/           -- Kroki, PlantUML, Mermaid, D2 clients
-ai_uml/                -- research code in the repo only; **not** shipped in the PyPI wheel (see docs/ai_uml.md)
 ```
 
 **Fallback strategy:** Kroki (primary) -> PlantUML server (UML types) / Mermaid.ink (Mermaid) -> error with details.
