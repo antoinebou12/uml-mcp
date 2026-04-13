@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "python scripts/generate_server_card.py",
+  "buildCommand": "python -m mcp_core.build_static_server_card",
   "framework": "fastapi",
   "rewrites": [
     {
