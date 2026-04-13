@@ -25,7 +25,7 @@ Create and extend MCP servers in Python with FastMCP and the official MCP Python
 
 ## FastMCP Quick Reference
 
-Python 3.10+, MCP Python SDK 1.2.0+. Use `uv add "mcp[cli]"` or `uv add fastmcp` (or project may use `fastmcp` package).
+Python 3.12, MCP Python SDK 1.2.0+. Use `uv add "mcp[cli]"` or `uv add fastmcp` (or project may use `fastmcp` package).
 
 ```python
 from mcp.server.fastmcp import FastMCP

@@ -14,7 +14,7 @@ Backends: PlantUML (local or remote) and Kroki.
 
 ## How to work in this repo
 
-1. **Python**: Use Python 3.10+. Prefer `uv` for running commands: `uv run pytest`, `uv sync`. Poetry is also supported (`poetry run pytest`, `poetry install`).
+1. **Python**: Use Python 3.12 (see `requires-python` in `pyproject.toml`). Prefer `uv` for running commands: `uv run pytest`, `uv sync`. Poetry is also supported (`poetry run pytest`, `poetry install`).
 2. **Style**: Follow existing code style. The project uses black, isort, flake8, and mypy (see `pyproject.toml`). Modern tooling (ruff, ty) is described in `.skill/skills/modern-python/SKILL.md` if you are adding or refactoring tooling.
 3. **MCP Python**: When adding or changing MCP tools or resources, follow `.skill/skills/mcp-python/SKILL.md` (FastMCP, STDIO logging, best practices).
 4. **Sequential thinking**: For complex or multi-step tasks, use step-by-step reasoning; when the sequential-thinking MCP tool is available, use it for hard problems (see `.skill/skills/sequential-thinking/SKILL.md`).

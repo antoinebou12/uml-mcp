@@ -10,7 +10,7 @@ Use this file to guide AI agents (Cursor, etc.) when working in this repository.
 
 ## Tech stack
 
-- **Python 3.10+**
+- **Python 3.12** (matches `requires-python` in `pyproject.toml`)
 - **Dependency management**: Poetry and/or uv (prefer uv for commands when possible: `uv run pytest`, `uv sync`).
 - **Server**: FastAPI, Starlette; MCP via FastMCP.
 - **Packages**: `mcp_core` (MCP server, tools, config), `tools` (Kroki / PlantUML / Mermaid / D2 clients under `tools/kroki/`).
