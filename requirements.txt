@@ -48,7 +48,7 @@ cryptography==46.0.4
     # via
     #   authlib
     #   pyjwt
-cyclopts==4.5.1
+cyclopts==4.10.2
     # via fastmcp
 diskcache==5.6.3
     # via py-key-value-aio
