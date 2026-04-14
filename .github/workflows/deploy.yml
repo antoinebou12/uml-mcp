@@ -11,7 +11,7 @@ on:
         description: "Vercel deployment root URL (no trailing slash)"
         required: false
         type: string
-        default: "https://umlmcp.vercel.app"
+        default: "https://uml-mcp.vercel.app"
     secrets:
       SMITHERY_API_KEY:
         description: "Smithery API key for publish (--key)"

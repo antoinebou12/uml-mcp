@@ -59,7 +59,7 @@ After publishing, your server will appear at:
 
 Example: `https://smithery.ai/server/@antoinebou12/uml`
 
-**Improve your Smithery listing:** Open **Settings → General** on your server’s Smithery page. Set **Display name**, **Description**, **Homepage** (e.g. your repo URL or `https://umlmcp.vercel.app`), and **Server icon** to improve discoverability and the Server Metadata score. Adding the session config schema (see above) improves the Configuration UX score.
+**Improve your Smithery listing:** Open **Settings → General** on your server’s Smithery page. Set **Display name**, **Description**, **Homepage** (e.g. your repo URL or `https://uml-mcp.vercel.app`), and **Server icon** to improve discoverability and the Server Metadata score. Adding the session config schema (see above) improves the Configuration UX score.
 
 **AI and plugin compatibility:** The app serves `/.well-known/ai-plugin.json` with a dynamic base URL (so OpenAI-style plugins work on any deployment), `/openapi.json` and `/openapi.yaml` for API docs and AI consumers, and `/logo.png` (ICO) for manifests. The server card at `/.well-known/mcp/server-card.json` uses correct JSON schema types for all tools so AI models and Smithery get accurate tool schemas.
 

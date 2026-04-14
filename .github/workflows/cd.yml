@@ -11,6 +11,10 @@ on:
         description: 'Version increment type (patch, minor, major)'
         required: true
         default: 'patch'
+      vercel_url:
+        description: 'Vercel deployment root URL (no trailing slash)'
+        required: false
+        default: 'https://uml-mcp.vercel.app'
       deploy_to_smithery:
         description: 'Deploy to Smithery after build'
         type: boolean
@@ -51,4 +55,6 @@ jobs:
       (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy_to_smithery == 'true') ||
       github.event_name == 'release'
     uses: ./.github/workflows/deploy.yml
+    with:
+      vercel_url: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.vercel_url || 'https://uml-mcp.vercel.app' }}
     secrets: inherit

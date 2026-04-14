@@ -8,7 +8,7 @@ This manual walks you through installing, configuring, and using the UML-MCP dia
 
 UML-MCP is a **diagram generation server** that speaks the Model Context Protocol (MCP). It lets AI assistants (Cursor, Claude Desktop, etc.) create diagrams for you—UML (class, sequence, activity, use case, state, component, deployment, object), Mermaid, D2, Graphviz, ERD, and more—using PlantUML, Kroki, and other backends.
 
-- **No hosting required**: Use the [public endpoint](https://umlmcp.vercel.app/mcp) or [Smithery](https://smithery.ai/server/antoinebou12/uml) to add the server without installing anything.
+- **No hosting required**: Use the [public endpoint](https://uml-mcp.vercel.app/mcp) or [Smithery](https://smithery.ai/server/antoinebou12/uml) to add the server without installing anything.
 - **Or run locally**: Clone the repo and run `server.py` for full control and optional local PlantUML/Kroki.
 
 ---

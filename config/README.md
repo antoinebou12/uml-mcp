@@ -1,30 +1,52 @@
-# MCP client configuration examples
+# MCP Client Configuration Examples
 
-This folder holds **example** MCP server config snippets for UML-MCP. Copy the relevant block into your client’s config file and replace the paths with your actual `uml-mcp` install path.
+Use this folder for copy-paste MCP config snippets.
 
-## Cursor
+## Choose Your Mode
 
-- **File**:  
-  - Windows: `%APPDATA%\Cursor\User\globalStorage\cursor.mcp\mcp.json` or Cursor Settings → MCP  
-  - macOS: `~/Library/Application Support/Cursor/User/globalStorage/cursor.mcp/mcp.json`  
-  - Linux: `~/.config/Cursor/User/globalStorage/cursor.mcp/mcp.json`  
+- **Remote HTTP MCP (recommended):** use deployed endpoint `https://uml-mcp.vercel.app/mcp`
+- **Local stdio MCP:** run `server.py` from your machine
 
-- **Example**: `cursor_config.json`  
-  - Server key: **`uml-mcp`**. Set **`cwd`** to your repo root; the sample uses **`${workspaceFolder}`** if your Cursor build expands it in MCP config—otherwise substitute the absolute path.  
-  - **`args`**: `["-u", "server.py"]` runs unbuffered Python with `server.py` relative to `cwd`.  
-  - **`env`**: `KROKI_SERVER`, `MCP_OUTPUT_DIR` (`output` is relative to `cwd`), and `MCP_DIAGRAM_FALLBACK` (`true` for local Kroki fallbacks). See [Configuration](../docs/configuration.md).
+## Remote HTTP MCP
 
-## Claude Desktop
+Use this when you want zero local Python setup.
 
-- **File**:  
-  - Windows: `%APPDATA%\Claude\claude_desktop_config.json`  
-  - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`  
+```json
+"uml-mcp": {
+  "transport": "http",
+  "url": "https://uml-mcp.vercel.app/mcp"
+}
+```
 
-- **Example**: `claude_desktop_config.json`  
-  - Replace **`cwd`** (`C:\\Users\\YOU\\uml-mcp`) with your real project root (macOS/Linux: use `/path/to/uml-mcp`).  
-  - Same `args` and `env` as Cursor (see above).
+Notes:
 
-## Notes
+- Use `/mcp` path (not root URL)
+- Local env vars like `MCP_OUTPUT_DIR` and `KROKI_SERVER` do not apply here
+- Remote endpoint is read-only (no local file writes via `output_dir`)
 
-- **`cwd`** must be the project root (the folder that contains `server.py`).
-- If you use a virtualenv or Poetry, set **`command`** to that interpreter, e.g. `"C:\\path\\to\\uml-mcp\\.venv\\Scripts\\python.exe"` (Windows) or `"/path/to/uml-mcp/.venv/bin/python"` (macOS/Linux).
+## Local stdio MCP
+
+Use this when you want local execution and file output support.
+
+- **Cursor example:** `cursor_config.json`
+- **Claude Desktop example:** `claude_desktop_config.json`
+
+### Cursor config location
+
+- Windows: `%APPDATA%\Cursor\User\globalStorage\cursor.mcp\mcp.json` (or Cursor Settings -> MCP)
+- macOS: `~/Library/Application Support/Cursor/User/globalStorage/cursor.mcp/mcp.json`
+- Linux: `~/.config/Cursor/User/globalStorage/cursor.mcp/mcp.json`
+
+### Claude Desktop config location
+
+- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
+- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+### Local config notes
+
+- `cwd` must be your project root (the folder containing `server.py`)
+- `args: ["-u", "server.py"]` runs unbuffered Python
+- `MCP_OUTPUT_DIR`, `KROKI_SERVER`, and related env vars are local/self-hosted settings
+- If you use a virtualenv or Poetry, set `command` to that Python interpreter (for example `C:\\path\\to\\uml-mcp\\.venv\\Scripts\\python.exe` on Windows)
+
+See [Configuration](../docs/configuration.md) for the full local environment variable reference.
