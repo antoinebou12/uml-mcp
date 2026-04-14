@@ -26,7 +26,7 @@ beartype==0.22.9
     #   py-key-value-shared
 cachetools==7.0.5
     # via py-key-value-aio
-certifi==2026.1.4
+certifi==2026.2.25
     # via
     #   httpcore
     #   httpx
