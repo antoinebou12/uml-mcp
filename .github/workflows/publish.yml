@@ -272,12 +272,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          # Install only testing dependencies for validation
-          grep -v "^mcp>=1.2.0" requirements.txt > requirements-filtered.txt
-          grep -v "^mermaid-cli>=0.0.1" requirements-filtered.txt > requirements-clean.txt
-          pip install -r requirements-clean.txt
-          # Install httpx explicitly to avoid missing dependency error
-          pip install httpx>=0.25.0
+          pip install -r requirements.txt
 
       - name: Verify setup
         run: |
