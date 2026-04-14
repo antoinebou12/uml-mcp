@@ -37,8 +37,11 @@ jobs:
       - name: Assert requirements.txt matches uv.lock export
         run: |
           uv export --no-dev --no-hashes -o requirements.generated.txt
-          diff -u requirements.txt requirements.generated.txt
-          rm requirements.generated.txt
+          # uv embeds the output path in the header; compare without that line.
+          diff -u \
+            <(sed '/^#    uv export --no-dev --no-hashes -o /d' requirements.txt) \
+            <(sed '/^#    uv export --no-dev --no-hashes -o /d' requirements.generated.txt)
+          rm -f requirements.generated.txt
 
       - name: Lint
         run: |
