@@ -53,7 +53,7 @@ cryptography==46.0.4
     #   authlib
     #   pyjwt
     #   secretstorage
-cyclopts==4.5.1
+cyclopts==4.10.2
     # via fastmcp
 dnspython==2.8.0
     # via email-validator
