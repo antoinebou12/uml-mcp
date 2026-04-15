@@ -12,7 +12,8 @@ from typing import Any, Optional, cast
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, Response
+from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 # Suppress deprecation warnings from Vercel's vendored websockets/uvicorn (not from this app).
@@ -68,7 +69,7 @@ _OPENAPI_TAGS = [
 ]
 
 # Initialize FastAPI (use MCP lifespan when mounted so session manager initializes)
-# Swagger UI at /docs, ReDoc at /redoc for API exploration
+# Swagger UI at /docs, ReDoc at /redoc for API exploration (custom HTML so tab favicon matches branding)
 app = FastAPI(
     title="UML Diagram Generator",
     description=(
@@ -76,12 +77,50 @@ app = FastAPI(
         "[Swagger UI](/docs) · [ReDoc](/redoc) · [OpenAPI JSON](/openapi.json)"
     ),
     version="1.3.0",
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=None,
+    redoc_url=None,
+    swagger_ui_oauth2_redirect_url=None,
     openapi_url="/openapi.json",
     openapi_tags=_OPENAPI_TAGS,
     lifespan=_mcp_http_app.lifespan if _mcp_http_app else None,
 )
+
+_FAVICON_SVG = Path(__file__).resolve().parent / "favicon.svg"
+
+
+@app.get("/favicon.svg", include_in_schema=False)
+async def favicon_svg():
+    """Brand favicon for /docs and /redoc (and direct requests)."""
+    if not _FAVICON_SVG.is_file():
+        raise HTTPException(status_code=404, detail="Favicon not found")
+    return FileResponse(_FAVICON_SVG, media_type="image/svg+xml")
+
+
+@app.get("/docs", include_in_schema=False)
+async def swagger_ui_docs(request: Request) -> HTMLResponse:
+    """Swagger UI with project favicon (default FastAPI docs use the FastAPI icon)."""
+    root_path = request.scope.get("root_path", "").rstrip("/")
+    openapi_url = f"{root_path}{app.openapi_url}"
+    return get_swagger_ui_html(
+        openapi_url=openapi_url,
+        title=f"{app.title} - Swagger UI",
+        swagger_favicon_url=f"{root_path}/favicon.svg",
+        init_oauth=app.swagger_ui_init_oauth,
+        swagger_ui_parameters=app.swagger_ui_parameters,
+    )
+
+
+@app.get("/redoc", include_in_schema=False)
+async def redoc_docs(request: Request) -> HTMLResponse:
+    """ReDoc with project favicon."""
+    root_path = request.scope.get("root_path", "").rstrip("/")
+    openapi_url = f"{root_path}{app.openapi_url}"
+    return get_redoc_html(
+        openapi_url=openapi_url,
+        title=f"{app.title} - ReDoc",
+        redoc_favicon_url=f"{root_path}/favicon.svg",
+    )
+
 
 # MCP Streamable HTTP requires Accept: application/json, text/event-stream.
 # Some clients/proxies (e.g. Smithery) omit it; normalize for /mcp so the MCP layer accepts the request.
@@ -121,6 +160,13 @@ app.add_middleware(
 )
 # Run first (outermost): normalize Accept for /mcp so MCP Streamable HTTP accepts the request.
 app.add_middleware(cast(Any, _MCPAcceptHeaderMiddleware))
+
+try:
+    from mcp_core.core.http_observability import RequestIdAndRateLimitMiddleware
+
+    app.add_middleware(RequestIdAndRateLimitMiddleware)
+except Exception as e:  # noqa: BLE001
+    logger.warning("RequestIdAndRateLimitMiddleware not loaded: %s", e)
 
 # Import local modules
 try:

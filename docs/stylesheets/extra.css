@@ -1,0 +1,9 @@
+/* Slightly wider layout on large viewports (default grid is ~61rem) */
+.md-grid {
+  max-width: 76rem;
+}
+
+/* Home and dense link lists: a bit more breathing room */
+.md-typeset ul li {
+  margin-bottom: 0.35em;
+}

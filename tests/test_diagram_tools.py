@@ -6,7 +6,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from mcp_core.tools.diagram_tools import generate_uml, register_diagram_tools
+from mcp_core.tools.diagram_tools import (
+    generate_uml,
+    generate_uml_batch,
+    list_diagram_types,
+    register_diagram_tools,
+)
 
 
 class TestDiagramTools:
@@ -43,7 +48,12 @@ class TestDiagramTools:
         """Test that diagram tools are registered correctly (generate_uml and validate_uml)."""
         register_diagram_tools(mock_mcp_server)
 
-        expected_tools = ["generate_uml", "validate_uml"]
+        expected_tools = [
+            "list_diagram_types",
+            "generate_uml_batch",
+            "generate_uml",
+            "validate_uml",
+        ]
 
         for tool_name in expected_tools:
             matching_calls = [
@@ -176,3 +186,42 @@ class TestDiagramTools:
         args = mock_generate_diagram.call_args[0]
         assert args[0] == "graphviz"
         assert args[2] == "jpeg"
+
+    def test_list_diagram_types_matches_resource_shape(self):
+        """list_diagram_types returns the same keys as uml://types (per-type metadata)."""
+        types_map = list_diagram_types()
+        assert isinstance(types_map, dict)
+        assert "class" in types_map
+        assert types_map["class"]["backend"] == "plantuml"
+        assert "formats" in types_map["class"]
+
+    @patch("mcp_core.core.diagram_service.generate_diagram")
+    def test_generate_uml_batch_two_items(self, mock_generate_diagram):
+        """Batch runs each item and returns indexed results."""
+        mock_generate_diagram.return_value = {
+            "code": "x",
+            "url": "https://kroki.io/mermaid/svg/x",
+            "playground": None,
+            "local_path": None,
+        }
+        out = generate_uml_batch(
+            [
+                {"diagram_type": "mermaid", "code": "graph TD; A-->B;"},
+                {"diagram_type": "mermaid", "code": "graph TD; C-->D;"},
+            ]
+        )
+        assert "results" in out
+        assert len(out["results"]) == 2
+        assert out["results"][0]["index"] == 0
+        assert "url" in out["results"][0]
+        assert mock_generate_diagram.call_count == 2
+
+    def test_generate_uml_batch_empty(self):
+        out = generate_uml_batch([])
+        assert out.get("error")
+        assert out["results"] == []
+
+    def test_generate_uml_batch_invalid_item(self):
+        out = generate_uml_batch([{"diagram_type": "not_a_type", "code": "x"}])
+        assert len(out["results"]) == 1
+        assert "error" in out["results"][0]

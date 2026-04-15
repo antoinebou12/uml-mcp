@@ -8,10 +8,8 @@ from __future__ import annotations
 
 import base64
 import datetime
-import hashlib
 import logging
 import time
-from collections import OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -23,9 +21,6 @@ from tools.kroki.kroki import plantuml_playground_path_segment
 from .config import MCP_SETTINGS
 
 logger = logging.getLogger(__name__)
-
-# Bounded LRU of successful memory-only renders (output_dir is None); limits RAM vs repeated Kroki calls.
-_render_cache: "OrderedDict[str, Dict[str, Any]]" = OrderedDict()
 
 
 def _http_timeout() -> httpx.Timeout:
@@ -44,36 +39,6 @@ class DiagramRenderContext:
     output_dir: Optional[str]
     theme: Optional[str]
     scale: float
-
-
-def _cache_key(ctx: DiagramRenderContext) -> str:
-    raw = (
-        f"{ctx.backend_type}\n{ctx.output_format}\n{ctx.scale}\n{ctx.theme or ''}\n"
-        f"{ctx.prepared_code}"
-    ).encode("utf-8")
-    return hashlib.sha256(raw).hexdigest()
-
-
-def _diagram_cache_capacity() -> int:
-    return max(0, int(MCP_SETTINGS.diagram_cache_size))
-
-
-def _cache_get(key: str) -> Optional[Dict[str, Any]]:
-    cap = _diagram_cache_capacity()
-    if cap <= 0 or key not in _render_cache:
-        return None
-    _render_cache.move_to_end(key)
-    return dict(_render_cache[key])
-
-
-def _cache_set(key: str, value: Dict[str, Any]) -> None:
-    cap = _diagram_cache_capacity()
-    if cap <= 0:
-        return
-    _render_cache[key] = dict(value)
-    _render_cache.move_to_end(key)
-    while len(_render_cache) > cap:
-        _render_cache.popitem(last=False)
 
 
 def prepare_diagram_code(code: str, backend_type: str, theme: Optional[str]) -> str:
@@ -530,18 +495,6 @@ def run_diagram_pipeline(
     def elapsed_ms() -> float:
         return (time.perf_counter() - t0) * 1000
 
-    if ctx.output_dir is None and not MCP_SETTINGS.url_only:
-        cached = _cache_get(_cache_key(ctx))
-        if cached is not None:
-            logger.debug("Diagram render cache hit for %s", ctx.diagram_type)
-            out = dict(cached)
-            out["cache_hit"] = True
-            out["render_ms"] = round(elapsed_ms(), 2)
-            mime = _mime_for_output_format(ctx.output_format)
-            if mime is not None:
-                out["mime_type"] = mime
-            return out
-
     success, err = try_kroki_render(ctx, kroki_client=kroki_client)
     if success is not None:
         out = dict(success)
@@ -553,12 +506,6 @@ def run_diagram_pipeline(
             cache_hit=False,
             output_format=ctx.output_format,
         )
-        if (
-            ctx.output_dir is None
-            and not MCP_SETTINGS.url_only
-            and not out.get("error")
-        ):
-            _cache_set(_cache_key(ctx), dict(out))
         return out
 
     assert err is not None
@@ -593,6 +540,4 @@ def run_diagram_pipeline(
         cache_hit=False,
         output_format=ctx.output_format,
     )
-    if ctx.output_dir is None and not MCP_SETTINGS.url_only and not out.get("error"):
-        _cache_set(_cache_key(ctx), dict(out))
     return out

@@ -47,7 +47,7 @@ class TestReadOnlyMode:
 
             assert "generate_uml" in registered
             assert "validate_uml" in registered
-            assert len(registered) == 2
+            assert len(registered) == 4
         finally:
             config.MCP_SETTINGS.read_only = original_read_only
 
@@ -67,7 +67,7 @@ class TestReadOnlyMode:
 
             assert "generate_uml" in registered
             assert "validate_uml" in registered
-            assert len(registered) == 2
+            assert len(registered) == 4
         finally:
             config.MCP_SETTINGS.read_only = original_read_only
 

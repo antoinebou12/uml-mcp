@@ -123,8 +123,11 @@ class MCPSettings(BaseModel):
     max_render_seconds: float = Field(
         default_factory=lambda: float(os.environ.get("MCP_MAX_RENDER_SECONDS", "30"))
     )
-    diagram_cache_size: int = Field(
-        default_factory=lambda: int(os.environ.get("MCP_DIAGRAM_CACHE_SIZE", "32"))
+    batch_max_items: int = Field(
+        default_factory=lambda: int(os.environ.get("MCP_BATCH_MAX_ITEMS", "20"))
+    )
+    rate_limit_per_minute: int = Field(
+        default_factory=lambda: int(os.environ.get("MCP_RATE_LIMIT_PER_MINUTE", "0"))
     )
     output_dir: str = _get_output_dir()
     tools: List[str] = []

@@ -96,3 +96,6 @@ class TestRegisterDiagramPrompts:
         assert "uml_diagram" in registry
         assert "class_diagram" in registry
         assert "uml_diagram_with_thinking" in registry
+        assert "c4_model" in registry
+        assert "wireviz_harness" in registry
+        assert "bpmn_executable_process" in registry

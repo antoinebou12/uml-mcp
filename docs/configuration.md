@@ -30,6 +30,14 @@ Command-line options override values in `fastmcp.json` (e.g. `fastmcp run --port
 | `USE_LOCAL_PLANTUML` | Use local PlantUML server (true/false) | `false` |
 | `MCP_DIAGRAM_FALLBACK` | After Kroki fails, try PlantUML server / Mermaid.ink | **On** for typical desktop; **off** when `VERCEL` is set or `USE_LOCAL_KROKI=true` unless overridden |
 | `FASTMCP_STATELESS_HTTP` | Enable stateless HTTP for multi-worker/horizontal scaling (true/false) | `false` |
+| `MCP_MAX_CODE_LENGTH` | Maximum diagram source length (characters) | `500000` |
+| `MCP_MAX_RENDER_SECONDS` | HTTP timeout budget for Kroki/fallback image fetch (seconds) | `30` |
+| `MCP_BATCH_MAX_ITEMS` | Maximum items per `generate_uml_batch` call | `20` |
+| `MCP_RATE_LIMIT_PER_MINUTE` | Per-client IP requests per minute for `/mcp`, `/generate_diagram`, `/kroki_encode` (FastAPI only). `0` disables. | `0` |
+| `MCP_URL_ONLY` | Return Kroki/playground URLs only (no fetch of rendered bytes, no `content_base64` in serverless). On Vercel defaults to true when unset. | See below |
+| `MCP_MEMORY_ONLY` | Never write diagram files to disk | Vercel: true when unset |
+
+When **`MCP_URL_ONLY=true`**, the server avoids downloading rendered image bytes inside the process (lower latency and cost on serverless). Responses omit `content_base64` unless you disable URL-only mode. **`MCP_MEMORY_ONLY=true`** skips all file writes; use URL/base64-from-client fetch if needed.
 
 ## Health check (HTTP deployment)
 

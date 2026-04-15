@@ -5,6 +5,7 @@ Logging is configured only by the CLI entrypoint (mcp_core.core.cli).
 Kroki client is lazy-loaded for testability.
 """
 
+import hashlib
 import logging
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
@@ -99,7 +100,14 @@ def generate_diagram(
             diagram_type, code, output_format, output_dir, theme, scale
         )
 
-    logger.info("Generating %s diagram (Kroki first, fallback if needed)", diagram_type)
+    fp12 = hashlib.sha256(code.encode("utf-8")).hexdigest()[:12]
+    logger.info(
+        "Generating diagram diagram_type=%s format=%s code_len=%s code_sha256_12=%s",
+        diagram_type,
+        output_format,
+        len(code),
+        fp12,
+    )
 
     if output_dir:
         try:

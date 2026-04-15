@@ -135,7 +135,7 @@ On Vercel, the runtime filesystem may be read-only. If the MCP cannot write the 
 
 ### URL-only mode on Vercel (no image fetch in the function)
 
-Production deployments set **`MCP_URL_ONLY=true`** (and **`MCP_MEMORY_ONLY=true`**, **`MCP_DIAGRAM_CACHE_SIZE=0`**) in `vercel.json`. In that mode the server builds Kroki and playground links locally and does **not** download rendered diagram bytes into the serverless function, does **not** return `content_base64`, and does not use the in-process render cache. PlantUML/Mermaid fallbacks return URLs only (no HTTP GET of the image inside the function). To restore fetching and base64 when not saving to disk, set `MCP_URL_ONLY=false` in the Vercel project environment. SVG `scale` is ignored in URL-only mode because scaling requires decoded SVG bytes.
+Production deployments set **`MCP_URL_ONLY=true`** (and **`MCP_MEMORY_ONLY=true`**) in `vercel.json`. In that mode the server builds Kroki and playground links locally and does **not** download rendered diagram bytes into the serverless function and does **not** return `content_base64`. PlantUML/Mermaid fallbacks return URLs only (no HTTP GET of the image inside the function). To restore fetching and base64 when not saving to disk, set `MCP_URL_ONLY=false` in the Vercel project environment. SVG `scale` is ignored in URL-only mode because scaling requires decoded SVG bytes.
 
 ### 405 on POST /mcp (Reconnect failed)
 

@@ -57,7 +57,7 @@ For client config snippets, use:
 ## Features
 
 - **30+ diagram types** -- UML (Class, Sequence, Activity, Use Case, State, Component, Deployment, Object), Mermaid, D2, Graphviz, TikZ, ERD, BlockDiag, BPMN, C4, and more via Kroki
-- **MCP-native tools** -- `generate_uml` and `validate_uml`
+- **MCP-native tools** -- `generate_uml`, `validate_uml` (optional `strict`), `list_diagram_types`, `generate_uml_batch`
 - **Multiple outputs** -- SVG, PNG, PDF, JPEG, and base64 (varies by diagram type)
 - **Fallback pipeline** -- Kroki first, then PlantUML or Mermaid.ink
 - **Flexible deployment** -- local stdio, local HTTP, Docker, Vercel, Smithery
@@ -75,7 +75,9 @@ Full list with supported formats: run `python server.py --list-tools` or query `
 ### Tools
 
 - `generate_uml` -- render a diagram; omit `output_dir` for URL/base64 only
-- `validate_uml` -- structural validation before render
+- `validate_uml` -- structural validation before render (`strict` for extra Mermaid/D2 checks)
+- `list_diagram_types` -- same metadata as `uml://types` when resources are awkward
+- `generate_uml_batch` -- multiple diagrams in one call (cap: `MCP_BATCH_MAX_ITEMS`)
 
 ### Resources (`uml://`)
 
@@ -123,6 +125,8 @@ These variables apply to local/self-hosted runs. Remote Vercel endpoint settings
 - `MCP_OUTPUT_DIR` -- diagram output directory (default: `./output`)
 - `MCP_READ_ONLY` -- disable file writes (default: `false`)
 - `MCP_MAX_CODE_LENGTH` -- max diagram code length (default: `500000`)
+- `MCP_BATCH_MAX_ITEMS` -- max items per `generate_uml_batch` (default: `20`)
+- `MCP_RATE_LIMIT_PER_MINUTE` -- HTTP rate limit per IP for diagram/MCP routes; `0` = off (default: `0`)
 - `USE_LOCAL_KROKI` -- use local Kroki instance (default: `false`)
 - `USE_LOCAL_PLANTUML` -- use local PlantUML instance (default: `false`)
 

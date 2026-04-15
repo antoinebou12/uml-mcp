@@ -457,6 +457,86 @@ Optionally point the user to:
 """
 
 
+@mcp_prompt(
+    "c4_model",
+    description=(
+        "Produce C4 model diagrams using PlantUML C4 includes: context or container views, "
+        "Person/System/Container/Component macros, relationships. Uses diagram_type c4plantuml."
+    ),
+    category="c4",
+)
+def c4_model_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+    """Task-specific guidance for C4 via Kroki c4plantuml backend (aligned with uml://templates key c4plantuml)."""
+    context = context or {}
+    return """You are a software architect. Produce a **C4 model** diagram using PlantUML C4 syntax.
+
+Before writing code:
+- Read **uml://types** and confirm `diagram_type` **c4plantuml** and allowed **output_format** values from **uml://formats**.
+- Read **uml://templates** (key **c4plantuml**) and **uml://examples** for **c4plantuml** for a valid starter.
+
+Rules:
+1. Start with standard includes, e.g. `!include <C4/C4_Context>` for a system context diagram, or `!include <C4/C4_Container>` for containers (add `C4_Component` if needed).
+2. Use **Person**, **System**, **System_Ext**, **Container**, **ContainerDb**, **Rel**, **Rel_Back**, **Rel_Neighbor** as appropriate; add a **title** line.
+3. Keep boundaries clear: one diagram focuses on one C4 level (context vs container vs component) unless the user asks otherwise.
+4. Output the **raw PlantUML/C4 source** (no markdown fences inside the tool argument).
+
+Workflow:
+1. Briefly state whether you are drawing a **context** or **container** (or component) view.
+2. Output complete C4 PlantUML in a fenced block for the human reader.
+3. Call **generate_uml** with `diagram_type` **c4plantuml** and pass the diagram source as `code`. Omit **output_dir** when no file should be written.
+"""
+
+
+@mcp_prompt(
+    "wireviz_harness",
+    description=(
+        "Produce WireViz YAML for cable/connector harnesses: connectors, cables, colors, pins. "
+        "Uses diagram_type wireviz."
+    ),
+    category="wireviz",
+)
+def wireviz_harness_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+    """Aligned with uml://templates and uml://examples for wireviz."""
+    context = context or {}
+    return """You are an electronics or systems engineer. Produce a **WireViz** harness description in **YAML**.
+
+Before writing code:
+- Read **uml://types** — backend for **wireviz** — and **uml://formats** for allowed outputs (typically png, svg).
+- Read **uml://templates** (key **wireviz**) and **uml://examples** (**wireviz**) for structure.
+
+YAML structure (typical):
+- **connectors**: named connectors with **pin** entries (id: signal name).
+- **cables**: gauge, length, color, and which connectors/wires they link.
+
+Use valid YAML (no tabs; consistent indentation). Output the YAML in a fenced block for readability, then call **generate_uml** with `diagram_type` **wireviz** and the **raw YAML string** as `code` (no markdown inside the tool argument). Omit **output_dir** when no file should be written.
+"""
+
+
+@mcp_prompt(
+    "bpmn_executable_process",
+    description=(
+        "Build a minimal executable BPMN 2.0 XML process: start, tasks, gateways, end, sequenceFlow. "
+        "Uses diagram_type bpmn."
+    ),
+    category="bpmn",
+)
+def bpmn_executable_process_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+    """Task-first BPMN XML; aligned with uml://templates bpmn and uml://bpmn-guide."""
+    context = context or {}
+    return """You are a BPMN modeler. Produce an **executable BPMN 2.0** XML snippet suitable for Kroki **bpmn**.
+
+Before writing code:
+- Read **uml://formats** for **bpmn** and use **uml://templates** (key **bpmn**) / **uml://bpmn-guide** for namespaces and element names.
+
+Task-first steps:
+1. Define a **bpmn:process** with `isExecutable="true"` (or `false` if the user wants a non-executable overview—match their request).
+2. Include **startEvent**, **endEvent**, **userTask** / **task** / **serviceTask** as needed, **exclusiveGateway** or **parallelGateway** if branching, and **sequenceFlow** wiring all elements.
+3. Use valid BPMN XML namespaces (see uml://templates **bpmn** example).
+
+Output the full XML in a fenced block for the reader, then call **generate_uml** with `diagram_type` **bpmn** and pass the **raw XML** as `code` (no markdown fences inside the tool argument). Omit **output_dir** when no file should be written.
+"""
+
+
 # Convert class diagram to Mermaid
 @mcp_prompt(
     "convert_class_to_mermaid",

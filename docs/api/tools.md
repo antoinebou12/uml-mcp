@@ -1,6 +1,6 @@
 # MCP Tools Reference
 
-**`generate_uml`** renders diagrams (optional save to disk). **`validate_uml`** checks inputs locally without calling Kroki. Both use the diagram types under `uml://types`; allowed output formats per type are in `uml://formats`.
+**`generate_uml`** renders diagrams (optional save to disk). **`validate_uml`** checks inputs locally without calling Kroki. **`list_diagram_types`** returns the same metadata as the `uml://types` resource. **`generate_uml_batch`** renders multiple diagrams in one call (see [Configuration](../configuration.md) for `MCP_BATCH_MAX_ITEMS`). Diagram types and formats: `uml://types`, `uml://formats`.
 
 ## Rendering fallback
 
@@ -48,11 +48,24 @@ Generates a diagram. Pass **`output_dir`** only when you need a file on disk; if
 }
 ```
 
+## `list_diagram_types`
+
+Returns a JSON object whose keys are diagram type names and whose values include `backend`, `description`, and `formats` (same as `uml://types`). No parameters.
+
+## `generate_uml_batch`
+
+**Parameters:**
+
+- `items` (array of objects): each object supports the same fields as `generate_uml` except **`output_dir`** (not per item). Required: `diagram_type`, `code`. Optional: `output_format`, `theme`, `scale`.
+- `output_dir` (string, optional): shared output directory for all items; omit for URL/base64 only.
+
+**Returns:** `{ "results": [ { "index": 0, ... }, ... ] }` where each entry matches `generate_uml` output or includes `error` for that index. Empty `items` or exceeding `MCP_BATCH_MAX_ITEMS` yields an `error` at the top level.
+
 ## `validate_uml`
 
 Validates `diagram_type`, `code`, and `output_format` locally (no network). Use before `generate_uml` to catch unsupported types or formats.
 
-**Parameters:** `diagram_type`, `code`, `output_format` (default `svg`).
+**Parameters:** `diagram_type`, `code`, `output_format` (default `svg`), **`strict`** (boolean, default `false`) — when `true`, applies extra Mermaid/D2 checks only (no extra PlantUML rules beyond existing `@startuml`/`@enduml` balance).
 
 ## TikZ support
 

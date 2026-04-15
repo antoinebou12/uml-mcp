@@ -44,3 +44,35 @@ def test_validate_uml_mermaid_minimal_ok():
     out = validate_uml_inputs("mermaid", "graph TD; A-->B;", "svg")
     assert out["valid"] is True
     assert out["backend"] == "mermaid"
+
+
+def test_validate_uml_strict_mermaid_rejects_garbage():
+    out = validate_uml_inputs(
+        "mermaid",
+        "not a diagram",
+        "svg",
+        strict=True,
+    )
+    assert out["valid"] is False
+    assert any("strict" in e.lower() for e in out["errors"])
+
+
+def test_validate_uml_strict_mermaid_ok():
+    out = validate_uml_inputs(
+        "mermaid",
+        "graph TD; A-->B;",
+        "svg",
+        strict=True,
+    )
+    assert out["valid"] is True
+
+
+def test_validate_uml_strict_d2_unclosed_quote():
+    out = validate_uml_inputs(
+        "d2",
+        'x: "broken',
+        "svg",
+        strict=True,
+    )
+    assert out["valid"] is False
+    assert any("quote" in e.lower() for e in out["errors"])

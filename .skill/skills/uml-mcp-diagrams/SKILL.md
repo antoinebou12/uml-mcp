@@ -1,7 +1,8 @@
 ---
 name: uml-mcp-diagrams
 description: >-
-  Creates diagrams via the uml-mcp MCP server (generate_uml, validate_uml) and
+  Creates diagrams via the uml-mcp MCP server (generate_uml, validate_uml,
+  list_diagram_types, generate_uml_batch) and
   returns shareable Kroki URLs plus optional playground links. Use when the user
   wants a diagram, asks for PlantUML/Mermaid/D2/UML, wants a URL instead of a
   saved file, or mentions uml-mcp, Kroki, or diagram_type.
@@ -17,7 +18,8 @@ Turn the user’s intent into valid `diagram_type` + source `code`, call **gener
 
 1. **If `diagram_type` is unknown or ambiguous**, read the **`uml://types`** resource (or **`uml://capabilities`**) to list valid types and supported backends.
 2. **For starter syntax**, use **`uml://templates`** or **`uml://examples`**; for Mermaid specifics, **`uml://mermaid-examples`** when relevant.
-3. **Optional quality pass**: call **`validate_uml`** with the same `diagram_type`, `code`, and planned `output_format` to catch local errors before render.
+3. **Optional quality pass**: call **`validate_uml`** with the same `diagram_type`, `code`, and planned `output_format` to catch local errors before render. Use **`strict: true`** for stricter Mermaid/D2 checks when needed.
+4. If you cannot read **`uml://types`**, call **`list_diagram_types`** for the same metadata.
 
 ## Calling generate_uml
 
@@ -54,9 +56,9 @@ When several types fit, pick the one the user named; otherwise prefer the type w
 
 ## MCP tools and resources
 
-- **Tools**: `generate_uml`, `validate_uml`
+- **Tools**: `generate_uml`, `validate_uml`, `list_diagram_types`, `generate_uml_batch`
 - **Resources**: `uml://types`, `uml://formats`, `uml://templates`, `uml://examples`, `uml://capabilities`, `uml://server-info`, `uml://mermaid-examples`, `uml://bpmn-guide`, `uml://workflow`
 
-**Prompts** (when the client exposes them): `uml_diagram`, `uml_diagram_with_thinking`, and type-specific prompts (`class_diagram`, `sequence_diagram`, `activity_diagram`, `usecase_diagram`, `mermaid_sequence_api`, `mermaid_gantt`, `bpmn_process_guide`, `convert_class_to_mermaid`) help structure code before `generate_uml`.
+**Prompts** (when the client exposes them): `uml_diagram`, `uml_diagram_with_thinking`, and type-specific prompts (`class_diagram`, `sequence_diagram`, `activity_diagram`, `usecase_diagram`, `mermaid_sequence_api`, `mermaid_gantt`, `bpmn_process_guide`, `c4_model`, `wireviz_harness`, `bpmn_executable_process`, `convert_class_to_mermaid`) help structure code before `generate_uml`.
 
 Always use the **MCP tool/resource APIs** exposed in the environment; do not guess unsupported `diagram_type` or `output_format` values when unsure—confirm with `uml://types` / `uml://formats`.

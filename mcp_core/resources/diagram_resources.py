@@ -10,6 +10,7 @@ from tools.kroki.kroki_templates import DiagramExamples, DiagramTemplates
 from mcp_core.server.fastmcp_wrapper import FastMCP
 
 from ..core.config import MCP_SETTINGS
+from ..core.diagram_catalog import get_diagram_types_dict
 
 logger = logging.getLogger(__name__)
 
@@ -65,14 +66,7 @@ def mcp_resource(
 )
 def get_diagram_types() -> str:
     """Get available diagram types"""
-    types = {}
-    for name, config in MCP_SETTINGS.diagram_types.items():
-        types[name] = {
-            "backend": config.backend,
-            "description": config.description,
-            "formats": config.formats,
-        }
-    return json.dumps(types, indent=2)
+    return json.dumps(get_diagram_types_dict(), indent=2)
 
 
 @mcp_resource(

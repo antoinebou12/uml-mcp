@@ -168,6 +168,15 @@ def test_swagger_docs_available():
     response = client.get("/docs")
     assert response.status_code == 200
     assert "swagger" in response.text.lower() or "openapi" in response.text.lower()
+    assert "favicon.svg" in response.text
+
+
+def test_favicon_svg_served():
+    """Brand favicon is available for Swagger/ReDoc tabs."""
+    response = client.get("/favicon.svg")
+    assert response.status_code == 200
+    assert "image/svg" in response.headers.get("content-type", "")
+    assert b"<svg" in response.content[:200]
 
 
 def test_mcp_post_never_405():

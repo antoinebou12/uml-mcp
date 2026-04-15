@@ -6,6 +6,7 @@ Reuses GenerateUMLInput for type/format/length rules, then applies light structu
 
 from __future__ import annotations
 
+import re
 from typing import Any, Dict, List
 
 from pydantic import ValidationError
@@ -37,6 +38,42 @@ def _structural_errors(backend_type: str, prepared_code: str) -> List[str]:
     return errors
 
 
+_MERMAID_HEAD = re.compile(
+    r"^\s*(graph\b|flowchart\b|sequenceDiagram\b|classDiagram\b|stateDiagram\b|"
+    r"erDiagram\b|gantt\b|pie\b|gitGraph\b|journey\b|mindmap\b|timeline\b|"
+    r"requirementDiagram\b|sankey-beta\b|block-beta\b|C4Context\b|C4Container\b)",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def _structural_errors_strict_mermaid(prepared_code: str) -> List[str]:
+    """Extra checks when strict=True; conservative to limit false positives."""
+    errors: List[str] = []
+    s = prepared_code.strip()
+    if not s:
+        errors.append("Mermaid diagram code is empty.")
+        return errors
+    if not _MERMAID_HEAD.search(s):
+        errors.append(
+            "Mermaid (strict): start with a diagram keyword such as "
+            "`graph TD`, `flowchart LR`, or `sequenceDiagram`."
+        )
+    if "subgraph" in s.lower() and "end" not in s.lower():
+        errors.append(
+            "Mermaid (strict): subgraph blocks typically need a matching `end`."
+        )
+    return errors
+
+
+def _structural_errors_strict_d2(prepared_code: str) -> List[str]:
+    errors: List[str] = []
+    for i, line in enumerate(prepared_code.splitlines(), 1):
+        if line.count('"') % 2 != 0:
+            errors.append(f"D2 (strict): line {i} may have an unclosed double quote.")
+            break
+    return errors
+
+
 def _suggestions_for_errors(errors: List[str]) -> List[str]:
     sug: List[str] = []
     for e in errors:
@@ -50,6 +87,10 @@ def _suggestions_for_errors(errors: List[str]) -> List[str]:
             )
         if "D2" in e:
             sug.append("Define at least one shape or connection (e.g. `a -> b`).")
+        if "strict" in e.lower() and "Mermaid" in e:
+            sug.append(
+                "Use a standard Mermaid diagram header on the first line (e.g. graph TD;)."
+            )
     return list(dict.fromkeys(sug))
 
 
@@ -57,6 +98,7 @@ def validate_uml_inputs(
     diagram_type: str,
     code: str,
     output_format: str = "svg",
+    strict: bool = False,
 ) -> Dict[str, Any]:
     """
     Validate diagram inputs without calling Kroki or other renderers.
@@ -93,7 +135,13 @@ def validate_uml_inputs(
     cfg = MCP_SETTINGS.diagram_types[dt_key]
     prepared = prepare_diagram_code(validated.code, cfg.backend, None)
     structural = _structural_errors(cfg.backend, prepared)
-    all_errors = structural
+    extra: List[str] = []
+    if strict:
+        if cfg.backend == "mermaid":
+            extra.extend(_structural_errors_strict_mermaid(prepared))
+        elif cfg.backend == "d2":
+            extra.extend(_structural_errors_strict_d2(prepared))
+    all_errors = structural + extra
     valid = len(all_errors) == 0
 
     return {
@@ -104,4 +152,5 @@ def validate_uml_inputs(
         "suggestions": _suggestions_for_errors(all_errors),
         "corrected_code": prepared if prepared != validated.code.strip() else None,
         "prepared_code": prepared,
+        "strict": strict,
     }

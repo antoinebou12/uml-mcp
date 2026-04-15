@@ -126,29 +126,3 @@ def test_run_diagram_pipeline_kroki_success_has_metadata(sample_ctx):
     assert result["attempts"] == [{"backend": "kroki", "ok": True}]
     assert result["cache_hit"] is False
     assert result.get("mime_type") == "image/svg+xml"
-
-
-def test_run_diagram_pipeline_cache_hit_second_call():
-    from mcp_core.core.diagram_rendering import _render_cache
-
-    _render_cache.clear()
-    ctx = DiagramRenderContext(
-        diagram_type="class",
-        backend_type="plantuml",
-        prepared_code="@startuml\nclass A\n@enduml",
-        output_format="svg",
-        output_dir=None,
-        theme=None,
-        scale=1.0,
-    )
-    mock_client = MagicMock()
-    mock_client.generate_diagram.return_value = {
-        "url": "https://kroki.io/plantuml/svg/abc",
-        "content": b"<svg>x</svg>",
-        "playground": None,
-    }
-    first = run_diagram_pipeline(ctx, kroki_client=mock_client)
-    assert first["cache_hit"] is False
-    second = run_diagram_pipeline(ctx, kroki_client=mock_client)
-    assert second["cache_hit"] is True
-    assert mock_client.generate_diagram.call_count == 1

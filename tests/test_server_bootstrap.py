@@ -22,7 +22,12 @@ pytestmark = pytest.mark.skipif(
 )
 
 # Expected tool names from register_diagram_tools (single diagram tool)
-EXPECTED_TOOLS = ["generate_uml", "validate_uml"]
+EXPECTED_TOOLS = [
+    "list_diagram_types",
+    "generate_uml_batch",
+    "generate_uml",
+    "validate_uml",
+]
 
 # Expected resource URIs from register_diagram_resources
 EXPECTED_RESOURCES = [
@@ -42,6 +47,13 @@ EXPECTED_PROMPTS = [
     "sequence_diagram",
     "activity_diagram",
     "usecase_diagram",
+    "mermaid_sequence_api",
+    "mermaid_gantt",
+    "bpmn_process_guide",
+    "c4_model",
+    "wireviz_harness",
+    "bpmn_executable_process",
+    "convert_class_to_mermaid",
 ]
 
 

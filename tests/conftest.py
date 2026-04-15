@@ -22,15 +22,6 @@ def _testing_env(monkeypatch):
 
 
 @pytest.fixture(autouse=True)
-def _clear_diagram_render_cache():
-    """Isolate diagram LRU cache between tests (avoids mock bleed-through)."""
-    from mcp_core.core import diagram_rendering
-
-    diagram_rendering._render_cache.clear()
-    yield
-
-
-@pytest.fixture(autouse=True)
 def _enable_diagram_fallback_for_tests(monkeypatch):
     """Match local-desktop defaults: allow Kroki→PlantUML/Mermaid after Kroki fails."""
     from mcp_core.core.config import MCP_SETTINGS
