@@ -164,7 +164,7 @@ app.add_middleware(cast(Any, _MCPAcceptHeaderMiddleware))
 try:
     from mcp_core.core.http_observability import RequestIdAndRateLimitMiddleware
 
-    app.add_middleware(RequestIdAndRateLimitMiddleware)
+    app.add_middleware(cast(Any, RequestIdAndRateLimitMiddleware))
 except Exception as e:  # noqa: BLE001
     logger.warning("RequestIdAndRateLimitMiddleware not loaded: %s", e)
 

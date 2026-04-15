@@ -116,7 +116,9 @@ def generate_uml_batch(
             )
             continue
         try:
-            validated = GenerateUMLInput(**{**raw, "output_dir": output_dir})
+            validated = GenerateUMLInput.model_validate(
+                {**raw, "output_dir": output_dir}
+            )
         except ValidationError as e:
             results.append({"index": i, "error": _format_validation_error(e)})
             continue
