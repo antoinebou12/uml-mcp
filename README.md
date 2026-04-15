@@ -1,3 +1,4 @@
+
 # UML-MCP: Diagram Generation via MCP
 
 [![Run Tests](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml)
@@ -11,6 +12,9 @@ Generate UML and other diagrams through the [Model Context Protocol](https://mod
 
 **Live endpoint:** [https://uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp)  
 **Smithery:** [Add via Smithery](https://smithery.ai/server/antoinebou12/uml)
+
+<img width="934" height="1148" alt="577497880-464b5b44-710c-4688-bfdc-432036b59cd1" src="https://github.com/user-attachments/assets/2da4000c-2090-46c5-846c-1f3c834611e4" />
+
 
 ## Quick Start
 
