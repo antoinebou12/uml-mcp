@@ -57,7 +57,7 @@ cyclopts==4.5.1
     # via fastmcp
 dnspython==2.8.0
     # via email-validator
-docstring-parser==0.17.0
+docstring-parser==0.18.0
     # via cyclopts
 docutils==0.22.4
     # via rich-rst
