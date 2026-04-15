@@ -194,7 +194,7 @@ requests==2.32.5
     # via
     #   jsonschema-path
     #   uml-mcp
-rich==14.3.2
+rich==14.3.4
     # via
     #   cyclopts
     #   fastmcp
