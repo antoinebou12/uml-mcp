@@ -8,15 +8,13 @@ theme:
   name: material
   favicon: assets/favicon.svg
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
+    - scheme: default
       primary: slate
       accent: indigo
       toggle:
         icon: material/brightness-4
         name: Switch to dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
+    - scheme: slate
       primary: slate
       accent: indigo
       toggle:
@@ -27,10 +25,12 @@ theme:
     code: JetBrains Mono
   features:
     - navigation.instant
+    - navigation.path
     - navigation.tracking
     - navigation.expand
     - navigation.top
     - navigation.tabs
+    - navigation.tabs.sticky
     - navigation.sections
     - toc.follow
     - content.action.edit
