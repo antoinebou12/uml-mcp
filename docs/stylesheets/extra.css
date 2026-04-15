@@ -7,3 +7,8 @@
 .md-typeset ul li {
   margin-bottom: 0.35em;
 }
+
+/* Calmer link color in dark mode */
+[data-md-color-scheme="slate"] {
+  --md-typeset-a-color: var(--md-primary-fg-color);
+}

@@ -55,6 +55,8 @@ ty = ">=0.0.14"
 pytest-asyncio = "^0.21.1"
 mkdocs = ">=1.6.0"
 mkdocs-material = ">=9.5.0"
+mkdocs-git-revision-date-localized-plugin = ">=1.4.0"
+mkdocs-minify-plugin = ">=0.8.0"
 
 [tool.poetry.scripts]
 # Official MCP server CLI (single entrypoint; server.py delegates here)
@@ -117,4 +119,6 @@ dev = [
     "mypy>=1.19.1",
     "mkdocs>=1.6.0",
     "mkdocs-material>=9.5.0",
+    "mkdocs-git-revision-date-localized-plugin>=1.4.0",
+    "mkdocs-minify-plugin>=0.8.0",
 ]
