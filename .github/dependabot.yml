@@ -3,7 +3,9 @@
 
 version: 2
 updates:
-  - package-ecosystem: "pip"
+  # Single source of truth with CI: pyproject.toml + uv.lock (+ exported requirements.txt).
+  # Avoid pip+poetry here; duplicate ecosystems open conflicting PRs for the same packages.
+  - package-ecosystem: "uv"
     directory: "/"
     schedule:
       interval: "weekly"
@@ -17,12 +19,6 @@ updates:
     labels: ["dependencies", "github-actions"]
 
   - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    labels: ["dependencies"]
-
-  - package-ecosystem: "poetry"
     directory: "/"
     schedule:
       interval: "weekly"

@@ -9,7 +9,7 @@ annotated-doc==0.0.4
     # via fastapi
 annotated-types==0.7.0
     # via pydantic
-anyio==4.12.1
+anyio==4.13.0
     # via
     #   httpx
     #   mcp
@@ -22,15 +22,15 @@ attrs==25.4.0
     #   cyclopts
     #   jsonschema
     #   referencing
-authlib==1.6.7
+authlib==1.7.0
     # via fastmcp
 beartype==0.22.9
     # via py-key-value-aio
-cachetools==7.0.0
+cachetools==7.0.5
     # via py-key-value-aio
 caio==0.9.25
     # via aiofile
-certifi==2026.1.4
+certifi==2026.2.25
     # via
     #   httpcore
     #   httpx
@@ -48,16 +48,17 @@ click==8.3.2
     #   uvicorn
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
-cryptography==46.0.4
+cryptography==46.0.7
     # via
     #   authlib
+    #   joserfc
     #   pyjwt
     #   secretstorage
-cyclopts==4.5.1
+cyclopts==4.10.2
     # via fastmcp
 dnspython==2.8.0
     # via email-validator
-docstring-parser==0.17.0
+docstring-parser==0.18.0
     # via cyclopts
 docutils==0.22.4
     # via rich-rst
@@ -69,7 +70,7 @@ fastapi==0.128.5
     # via uml-mcp
 fastmcp==3.2.4
     # via uml-mcp
-graphviz==0.20.3
+graphviz==0.21
     # via uml-mcp
 griffelib==2.0.2
     # via fastmcp
@@ -106,6 +107,8 @@ jeepney==0.9.0 ; sys_platform == 'linux'
     #   secretstorage
 jinja2==3.1.6
     # via uml-mcp
+joserfc==1.6.4
+    # via authlib
 jsonref==1.1.0
     # via fastmcp
 jsonschema==4.26.0
@@ -168,7 +171,7 @@ pyperclip==1.11.0
     # via fastmcp
 python-dateutil==2.9.0.post0
     # via uml-mcp
-python-dotenv==1.2.1
+python-dotenv==1.2.2
     # via
     #   fastmcp
     #   pydantic-settings
@@ -194,7 +197,7 @@ requests==2.32.5
     # via
     #   jsonschema-path
     #   uml-mcp
-rich==14.3.2
+rich==14.3.4
     # via
     #   cyclopts
     #   fastmcp

@@ -106,10 +106,13 @@ See [SECURITY.md](SECURITY.md) for how to report vulnerabilities.
 Production dependencies for Vercel and `pip install -r requirements.txt` are exported from the lockfile:
 
 ```bash
+uv lock
 uv export --no-dev --no-hashes -o requirements.txt
 ```
 
 Run this after changing runtime dependencies in `pyproject.toml` / `uv.lock`, then commit the updated `requirements.txt`.
+
+**Transitive pins:** Some packages are pinned only in `[tool.uv] override-dependencies` in `pyproject.toml` (they are not direct Poetry deps). Dependabot is configured for the `uv` ecosystem so PRs target `uv.lock` consistently. After merging a dependency PR, re-export `requirements.txt` if the lockfile changed so CI’s “export matches `requirements.txt`” step stays green.
 
 ## Documentation
 
