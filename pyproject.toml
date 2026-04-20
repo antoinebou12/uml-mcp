@@ -39,7 +39,7 @@ click = "==8.3.2"
 charset-normalizer = "==3.4.7"
 python-dateutil = "^2.8.2"
 # Add diagram-related dependencies
-graphviz = "==0.21"
+graphviz = ">=0.21,<0.22"
 pillow = "^10.1.0"
 # If fastmcp is not your own module but a dependency (2.3.1+ for http_app / Streamable HTTP)
 fastmcp = ">=2.3.1,<4"
@@ -56,6 +56,9 @@ override-dependencies = [
     "cryptography==46.0.7",
     "cyclopts==4.10.2",
     "docstring-parser==0.18.0",
+    "graphviz==0.21",
+    "python-dotenv==1.2.2",
+    "rich==14.3.4",
 ]
 
 [tool.poetry.group.dev.dependencies]
