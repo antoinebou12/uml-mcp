@@ -161,7 +161,7 @@ pydantic-core==2.41.5
     # via
     #   pydantic
     #   uml-mcp
-pydantic-settings==2.12.0
+pydantic-settings==2.14.0
     # via mcp
 pygments==2.19.2
     # via rich
