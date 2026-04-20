@@ -57,6 +57,7 @@ override-dependencies = [
     "cyclopts==4.10.2",
     "docstring-parser==0.18.0",
     "graphviz==0.21",
+    "pygments<2.20",
     "python-dotenv==1.2.2",
     "rich==14.3.4",
 ]
