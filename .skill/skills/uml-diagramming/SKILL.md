@@ -1,11 +1,26 @@
 ---
 name: uml-diagramming
-description: Produces Mermaid or PlantUML diagram code from user specifications for UML, architecture, and flow diagrams. Use when the user asks for a diagram (sequence, class, activity, use case, component, state, deployment), diagram code, or when generating diagram script for documentation, design, or the generate_uml MCP tool. Supports Kroki-renderable output.
+description: >-
+  Produces Mermaid or PlantUML diagram code from user specifications for UML,
+  architecture, and flow diagrams. Use when the user asks for diagram code or
+  output for the generate_uml MCP tool. Supports Kroki-renderable output.
 ---
 
 # UML Diagramming
 
 Generate a single, correct Mermaid or PlantUML code block from a user's description. Output only the diagram script in one code block; no prose outside it.
+
+## Positive vs negative instructions (LLM steering)
+
+These are **not** “good vs bad diagrams”—they steer the **LLM** before diagram source is finalized:
+
+| | **Positive** | **Negative** |
+|---|----------------|---------------|
+| **Role** | What the model **must** do (DSL shape, notation). | What the model **must not** do (common junk). |
+| **Good** | “Use `sequenceDiagram`.” “Participant names: Client, API, DB.” | “No ``` fences.” “No ‘Here is the diagram:’ preamble.” |
+| **Bad** | Pasting the full user story again (use **template** / **description** for that). | Repeating the positive list as negatives (“do not omit participants”)—confusing and wasteful. |
+
+Keep each side **short**; when the provider exposes a separate negative or “must not” channel, route **negative** there instead of duplicating it in the main prompt.
 
 ## When to Use
 

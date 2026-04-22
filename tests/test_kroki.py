@@ -19,23 +19,6 @@ from tools.kroki.kroki import (
 from tools.kroki.kroki_templates import DiagramExamples, DiagramTemplates
 
 
-@pytest.fixture
-def mock_httpx_client():
-    """Mock the httpx client for testing."""
-    with patch("httpx.Client") as mock_client:
-        # Create mock response
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.content = b"<svg>test content</svg>"
-        mock_response.raise_for_status = MagicMock()
-
-        # Make client.get return the mock response
-        client_instance = mock_client.return_value
-        client_instance.get.return_value = mock_response
-
-        yield client_instance
-
-
 def test_kroki_initialization():
     """Test Kroki client initialization."""
     # Test with default URL

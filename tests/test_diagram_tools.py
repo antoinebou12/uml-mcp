@@ -4,8 +4,6 @@ Unit tests for diagram tool functions
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from mcp_core.tools.diagram_tools import (
     generate_uml,
     generate_uml_batch,
@@ -36,13 +34,6 @@ class TestDiagramTools:
             )
         finally:
             config.MCP_SETTINGS.read_only = original
-
-    @pytest.fixture
-    def mock_mcp_server(self):
-        """Fixture to create a mock MCP server"""
-        server = MagicMock()
-        server.tool = MagicMock()
-        return server
 
     def test_register_diagram_tools(self, mock_mcp_server):
         """Test that diagram tools are registered correctly (generate_uml and validate_uml)."""

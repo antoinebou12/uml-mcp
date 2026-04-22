@@ -14,6 +14,8 @@ if not os.environ.get("USE_REAL_FASTMCP", "").strip():
 
 import pytest
 
+pytest_plugins = ["tests.fixtures_mcp"]
+
 
 @pytest.fixture(autouse=True)
 def _testing_env(monkeypatch):

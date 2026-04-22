@@ -4,7 +4,7 @@ Tests for the FastAPI application.
 
 import json
 import os
-from unittest.mock import MagicMock, mock_open, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -16,36 +16,6 @@ from app import app  # noqa: E402
 
 # Create test client
 client = TestClient(app)
-
-
-@pytest.fixture
-def mock_generate_diagram():
-    """Mock the generate_diagram function."""
-    with patch("app.generate_diagram") as mock_func:
-        # Setup mock response
-        mock_func.return_value = {
-            "code": "@startuml\nclass Test\n@enduml",
-            "url": "https://kroki.io/plantuml/svg/test_url",
-            "playground": "https://playground.example.com",
-            "local_path": "/tmp/diagrams/test.svg",
-        }
-        yield mock_func
-
-
-@pytest.fixture
-def mock_plugin_manifest():
-    """Mock the plugin manifest file read."""
-    manifest_content = {
-        "schema_version": "v1",
-        "name_for_human": "UML Diagram Generator",
-        "description_for_human": "Generate UML diagrams from text",
-        "auth": {"type": "none"},
-        "api": {"type": "openapi", "url": "https://example.com/openapi.json"},
-        "logo_url": "https://example.com/logo.png",
-    }
-
-    with patch("builtins.open", mock_open(read_data=json.dumps(manifest_content))):
-        yield
 
 
 def test_root_endpoint():

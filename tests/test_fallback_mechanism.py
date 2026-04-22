@@ -7,53 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from mcp_core.core.utils import generate_diagram
-from tools.kroki.kroki import KrokiConnectionError, KrokiHTTPError
-
-
-@pytest.fixture
-def mock_kroki_failure():
-    """Mock the Kroki client to simulate failure."""
-    mock_client = MagicMock()
-    mock_client.generate_diagram.side_effect = KrokiConnectionError(
-        "Cannot connect to Kroki"
-    )
-    with patch("mcp_core.core.utils.get_kroki_client", return_value=mock_client):
-        yield mock_client
-
-
-@pytest.fixture
-def mock_plantuml_fallback():
-    """Mock the PlantUML fallback to succeed."""
-    mock_response = MagicMock()
-    mock_response.content = b"<svg>fallback content</svg>"
-    mock_response.raise_for_status = MagicMock()
-
-    # Mock httpx at the module level where it's imported
-    import httpx
-
-    with patch.object(httpx, "get", return_value=mock_response):
-        yield mock_response
-
-
-@pytest.fixture
-def mock_mermaid_fallback():
-    """Mock the Mermaid.ink fallback to succeed."""
-    mock_response = MagicMock()
-    mock_response.content = b"<svg>mermaid fallback content</svg>"
-    mock_response.raise_for_status = MagicMock()
-
-    mock_urls = MagicMock()
-    mock_urls.image_url = "https://mermaid.ink/svg/test"
-    mock_urls.edit_url = "https://mermaid.live/edit#test"
-
-    # Mock httpx at the module level and mermaid urls
-    import httpx
-
-    with (
-        patch.object(httpx, "get", return_value=mock_response),
-        patch("tools.kroki.mermaid.generate_mermaid_urls", return_value=mock_urls),
-    ):
-        yield mock_response
+from tools.kroki.kroki import KrokiHTTPError
 
 
 def test_fallback_plantuml_success(

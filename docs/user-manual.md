@@ -78,7 +78,9 @@ Try prompts like *“Create a class diagram for a banking app with Account, Cust
 | Tool | Purpose |
 |------|--------|
 | `generate_uml` | Render a diagram; set `output_dir` to save a file, or omit it for URL/base64 only. |
-| `validate_uml` | Check type, format, and basic syntax locally before render. |
+| `validate_uml` | Check type, format, and basic syntax locally before render (optional `strict` for stricter Mermaid/D2 checks). |
+| `list_diagram_types` | Return supported types and formats (same as `uml://types`) when the client cannot read resources. |
+| `generate_uml_batch` | Render multiple diagrams in one call; per-item errors do not stop the rest. |
 
 **Parameters, examples, and rendering fallback:** [API / tools](api/tools.md).
 

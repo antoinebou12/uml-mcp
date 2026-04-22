@@ -43,7 +43,7 @@ So the skip behavior is **by design** and consistent with “keep tests fast; us
 
 ## Integration tests and tools
 
-The server exposes **generate_uml** (omit `output_dir` for URL/base64 only) and **validate_uml** (see [mcp_core/tools/diagram_tools.py](https://github.com/antoinebou12/uml-mcp/blob/main/mcp_core/tools/diagram_tools.py)). Planning (diagram type, elements, relationships) is built into the default prompts (**uml_diagram**, **uml_diagram_with_thinking**), so the model plans first then calls `generate_uml` with the final code.
+The server exposes **generate_uml** (omit `output_dir` for URL/base64 only), **validate_uml**, **list_diagram_types** (same payload as `uml://types` when resources are unavailable), and **generate_uml_batch** (see [mcp_core/tools/diagram_tools.py](https://github.com/antoinebou12/uml-mcp/blob/main/mcp_core/tools/diagram_tools.py)). Planning (diagram type, elements, relationships) is built into the default prompts (**uml_diagram**, **uml_diagram_with_thinking**), so the model plans first then calls `generate_uml` with the final code.
 
 When you run integration tests with `USE_REAL_FASTMCP=1`, they verify that `generate_uml` is discoverable and callable via the real FastMCP client (e.g. **TestDiscoveryViaClient::test_list_tools_via_client**, **TestDiagramToolsViaClient**).
 
@@ -69,6 +69,6 @@ For full evaluation with Claude (requires `anthropic`), use the evaluation harne
 | **Why skipped**           | `USE_REAL_FASTMCP` is not set; skip is intentional.                                       |
 | **Run integration tests** | `USE_REAL_FASTMCP=1 uv run pytest tests/integration -v` (or set env in PowerShell first). |
 | **Testing approach**      | Default suite stays fast; integration tests are opt-in and use conftest/fixtures.          |
-| **Diagram tools**         | `generate_uml` and `validate_uml`; integration tests check they are listed and callable. |
+| **Diagram tools**         | `generate_uml`, `validate_uml`, `list_diagram_types`, `generate_uml_batch`; integration tests check they are listed and callable. |
 
 No code changes are required to “fix” the skips; they are the intended behavior. To see the integration tests execute, run them with the environment variable above.
