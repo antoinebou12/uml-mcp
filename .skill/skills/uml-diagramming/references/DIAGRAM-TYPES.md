@@ -2,6 +2,26 @@
 
 Full reference for mapping user-requested diagram types to Mermaid and PlantUML syntax, and optional constraints.
 
+## Intent → `diagram_type` (Kroki)
+
+Map common **presentation intents** to a concrete Kroki backend. Always confirm keys and formats with **`uml://types`** and **`uml://formats`**.
+
+| User intent | Typical `diagram_type` | Notes |
+|-------------|------------------------|--------|
+| **Sequence** (messages, lifelines, activations) | `sequence` (PlantUML) or `mermaid` with `sequenceDiagram` | Time flows top → bottom; label returns; avoid overcrowded lifelines. |
+| **State machine** | `state` (PlantUML) or `mermaid` with `stateDiagram-v2` | Label transitions; avoid duplicating “to error” from every state — use a note or one grouped path. |
+| **Flowchart** (decisions, branching) | `activity` (PlantUML) or `mermaid` with `flowchart` | One start / one end where possible; label every decision exit. |
+| **Swimlane** / RACI-style process | `activity` (PlantUML partitions/swimlanes), `bpmn`, or `mermaid` flowchart with `subgraph` per lane | BPMN when you need pools/lanes semantics; otherwise PlantUML activity. |
+| **Timeline / roadmap / milestones** | `mermaid` with `gantt`, or `d2` / `graphviz` / `flowchart` with **honest** spacing for non-uniform dates | Do not fake equal spacing when intervals differ; prefer Gantt with real dates or a narrative break across two diagrams. |
+| **ER / data model** | `erd`, `dbml`, or PlantUML `class` | Pick the type that matches the source format; group related entities. |
+| **Architecture / system overview** | `c4plantuml`, `structurizr`, `d2`, `component`, `deployment`, or `mermaid` + subgraphs | Prefer **LR** for layered systems when it helps. |
+| **Tree** (org, taxonomy, WBS) | `mermaid` `flowchart TB`, PlantUML `wbs` / `mindmap`, or `graphviz` | Cap depth and breadth; split wide trees. |
+| **Venn / set overlap** | No dedicated Kroki “venn” type | Options: **`mermaid`** `pie` for **proportions** (not overlap geometry); **PlantUML** with simple overlapping shapes is possible but fragile; **D2** for custom layout; if overlap is unreadable, use a **matrix/table** or two diagrams. Prefer 2–3 sets only. |
+| **Quadrant** (2×2, prioritization) | `mermaid` with `quadrantChart` **if** the Mermaid version behind Kroki supports it; else **`d2`** or **`mermaid`** `flowchart` with four named regions | Position in cell must match meaning; for “four named scenarios” without XY position, a 2×2 **labeled** flowchart or D2 grid can work better than forcing `quadrantChart`. |
+| **Layer stack** (OSI, cascade) | `mermaid` flowchart TB or `d2` | Horizontal bands as nodes or subgraphs; consistent ordering. |
+| **Nested containment** (scopes, trust zones) | `mermaid` nested `subgraph` or `d2` containers | Keep nesting depth modest (see complexity limits in uml-diagramming skill). |
+| **Pyramid / funnel** | `blockdiag` family, `d2`, or `flowchart` with trapezoid-style nodes | Widths should reflect real proportions when showing funnel data. |
+
 ## Mermaid: Diagram Type → Syntax
 
 | Diagram Type | Mermaid Form | Notes |
@@ -109,4 +129,4 @@ The `generate_uml` tool accepts any Kroki backend as `diagram_type`. Use resourc
 
 - **User Journey** — Mermaid: represent as flowchart or sequence with user/step nodes.
 - **Gitgraph** — Mermaid: `gitGraph` block for commit/branch visualization.
-- **ZenUML / Quadrant (XY)** — Kroki supports additional diagram types; map to Mermaid/PlantUML equivalents when needed (e.g. flowchart, sequence).
+- **ZenUML / Quadrant (XY)** — See **Intent → `diagram_type` (Kroki)** above; prefer `quadrantChart` when supported, else D2 or four-region flowchart.

@@ -15,12 +15,16 @@ Generate a single, correct Mermaid or PlantUML code block from a user's descript
 
 The `generate_uml` tool supports all Kroki diagram types via `diagram_type` (e.g. `mermaid`, `plantuml`, `d2`, `graphviz`, `blockdiag`, `bpmn`, `vegalite`, `wavedrom`, etc.). Use resource `uml://types` for the full list and `uml://templates` for starter code. For non-Mermaid/PlantUML types (D2, BlockDiag, BPMN, Bytefield, Vega, WaveDrom, etc.), see [references/DIAGRAM-TYPES.md](references/DIAGRAM-TYPES.md).
 
+For **user intent → Kroki `diagram_type`** (including Venn, quadrant, and timeline caveats), see the **Intent → `diagram_type` (Kroki)** section in [references/DIAGRAM-TYPES.md](references/DIAGRAM-TYPES.md).
+
 ## Output Rules
 
 - Emit **only one** code block; no explanatory text outside the block.
 - Code block language: `mermaid` or `plantuml`.
 - For PlantUML: script must start with `@startuml` and end with `@enduml`.
 - You may use brief comments inside the block (Mermaid `%% ...` or PlantUML `' ...`) to note assumptions.
+
+When you are **also** invoking the uml-mcp **`generate_uml`** tool in the same turn, the chat response may include normal prose (URLs, errors, short explanations) **outside** the single fenced diagram block. This skill’s “one code block” rule applies to the **diagram script** portion of the answer, not to the entire MCP reply.
 
 ## Choosing Mermaid vs PlantUML
 

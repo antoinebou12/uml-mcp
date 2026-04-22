@@ -20,9 +20,10 @@ Use this file to guide AI agents (Cursor, etc.) when working in this repository.
 1. **Modern Python**: Follow the project skill in `.skill/skills/modern-python/SKILL.md` for tooling (uv, ruff, pytest, type checking).
 2. **MCP Python**: When adding or changing MCP tools, resources, or server behavior, follow `.skill/skills/mcp-python/SKILL.md` (FastMCP, STDIO logging, contracts, best practices).
 3. **Sequential thinking**: For complex or multi-step tasks, use step-by-step reasoning; when the sequential-thinking MCP tool is available, use it for hard problems (see `.skill/skills/sequential-thinking/SKILL.md`).
-4. **Tests**: Add/update tests in `tests/`; run with `uv run pytest` or `poetry run pytest`. Keep coverage for `mcp_core` and `tools` (e.g. `uv run pytest --cov=mcp_core --cov=tools`).
-5. **Linting/formatting**: Use ruff (or existing black/isort/flake8 per `pyproject.toml`). Run before committing.
-6. **MCP tools**: New diagram tools or resources belong in `mcp_core/tools/` and `mcp_core/resources/`; follow existing patterns and docstrings for MCP discovery.
+4. **Diagram skills**: When producing diagram source or calling **`generate_uml`** for this project, follow `.skill/skills/uml-mcp-diagrams/SKILL.md` (MCP workflow, Kroki URLs) and `.skill/skills/uml-diagramming/SKILL.md` (Mermaid/PlantUML and intent→type mapping via `references/DIAGRAM-TYPES.md`).
+5. **Tests**: Add/update tests in `tests/`; run with `uv run pytest` or `poetry run pytest`. Keep coverage for `mcp_core` and `tools` (e.g. `uv run pytest --cov=mcp_core --cov=tools`).
+6. **Linting/formatting**: Use ruff (or existing black/isort/flake8 per `pyproject.toml`). Run before committing.
+7. **MCP tools**: New diagram tools or resources belong in `mcp_core/tools/` and `mcp_core/resources/`; follow existing patterns and docstrings for MCP discovery.
 
 ## Where to look
 
