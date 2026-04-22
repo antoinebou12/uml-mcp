@@ -117,9 +117,18 @@ Quality: proper notation, all requested elements, readable layout, correct relat
 def uml_diagram_with_thinking_prompt(context: Optional[Dict[str, Any]] = None) -> str:
     """
     Prompt for generating UML diagrams with plan-then-generate. Same workflow as
-    uml_diagram (plan first, then code and generate_uml).
+    uml_diagram (plan first, then code and generate_uml), plus explicit planning
+    instructions and optional sequential-thinking MCP guidance.
     """
-    return uml_diagram_prompt(context)
+    planning_preamble = """Before writing diagram code, complete an explicit plan (in your reasoning, not inside the raw `code` tool argument):
+1. **diagram_type** — must match **uml://types**; pick notation (PlantUML / Mermaid / D2 / other) consistent with that type.
+2. **Scope** — approximate node, state, or lifeline count; stay under ~25 elements for Mermaid and ~30 for PlantUML unless you split into two diagrams.
+3. **Emphasis** — at most one focal element or path to highlight in the DSL, if any (avoid rainbow styling).
+
+If a **sequential-thinking** MCP tool is available, use it for steps 1–3 so thoughts stay ordered and revisable before you emit source.
+
+"""
+    return planning_preamble + uml_diagram_prompt(context)
 
 
 # Class diagram prompt

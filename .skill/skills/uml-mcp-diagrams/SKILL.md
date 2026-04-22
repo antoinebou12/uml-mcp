@@ -21,6 +21,26 @@ Turn the user’s intent into valid `diagram_type` + source `code`, call **gener
 3. **Optional quality pass**: call **`validate_uml`** with the same `diagram_type`, `code`, and planned `output_format` to catch local errors before render. Use **`strict: true`** for stricter Mermaid/D2 checks when needed.
 4. If you cannot read **`uml://types`**, call **`list_diagram_types`** for the same metadata.
 
+## Complex requests
+
+For ambiguous specs, large diagrams, or many actors/states/messages, plan before coding:
+
+1. Follow [`.skill/skills/sequential-thinking/SKILL.md`](../sequential-thinking/SKILL.md): ordered steps, revise when wrong, split when over budget.
+2. If the **sequential-thinking** MCP tool is available in the client, prefer it for the planning phase (track thoughts, branches, revisions), then produce diagram source and call **`validate_uml`** / **`generate_uml`**.
+
+## Readability (Kroki / DSL)
+
+These rules apply to **diagram source** (Mermaid, PlantUML, D2, etc.), not to HTML layout:
+
+- **Complexity**: Aim for roughly &lt;25 nodes in Mermaid and &lt;30 in PlantUML; fewer lifelines in sequence diagrams. If the user’s scope exceeds that, split into two diagrams or an overview plus a detail view.
+- **Sequence**: Time flows **top → bottom**. Do not model upward message arrows. Use activation where the notation supports it (PlantUML `activate` / `deactivate`; Mermaid `activate` / `deactivate` when appropriate). Close every activation interval you open.
+- **State and flowchart**: Label **every** transition or decision branch (event/guard or yes/no). Avoid drawing the same “to error” edge from every state; prefer one note, a group, or a single `*` / global exception path where the DSL allows.
+- **Emphasis**: At most **one** strong visual highlight when the backend allows it (e.g. one Mermaid `classDef` / highlighted participant, one PlantUML `skinparam` / styled element, one D2 node style). Avoid rainbow or per-node rainbow fills — hierarchy and labels carry meaning.
+
+## Prose around URLs
+
+For **assistant-facing** explanations (summaries, caveats, next steps), you may use a **Humanizer** skill if it is installed in the client, to keep tone clear and direct. Do **not** run humanizer output through diagram `code` — Kroki needs valid DSL only.
+
 ## Calling generate_uml
 
 | Input | Guidance |
