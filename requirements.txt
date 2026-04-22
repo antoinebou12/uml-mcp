@@ -94,7 +94,7 @@ idna==3.12
     #   email-validator
     #   httpx
     #   requests
-importlib-metadata==8.7.1
+importlib-metadata==9.0.0
     # via opentelemetry-api
 jaraco-classes==3.4.0
     # via keyring
