@@ -43,7 +43,7 @@ charset-normalizer==3.4.7
     # via
     #   requests
     #   uml-mcp
-click==8.3.2
+click==8.3.3
     # via
     #   typer
     #   uml-mcp
