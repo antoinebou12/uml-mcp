@@ -2,7 +2,7 @@
 Unit tests for diagram tool functions
 """
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 from mcp_core.tools.diagram_tools import (
     generate_uml,

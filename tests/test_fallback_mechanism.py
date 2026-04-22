@@ -4,8 +4,6 @@ Tests for the diagram generation fallback mechanism.
 
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 from mcp_core.core.utils import generate_diagram
 from tools.kroki.kroki import KrokiHTTPError
 

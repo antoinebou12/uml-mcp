@@ -45,13 +45,13 @@ def test_diagram_generation_with_fallback():
         +login()
         +logout()
     }
-    
+
     class Order {
         +int orderId
         +Date orderDate
         +calculateTotal()
     }
-    
+
     User "1" --> "*" Order : places
     """
 
@@ -108,7 +108,7 @@ def test_diagram_generation_with_fallback():
     @startuml
     Alice -> Bob: Authentication Request
     Bob --> Alice: Authentication Response
-    
+
     Alice -> Bob: Another authentication Request
     Alice <-- Bob: another authentication Response
     @enduml

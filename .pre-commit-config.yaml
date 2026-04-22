@@ -9,6 +9,8 @@ repos:
       - id: trailing-whitespace
       - id: end-of-file-fixer
       - id: check-yaml
+        args: [--unsafe]
+        exclude: ^examples/example-wireviz\.yaml$
       - id: check-json
       - id: check-added-large-files
       - id: check-merge-conflict
@@ -20,4 +22,3 @@ repos:
       - id: ruff
         args: [--fix]
       - id: ruff-format
-

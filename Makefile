@@ -41,9 +41,7 @@ test:
 	uv run pytest -xvs tests/
 
 lint:
-	uv run ruff check .
-	uv run ruff format --check .
-	pre-commit run --all-files
+	uv run pre-commit run --all-files
 
 typecheck:
 	uv run ty check
@@ -53,8 +51,7 @@ coverage:
 
 # Same steps as .github/workflows/ci.yml (test job) for local/act runs
 ci: install-dev
-	uv run ruff check .
-	uv run ruff format --check .
+	uv run pre-commit run --all-files
 	uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html
 
 # Documentation (MkDocs)

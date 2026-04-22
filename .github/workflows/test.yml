@@ -28,15 +28,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-groups
 
-      - name: Lint
-        run: |
-          uv run ruff check .
-          uv run ruff format --check .
+      - name: Lint (pre-commit)
+        run: uv run pre-commit run --all-files
 
   test:
     runs-on: ubuntu-latest
-    needs: lint
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -84,3 +80,6 @@ jobs:
           name: coverage-report
           path: htmlcov/
           retention-days: 14
+
+  build:
+    uses: ./.github/workflows/build.yml

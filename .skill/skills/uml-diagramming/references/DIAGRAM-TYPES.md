@@ -80,11 +80,11 @@ Defaults when not specified: `direction` TB (or LR for component/deployment/netw
 
 Use stereotypes to clarify roles when helpful:
 
-- `<<service>>` – service component  
-- `<<db>>` or `<<database>>` – database  
-- `<<queue>>` – message queue  
-- `<<external>>` – external system  
-- `<<interface>>` – interface  
+- `<<service>>` – service component
+- `<<db>>` or `<<database>>` – database
+- `<<queue>>` – message queue
+- `<<external>>` – external system
+- `<<interface>>` – interface
 
 ## Mermaid Subgraph Naming
 

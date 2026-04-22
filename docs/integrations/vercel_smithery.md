@@ -45,7 +45,7 @@ Publishing a URL-based server is done **only via the Smithery website**; the `@s
 4. Fill in:
    - **Namespace**: your Smithery username (e.g. `antoinebou12`)
    - **Server ID**: short slug (e.g. `uml`)
-   - **MCP Server URL**: `https://<your-project>.vercel.app/mcp`  
+   - **MCP Server URL**: `https://<your-project>.vercel.app/mcp`
      Replace `<your-project>` with your actual Vercel project URL. Use the **root** deployment URL (e.g. `https://uml-xxx.vercel.app`), not a path; the MCP endpoint is at `/mcp`.
 5. Submit. Smithery will use your server’s Streamable HTTP transport and will fetch metadata from `https://<your-project>.vercel.app/.well-known/mcp/server-card.json` when automatic scanning is not possible.
 
@@ -99,10 +99,10 @@ If Smithery shows a connection error like `HTTP 401: Invalid OAuth error respons
 
 **Fix (choose one):**
 
-1. **Disable Deployment Protection (recommended for public MCP)**  
+1. **Disable Deployment Protection (recommended for public MCP)**
    In the [Vercel project](https://vercel.com/dashboard) → **Settings** → **Deployment Protection**, turn off protection for Production and/or Preview so your app URL is publicly reachable. Then use the normal MCP URL in Smithery: `https://<your-project>.vercel.app/mcp`.
 
-2. **Keep protection and use a bypass token**  
+2. **Keep protection and use a bypass token**
    If you want to keep protection, use Vercel’s [Protection Bypass for automation](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation). Get the bypass token from the project’s Deployment Protection settings, then in Smithery set **MCP Server URL** to:
    ```
    https://<your-project>.vercel.app/mcp?x-vercel-set-bypass-cookie=true&x-vercel-protection-bypass=YOUR_BYPASS_TOKEN
@@ -143,13 +143,13 @@ If you see **405 Method Not Allowed** on **POST /mcp** (e.g. “Reconnect failed
 
 **What to check:**
 
-1. **Correct MCP URL**  
+1. **Correct MCP URL**
    The client must POST to the **MCP endpoint** (e.g. `https://<your-project>.vercel.app/mcp`), not to the server card or root. POSTing to `/.well-known/mcp/server-card.json` or to the root URL can return 405 because those are served as GET-only (static card) or other handlers. In Cursor/Smithery, ensure the configured URL is exactly `https://<your-project>.vercel.app/mcp` (with `/mcp`).
 
-2. **Vercel build and runtime logs**  
+2. **Vercel build and runtime logs**
    In the app startup logs, look for either “MCP HTTP app mounted at /mcp” (success) or “MCP HTTP fallback: GET/POST /mcp return 503 (MCP HTTP transport not available).” If you see the fallback message, the MCP app failed to load. Check for any exception logged in the same block (the app logs with `exc_info=True`).
 
-3. **Dependencies**  
+3. **Dependencies**
    Confirm that `fastmcp` and all modules used by `get_mcp_server()` (e.g. diagram tools, resources, prompts, Kroki, PlantUML) are installed and import without error. Production installs use `requirements.txt` via `installCommand` and Vercel’s Python/`uv` pipeline (`requirements-dev.txt` is for local development and CI only). Ensure the build completes and that `fastmcp>=2.3.1` is present in `requirements.txt`.
 
 **405 vs 503 fallback:** When the MCP app is not mounted, this server registers both GET and POST for `/mcp` and returns **503** with `{"detail": "MCP HTTP transport is not available."}` (and OPTIONS for CORS). So if the request reaches the FastAPI app at `/mcp`, you would see 503, not 405. A 405 usually means the request is hitting a different handler (e.g. wrong URL or a proxy that only allows GET for that path).
@@ -162,13 +162,13 @@ MCP Streamable HTTP keeps a **long-lived GET** connection open (Server-Sent Even
 
 **Mitigations:**
 
-1. **Increase max duration (Pro/Enterprise)**  
+1. **Increase max duration (Pro/Enterprise)**
    This repo sets `maxDuration: 200` in `vercel.json` under `functions["app.py"]`. On **Pro** or **Enterprise** (with Fluid Compute), you may raise that value (for example toward **800** seconds) so the GET `/mcp` connection can stay open longer than the default **300s** platform cap on Hobby. On **Hobby**, the cap remains 300s regardless.
 
-2. **Reconnect on timeout**  
+2. **Reconnect on timeout**
    Clients should reconnect when the stream ends. Cursor and Smithery typically retry or allow re-adding the server; after a timeout, reconnect to `/mcp` to start a new session.
 
-3. **Long-lived or heavy use**  
+3. **Long-lived or heavy use**
    For sessions that must stay open indefinitely (or to avoid timeouts entirely), use **Smithery-hosted** deployment (Docker) or self-host the server (e.g. Docker, a long-running process) instead of Vercel serverless.
 
 ### CI or local: `pip install smithery-cli` / "No matching distribution"

@@ -65,7 +65,9 @@ def mock_httpx_client():
 def mock_kroki_failure():
     """Mock the Kroki client to simulate connection failure."""
     mock_client = MagicMock()
-    mock_client.generate_diagram.side_effect = KrokiConnectionError("Cannot connect to Kroki")
+    mock_client.generate_diagram.side_effect = KrokiConnectionError(
+        "Cannot connect to Kroki"
+    )
     with patch("mcp_core.core.utils.get_kroki_client", return_value=mock_client):
         yield mock_client
 
