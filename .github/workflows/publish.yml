@@ -319,13 +319,11 @@ jobs:
 
       - name: Install runtime dependencies from lockfile
         run: |
-          uv export --frozen --no-dev --no-hashes -o requirements.generated.txt
-          uv pip install --system --no-compile --no-cache-dir -r requirements.generated.txt
-          rm -f requirements.generated.txt
+          uv sync --frozen --no-dev
 
       - name: Verify setup
         run: |
-          python -c "import fastapi, httpx, rich, pydantic; from mcp_core.core.server import main"
+          uv run python -c "import fastapi, httpx, rich, pydantic; from mcp_core.core.server import main"
           echo "Basic imports successful"
 
       - name: Build Docker image
