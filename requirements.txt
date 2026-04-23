@@ -55,7 +55,7 @@ cryptography==46.0.7
     #   authlib
     #   joserfc
     #   secretstorage
-cyclopts==4.10.2
+cyclopts==4.11.0
     # via fastmcp
 dnspython==2.8.0
     # via email-validator
