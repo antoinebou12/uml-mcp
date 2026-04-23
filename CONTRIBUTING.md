@@ -101,9 +101,11 @@ Include OS, Python version, and how you run the server when relevant.
 
 See [SECURITY.md](SECURITY.md) for how to report vulnerabilities.
 
-## Maintaining `requirements.txt` (Vercel / pip)
+## Lockfile and `requirements.txt`
 
-Production dependencies for Vercel and `pip install -r requirements.txt` are exported from the lockfile:
+`uv.lock` is the runtime source of truth for CI, Vercel, and release validation. Deploy/install paths export from the lockfile at runtime.
+
+Keep `requirements.txt` updated for users that still install with pip:
 
 ```bash
 uv lock

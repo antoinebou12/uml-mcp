@@ -32,7 +32,7 @@ cachetools==7.0.5
     # via py-key-value-aio
 caio==0.9.25
     # via aiofile
-certifi==2026.2.25
+certifi==2026.4.22
     # via
     #   httpcore
     #   httpx
@@ -43,7 +43,7 @@ charset-normalizer==3.4.7
     # via
     #   requests
     #   uml-mcp
-click==8.3.2
+click==8.3.3
     # via
     #   typer
     #   uml-mcp
@@ -55,7 +55,7 @@ cryptography==46.0.7
     #   authlib
     #   joserfc
     #   secretstorage
-cyclopts==4.10.2
+cyclopts==4.11.0
     # via fastmcp
 dnspython==2.8.0
     # via email-validator
@@ -88,14 +88,16 @@ httpx==0.28.1
     #   uml-mcp
 httpx-sse==0.4.3
     # via mcp
-idna==3.12
+idna==3.13
     # via
     #   anyio
     #   email-validator
     #   httpx
     #   requests
-importlib-metadata==8.7.1
-    # via opentelemetry-api
+importlib-metadata==9.0.0
+    # via
+    #   keyring
+    #   opentelemetry-api
 jaraco-classes==3.4.0
     # via keyring
 jaraco-context==6.1.2
@@ -142,7 +144,7 @@ packaging==26.1
     # via fastmcp
 pathable==0.5.0
     # via jsonschema-path
-pillow==10.4.0
+pillow==12.2.0
     # via uml-mcp
 platformdirs==4.5.1
     # via fastmcp
@@ -196,7 +198,7 @@ referencing==0.37.0
     #   jsonschema-specifications
 requests==2.33.1
     # via uml-mcp
-rich==14.3.4
+rich==15.0.0
     # via
     #   cyclopts
     #   fastmcp
@@ -223,7 +225,7 @@ starlette==0.52.1
     #   mcp
     #   sse-starlette
     #   uml-mcp
-typer==0.24.1
+typer==0.24.2
     # via uml-mcp
 typing-extensions==4.15.0
     # via

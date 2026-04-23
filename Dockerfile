@@ -12,9 +12,12 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# requirements.txt includes `-e .`; install needs the project tree present.
+# Installs derive from the lockfile to avoid requirements drift.
 COPY . .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir uv \
+    && uv export --frozen --no-dev --no-hashes -o /tmp/requirements.lock.txt \
+    && uv pip install --system --no-compile --no-cache-dir -r /tmp/requirements.lock.txt \
+    && rm -f /tmp/requirements.lock.txt
 
 RUN mkdir -p /app/output
 

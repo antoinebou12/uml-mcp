@@ -14,7 +14,7 @@ This guide walks you through deploying the UML-MCP server to Vercel and publishi
 1. **Connect the repo** in the [Vercel dashboard](https://vercel.com/new): Import your `uml-mcp` repository.
 2. **Build settings** (match [vercel.json](https://github.com/antoinebou12/uml-mcp/blob/main/vercel.json) in the repo root; clear dashboard overrides if they disagree):
    - Framework Preset: **FastAPI** (`"framework": "fastapi"`—needed so Vercel runs the custom install inside the Python build virtualenv)
-   - Install Command: `bash scripts/vercel-install.sh` (runs `uv pip install -r requirements.txt` only, then a quick `pydantic` / `pydantic_core` import smoke test)
+   - Install Command: `bash scripts/vercel-install.sh` (exports runtime deps from `uv.lock` and installs them with `uv pip`, avoiding stale `requirements.txt` drift)
    - Build Command: `python -m mcp_core.build_static_server_card` (writes `public/.well-known/mcp/server-card.json` and related files)
    - Serverless entrypoint: `app.py` at the repo root (see `functions` in `vercel.json`); routing and output are handled by `vercel.json`
 3. **Deploy** and wait for the build to finish.
@@ -104,9 +104,11 @@ If Smithery shows a connection error like `HTTP 401: Invalid OAuth error respons
 
 2. **Keep protection and use a bypass token**
    If you want to keep protection, use Vercel’s [Protection Bypass for automation](https://vercel.com/docs/deployment-protection/methods-to-bypass-deployment-protection/protection-bypass-automation). Get the bypass token from the project’s Deployment Protection settings, then in Smithery set **MCP Server URL** to:
-   ```
+
+   ```text
    https://<your-project>.vercel.app/mcp?x-vercel-set-bypass-cookie=true&x-vercel-protection-bypass=YOUR_BYPASS_TOKEN
    ```
+
    Replace `YOUR_BYPASS_TOKEN` with the token from Vercel.
 
 ### Connection error: Initialization failed with status 404 or 405 / “advertise server-card”
@@ -150,7 +152,7 @@ If you see **405 Method Not Allowed** on **POST /mcp** (e.g. “Reconnect failed
    In the app startup logs, look for either “MCP HTTP app mounted at /mcp” (success) or “MCP HTTP fallback: GET/POST /mcp return 503 (MCP HTTP transport not available).” If you see the fallback message, the MCP app failed to load. Check for any exception logged in the same block (the app logs with `exc_info=True`).
 
 3. **Dependencies**
-   Confirm that `fastmcp` and all modules used by `get_mcp_server()` (e.g. diagram tools, resources, prompts, Kroki, PlantUML) are installed and import without error. Production installs use `requirements.txt` via `installCommand` and Vercel’s Python/`uv` pipeline (`requirements-dev.txt` is for local development and CI only). Ensure the build completes and that `fastmcp>=2.3.1` is present in `requirements.txt`.
+   Confirm that `fastmcp` and all modules used by `get_mcp_server()` (e.g. diagram tools, resources, prompts, Kroki, PlantUML) are installed and import without error. Production installs export from `uv.lock` via `installCommand` and Vercel’s Python/`uv` pipeline (`requirements-dev.txt` is for local development and CI only). Ensure the build completes and that `fastmcp>=2.3.1` is resolvable from `uv.lock`.
 
 **405 vs 503 fallback:** When the MCP app is not mounted, this server registers both GET and POST for `/mcp` and returns **503** with `{"detail": "MCP HTTP transport is not available."}` (and OPTIONS for CORS). So if the request reaches the FastAPI app at `/mcp`, you would see 503, not 405. A 405 usually means the request is hitting a different handler (e.g. wrong URL or a proxy that only allows GET for that path).
 

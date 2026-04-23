@@ -17,7 +17,7 @@ git clone https://github.com/antoinebou12/uml-mcp.git
 cd uml-mcp
 ```
 
-2. Install dependencies:
+1. Install dependencies:
 
 **With uv (recommended):**
 
@@ -37,9 +37,14 @@ poetry install
 pip install -e .
 ```
 
-Alternatively: `pip install -r requirements.txt` (generated from the lockfile; see [CONTRIBUTING.md](https://github.com/antoinebou12/uml-mcp/blob/main/CONTRIBUTING.md)).
+Alternatively, for a lockfile-derived pip install:
 
-3. For development (tests, linting, docs):
+```bash
+uv export --frozen --no-dev --no-hashes -o requirements.txt
+pip install -r requirements.txt
+```
+
+1. For development (tests, linting, docs):
 
 ```bash
 uv sync --all-groups

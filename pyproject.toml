@@ -26,21 +26,21 @@ fastapi = ">=0.128.0,<0.136.0"
 uvicorn = ">=0.45.0,<0.46"
 pydantic = "^2.3.0"
 pydantic-core = ">=2.27.0,<3"
-rich = "==14.3.4"
+rich = "==15.0.0"
 httpx = "^0.28.0"
-typer = "==0.24.1"
+typer = "==0.24.2"
 python-multipart = ">=0.0.22,<0.1"
 python-dotenv = "==1.2.2"
 starlette = ">=0.52.0,<1.0.0"
 jinja2 = "^3.1.2"
 aiofiles = ">=25,<26"
 requests = ">=2.33.1,<3"
-click = "==8.3.2"
+click = "==8.3.3"
 charset-normalizer = "==3.4.7"
 python-dateutil = "^2.8.2"
 # Add diagram-related dependencies
 graphviz = ">=0.21,<0.22"
-pillow = "^10.1.0"
+pillow = "^12.0.0"
 # If fastmcp is not your own module but a dependency (2.3.1+ for http_app / Streamable HTTP)
 fastmcp = ">=2.3.1,<4"
 mcp = ">=1.24.0,<2.0.0"
@@ -53,16 +53,17 @@ override-dependencies = [
     "attrs>=26,<27",
     "authlib==1.7.0",
     "cachetools==7.0.5",
-    "certifi==2026.2.25",
+    "certifi==2026.4.22",
     "cryptography==46.0.7",
-    "cyclopts==4.10.2",
+    "cyclopts==4.11.0",
     "docstring-parser==0.18.0",
     "graphviz==0.21",
-    "idna==3.12",
+    "idna==3.13",
+    "importlib-metadata==9.0.0",
     "pygments==2.20.0",
     "pyjwt==2.12.1",
     "python-dotenv==1.2.2",
-    "rich==14.3.4",
+    "rich==15.0.0",
     "sse-starlette==3.3.4",
 ]
 
