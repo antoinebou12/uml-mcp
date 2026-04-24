@@ -140,7 +140,7 @@ openapi-pydantic==0.5.1
     # via fastmcp
 opentelemetry-api==1.41.0
     # via fastmcp
-packaging==26.1
+packaging==26.2
     # via fastmcp
 pathable==0.5.0
     # via jsonschema-path
