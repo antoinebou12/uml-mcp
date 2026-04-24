@@ -50,7 +50,7 @@ click==8.3.3
     #   uvicorn
 colorama==0.4.6 ; sys_platform == 'win32'
     # via click
-cryptography==46.0.7
+cryptography==47.0.0
     # via
     #   authlib
     #   joserfc
