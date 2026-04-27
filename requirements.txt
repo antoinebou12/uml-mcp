@@ -179,7 +179,7 @@ python-dotenv==1.2.2
     #   fastmcp
     #   pydantic-settings
     #   uml-mcp
-python-multipart==0.0.22
+python-multipart==0.0.27
     # via
     #   mcp
     #   uml-mcp
