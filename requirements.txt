@@ -28,7 +28,7 @@ authlib==1.7.0
     # via fastmcp
 beartype==0.22.9
     # via py-key-value-aio
-cachetools==7.0.5
+cachetools==7.0.6
     # via py-key-value-aio
 caio==0.9.25
     # via aiofile
