@@ -28,8 +28,8 @@ pydantic = "^2.3.0"
 pydantic-core = ">=2.27.0,<3"
 rich = "==15.0.0"
 httpx = "^0.28.0"
-typer = "==0.24.2"
-python-multipart = ">=0.0.22,<0.1"
+typer = "==0.25.0"
+python-multipart = "==0.0.27"
 python-dotenv = "==1.2.2"
 starlette = ">=0.52.0,<1.0.0"
 jinja2 = "^3.1.2"
@@ -52,9 +52,12 @@ override-dependencies = [
     "anyio==4.13.0",
     "attrs>=26,<27",
     "authlib==1.7.0",
-    "cachetools==7.0.5",
+    "cachetools==7.0.6",
     "certifi==2026.4.22",
-    "cryptography==46.0.7",
+    "cryptography>=47,<48",
+    "opentelemetry-api==1.41.1",
+    "packaging==26.2",
+    "platformdirs==4.9.6",
     "cyclopts==4.11.0",
     "docstring-parser==0.18.0",
     "graphviz==0.21",
@@ -64,7 +67,7 @@ override-dependencies = [
     "pyjwt==2.12.1",
     "python-dotenv==1.2.2",
     "rich==15.0.0",
-    "sse-starlette==3.3.4",
+    "sse-starlette==3.4.1",
 ]
 
 [tool.poetry.group.dev.dependencies]
@@ -72,11 +75,11 @@ tomli = "^2.0.0"
 pytest = "^7.4.2"
 pytest-cov = "^4.1.0"
 pre-commit = "^4.0.0"
-ruff = ">=0.8.0"
+ruff = ">=0.15.12"
 ty = ">=0.0.14"
 pytest-asyncio = "^0.21.1"
 mkdocs = ">=1.6.0"
-mkdocs-material = ">=9.5.0"
+mkdocs-material = ">=9.7.6"
 mkdocs-git-revision-date-localized-plugin = ">=1.4.0"
 mkdocs-minify-plugin = ">=0.8.0"
 
@@ -135,12 +138,12 @@ dev = [
     "pre-commit>=4.5.1",
     "pytest>=9.0.2",
     "pytest-cov>=7.0.0",
-    "ruff>=0.8.0",
+    "ruff>=0.15.12",
     "ty>=0.0.14",
     "pytest-asyncio>=0.21.1",
     "mypy>=1.19.1",
     "mkdocs>=1.6.0",
-    "mkdocs-material>=9.5.0",
+    "mkdocs-material>=9.7.6",
     "pymdown-extensions>=10.21.2",
     "mkdocs-git-revision-date-localized-plugin>=1.4.0",
     "mkdocs-minify-plugin>=0.8.0",
