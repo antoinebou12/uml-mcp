@@ -36,7 +36,7 @@ gitpython==3.1.47
     # via mkdocs-git-revision-date-localized-plugin
 htmlmin2==0.1.13
     # via mkdocs-minify-plugin
-identify==2.6.16
+identify==2.6.19
     # via pre-commit
 idna==3.13
     # via requests
