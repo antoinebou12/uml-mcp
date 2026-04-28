@@ -134,7 +134,7 @@ six==1.17.0
     # via python-dateutil
 smmap==5.0.3
     # via gitdb
-tomli==2.4.0
+tomli==2.4.1
 ty==0.0.15
 typing-extensions==4.15.0
     # via
