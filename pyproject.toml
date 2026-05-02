@@ -28,7 +28,7 @@ pydantic = "^2.3.0"
 pydantic-core = ">=2.27.0,<3"
 rich = "==15.0.0"
 httpx = "^0.28.0"
-typer = "==0.25.0"
+typer = "==0.25.1"
 python-multipart = "==0.0.27"
 python-dotenv = "==1.2.2"
 starlette = ">=1.0.0,<2.0.0"
@@ -59,7 +59,7 @@ override-dependencies = [
     "opentelemetry-api==1.41.1",
     "packaging==26.2",
     "platformdirs==4.9.6",
-    "cyclopts==4.11.0",
+    "cyclopts==4.11.1",
     "docstring-parser==0.18.0",
     "graphviz==0.21",
     "gitpython==3.1.49",
