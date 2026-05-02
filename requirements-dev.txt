@@ -135,7 +135,7 @@ six==1.17.0
 smmap==5.0.3
     # via gitdb
 tomli==2.4.0
-ty==0.0.15
+ty==0.0.34
 typing-extensions==4.15.0
     # via
     #   mypy
