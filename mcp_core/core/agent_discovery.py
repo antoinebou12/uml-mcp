@@ -14,9 +14,7 @@ from xml.sax.saxutils import escape
 # Default GitHub raw URLs for skills (plan: raw.githubusercontent.com/.../main/.skill/skills/...)
 DEFAULT_GITHUB_REPO = "antoinebou12/uml-mcp"
 DEFAULT_GITHUB_BRANCH = "main"
-AGENT_SKILLS_SCHEMA = (
-    "https://agentskills.io/schemas/agent-skills-index-v0.2.0.json"
-)
+AGENT_SKILLS_SCHEMA = "https://agentskills.io/schemas/agent-skills-index-v0.2.0.json"
 
 _AI_USER_AGENTS = (
     "GPTBot",
@@ -78,9 +76,7 @@ def build_sitemap_xml(base_url: str) -> str:
     urls_xml = []
     for p in paths:
         loc = base + (p if p.startswith("/") else "/" + p)
-        urls_xml.append(
-            f"    <url>\n        <loc>{escape(loc)}</loc>\n    </url>"
-        )
+        urls_xml.append(f"    <url>\n        <loc>{escape(loc)}</loc>\n    </url>")
     return (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'
@@ -353,7 +349,9 @@ def _parse_accept(accept: str) -> list[tuple[str, float, int]]:
     return entries
 
 
-def negotiate_root_format(accept_header: str | None) -> Literal["json", "html", "markdown"]:
+def negotiate_root_format(
+    accept_header: str | None,
+) -> Literal["json", "html", "markdown"]:
     """
     Choose response type for GET /.
     Default JSON; text/markdown and text/html when explicitly negotiated with q > 0.

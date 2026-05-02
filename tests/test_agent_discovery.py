@@ -81,9 +81,7 @@ def test_build_agent_skills_index_tmp(tmp_path):
     skill_dir.mkdir(parents=True)
     body = b"# Title\n\nFirst line desc.\n"
     (skill_dir / "SKILL.md").write_bytes(body)
-    idx = build_agent_skills_index(
-        tmp_path, github_repo="owner/repo", branch="main"
-    )
+    idx = build_agent_skills_index(tmp_path, github_repo="owner/repo", branch="main")
     assert idx["$schema"] == AGENT_SKILLS_SCHEMA
     assert len(idx["skills"]) == 1
     sk = idx["skills"][0]

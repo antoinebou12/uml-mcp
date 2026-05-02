@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+from typing import Any
 
 # Vercel build uses this in a separate process from serverless runtime.
 os.environ["MOCK_FASTMCP"] = "true"
@@ -25,6 +26,12 @@ if _REPO_ROOT not in sys.path:
 
 # Canonical origin for static linkset / OAuth metadata (preview deploys still serve these files).
 _DEFAULT_PUBLIC_BASE = "https://uml-mcp.vercel.app"
+
+
+def _dump_json(obj: Any, path: str) -> None:
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(obj, f, indent=2)
+        f.write("\n")
 
 
 def _write_discovery_artifacts(repo_root: str, public_base: str) -> None:
@@ -46,20 +53,17 @@ def _write_discovery_artifacts(repo_root: str, public_base: str) -> None:
     for wk in roots:
         os.makedirs(wk, exist_ok=True)
         api_cat_path = os.path.join(wk, "api-catalog")
-        with open(api_cat_path, "w", encoding="utf-8") as f:
-            json.dump(catalog, f, indent=2)
+        _dump_json(catalog, api_cat_path)
         print(f"Wrote {api_cat_path}")
 
         oauth_path = os.path.join(wk, "oauth-protected-resource")
-        with open(oauth_path, "w", encoding="utf-8") as f:
-            json.dump(oauth, f, indent=2)
+        _dump_json(oauth, oauth_path)
         print(f"Wrote {oauth_path}")
 
         ask_dir = os.path.join(wk, "agent-skills")
         os.makedirs(ask_dir, exist_ok=True)
         idx_path = os.path.join(ask_dir, "index.json")
-        with open(idx_path, "w", encoding="utf-8") as f:
-            json.dump(skills_index, f, indent=2)
+        _dump_json(skills_index, idx_path)
         print(f"Wrote {idx_path}")
 
 
@@ -79,7 +83,7 @@ def main() -> None:
             with open(schema_src, encoding="utf-8") as f:
                 schema_content = f.read()
             with open(dest, "w", encoding="utf-8") as g:
-                g.write(schema_content)
+                g.write(schema_content.rstrip("\n") + "\n")
             print(f"Wrote {dest}")
 
     card = build_server_card(strict=True)
@@ -90,12 +94,10 @@ def main() -> None:
         )
         sys.exit(1)
     out_path = os.path.join(out_dir, "server-card.json")
-    with open(out_path, "w", encoding="utf-8") as f:
-        json.dump(card, f, indent=2)
+    _dump_json(card, out_path)
     print(f"Wrote {out_path}")
     public_path = os.path.join(public_dir, "server-card.json")
-    with open(public_path, "w", encoding="utf-8") as f:
-        json.dump(card, f, indent=2)
+    _dump_json(card, public_path)
     print(f"Wrote {public_path}")
 
     _write_discovery_artifacts(_REPO_ROOT, public_base)
