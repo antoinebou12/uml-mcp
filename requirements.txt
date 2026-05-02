@@ -225,7 +225,7 @@ starlette==1.0.0
     #   mcp
     #   sse-starlette
     #   uml-mcp
-typer==0.25.0
+typer==0.25.1
     # via uml-mcp
 typing-extensions==4.15.0
     # via
