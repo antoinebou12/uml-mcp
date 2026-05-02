@@ -2,6 +2,7 @@
 Tests for FastMCP wrapper (mock) request routing.
 """
 
+from typing import Any, cast
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -20,9 +21,10 @@ class TestFastMcpMockRouting:
     @pytest.fixture
     def server(self):
         s = FastMCP("test-server")
-        s._tools["echo"] = lambda msg: {"echo": msg}
-        s._prompts["greet"] = lambda name: f"Hello, {name}"
-        s._resources["test://x"] = lambda: {"data": "x"}
+        m = cast(Any, s)
+        m._tools["echo"] = lambda msg: {"echo": msg}
+        m._prompts["greet"] = lambda name: f"Hello, {name}"
+        m._resources["test://x"] = lambda: {"data": "x"}
         return s
 
     def test_handle_request_tool(self, server):
