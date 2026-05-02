@@ -1,0 +1,31 @@
+{
+  "linkset": [
+    {
+      "anchor": "https://uml-mcp.vercel.app/",
+      "service-desc": [
+        {
+          "href": "https://uml-mcp.vercel.app/openapi.json",
+          "type": "application/json"
+        }
+      ],
+      "service-doc": [
+        {
+          "href": "https://uml-mcp.vercel.app/docs",
+          "type": "text/html"
+        }
+      ],
+      "status": [
+        {
+          "href": "https://uml-mcp.vercel.app/health",
+          "type": "application/json"
+        }
+      ],
+      "describedby": [
+        {
+          "href": "https://uml-mcp.vercel.app/.well-known/mcp/server-card.json",
+          "type": "application/json"
+        }
+      ]
+    }
+  ]
+}

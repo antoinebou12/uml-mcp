@@ -1,0 +1,40 @@
+{
+  "$schema": "https://agentskills.io/schemas/agent-skills-index-v0.2.0.json",
+  "skills": [
+    {
+      "name": "mcp-python",
+      "type": "context",
+      "description": "Create and extend MCP servers in Python with FastMCP and the official MCP Python SDK. Based on [MCP Build a server](https://modelcontextprotocol.io/docs/develop/build-server) and [MCP Best Practices](https://mcp-best-practice.github.io/mcp-best-practice/best-practice/).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/mcp-python/SKILL.md",
+      "sha256": "ca90bceff7093cb7ee1dcbff144c723cb9115270345ea89efa36b553871f3cf3"
+    },
+    {
+      "name": "modern-python",
+      "type": "context",
+      "description": "Modern Python tooling and practices: uv for dependencies, ruff for lint/format, ty for type checking, pytest for tests. Use for this project and when setting up or refactoring Python codebases.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/modern-python/SKILL.md",
+      "sha256": "f3163ae4a4d4ef7b9c833d708364841b2295dfff2d0658eaa9527465dd654632"
+    },
+    {
+      "name": "sequential-thinking",
+      "type": "context",
+      "description": "Break down complex work into ordered steps, revise when needed, and produce one clear answer. Use for multi-step tasks, planning, and problems where scope or approach may change.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/sequential-thinking/SKILL.md",
+      "sha256": "bccc58119520979882b89114de306b57f8dad0e55d2ff0961d75b8d075f5b2e0"
+    },
+    {
+      "name": "uml-diagramming",
+      "type": "context",
+      "description": "Generate a single, correct Mermaid or PlantUML code block from a user's description. Output only the diagram script in one code block; no prose outside it.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-diagramming/SKILL.md",
+      "sha256": "b826b63af75be811c021502f0df17475b50955223967ee2a80f21696937f9b0e"
+    },
+    {
+      "name": "uml-mcp-diagrams",
+      "type": "context",
+      "description": "> **Maintainers:** Keep tool tables and `output_dir` wording aligned with the Smithery bundle **[uml-skill/SKILL.md](https://github.com/antoinebou12/uml-skill/blob/main/SKILL.md)** (`diagramming-uml`) when you edit either file. Mirror edits under **`.cursor/skills/uml-mcp-diagrams/SKILL.md`** so Cursor and repo-local skills stay in sync.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
+      "sha256": "b76e5fd0c95c55143a5fe28f8c1aca4323209022eb7f1061ad7370eb0a68c761"
+    }
+  ]
+}

@@ -23,9 +23,50 @@ _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if _REPO_ROOT not in sys.path:
     sys.path.append(_REPO_ROOT)
 
+# Canonical origin for static linkset / OAuth metadata (preview deploys still serve these files).
+_DEFAULT_PUBLIC_BASE = "https://uml-mcp.vercel.app"
+
+
+def _write_discovery_artifacts(repo_root: str, public_base: str) -> None:
+    """Emit RFC 9727 api-catalog, RFC 9728 oauth-protected-resource, agent-skills index."""
+    from mcp_core.core.agent_discovery import (
+        build_agent_skills_index,
+        build_api_catalog,
+        build_oauth_protected_resource,
+    )
+
+    catalog = build_api_catalog(public_base)
+    oauth = build_oauth_protected_resource(public_base)
+    skills_index = build_agent_skills_index(repo_root)
+
+    roots = [
+        os.path.join(repo_root, ".well-known"),
+        os.path.join(repo_root, "public", ".well-known"),
+    ]
+    for wk in roots:
+        os.makedirs(wk, exist_ok=True)
+        api_cat_path = os.path.join(wk, "api-catalog")
+        with open(api_cat_path, "w", encoding="utf-8") as f:
+            json.dump(catalog, f, indent=2)
+        print(f"Wrote {api_cat_path}")
+
+        oauth_path = os.path.join(wk, "oauth-protected-resource")
+        with open(oauth_path, "w", encoding="utf-8") as f:
+            json.dump(oauth, f, indent=2)
+        print(f"Wrote {oauth_path}")
+
+        ask_dir = os.path.join(wk, "agent-skills")
+        os.makedirs(ask_dir, exist_ok=True)
+        idx_path = os.path.join(ask_dir, "index.json")
+        with open(idx_path, "w", encoding="utf-8") as f:
+            json.dump(skills_index, f, indent=2)
+        print(f"Wrote {idx_path}")
+
 
 def main() -> None:
     from mcp_core.core.server_card import build_server_card
+
+    public_base = os.environ.get("AGENT_DISCOVERY_BASE_URL", _DEFAULT_PUBLIC_BASE)
 
     schema_src = os.path.join(_REPO_ROOT, "smithery-config-schema.json")
     out_dir = os.path.join(_REPO_ROOT, ".well-known", "mcp")
@@ -56,6 +97,8 @@ def main() -> None:
     with open(public_path, "w", encoding="utf-8") as f:
         json.dump(card, f, indent=2)
     print(f"Wrote {public_path}")
+
+    _write_discovery_artifacts(_REPO_ROOT, public_base)
 
 
 if __name__ == "__main__":
