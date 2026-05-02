@@ -17,8 +17,8 @@ client = TestClient(app)
 
 
 def test_root_endpoint():
-    """Test the root endpoint."""
-    response = client.get("/")
+    """Test the root endpoint (JSON when Accept is application/json or default)."""
+    response = client.get("/", headers={"Accept": "application/json"})
     assert response.status_code == 200
     data = response.json()
     assert data["message"] == "Welcome to the UML-MCP API"
@@ -27,6 +27,50 @@ def test_root_endpoint():
     assert data.get("openapi_json") == "/openapi.json"
     assert data.get("mcp") == "/mcp"
     assert data.get("kroki_encode") == "/kroki_encode"
+    assert "Link" in response.headers
+    assert response.headers.get("Vary") == "Accept"
+    link = response.headers["Link"]
+    assert 'rel="api-catalog"' in link
+    assert 'rel="service-desc"' in link
+    assert 'rel="sitemap"' in link
+    assert 'rel="describedby"' in link
+    assert 'rel="agent-skills"' in link
+
+
+def test_root_markdown():
+    """Accept: text/markdown returns markdown body."""
+    response = client.get("/", headers={"Accept": "text/markdown"})
+    assert response.status_code == 200
+    assert "text/markdown" in response.headers.get("content-type", "")
+    assert "x-markdown-tokens" in response.headers
+    assert b"UML" in response.content or b"diagram" in response.content.lower()
+
+
+def test_root_html_webmcp():
+    """Accept: text/html returns HTML with WebMCP registration."""
+    response = client.get("/", headers={"Accept": "text/html"})
+    assert response.status_code == 200
+    assert "text/html" in response.headers.get("content-type", "")
+    assert b"navigator.modelContext" in response.content
+    assert b"provideContext" in response.content
+
+
+def test_robots_txt():
+    response = client.get("/robots.txt")
+    assert response.status_code == 200
+    assert response.headers.get("content-type", "").startswith("text/plain")
+    text = response.text
+    assert "User-agent: GPTBot" in text
+    assert "Content-Signal:" in text
+    assert "Sitemap:" in text
+
+
+def test_sitemap_xml():
+    response = client.get("/sitemap.xml")
+    assert response.status_code == 200
+    assert "xml" in response.headers.get("content-type", "")
+    assert "<urlset" in response.text
+    assert "/openapi.json" in response.text
 
 
 def test_health_check():

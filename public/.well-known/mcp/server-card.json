@@ -5,6 +5,47 @@
   },
   "tools": [
     {
+      "name": "list_diagram_types",
+      "description": "List supported diagram types with Kroki backend, description, and formats (same data as uml://types resource). Use when the client cannot read resources.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      },
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      }
+    },
+    {
+      "name": "generate_uml_batch",
+      "description": "Generate multiple diagrams in one call. Each item is like generate_uml (diagram_type, code, output_format?, theme?, scale?). Optional shared output_dir for all items. Returns a list of per-index results or errors.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "string",
+            "description": "Items"
+          },
+          "output_dir": {
+            "type": "string",
+            "description": "Output Dir"
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true
+      }
+    },
+    {
       "name": "generate_uml",
       "description": "Generate any UML or diagram by type (class, sequence, mermaid, d2, etc.)",
       "inputSchema": {
@@ -64,6 +105,10 @@
           "output_format": {
             "type": "string",
             "description": "Output format: svg, png, pdf, jpeg, txt, or base64 (per diagram type; see uml://formats)"
+          },
+          "strict": {
+            "type": "boolean",
+            "description": "Strict"
           }
         },
         "required": [
@@ -162,6 +207,18 @@
     {
       "name": "bpmn_process_guide",
       "description": "Explain how to draw a BPMN process model. Covers start/end events, tasks, gateways (XOR, AND, OR), sequence flow, lanes, pools, aligned with BPMN 2.0.2."
+    },
+    {
+      "name": "c4_model",
+      "description": "Produce C4 model diagrams using PlantUML C4 includes: context or container views, Person/System/Container/Component macros, relationships. Uses diagram_type c4plantuml."
+    },
+    {
+      "name": "wireviz_harness",
+      "description": "Produce WireViz YAML for cable/connector harnesses: connectors, cables, colors, pins. Uses diagram_type wireviz."
+    },
+    {
+      "name": "bpmn_executable_process",
+      "description": "Build a minimal executable BPMN 2.0 XML process: start, tasks, gateways, end, sequenceFlow. Uses diagram_type bpmn."
     },
     {
       "name": "convert_class_to_mermaid",

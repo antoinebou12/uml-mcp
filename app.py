@@ -16,6 +16,16 @@ from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from mcp_core.core.agent_discovery import (
+    approximate_markdown_token_count,
+    build_robots_txt,
+    build_sitemap_xml,
+    homepage_html,
+    homepage_markdown,
+    link_header_values,
+    negotiate_root_format,
+)
+
 # Suppress deprecation warnings from Vercel's vendored websockets/uvicorn (not from this app).
 warnings.filterwarnings(
     "ignore",
@@ -237,19 +247,51 @@ class DiagramResponse(BaseModel):
 
 
 @app.get("/", tags=[TAG_REST])
-async def root():
-    """Root endpoint with basic information about the API"""
-    return {
-        "message": "Welcome to the UML-MCP API",
-        "version": "1.3.0",
-        "status": "operational",
-        "docs": "/docs",
-        "redoc": "/redoc",
-        "openapi_json": "/openapi.json",
-        "openapi_yaml": "/openapi.yaml",
-        "mcp": "/mcp",
-        "kroki_encode": "/kroki_encode",
-    }
+async def root(request: Request):
+    """Root: JSON by default; ``Accept: text/html`` or ``text/markdown`` for agents."""
+    base = str(request.base_url).rstrip("/")
+    link_h = link_header_values(base)
+    headers = {"Link": link_h, "Vary": "Accept"}
+    accept = request.headers.get("accept")
+    fmt = negotiate_root_format(accept)
+    if fmt == "markdown":
+        md = homepage_markdown()
+        tokens = approximate_markdown_token_count(md)
+        return Response(
+            content=md,
+            media_type="text/markdown; charset=utf-8",
+            headers={**headers, "x-markdown-tokens": str(tokens)},
+        )
+    if fmt == "html":
+        return HTMLResponse(content=homepage_html(), headers=headers)
+    return JSONResponse(
+        content={
+            "message": "Welcome to the UML-MCP API",
+            "version": "1.3.0",
+            "status": "operational",
+            "docs": "/docs",
+            "redoc": "/redoc",
+            "openapi_json": "/openapi.json",
+            "openapi_yaml": "/openapi.yaml",
+            "mcp": "/mcp",
+            "kroki_encode": "/kroki_encode",
+        },
+        headers=headers,
+    )
+
+
+@app.get("/robots.txt", include_in_schema=False)
+async def robots_txt(request: Request):
+    """Robots exclusion / allow rules and sitemap reference (RFC 9309)."""
+    body = build_robots_txt(str(request.base_url))
+    return Response(content=body, media_type="text/plain; charset=utf-8")
+
+
+@app.get("/sitemap.xml", include_in_schema=False)
+async def sitemap_xml(request: Request):
+    """XML sitemap for discovery."""
+    body = build_sitemap_xml(str(request.base_url))
+    return Response(content=body, media_type="application/xml; charset=utf-8")
 
 
 @app.get("/health", tags=[TAG_REST])

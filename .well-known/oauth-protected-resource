@@ -1,0 +1,7 @@
+{
+  "resource": "https://uml-mcp.vercel.app/",
+  "authorization_servers": [],
+  "scopes_supported": [],
+  "bearer_methods_supported": [],
+  "resource_documentation": "https://uml-mcp.vercel.app/docs"
+}
