@@ -137,4 +137,4 @@ def test_mermaid_urls_frozen():
     """MermaidUrls is immutable."""
     urls = generate_mermaid_urls(diagram_text="x")
     with pytest.raises(AttributeError):
-        urls.code = "y"  # type: ignore[misc]
+        setattr(urls, "code", "y")

@@ -45,7 +45,9 @@ else:
             from fastmcp import Context
         except ImportError:
             try:
-                from fastmcp.context import Context  # type: ignore[attr-defined]
+                import importlib
+
+                Context = importlib.import_module("fastmcp.context").Context
             except ImportError:
                 # Stub so callers always get a class when not using mock
                 class Context:  # noqa: F811

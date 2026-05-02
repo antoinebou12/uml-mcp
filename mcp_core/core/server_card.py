@@ -32,6 +32,8 @@ def build_server_card(*, strict: bool = False):
     show the real error. When False (runtime HTTP), failures return an empty stub.
     """
     try:
+        from typing import Any
+
         from mcp_core.core.config import MCP_SETTINGS
         from mcp_core.prompts.diagram_prompts import get_prompt_registry
         from mcp_core.resources.diagram_resources import get_resource_registry
@@ -106,7 +108,7 @@ def build_server_card(*, strict: bool = False):
             for pname, pinfo in prompt_registry.items()
         ]
 
-        card = {
+        card: dict[str, Any] = {
             "serverInfo": {
                 "name": MCP_SETTINGS.display_name,
                 "version": MCP_SETTINGS.version,
