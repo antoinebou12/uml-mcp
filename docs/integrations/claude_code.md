@@ -62,7 +62,7 @@ claude plugin validate /path/to/uml-mcp
 
 The default plugin ships HTTP MCP pointing at the public deployment. To use another endpoint, either:
 
-1. Edit **`plugins/uml-mcp/.mcp.json`** in your clone and reinstall or update the plugin from that clone, or  
+1. Edit **`plugins/uml-mcp/.mcp.json`** in your clone and reinstall or update the plugin from that clone, or
 2. Keep using [manual MCP configuration](../configuration.md) in Claude Code settings instead of the plugin.
 
 The plugin directory is copied into Claude Code’s plugin cache when installed, so changes apply after you bump the plugin **`version`** in **`plugins/uml-mcp/.claude-plugin/plugin.json`** (and reinstall/update) or reinstall from a branch that contains your edits.
