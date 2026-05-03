@@ -49,6 +49,16 @@ mcp = ">=1.24.0,<2.0.0"
 # Revisit when bumping fastmcp / httpx / starlette; drop entries when upstream aligns.
 [tool.uv]
 override-dependencies = [
+    "filelock==3.29.0",
+    "librt==0.9.0",
+    "mypy==1.20.2",
+    "pathspec==1.1.1",
+    "pre-commit==4.6.0",
+    "pydantic==2.13.3",
+    "pydantic-core==2.46.3",
+    "pytest-cov==7.1.0",
+    "tzdata==2026.2",
+    "virtualenv==20.39.1",
     "anyio==4.13.0",
     "attrs>=26,<27",
     "authlib==1.7.0",
@@ -79,8 +89,8 @@ override-dependencies = [
 [tool.poetry.group.dev.dependencies]
 tomli = ">=2.4.1,<3"
 pytest = ">=9.0.3,<10"
-pytest-cov = ">=7.0.0,<8"
-pre-commit = "^4.0.0"
+pytest-cov = ">=7.1.0,<8"
+pre-commit = "^4.6.0"
 ruff = ">=0.15.12"
 ty = ">=0.0.34"
 pytest-asyncio = "^0.21.1"
@@ -141,13 +151,13 @@ exclude_lines = [
 [dependency-groups]
 dev = [
     "tomli>=2.4.1",
-    "pre-commit>=4.5.1",
+    "pre-commit>=4.6.0",
     "pytest>=9.0.3",
-    "pytest-cov>=7.0.0",
+    "pytest-cov>=7.1.0",
     "ruff>=0.15.12",
     "ty>=0.0.34",
     "pytest-asyncio>=0.21.1",
-    "mypy>=1.19.1",
+    "mypy>=1.20.2",
     "mkdocs>=1.6.0",
     "mkdocs-material>=9.7.6",
     "pymdown-extensions>=10.21.2",
