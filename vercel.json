@@ -44,5 +44,5 @@
     "MCP_URL_ONLY": "true",
     "MCP_MEMORY_ONLY": "true"
   },
-  "installCommand": "bash scripts/vercel-install.sh"
+  "installCommand": "uv export --frozen --no-dev --no-hashes | uv pip install --no-compile --no-cache-dir -r -"
 }

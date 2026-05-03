@@ -5,7 +5,7 @@ description: The User Manual was reorganised into the Tutorials, Reference, and 
 
 # User Manual (moved)
 
-The single-page User Manual has been split into three focused sections:
+The old single-page manual now lives in three sections:
 
 - **[Tutorials → Getting started](tutorials/getting-started.md)**: end-to-end walkthrough from connecting a client to rendering, validating, batching, and tuning output.
 - **[Reference](reference/index.md)**: MCP tools, resources, prompts, Python API, and configuration.

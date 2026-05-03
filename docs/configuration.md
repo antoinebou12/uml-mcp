@@ -1,6 +1,6 @@
 # Configuration
 
-UML-MCP can be configured using environment variables and MCP client config files.
+Configure UML-MCP with environment variables and MCP client config files.
 
 ## Running with FastMCP CLI
 
@@ -71,6 +71,8 @@ Example MCP server config snippets for **Cursor** and **Claude Desktop** are in 
 - **`config/cursor_config.json`**: Cursor
 - **`config/claude_desktop_config.json`**: Claude Desktop
 - **`config/README.md`**: Where each app stores its config and how to copy the examples
+
+For **Claude Code**, you can install the bundled plugin from this repo’s marketplace instead of pasting JSON; see [Claude Code integration](integrations/claude_code.md).
 
 Copy the relevant `mcpServers` block into your client’s config file and set `cwd` to your `uml-mcp` project root. The examples use **`args`: `["-u", "server.py"]`** (unbuffered stdio, path relative to `cwd`). The main server entry point is **`server.py`**. Optional `env` keys include `KROKI_SERVER`, `MCP_OUTPUT_DIR`, and `MCP_DIAGRAM_FALLBACK` (see table above).
 

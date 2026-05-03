@@ -1,0 +1,14 @@
+{
+  "name": "uml-mcp",
+  "version": "1.0.0",
+  "description": "Diagram generation for Claude Code via UML-MCP (PlantUML, Mermaid, D2, Graphviz, and more) over HTTP MCP.",
+  "author": {
+    "name": "Antoine Boucher",
+    "url": "https://github.com/antoinebou12"
+  },
+  "homepage": "https://github.com/antoinebou12/uml-mcp",
+  "repository": "https://github.com/antoinebou12/uml-mcp",
+  "license": "MIT",
+  "keywords": ["mcp", "diagrams", "uml", "mermaid", "plantuml", "kroki", "d2"],
+  "mcpServers": "./.mcp.json"
+}

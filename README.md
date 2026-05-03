@@ -60,6 +60,18 @@ For client config snippets, use:
 - `config/cursor_config.json`
 - `config/claude_desktop_config.json`
 - `config/README.md` for exact config file locations
+- **Claude Code:** install the bundled plugin from the repo marketplace (see below) or read [docs/integrations/claude_code.md](docs/integrations/claude_code.md)
+
+### Claude Code plugin
+
+Adds the hosted HTTP MCP server plus a diagram skill (no `settings.json` paste). In Claude Code:
+
+```text
+/plugin marketplace add https://github.com/antoinebou12/uml-mcp
+/plugin install uml-mcp@uml-mcp-plugins
+```
+
+Use a local path instead of the GitHub URL if you already cloned this repo. Custom endpoints and validation: [docs/integrations/claude_code.md](docs/integrations/claude_code.md).
 
 ## Remote vs Local
 
@@ -182,9 +194,6 @@ uv run pytest tests/ -v
 
 # Lint
 uv run ruff check . && uv run ruff format --check .
-
-# Integration tests (requires real FastMCP)
-USE_REAL_FASTMCP=1 uv run pytest tests/integration -v
 
 # Local CI
 make ci

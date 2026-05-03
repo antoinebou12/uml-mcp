@@ -5,7 +5,7 @@ description: API reference for UML-MCP (MCP tools, resources, prompts, Python AP
 
 # Reference
 
-Reference for the tools, resources, prompts, and Python modules UML-MCP exposes. The table links to one concept per page.
+Tools, resources, prompts, and Python modules exposed by UML-MCP. Use the table to open one topic per page.
 
 | Section | What's here |
 | --- | --- |

@@ -29,9 +29,33 @@ Pick a starting point. Each tutorial is self-contained and assumes you have a wo
 
     ---
 
-    A gallery of ready-to-copy Mermaid diagrams (flowchart, sequence, class, state, Gantt, ER), rendered live on this page.
+    Live gallery (flowchart, sequence, class, state, Gantt, ER) plus a section on **prompts**, optional **Sequential Thinking** MCP, and **server SVG** via `generate_uml`.
 
     [:octicons-arrow-right-24: Browse Mermaid](mermaid.md)
+
+-   :material-chart-box-outline:{ .lg .middle } **PlantUML prompts and SVG**
+
+    ---
+
+    Copy-paste prose prompts, example Sequential Thinking steps, named MCP prompts (`class_diagram`, `sequence_diagram`, …), and a committed SVG sample.
+
+    [:octicons-arrow-right-24: Open PlantUML tutorial](plantuml-prompts-svg.md)
+
+-   :material-graph-outline:{ .lg .middle } **D2 prompts and SVG**
+
+    ---
+
+    Service-style sketches, planning with Sequential Thinking, `uml_diagram_with_thinking`, and a D2 SVG example.
+
+    [:octicons-arrow-right-24: Open D2 tutorial](d2-prompts-svg.md)
+
+-   :material-drawing:{ .lg .middle } **TikZ prompts and SVG**
+
+    ---
+
+    Precision figures with TikZ, optional Sequential Thinking, and a minimal circle SVG from Kroki.
+
+    [:octicons-arrow-right-24: Open TikZ tutorial](tikz-prompts-svg.md)
 
 -   :material-sitemap:{ .lg .middle } **BPMN guide**
 

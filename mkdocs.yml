@@ -76,16 +76,30 @@ nav:
       - Getting started: tutorials/getting-started.md
       - Diagram Assistant: diagram-assistant.md
       - Mermaid live examples: tutorials/mermaid.md
+      - PlantUML prompts and SVG: tutorials/plantuml-prompts-svg.md
+      - D2 prompts and SVG: tutorials/d2-prompts-svg.md
+      - TikZ prompts and SVG: tutorials/tikz-prompts-svg.md
       - BPMN guide: tutorials/bpmn.md
       - Usage examples: examples.md
   - Diagram types:
       - diagrams/index.md
       - UML (PlantUML): diagrams/uml.md
       - Mermaid: diagrams/mermaid.md
-      - D2 / Graphviz / others: diagrams/general.md
+      - D2: diagrams/d2.md
+      - Graphviz: diagrams/graphviz.md
+      - More diagram backends:
+          - Overview: diagrams/general.md
+          - ERD: diagrams/erd.md
+          - DBML: diagrams/dbml.md
+          - BlockDiag family: diagrams/blockdiag.md
+          - BPMN (Kroki XML): diagrams/bpmn.md
+          - C4 (PlantUML): diagrams/c4plantuml.md
+          - Structurizr: diagrams/structurizr.md
+          - Specialty types: diagrams/specialty.md
       - TikZ: diagrams/tikz.md
   - Reference:
       - reference/index.md
+      - LLMs.txt: llms.txt
       - MCP tools: api/tools.md
       - MCP resources: reference/resources.md
       - MCP prompts: reference/prompts.md
@@ -101,6 +115,7 @@ nav:
       - Docker: deploy/docker.md
       - Vercel & Smithery: integrations/vercel_smithery.md
       - Claude Desktop: integrations/claude_desktop.md
+      - Claude Code: integrations/claude_code.md
       - Cursor: integrations/cursor.md
       - Fallback strategy: fallback-mechanism.md
   - Developers:

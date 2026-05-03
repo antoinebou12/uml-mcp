@@ -6,7 +6,6 @@ All diagram rendering lives under tools.kroki:
   - tools.kroki.mermaid — Mermaid URL/state utilities
   - tools.kroki.plantuml — PlantUML client
   - tools.kroki.d2 — D2 encoding/URL utilities
-  - tools.kroki.run_d2 — D2 subprocess runner
 """
 
 from .kroki import (

@@ -84,6 +84,10 @@ You can customize how diagrams appear in Cursor by modifying the templates in th
 
 Cursor works well with SVG and PNG formats. You can specify the preferred format in your prompts or configure defaults in the UML-MCP server.
 
+### Optional: Sequential Thinking MCP
+
+UML-MCP does **not** include Sequential Thinking. For multi-step reasoning before calling `generate_uml`, add a **second** MCP server entry alongside `uml-mcp` in your Cursor MCP configuration (for example install **Sequential Thinking** from the Cursor MCP server directory if you use that distribution). The assistant can call its `sequentialthinking` tool (`thought`, `thoughtNumber`, `totalThoughts`, `nextThoughtNeeded`, and related fields), then call UML-MCP’s `generate_uml` with the final diagram source. Worked narratives appear under [Mermaid tutorials](../tutorials/mermaid.md) and [PlantUML prompts and SVG](../tutorials/plantuml-prompts-svg.md).
+
 ## Related resources
 
 - [Configuration Options](../configuration.md)

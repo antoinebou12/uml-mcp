@@ -2,6 +2,8 @@
 
 Connect UML-MCP to Claude Desktop to generate diagrams in chat.
 
+For **Claude Code** (CLI / IDE extension) and the bundled marketplace plugin, see [Claude Code integration](claude_code.md).
+
 ## Overview
 
 Claude Desktop connects to UML-MCP as an MCP server so you can generate and view UML and other supported diagram types in chat.

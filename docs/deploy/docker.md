@@ -1,6 +1,6 @@
 ---
 title: Docker
-description: "Run UML-MCP in Docker: full stack with bundled Kroki/PlantUML, plain HTTP, or stdio MCP."
+description: "Run UML-MCP in Docker: full stack with bundled Kroki, Mermaid, and BlockDiag, plain HTTP, or stdio MCP."
 tags:
   - docker
   - deploy
@@ -64,10 +64,6 @@ The Docker image reads the same variables as the local server. The most useful f
 | `MCP_DIAGRAM_FALLBACK` | Enable the PlantUML / Mermaid.ink fallback chain | (auto) |
 
 Full table: [Configuration](../configuration.md).
-
-## Optional LaTeX / TikZ container
-
-For local TikZ rendering without Kroki, see [`tools/docker/`](https://github.com/antoinebou12/uml-mcp/tree/main/tools/docker) and the [TikZ page](../diagrams/tikz.md#optional-docker).
 
 ## Compose snippet: bring your own backends
 

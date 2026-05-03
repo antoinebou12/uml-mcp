@@ -58,10 +58,6 @@ jobs:
         run: |
           uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html
 
-      - name: Integration tests (MCP Client)
-        run: USE_REAL_FASTMCP=1 uv run pytest tests/integration -v --no-cov
-        continue-on-error: true
-
       - name: Health check (FastAPI UML API)
         run: |
           uv run python -c "

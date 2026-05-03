@@ -1,9 +1,7 @@
 # Large or unused assets (stay under 250 MB bundle limit)
 public/ressources/
-tools/kroki/d2_bin
 examples/
 docs/
-evaluations/
 tests/
 .github/
 .skill/
@@ -25,12 +23,10 @@ SECURITY.md
 FALLBACK_IMPLEMENTATION.md
 
 # Dev / build / tooling (buildCommand: python -m mcp_core.build_static_server_card)
-scripts/evaluation.py
 Makefile
 mkdocs.yml
 renovate.json
 requirements-dev.txt
-tools/docker/
 .git/
 .gitignore
 .pytest_cache/

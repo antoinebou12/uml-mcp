@@ -789,21 +789,3 @@ cable: C1
             "# No specific template available for this diagram type.\n"
             "# Please refer to the documentation for this diagram type.",
         )
-
-
-# Example usage:
-def demo():
-    # Get and print a template for Mermaid
-    mermaid_template = DiagramTemplates.get_template("mermaid")
-    print("MERMAID TEMPLATE:")
-    print(mermaid_template)
-    print("\n")
-
-    # Get and print a comprehensive example for Mermaid
-    mermaid_example = DiagramExamples.get_example("mermaid")
-    print("MERMAID EXAMPLE:")
-    print(mermaid_example)
-
-
-if __name__ == "__main__":
-    demo()

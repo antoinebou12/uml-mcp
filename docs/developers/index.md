@@ -13,7 +13,7 @@ Build, test, and extend UML-MCP. Pick the page that matches what you're trying t
 
     ---
 
-    Why integration tests are skipped by default, how to opt in with `USE_REAL_FASTMCP=1`, and the evaluation harness.
+    Test layout and how to run the suite.
 
     [:octicons-arrow-right-24: Testing guide](../testing.md)
 
@@ -56,9 +56,6 @@ uv run pytest tests/ -v
 uv run ruff check .
 uv run ruff format --check .
 
-# Integration tests (requires real FastMCP)
-USE_REAL_FASTMCP=1 uv run pytest tests/integration -v
-
 # Local CI (mirrors GitHub Actions)
 make ci
 
@@ -79,7 +76,7 @@ mcp_core/
   resources/           uml:// resource handlers
   server/              FastMCP wrapper
 tools/kroki/           Kroki, PlantUML, Mermaid, D2, TikZ clients
-tests/                 unit + integration suites
+tests/                 pytest suite
 docs/                  this MkDocs site
 ```
 

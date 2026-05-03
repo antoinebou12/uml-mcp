@@ -1,6 +1,6 @@
 ---
 title: TikZ
-description: Render TikZ/PGF graphics through Kroki, with optional local LaTeX compilation.
+description: Render TikZ/PGF graphics through Kroki.
 tags:
   - tikz
   - latex
@@ -17,14 +17,13 @@ UML-MCP supports [TikZ/PGF](https://tikz.dev/) graphics via [Kroki](https://krok
 ## Overview
 
 - **Backend**: Kroki (default). No local LaTeX installation required.
-- **Optional**: Local compilation with Docker; see [Optional Docker](#optional-docker) below.
 - **Output formats**: SVG, PDF, PNG, JPEG.
 
 Use `diagram_type: "tikz"` with the **`generate_uml`** tool. The `code` parameter is your TikZ/LaTeX source (snippet or full document). Omit **`output_dir`** if you only need a URL or base64.
 
 ## Available templates and examples
 
-The TikZ module provides a template library and auto-wrapping:
+TikZ support in UML-MCP includes templates and auto-wrapping:
 
 - **Snippets**: If you pass only `\begin{tikzpicture}...\end{tikzpicture}`, the server wraps it in a minimal standalone LaTeX document and infers required TikZ libraries where possible.
 - **Preamble lines in snippets**: If you paste `\usetikzlibrary{...}` and/or `\usepackage{tikz}` / `\usepackage{pgfplots}` on their own lines *before* the picture (without a full document), those lines are **hoisted** into the generated preamble so they are not duplicated inside `\begin{document}` (which would break LaTeX on Kroki).
@@ -100,37 +99,14 @@ Use `output_format` in the tool call (e.g. `"svg"`, `"pdf"`, `"png"`, `"jpeg"`).
 - For pgfplots, the wrapper adds `\usepackage{pgfplots}` and `\pgfplotsset{compat=1.18}` when needed.
 - Use a full standalone document if you need custom packages or fonts (e.g. `\documentclass{standalone}\usepackage{tikz}\usepackage{pgfplots}...`).
 
-## Local vs Kroki rendering
+## Rendering
 
-| Aspect       | Kroki (default)     | Local (Docker)        |
-|-------------|---------------------|------------------------|
-| Setup       | None                | Docker build/run       |
-| Network     | Required            | Optional               |
-| Custom TeX  | Kroki’s environment | Your image            |
-| Use case    | Most diagrams       | Offline or custom deps |
-
-To use optional local compilation, set `USE_LOCAL_LATEX=true` and use the LaTeX Docker setup under `tools/docker/` (see [Optional Docker](#optional-docker)).
-
-## Optional Docker
-
-For local LaTeX/TikZ compilation without Kroki:
-
-1. Build and start the container from the project root:
-   ```bash
-   docker compose -f tools/docker/docker-compose.latex.yml build
-   docker compose -f tools/docker/docker-compose.latex.yml up -d
-   ```
-2. Compile a `.tex` file inside the container (e.g. from `examples/`):
-   ```bash
-   docker exec -it uml-mcp-latex xelatex -interaction=nonstopmode /workspace/examples/example-tikz-flowchart.tex
-   ```
-
-See `tools/docker/README.md` for details and volume mounts.
+UML-MCP sends TikZ code to your configured Kroki gateway (see [Configuration](../configuration.md) for `KROKI_SERVER` and related settings). There is no separate local LaTeX compile path in the server.
 
 ---
 
 ## Related
 
 - [Diagram catalog](index.md): all supported types.
-- [General-purpose diagrams](general.md): D2, Graphviz, ERD, BPMN, C4 and more.
+- [D2](d2.md) and [Graphviz](graphviz.md) (with SVG examples); [more backends overview](general.md); [ERD](erd.md), [DBML](dbml.md), [BlockDiag family](blockdiag.md), [BPMN XML](bpmn.md), [C4 (PlantUML)](c4plantuml.md), [Structurizr](structurizr.md), [specialty types](specialty.md).
 - [MCP tools reference](../api/tools.md): `generate_uml` parameters.

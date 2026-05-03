@@ -53,7 +53,16 @@ Create a component diagram for a microservices architecture with:
 
 ## Diagram assistant (Mermaid, Gantt, BPMN, class → Mermaid)
 
-For **named prompts**, **`uml://` resources**, and how tools map to API sequences, Gantt charts, BPMN guides, and class-to-Mermaid conversion, see **[Diagram Assistant](diagram-assistant.md)**.
+Named prompts, `uml://` resources, and how tools map to Mermaid sequences, Gantt charts, BPMN, and class-to-Mermaid conversion are covered in [Diagram Assistant](diagram-assistant.md).
+
+## Engine-specific tutorials
+
+Tracks with copy-paste prompts, optional **Sequential Thinking** MCP (separate server), `generate_uml` with **`output_format: svg`**, and committed SVG samples:
+
+- [Mermaid live examples + prompts and SVG](tutorials/mermaid.md)
+- [PlantUML prompts and SVG](tutorials/plantuml-prompts-svg.md)
+- [D2 prompts and SVG](tutorials/d2-prompts-svg.md)
+- [TikZ prompts and SVG](tutorials/tikz-prompts-svg.md)
 
 ## Using MCP Tools Directly
 

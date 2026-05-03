@@ -1,6 +1,6 @@
 # Diagram Assistant
 
-Diagram Assistant lists the MCP tools, resources, and prompts used to generate and read UML and other diagram types. The table shows four example prompts and how the server handles them.
+This page lists the MCP tools, resources, and prompts for generating and reading UML and other diagram types. The table maps four example user prompts to the tools and resources the server uses.
 
 ## Example prompts and behavior
 

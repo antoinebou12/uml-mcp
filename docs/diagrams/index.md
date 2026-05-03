@@ -45,7 +45,9 @@ All UML types are rendered through the PlantUML backend on Kroki.
 | `dbml` | DBML | Database Markup Language schemas | `svg` |
 | `nomnoml` | nomnoml | UML-style diagrams from shorthand syntax | `svg` |
 
-[:octicons-arrow-right-24: General-purpose page](general.md) · [Mermaid live examples](mermaid.md)
+[:octicons-arrow-right-24: D2](d2.md) · [:octicons-arrow-right-24: Graphviz](graphviz.md) · [:octicons-arrow-right-24: More backends overview](general.md) · [Mermaid live examples](mermaid.md)
+
+Snippets: [ERD](erd.md) · [DBML](dbml.md) · [BlockDiag](blockdiag.md) · [BPMN XML](bpmn.md) · [C4 PlantUML](c4plantuml.md) · [Structurizr](structurizr.md) · [Specialty types](specialty.md)
 
 ## blockdiag family
 
@@ -57,6 +59,8 @@ All UML types are rendered through the PlantUML backend on Kroki.
 | `nwdiag` | Network diagrams | `png`, `svg`, `pdf` |
 | `packetdiag` | Network packet layouts | `png`, `svg`, `pdf` |
 | `rackdiag` | Rack and server layouts | `png`, `svg`, `pdf` |
+
+[:octicons-arrow-right-24: BlockDiag family snippets](blockdiag.md)
 
 ## Specialized
 
@@ -74,7 +78,7 @@ All UML types are rendered through the PlantUML backend on Kroki.
 | `wavedrom` | Waveform and digital timing | `svg` |
 | `wireviz` | Cable and wiring diagrams | (varies) |
 
-[:octicons-arrow-right-24: TikZ page](tikz.md)
+[:octicons-arrow-right-24: TikZ page](tikz.md) · [:octicons-arrow-right-24: Specialty types](specialty.md)
 
 ---
 

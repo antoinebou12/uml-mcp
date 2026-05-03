@@ -13,7 +13,7 @@ If UML-MCP helps your research, tooling, or product, please cite it:
 
 ```bibtex
 @software{uml_mcp,
-  author = {Antoine Bou and contributors},
+  author = {Antoine Boucher and contributors},
   title  = {{UML-MCP: Diagram Generation via the Model Context Protocol}},
   url    = {https://github.com/antoinebou12/uml-mcp},
   year   = {2025}
@@ -49,7 +49,7 @@ And the MCP ecosystem:
 
 ## Maintainers
 
-- [Antoine Bou](https://github.com/antoinebou12) and the [list of contributors](https://github.com/antoinebou12/uml-mcp/graphs/contributors).
+- [Antoine Boucher](https://github.com/antoinebou12) and the [list of contributors](https://github.com/antoinebou12/uml-mcp/graphs/contributors).
 
 ## Get in touch
 

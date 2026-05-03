@@ -6,8 +6,7 @@ Served at .well-known/mcp/server-card.json (see public/.well-known/ copy).
 Run from repo root:
   python -m mcp_core.build_static_server_card
 
-This lives under mcp_core/ so Vercel buildCommand does not depend on scripts/
-being present in the build workspace (path0).
+This lives under mcp_core/ so the Vercel buildCommand runs as a plain Python module.
 """
 
 from __future__ import annotations

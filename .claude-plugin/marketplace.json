@@ -1,0 +1,18 @@
+{
+  "name": "uml-mcp-plugins",
+  "metadata": {
+    "description": "Official Claude Code plugins for the UML-MCP diagram MCP server."
+  },
+  "owner": {
+    "name": "Antoine Boucher",
+    "url": "https://github.com/antoinebou12"
+  },
+  "plugins": [
+    {
+      "name": "uml-mcp",
+      "source": "./plugins/uml-mcp",
+      "description": "HTTP MCP to UML-MCP for diagrams (UML, Mermaid, D2, Kroki) plus an /uml-diagrams skill.",
+      "version": "1.0.0"
+    }
+  ]
+}

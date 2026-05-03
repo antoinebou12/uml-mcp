@@ -122,9 +122,9 @@ exclude = [".venv", "build", "dist"]
 [tool.ruff.format]
 quote-style = "double"
 
-# Optional ML / eval code and one-off scripts are not part of the MCP package surface.
+# Optional ML / eval examples are not part of the MCP package surface.
 [tool.ty.src]
-exclude = ["scripts/**", "examples/**"]
+exclude = ["examples/**"]
 
 # FastMCP / Starlette typing is often stricter than runtime; relax in integration tests.
 [[tool.ty.overrides]]

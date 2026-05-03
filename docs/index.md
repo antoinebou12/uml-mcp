@@ -66,7 +66,7 @@ sequenceDiagram
 
     [:octicons-arrow-right-24: Configuration](configuration.md)
 
--   :material-cloud-cog:{ .lg .middle } **Flexible deployment**
+-   :material-cloud-cog:{ .lg .middle } **Deployment options**
 
     ---
 
@@ -160,7 +160,7 @@ sequenceDiagram
 
 !!! tip "Need an end-to-end stack?"
 
-    Combine UML-MCP with your favourite MCP-aware editor. Cursor and Claude Desktop both work out of the box; see [Cursor](integrations/cursor.md) and [Claude Desktop](integrations/claude_desktop.md).
+    Combine UML-MCP with your favourite MCP-aware editor. Cursor and Claude Desktop both work out of the box; see [Cursor](integrations/cursor.md), [Claude Desktop](integrations/claude_desktop.md), and [Claude Code](integrations/claude_code.md) (plugin + marketplace).
 
 ---
 
@@ -170,7 +170,7 @@ If UML-MCP helps your research, tooling, or product, please cite the project or 
 
 ```bibtex
 @software{uml_mcp,
-  author = {Antoine Bou and contributors},
+  author = {Antoine Boucher and contributors},
   title  = {{UML-MCP: Diagram Generation via the Model Context Protocol}},
   url    = {https://github.com/antoinebou12/uml-mcp},
   year   = {2025}

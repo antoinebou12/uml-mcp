@@ -8,7 +8,6 @@ This package consolidates all diagram rendering clients and utilities:
   - PlantUML client (plantuml.py)
   - PlantUML themes (plantuml_themes.py)
   - D2 encoding/URL utilities (d2.py)
-  - D2 subprocess runner (run_d2.py)
 """
 
 from .kroki import LANGUAGE_OUTPUT_SUPPORT, generate_diagram, generate_kroki_url

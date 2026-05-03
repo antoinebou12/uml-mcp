@@ -5,7 +5,7 @@ description: A step-by-step walkthrough of connecting a client, generating diagr
 
 # Getting started
 
-These seven steps connect an MCP client and render a diagram in the editor. Pick your client; each step shows the JSON-RPC payload used by Cursor, Claude Desktop, a custom HTTP client, or `curl`.
+Seven steps take you from a connected MCP client to a rendered diagram in the editor. Each step includes JSON-RPC examples for Cursor, Claude Desktop, a custom HTTP client, or `curl`.
 
 ## 1. Connect a client
 
@@ -47,6 +47,17 @@ UML-MCP speaks the [Model Context Protocol](https://modelcontextprotocol.io/) ov
     ```
 
     Restart Claude Desktop after saving.
+
+=== ":material-code-tags: Claude Code"
+
+    Add this repository as a plugin marketplace, then install the **`uml-mcp`** plugin (HTTP MCP to the hosted server plus a diagram skill):
+
+    ```text
+    /plugin marketplace add https://github.com/antoinebou12/uml-mcp
+    /plugin install uml-mcp@uml-mcp-plugins
+    ```
+
+    Use a local path instead of the Git URL if you already cloned the repo. Details: [Claude Code integration](../integrations/claude_code.md).
 
 === ":material-cloud-outline: Smithery"
 
