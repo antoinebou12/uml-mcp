@@ -6,7 +6,7 @@ Install UML-MCP as a **Claude Code plugin** to get the hosted HTTP MCP server pl
 
 | Piece | Purpose |
 | --- | --- |
-| **MCP server `uml-mcp`** | Streamable HTTP to `https://uml-mcp.vercel.app/mcp` — tools such as `generate_uml`, `validate_uml`, `list_diagram_types`, `generate_uml_batch` |
+| **MCP server `uml-mcp`** | Streamable HTTP to `https://uml-mcp.vercel.app/mcp`, with `generate_uml`, `validate_uml`, `list_diagram_types`, and `generate_uml_batch` |
 | **Skill `uml-diagrams`** | Invoked as **`/uml-mcp:uml-diagrams`** (plugin name + skill name) for URL-first diagram workflows |
 
 Plugin sources live under [`plugins/uml-mcp/`](https://github.com/antoinebou12/uml-mcp/tree/main/plugins/uml-mcp) in this repository. The catalog file is [`.claude-plugin/marketplace.json`](https://github.com/antoinebou12/uml-mcp/tree/main/.claude-plugin/marketplace.json).
@@ -69,6 +69,6 @@ The plugin directory is copied into Claude Code’s plugin cache when installed,
 
 ## Related resources
 
-- [Claude Desktop](claude_desktop.md) — MCP via app settings (not the plugin system)
+- [Claude Desktop](claude_desktop.md) (MCP via app settings, not the plugin system)
 - [Configuration](../configuration.md)
 - [Getting started](../tutorials/getting-started.md)

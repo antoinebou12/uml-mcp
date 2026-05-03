@@ -37,11 +37,11 @@ Kubernetes pulls images from container registry.
 
 ## Example Sequential Thinking flow (then `generate_uml`)
 
-1. **Scope** — Three tiers: frontend, API, data.
-2. **Notation** — D2 connections with labels, no nested containers for the first draft.
-3. **Entities** — `service.frontend`, `service.api`, `db`, `cache`.
-4. **Layout** — Let D2’s engine position nodes; avoid over-constraining.
-5. **Output** — `generate_uml` with `diagram_type: "d2"`, `output_format: "svg"`.
+1. **Scope:** Three tiers: frontend, API, data.
+2. **Notation:** D2 connections with labels, no nested containers for the first draft.
+3. **Entities:** `service.frontend`, `service.api`, `db`, `cache`.
+4. **Layout:** Let D2’s engine position nodes; avoid over-constraining.
+5. **Output:** `generate_uml` with `diagram_type: "d2"`, `output_format: "svg"`.
 
 Omit `output_dir` when you want URL / base64 only (typical for hosted MCP).
 

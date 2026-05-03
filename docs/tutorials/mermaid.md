@@ -23,7 +23,7 @@ Every code block on this page is a live Mermaid diagram rendered in your browser
 
 Use **natural-language prompts** first, then have the model produce Mermaid source and call **`generate_uml`** with **`"output_format": "svg"`** when you need a static asset, PDF pipeline, or shareable Kroki URL (unlike the in-page diagrams below, which rely on JavaScript).
 
-**Optional Sequential Thinking MCP** — In clients such as Cursor you can enable a **Sequential Thinking** server alongside UML-MCP. It is a separate product: use its `sequentialthinking` tool to step through scope, diagram type, participants, edge cases, then finish with **`nextThoughtNeeded: false`** before invoking `generate_uml`. UML-MCP’s own **`uml_diagram_with_thinking`** prompt is different: it is fetched with `prompts/get` and only affects how the model plans inside the chat.
+**Optional Sequential Thinking MCP.** In clients such as Cursor you can enable a **Sequential Thinking** server alongside UML-MCP. It is a separate product: use its `sequentialthinking` tool to step through scope, diagram type, participants, edge cases, then finish with **`nextThoughtNeeded: false`** before invoking `generate_uml`. UML-MCP’s own **`uml_diagram_with_thinking`** prompt is different: it is fetched with `prompts/get` and only affects how the model plans inside the chat.
 
 **Named prompts on UML-MCP** (see [MCP prompts](../reference/prompts.md)):
 

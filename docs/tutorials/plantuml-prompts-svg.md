@@ -46,11 +46,11 @@ system boundary LibrarySystem; include relationship SearchCatalog from Borrow to
 
 Illustrative steps you might run through the **Sequential Thinking** tool before generating:
 
-1. **Scope** — Static structure only (classes + associations), no sequence.
-2. **Notation** — PlantUML `class` with `@startuml` / `@enduml`, visibility optional.
-3. **Entities** — Account, Customer, one-to-many Customer to Account.
-4. **Risks** — Avoid ambiguous navigability; name associations clearly.
-5. **Validation** — Call `validate_uml` with `diagram_type: class` and the same source, then `generate_uml` with `"output_format": "svg"`.
+1. **Scope:** Static structure only (classes + associations), no sequence.
+2. **Notation:** PlantUML `class` with `@startuml` / `@enduml`, visibility optional.
+3. **Entities:** Account, Customer, one-to-many Customer to Account.
+4. **Risks:** Avoid ambiguous navigability; name associations clearly.
+5. **Validation:** Call `validate_uml` with `diagram_type: class` and the same source, then `generate_uml` with `"output_format": "svg"`.
 
 Then call **`generate_uml`** with `diagram_type` set to a PlantUML-backed type (for example `class`, `sequence`, or raw `plantuml`), your final source as `code`, **`"output_format": "svg"`**, and omit `output_dir` (or set it to `null`) if you only need a URL or `content_base64` without writing a file.
 

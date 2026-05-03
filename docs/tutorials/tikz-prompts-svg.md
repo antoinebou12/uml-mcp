@@ -37,11 +37,11 @@ TikZ mind map style (simple): root node "Server", children "MCP", "Kroki", "Clie
 
 ## Example Sequential Thinking flow (then `generate_uml`)
 
-1. **Scope** — Single `tikzpicture`, no full `\documentclass` needed (Kroki wraps snippets).
-2. **Libraries** — Default draw suffices for circles and nodes; add `\usetikzlibrary{...}` on its own line if required.
-3. **Coordinates** — Keep bounding box modest for SVG clarity.
-4. **Text** — ASCII labels preferred inside nodes for portability.
-5. **Generate** — `diagram_type: "tikz"`, `output_format: "svg"`.
+1. **Scope:** Single `tikzpicture`, no full `\documentclass` needed (Kroki wraps snippets).
+2. **Libraries:** Default draw suffices for circles and nodes; add `\usetikzlibrary{...}` on its own line if required.
+3. **Coordinates:** Keep bounding box modest for SVG clarity.
+4. **Text:** ASCII labels preferred inside nodes for portability.
+5. **Generate:** `diagram_type: "tikz"`, `output_format: "svg"`.
 
 ## Named prompts
 

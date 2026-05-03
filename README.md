@@ -38,7 +38,7 @@ Generate UML and other diagrams through the [Model Context Protocol](https://mod
 
 ### Remote quick start (Vercel HTTP MCP)
 
-Use this when you want the deployed endpoint from this repo:
+Configuration for the public Vercel deployment:
 
 ```json
 "uml-mcp": {
@@ -55,7 +55,7 @@ uv sync
 uv run python server.py
 ```
 
-For client config snippets, use:
+Example client configs:
 
 - `config/cursor_config.json`
 - `config/claude_desktop_config.json`
@@ -81,7 +81,7 @@ Use a local path instead of the GitHub URL if you already cloned this repo. Cust
 - **Returned data:** Both return URL + base64; local can also save files
 - **Environment variables:** Remote is managed server-side; local reads your env config
 
-**Important:** The MCP route is `/mcp`, not the domain root.
+MCP clients must call `/mcp`, not the site root.
 
 ## Supported Diagram Types
 
