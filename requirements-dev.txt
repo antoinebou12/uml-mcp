@@ -202,7 +202,7 @@ more-itertools==11.0.2
     # via
     #   jaraco-classes
     #   jaraco-functools
-mypy==1.19.1
+mypy==1.20.2
 mypy-extensions==1.1.0
     # via mypy
 nodeenv==1.10.0
