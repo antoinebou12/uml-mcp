@@ -171,6 +171,12 @@ Full options: [docs/configuration.md](docs/configuration.md)
 
 ## Architecture
 
+Typical flow when a user asks an MCP-enabled assistant for a diagram: the assistant calls `generate_uml`, the server renders via Kroki, then returns URLs and optional base64 to the assistant for the user.
+
+<p align="center">
+  <img src="docs/assets/diagrams/mcp-request-flow.svg" width="100%" style="max-width: 1132px;" alt="Sequence diagram: User to AI Assistant to UML-MCP server to Kroki and back, showing generate_uml and diagram delivery" />
+</p>
+
 ```text
 server.py              -- MCP entry point (stdio/HTTP)
 app.py                 -- FastAPI REST API + MCP HTTP at /mcp

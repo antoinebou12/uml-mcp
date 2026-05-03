@@ -9,7 +9,7 @@ tags:
 
 # D2 prompts and SVG
 
-[D2](https://d2lang.com/) fits **boxes-and-arrows** system sketches (services, data stores, queues) with automatic layout. UML-MCP renders D2 through Kroki. For a minimal snippet reference, see [D2 / Graphviz / others](../diagrams/general.md#d2).
+[D2](https://d2lang.com/) fits **boxes-and-arrows** system sketches (services, data stores, queues) with automatic layout. UML-MCP renders D2 through Kroki. For a minimal snippet reference, see [D2](../diagrams/d2.md) and the [more backends hub](../diagrams/general.md).
 
 ## Prerequisites
 

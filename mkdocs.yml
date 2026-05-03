@@ -79,7 +79,9 @@ nav:
       - PlantUML prompts and SVG: tutorials/plantuml-prompts-svg.md
       - D2 prompts and SVG: tutorials/d2-prompts-svg.md
       - TikZ prompts and SVG: tutorials/tikz-prompts-svg.md
-      - BPMN guide: tutorials/bpmn.md
+      - BPMN:
+          - Guide: tutorials/bpmn.md
+          - Prompts and SVG: tutorials/bpmn-prompts-svg.md
       - Usage examples: examples.md
   - Diagram types:
       - diagrams/index.md

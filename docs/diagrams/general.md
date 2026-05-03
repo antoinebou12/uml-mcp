@@ -19,7 +19,7 @@ These pages hold minimal, copy-paste-ready snippets for Kroki-backed types that 
 | ERD | [ERD](erd.md) |
 | DBML | [DBML](dbml.md) |
 | BlockDiag family | [BlockDiag family](blockdiag.md) |
-| BPMN XML for Kroki | [BPMN (Kroki XML)](bpmn.md) (see also [BPMN guide](../tutorials/bpmn.md)) |
+| BPMN XML for Kroki | [BPMN (Kroki XML)](bpmn.md) ([BPMN guide](../tutorials/bpmn.md), [prompts and SVG](../tutorials/bpmn-prompts-svg.md)) |
 | C4 via PlantUML | [C4 (PlantUML)](c4plantuml.md) |
 | Structurizr DSL | [Structurizr](structurizr.md) |
 | Excalidraw, bytefield, wavedrom, … | [Specialty diagram types](specialty.md) |

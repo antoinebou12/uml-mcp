@@ -59,7 +59,9 @@ Most prompts accept an optional `context` dict. The most common key is `diagram_
 | `bpmn_process_guide` | Explains how to draw a BPMN process model (BPMN 2.0.2-aligned), pairs with `uml://bpmn-guide`. |
 | `bpmn_executable_process` | Produces minimal executable BPMN 2.0 XML: start, tasks, gateways, end, sequenceFlow. |
 
-[:octicons-arrow-right-24: BPMN tutorial](../tutorials/bpmn.md)
+[:octicons-arrow-right-24: BPMN guide](../tutorials/bpmn.md)
+
+[:octicons-arrow-right-24: BPMN prompts and SVG](../tutorials/bpmn-prompts-svg.md)
 
 ## Architecture
 

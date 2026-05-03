@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100%" viewBox="-50 -10 1132.5 471" role="img" aria-label="Sequence: User asks AI for a diagram; AI calls UML-MCP generate_uml; server renders via Kroki; SVG or PNG returns; MCP returns URL and base64; user sees rendered diagram">
+  <defs>
+    <marker id="arrow-solid" markerWidth="12" markerHeight="12" refX="10" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+    <marker id="arrow-dash" markerWidth="12" markerHeight="12" refX="10" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#333"/>
+    </marker>
+  </defs>
+  <style>
+    .actor { fill: #ECECFF; stroke: #9370DB; stroke-width: 1; }
+    .lifeline { stroke: #999; stroke-width: 0.5; }
+    .msg-solid { stroke: #333; stroke-width: 1.5; fill: none; marker-end: url(#arrow-solid); }
+    .msg-dash { stroke: #333; stroke-width: 1.5; fill: none; stroke-dasharray: 3 3; marker-end: url(#arrow-dash); }
+    .msg-text { fill: #333; font-family: &quot;trebuchet ms&quot;, verdana, arial, sans-serif; font-size: 16px; }
+    .num { fill: #333; font-family: sans-serif; font-size: 12px; }
+  </style>
+  <!-- Top actors -->
+  <rect class="actor" x="0" y="0" width="150" height="65" rx="3"/>
+  <text class="msg-text" x="75" y="38" text-anchor="middle">User</text>
+  <rect class="actor" x="344" y="0" width="150" height="65" rx="3"/>
+  <text class="msg-text" x="419" y="38" text-anchor="middle">AI Assistant</text>
+  <rect class="actor" x="681.5" y="0" width="151" height="65" rx="3"/>
+  <text class="msg-text" x="757" y="38" text-anchor="middle">UML-MCP server</text>
+  <rect class="actor" x="882.5" y="0" width="150" height="65" rx="3"/>
+  <text class="msg-text" x="957.5" y="38" text-anchor="middle">Kroki</text>
+  <!-- Lifelines -->
+  <line class="lifeline" x1="75" y1="65" x2="75" y2="385"/>
+  <line class="lifeline" x1="419" y1="65" x2="419" y2="385"/>
+  <line class="lifeline" x1="757" y1="65" x2="757" y2="385"/>
+  <line class="lifeline" x1="957.5" y1="65" x2="957.5" y2="385"/>
+  <!-- Bottom actors -->
+  <rect class="actor" x="0" y="385" width="150" height="65" rx="3"/>
+  <text class="msg-text" x="75" y="423" text-anchor="middle">User</text>
+  <rect class="actor" x="344" y="385" width="150" height="65" rx="3"/>
+  <text class="msg-text" x="419" y="423" text-anchor="middle">AI Assistant</text>
+  <rect class="actor" x="681.5" y="385" width="151" height="65" rx="3"/>
+  <text class="msg-text" x="757" y="423" text-anchor="middle">UML-MCP server</text>
+  <rect class="actor" x="882.5" y="385" width="150" height="65" rx="3"/>
+  <text class="msg-text" x="957.5" y="423" text-anchor="middle">Kroki</text>
+  <!-- Message 1 -->
+  <text class="msg-text" x="246" y="95" text-anchor="middle">Draw a sequence diagram of login</text>
+  <line class="msg-solid" x1="82" y1="115" x2="405" y2="115"/>
+  <circle cx="75" cy="115" r="8" fill="#333"/><text class="num" x="75" y="119" text-anchor="middle" fill="#fff">1</text>
+  <!-- Message 2 -->
+  <text class="msg-text" x="587" y="145" text-anchor="middle">generate_uml(diagram_type, code)</text>
+  <line class="msg-solid" x1="426" y1="165" x2="743" y2="165"/>
+  <circle cx="419" cy="165" r="8" fill="#333"/><text class="num" x="419" y="169" text-anchor="middle" fill="#fff">2</text>
+  <!-- Message 3 -->
+  <text class="msg-text" x="856" y="195" text-anchor="middle">render diagram</text>
+  <line class="msg-solid" x1="764" y1="215" x2="943" y2="215"/>
+  <circle cx="757" cy="215" r="8" fill="#333"/><text class="num" x="757" y="219" text-anchor="middle" fill="#fff">3</text>
+  <!-- Message 4 -->
+  <text class="msg-text" x="859" y="245" text-anchor="middle">SVG / PNG</text>
+  <line class="msg-dash" x1="952" y1="265" x2="771" y2="265"/>
+  <circle cx="957.5" cy="265" r="8" fill="#333"/><text class="num" x="957.5" y="269" text-anchor="middle" fill="#fff">4</text>
+  <!-- Message 5 -->
+  <text class="msg-text" x="590" y="295" text-anchor="middle">{ url, playground, content_base64 }</text>
+  <line class="msg-dash" x1="762" y1="315" x2="433" y2="315"/>
+  <circle cx="757" cy="315" r="8" fill="#333"/><text class="num" x="757" y="319" text-anchor="middle" fill="#fff">5</text>
+  <!-- Message 6 -->
+  <text class="msg-text" x="249" y="345" text-anchor="middle">rendered diagram</text>
+  <line class="msg-dash" x1="424" y1="365" x2="89" y2="365"/>
+  <circle cx="419" cy="365" r="8" fill="#333"/><text class="num" x="419" y="369" text-anchor="middle" fill="#fff">6</text>
+</svg>

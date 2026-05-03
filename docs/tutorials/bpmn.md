@@ -47,7 +47,7 @@ This page mirrors `uml://bpmn-guide` for readers on the docs site; MCP clients c
 
 ## Reference flow (Mermaid sketch)
 
-The diagram below is a Mermaid sketch of a typical "approval" BPMN process. For an executable BPMN 2.0 XML model, use the `bpmn_executable_process` prompt and the `uml://templates` resource (key `bpmn`).
+The diagram below is a Mermaid sketch of a typical "approval" BPMN process. For an executable BPMN 2.0 XML model, use the `bpmn_executable_process` prompt and the `uml://templates` resource (key `bpmn`). For copy-paste prompts, a full `tools/call` JSON example, and a committed Kroki SVG, see [BPMN prompts and SVG](bpmn-prompts-svg.md).
 
 ```mermaid
 flowchart LR
@@ -75,5 +75,6 @@ flowchart LR
 - The `bpmn` diagram type renders to **SVG** through Kroki.
 - For an executable BPMN starter, use the `bpmn_executable_process` prompt or read the `bpmn` template from `uml://templates`.
 - For a process explanation rather than rendering, use the `bpmn_process_guide` prompt.
+- For minimal XML syntax, see [BPMN (Kroki XML)](../diagrams/bpmn.md).
 
-See also: [Diagram Assistant](../diagram-assistant.md) and [MCP resources reference](../reference/resources.md).
+See also: [BPMN prompts and SVG](bpmn-prompts-svg.md), [Diagram Assistant](../diagram-assistant.md), and [MCP resources reference](../reference/resources.md).

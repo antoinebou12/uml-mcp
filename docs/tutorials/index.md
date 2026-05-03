@@ -65,6 +65,14 @@ Pick a starting point. Each tutorial is self-contained and assumes you have a wo
 
     [:octicons-arrow-right-24: Read the BPMN guide](bpmn.md)
 
+-   :material-file-image-outline:{ .lg .middle } **BPMN prompts and SVG**
+
+    ---
+
+    Copy-paste prose prompts, named MCP prompts (`bpmn_process_guide`, `bpmn_executable_process`), a full `tools/call` JSON example with BPMN-DI XML, and a committed Kroki SVG sample.
+
+    [:octicons-arrow-right-24: Open BPMN prompts tutorial](bpmn-prompts-svg.md)
+
 </div>
 
 ## Prerequisites
