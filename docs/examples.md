@@ -1,20 +1,20 @@
 # Usage Examples
 
-This page provides examples of using UML-MCP with different environments and diagram types.
+Prompts, Cursor usage, and direct MCP tool calls.
 
-## Basic Usage with Cursor
+## Basic usage with Cursor
 
-When using Cursor with UML-MCP configured, you can generate diagrams by asking the AI assistant:
+With UML-MCP configured in Cursor, you might ask:
 
 ```
 Generate a class diagram for a banking system with Account, Customer, and Transaction classes.
 ```
 
-The AI will use UML-MCP's tools to generate and display the diagram directly in your conversation.
+The assistant calls UML-MCP tools and shows the diagram in the conversation.
 
-## AI Assistant Prompts
+## Assistant prompts
 
-Here are some example prompts for generating diagrams:
+Example prompts:
 
 ### Class Diagram
 
@@ -57,7 +57,7 @@ For **named prompts**, **`uml://` resources**, and how tools map to API sequence
 
 ## Using MCP Tools Directly
 
-If you're building an application that uses UML-MCP, you can call the tools directly:
+To call UML-MCP from your own application, invoke the tools directly:
 
 ### Python Example
 
@@ -114,7 +114,7 @@ print(f"Diagram URL: {diagram['url']}")
 print(f"Local file: {diagram['local_path']}")
 ```
 
-## Integration Examples
+## Integration examples
 
 ### Web Application
 

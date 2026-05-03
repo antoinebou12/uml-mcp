@@ -1,14 +1,88 @@
-/* Slightly wider layout on large viewports (default grid is ~61rem) */
+/* ----------------------------------------------------------------------------
+ * UML-MCP docs theme tweaks
+ *
+ * Layered on top of mkdocs-material to mirror the IPC-Toolkit reading
+ * experience: roomy hero on the landing page, breathing room in dense link
+ * lists, calmer link colour in dark mode, centered Mermaid blocks, and a
+ * citation-block treatment for BibTeX snippets.
+ * ------------------------------------------------------------------------- */
+
+/* Slightly wider main grid so wide tables / diagrams have room.            */
 .md-grid {
   max-width: 76rem;
 }
 
-/* Home and dense link lists: a bit more breathing room */
+/* Hero typography on the landing page (hides nav + toc via front matter). */
+.md-typeset h1:first-of-type {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 2.4rem;
+  line-height: 1.15;
+  margin-top: 0;
+}
+
+/* Badge row spacing (the badges at the top of the homepage).              */
+.md-typeset h1 + p img {
+  margin: 0.15rem 0.2rem;
+}
+
+/* Buttons row in hero: give the call-to-action group breathing room.    */
+.md-typeset h1 + p + p .md-button {
+  margin: 0.4rem 0.5rem 0.4rem 0;
+}
+
+/* Material grid cards: nudge spacing so the hero feels less cramped.    */
+.md-typeset .grid.cards > :is(ul, ol) > li,
+.md-typeset .grid > .card {
+  border-radius: 0.4rem;
+}
+
+.md-typeset .grid.cards > :is(ul, ol) > li > hr {
+  margin: 0.6rem 0 0.7rem;
+}
+
+/* Slightly more breathing room in dense link lists (legacy rule).        */
 .md-typeset ul li {
   margin-bottom: 0.35em;
 }
 
-/* Calmer link color in dark mode */
+/* Calmer link colour in dark mode (matches IPC's furo-like palette).     */
 [data-md-color-scheme="slate"] {
   --md-typeset-a-color: var(--md-primary-fg-color);
+}
+
+/* Mermaid block: center inside the article column for a cleaner look.    */
+.md-typeset .mermaid {
+  display: flex;
+  justify-content: center;
+  margin: 1.2em auto;
+}
+
+/* Long PlantUML / TikZ samples: cap height so the page stays scrollable. */
+.md-typeset pre > code {
+  max-height: 36rem;
+}
+
+/* Tabbed content: subtle bottom border so tabs feel grouped.             */
+.md-typeset .tabbed-set {
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+  padding-bottom: 0.4rem;
+}
+
+/* Citation / BibTeX block treatment.                                      */
+.md-typeset code.language-bibtex,
+.md-typeset pre > code.language-bibtex {
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+/* Footer: keep social icons aligned with the other footer text.          */
+.md-footer-meta__inner {
+  align-items: center;
+}
+
+/* Admonition titles: subtle weight bump for legibility in long pages.    */
+.md-typeset .admonition > .admonition-title,
+.md-typeset details > summary {
+  font-weight: 600;
 }

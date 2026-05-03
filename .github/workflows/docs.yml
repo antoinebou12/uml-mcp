@@ -28,6 +28,17 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install Cairo / image libs for Material social plugin
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libcairo2 \
+            libfreetype6 \
+            libjpeg-dev \
+            libxml2 \
+            libxslt1.1 \
+            pngquant
+
       - name: Install uv
         uses: astral-sh/setup-uv@v8.1.0
         with:
@@ -39,7 +50,7 @@ jobs:
         run: uv sync --all-groups
 
       - name: Build documentation
-        run: uv run mkdocs build
+        run: uv run mkdocs build --strict
 
       - name: Upload GitHub Pages artifact
         uses: actions/upload-pages-artifact@v5

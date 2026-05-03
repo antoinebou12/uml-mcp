@@ -9,7 +9,7 @@ import base64
 import logging
 import re
 import zlib
-from typing import Dict, Optional, Tuple
+from typing import Any, Dict, Optional, Tuple
 
 import httpx
 
@@ -157,7 +157,7 @@ class Kroki:
         "excalidraw": "https://excalidraw.com/#",
     }
 
-    def __init__(self, base_url: str = "https://kroki.io", **http_opts):
+    def __init__(self, base_url: str = "https://kroki.io", **http_opts: Any) -> None:
         """
         Initialize the Kroki client.
 

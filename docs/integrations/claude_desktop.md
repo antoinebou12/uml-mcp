@@ -1,16 +1,16 @@
 # Claude Desktop Integration
 
-This guide explains how to integrate UML-MCP with Claude Desktop for generating diagrams directly in your conversations.
+Connect UML-MCP to Claude Desktop to generate diagrams in chat.
 
 ## Overview
 
-Claude Desktop can connect to the UML-MCP server through the Model Context Protocol (MCP), allowing you to generate and visualize UML diagrams and other supported diagram types within your Claude conversations.
+Claude Desktop connects to UML-MCP as an MCP server so you can generate and view UML and other supported diagram types in chat.
 
-## Setup Instructions
+## Setup
 
-### 1. Install and Configure UML-MCP
+### 1. Install UML-MCP
 
-Make sure you have the UML-MCP server properly installed and configured on your system. See the [Installation](../installation.md) guide for details.
+Install the server on your machine. See [Installation](../installation.md).
 
 ### 2. Claude Desktop Configuration
 
@@ -75,7 +75,7 @@ If diagrams aren't being generated correctly:
 3. Try generating different diagram types to isolate the issue
 4. Verify that all required dependencies are installed
 
-## Advanced Configuration
+## Advanced configuration
 
 ### Custom Templates
 
@@ -85,7 +85,7 @@ You can customize how diagrams appear in Claude Desktop by modifying the templat
 
 Claude Desktop works best with SVG and PNG formats. You can specify the preferred format in your prompts to Claude or configure defaults in the UML-MCP server.
 
-## Related Resources
+## Related resources
 
 - [Configuration Options](../configuration.md)
 - [UML Diagram Examples](../examples.md)

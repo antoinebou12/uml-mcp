@@ -1,0 +1,79 @@
+---
+title: BPMN guide
+description: "Short structured BPMN 2.0.2 reference; same content as the uml://bpmn-guide MCP resource."
+tags:
+  - bpmn
+---
+
+# BPMN guide
+
+This page mirrors `uml://bpmn-guide` for readers on the docs site; MCP clients can load the same text from the resource URI. It is a compact BPMN 2.0.2 reference; for the full specification see the [OMG BPMN page](https://www.omg.org/spec/BPMN/2.0.2/).
+
+!!! tip "Use it as an MCP resource"
+
+    Any MCP client can load this content directly:
+
+    ```json
+    {
+      "jsonrpc": "2.0",
+      "id": 1,
+      "method": "resources/read",
+      "params": { "uri": "uml://bpmn-guide" }
+    }
+    ```
+
+## Core elements
+
+| Element | Notation | Purpose |
+| --- | --- | --- |
+| **Start Event** | Circle, single border | Process trigger. |
+| **End Event** | Circle, thick border | Process end. |
+| **Task** | Rounded rectangle | Work performed in the process. |
+| **Gateway** | Diamond: `X` exclusive, `+` parallel, `O` inclusive | Branch or merge control flow. |
+| **Sequence Flow** | Solid arrow | Order of flow between elements. |
+| **Message Flow** | Dashed arrow | Message between pools. |
+| **Lane** | Sub-partition of a pool | Group tasks by role or system. |
+| **Pool** | Outer boundary | Process or participant boundary. |
+
+## Flow rules
+
+- Each process has at least one Start Event and one End Event.
+- Sequence flows connect activities, events, and gateways (never message flows).
+- Gateways split or merge flows. Pick the right kind:
+    * Exclusive (`X`): one path of many.
+    * Parallel (`+`): all paths in parallel.
+    * Inclusive (`O`): one or more paths based on conditions.
+- Lanes group tasks by role or system within a pool. Pools represent independent participants.
+
+## Reference flow (Mermaid sketch)
+
+The diagram below is a Mermaid sketch of a typical "approval" BPMN process. For an executable BPMN 2.0 XML model, use the `bpmn_executable_process` prompt and the `uml://templates` resource (key `bpmn`).
+
+```mermaid
+flowchart LR
+    Start((Start)) --> T1[Submit request]
+    T1 --> G1{Approval needed?}
+    G1 -- no  --> T3[Apply change]
+    G1 -- yes --> T2[Manager approves]
+    T2 -->|approved| T3
+    T2 -->|rejected| End2((End: rejected))
+    T3 --> End1((End: applied))
+```
+
+## Generating BPMN
+
+```json
+{
+  "name": "generate_uml",
+  "arguments": {
+    "diagram_type": "bpmn",
+    "code": "<BPMN 2.0 XML or BPMN-DI snippet>"
+  }
+}
+```
+
+- The `bpmn` diagram type renders to **SVG** through Kroki.
+- For an executable BPMN starter, use the `bpmn_executable_process` prompt or read the `bpmn` template from `uml://templates`.
+- For a process explanation rather than rendering, use the `bpmn_process_guide` prompt.
+
+See also: [Diagram Assistant](../diagram-assistant.md) and [MCP resources reference](../reference/resources.md).

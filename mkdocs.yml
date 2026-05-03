@@ -1,20 +1,28 @@
 site_name: UML-MCP Documentation
 site_url: https://antoinebou12.github.io/uml-mcp/
 site_description: UML-MCP — diagram generation via Model Context Protocol (MCP) for AI assistants.
+site_author: Antoine Boucher
 repo_url: https://github.com/antoinebou12/uml-mcp
+repo_name: antoinebou12/uml-mcp
 edit_uri: edit/main/docs/
 
 theme:
   name: material
   favicon: assets/favicon.svg
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
   palette:
-    - scheme: default
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
       primary: slate
       accent: indigo
       toggle:
         icon: material/brightness-4
         name: Switch to dark mode
-    - scheme: slate
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
       primary: slate
       accent: indigo
       toggle:
@@ -25,54 +33,95 @@ theme:
     code: JetBrains Mono
   features:
     - navigation.instant
+    - navigation.instant.progress
     - navigation.path
     - navigation.tracking
-    - navigation.expand
-    - navigation.top
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
     - toc.follow
     - content.action.edit
-    - search.suggest
-    - search.highlight
+    - content.action.view
     - content.code.copy
     - content.code.annotate
+    - content.tabs.link
+    - content.tooltips
+    - search.suggest
+    - search.highlight
+    - search.share
 
 extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/antoinebou12/uml-mcp
       name: uml-mcp on GitHub
+    - icon: material/cloud-outline
+      link: https://smithery.ai/server/antoinebou12/uml
+      name: uml-mcp on Smithery
+    - icon: material/web
+      link: https://uml-mcp.vercel.app/mcp
+      name: Live MCP endpoint
+  generator: false
 
 extra_css:
   - stylesheets/extra.css
 
 nav:
   - Home: index.md
-  - User Manual: user-manual.md
-  - Getting started:
-      - Installation: installation.md
-      - Configuration: configuration.md
-      - Examples: examples.md
+  - Tutorials:
+      - tutorials/index.md
+      - Getting started: tutorials/getting-started.md
       - Diagram Assistant: diagram-assistant.md
-      - Diagram rendering fallback: fallback-mechanism.md
+      - Mermaid live examples: tutorials/mermaid.md
+      - BPMN guide: tutorials/bpmn.md
+      - Usage examples: examples.md
   - Diagram types:
-      - UML: diagrams/uml.md
+      - diagrams/index.md
+      - UML (PlantUML): diagrams/uml.md
+      - Mermaid: diagrams/mermaid.md
+      - D2 / Graphviz / others: diagrams/general.md
       - TikZ: diagrams/tikz.md
-  - Integrations:
+  - Reference:
+      - reference/index.md
+      - MCP tools: api/tools.md
+      - MCP resources: reference/resources.md
+      - MCP prompts: reference/prompts.md
+      - Python API:
+          - reference/python/index.md
+          - mcp_core.tools: reference/python/tools.md
+          - mcp_core.core: reference/python/core.md
+          - tools.kroki: reference/python/kroki.md
+      - Configuration: configuration.md
+  - Deploy:
+      - deploy/index.md
+      - Installation: installation.md
+      - Docker: deploy/docker.md
+      - Vercel & Smithery: integrations/vercel_smithery.md
       - Claude Desktop: integrations/claude_desktop.md
       - Cursor: integrations/cursor.md
-      - Vercel & Smithery: integrations/vercel_smithery.md
-  - API:
-      - Tools: api/tools.md
-  - Testing: testing.md
-  - Maintainer: refactor-architecture-plan.md
+      - Fallback strategy: fallback-mechanism.md
+  - Developers:
+      - developers/index.md
+      - Testing: testing.md
+      - Architecture: refactor-architecture-plan.md
+      - Contributing: developers/contributing.md
+  - About:
+      - about/index.md
+      - Changelog: about/changelog.md
 
 markdown_extensions:
+  - abbr
   - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - tables
   - toc:
       permalink: true
+      toc_depth: 4
   - admonition
   - pymdownx.details
   - pymdownx.highlight:
@@ -80,18 +129,66 @@ markdown_extensions:
       line_spans: __span
       pygments_lang_class: true
   - pymdownx.inlinehilite
-  - pymdownx.superfences
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
   - pymdownx.tabbed:
       alternate_style: true
+      slugify: !!python/object/apply:pymdownx.slugs.slugify
+        kwds:
+          case: lower
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.caret
+  - pymdownx.keys
+  - pymdownx.smartsymbols
   - pymdownx.emoji:
       emoji_index: !!python/name:material.extensions.emoji.twemoji
       emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.arithmatex:
+      generic: true
 
 plugins:
   - search:
       lang: en
       separator: '[\s\-\.]+'
+  - tags
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      effect: zoom
+      zoomable: true
+      draggable: true
   - git-revision-date-localized:
       fallback_to_build_date: true
+      enable_creation_date: true
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths:
+            - .
+          options:
+            docstring_style: google
+            show_source: false
+            show_root_heading: true
+            show_root_full_path: true
+            show_signature_annotations: true
+            separate_signature: true
+            members_order: source
+            merge_init_into_class: true
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            filters:
+              - "!^_"
+  - social:
+      enabled: !ENV [MKDOCS_SOCIAL, true]
+      cards_layout_options:
+        background_color: "#1e293b"
+        color: "#e2e8f0"
   - minify:
       minify_html: true

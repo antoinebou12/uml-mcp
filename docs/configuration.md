@@ -19,7 +19,7 @@ fastmcp run server.py
 
 Command-line options override values in `fastmcp.json` (e.g. `fastmcp run --port 8080`). For the full local CLI with options like `--list-tools`, use `python server.py` instead.
 
-## Environment Variables
+## Environment variables
 
 | Variable | Description | Default |
 |----------|-------------|---------|
@@ -48,7 +48,7 @@ When running the FastAPI app (`app.py`) for HTTP deployment (e.g. Vercel, Docker
   - `status`: Always `"healthy"` when the server is up.
   - `modules_available`: Whether diagram backends (Kroki, PlantUML, etc.) could be loaded.
 
-Use this endpoint for load balancers, readiness/liveness probes (e.g. Kubernetes, Docker, Vercel), and monitoring. For HTTP deployment, the FastAPI app’s `/health` is the canonical health endpoint for readiness checks.
+Use `/health` for load balancers, Kubernetes or Docker liveness/readiness probes, Vercel checks, and similar monitoring whenever you run the FastAPI app (`app.py`).
 
 When running the MCP server via `fastmcp run` with HTTP transport only (no FastAPI app), the standalone server does not expose `/health` unless you add a custom route; use the FastAPI app if you need the health endpoint.
 
@@ -68,13 +68,13 @@ This is recommended for multi-worker or horizontally scaled deployments. The MCP
 
 Example MCP server config snippets for **Cursor** and **Claude Desktop** are in the **[`config/`](https://github.com/antoinebou12/uml-mcp/tree/main/config)** folder in this repo:
 
-- **`config/cursor_config.json`** — Cursor
-- **`config/claude_desktop_config.json`** — Claude Desktop
-- **`config/README.md`** — Where each app stores its config and how to copy the examples
+- **`config/cursor_config.json`**: Cursor
+- **`config/claude_desktop_config.json`**: Claude Desktop
+- **`config/README.md`**: Where each app stores its config and how to copy the examples
 
 Copy the relevant `mcpServers` block into your client’s config file and set `cwd` to your `uml-mcp` project root. The examples use **`args`: `["-u", "server.py"]`** (unbuffered stdio, path relative to `cwd`). The main server entry point is **`server.py`**. Optional `env` keys include `KROKI_SERVER`, `MCP_OUTPUT_DIR`, and `MCP_DIAGRAM_FALLBACK` (see table above).
 
-## Advanced Configuration
+## Advanced configuration
 
 ### Custom Templates
 
@@ -91,14 +91,12 @@ Each diagram type supports specific output formats:
 | D2           | svg, png |
 | Graphviz     | png, svg, pdf, jpeg |
 
-You can specify the output format when generating diagrams through the MCP tools.
+Set `output_format` in the MCP tool arguments when you generate a diagram.
 
 ## Server card and config schema (Smithery / quality score)
 
-For better **Configuration UX** and MCP quality scores:
+Smithery and other MCP clients read the server card for tool metadata and optional session fields:
 
-- The server card at `/.well-known/mcp/server-card.json` includes **tool annotations** (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) and a **config schema URL** (`configSchemaUrl`: `config-schema.json`).
+- The server card at `/.well-known/mcp/server-card.json` lists tool annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) and a config schema URL (`configSchemaUrl`: `config-schema.json`).
 - The session config schema is served at `/.well-known/mcp/config-schema.json` (same path as the card) so clients can resolve it when the card is loaded from that origin.
-- When publishing via Smithery CLI, pass the config schema:
-  `[smithery.ai/new](https://smithery.ai/new) (web); add session config from `smithery-config-schema.json` in Settings`
-  See [Vercel/Smithery integration](integrations/vercel_smithery.md).
+- When publishing on Smithery, add session configuration from `smithery-config-schema.json` in the project settings (see [Vercel/Smithery integration](integrations/vercel_smithery.md)).

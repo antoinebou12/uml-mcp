@@ -1,6 +1,6 @@
 # Installation
 
-This guide explains how to install and set up the UML-MCP server.
+Install and run the UML-MCP server locally.
 
 ## System requirements
 
@@ -17,7 +17,7 @@ git clone https://github.com/antoinebou12/uml-mcp.git
 cd uml-mcp
 ```
 
-1. Install dependencies:
+2. Install dependencies:
 
 **With uv (recommended):**
 
@@ -44,7 +44,7 @@ uv export --frozen --no-dev --no-hashes -o requirements.txt
 pip install -r requirements.txt
 ```
 
-1. For development (tests, linting, docs):
+3. For development (tests, linting, docs):
 
 ```bash
 uv sync --all-groups
@@ -78,7 +78,7 @@ You should see a table listing **`generate_uml`** and **`validate_uml`**, plus r
 
 ## IDE integration
 
-Point your MCP client at `server.py` with **absolute** paths for `args` and `cwd` (project root); optional `MCP_OUTPUT_DIR` in `env`. **[config/README.md](https://github.com/antoinebou12/uml-mcp/blob/main/config/README.md)** has example JSON; **[User Manual – Configuration](user-manual.md#configuration)** summarizes Cursor and Claude Desktop. Step-by-step: [Cursor](integrations/cursor.md), [Claude Desktop](integrations/claude_desktop.md).
+Point your MCP client at `server.py` with **absolute** paths for `args` and `cwd` (project root); optional `MCP_OUTPUT_DIR` in `env`. **[config/README.md](https://github.com/antoinebou12/uml-mcp/blob/main/config/README.md)** has example JSON; see **[Configuration](configuration.md)** for environment variables and **[Tutorials, Getting started](tutorials/getting-started.md#1-connect-a-client)** for client wiring. Step-by-step: [Cursor](integrations/cursor.md), [Claude Desktop](integrations/claude_desktop.md).
 
 ## Optional components
 

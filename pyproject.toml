@@ -95,9 +95,11 @@ ruff = ">=0.15.12"
 ty = ">=0.0.34"
 pytest-asyncio = "^0.21.1"
 mkdocs = ">=1.6.0"
-mkdocs-material = ">=9.7.6"
+mkdocs-material = { version = ">=9.7.6", extras = ["imaging"] }
 mkdocs-git-revision-date-localized-plugin = ">=1.4.0"
 mkdocs-minify-plugin = ">=0.8.0"
+mkdocs-glightbox = ">=0.4.0"
+mkdocstrings = { version = ">=0.30.0", extras = ["python"] }
 
 [tool.poetry.scripts]
 # Official MCP server CLI (single entrypoint; server.py delegates here)
@@ -159,8 +161,10 @@ dev = [
     "pytest-asyncio>=0.21.1",
     "mypy>=1.20.2",
     "mkdocs>=1.6.0",
-    "mkdocs-material>=9.7.6",
+    "mkdocs-material[imaging]>=9.7.6",
     "pymdown-extensions>=10.21.2",
     "mkdocs-git-revision-date-localized-plugin>=1.4.0",
     "mkdocs-minify-plugin>=0.8.0",
+    "mkdocs-glightbox>=0.4.0",
+    "mkdocstrings[python]>=0.30.0",
 ]

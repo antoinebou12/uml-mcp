@@ -1,6 +1,18 @@
+---
+title: TikZ
+description: Render TikZ/PGF graphics through Kroki, with optional local LaTeX compilation.
+tags:
+  - tikz
+  - latex
+---
+
 # TikZ Diagrams
 
 UML-MCP supports [TikZ/PGF](https://tikz.dev/) graphics via [Kroki](https://kroki.io/#tikz). You can render TikZ and LaTeX snippets to SVG, PDF, PNG, or JPEG without installing TeX locally.
+
+!!! note "When to use TikZ"
+
+    Pick TikZ when you need precise mathematical drawings, scientific figures, or LaTeX-quality output. For software-engineering UML, prefer [class/sequence diagrams](uml.md). For quick web diagrams, [Mermaid](mermaid.md) is faster and renders directly in the browser.
 
 ## Overview
 
@@ -31,7 +43,7 @@ Templates (via `tools.kroki.tikz.TikZTemplateLibrary`) include:
 | mindmap_simple     | Mind map                   |
 | circuit_simple     | Simple circuit (IEC)       |
 | coordinate_grid    | XY grid                    |
-| block_diagram      | Input–Process–Output blocks|
+| block_diagram      | Input-Process-Output blocks|
 
 Example files are in `examples/`:
 
@@ -114,3 +126,11 @@ For local LaTeX/TikZ compilation without Kroki:
    ```
 
 See `tools/docker/README.md` for details and volume mounts.
+
+---
+
+## Related
+
+- [Diagram catalog](index.md): all supported types.
+- [General-purpose diagrams](general.md): D2, Graphviz, ERD, BPMN, C4 and more.
+- [MCP tools reference](../api/tools.md): `generate_uml` parameters.

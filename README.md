@@ -9,10 +9,22 @@
 [![Python >=3.12,<3.13](https://img.shields.io/badge/python-%3E%3D3.12%2C%3C3.13-blue.svg)](https://www.python.org/downloads/)
 [![MseeP.ai Security Assessment](https://img.shields.io/badge/MseeP.ai-Security%20Assessment-green)](https://mseep.ai/app/antoinebou12-uml-mcp)
 
-Generate UML and other diagrams through the [Model Context Protocol](https://modelcontextprotocol.io/). Supports 30+ diagram types through [Kroki](https://kroki.io/), [PlantUML](https://plantuml.com/), [Mermaid](https://mermaid.js.org/), and [D2](https://d2lang.com/).
+Generate UML and other diagrams through the [Model Context Protocol](https://modelcontextprotocol.io/).
 
-**Live endpoint:** [https://uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp)
-**Smithery:** [Add via Smithery](https://smithery.ai/server/antoinebou12/uml)
+### At a glance
+
+| Topic | What you get |
+| --- | --- |
+| **Diagrams** | **30+ types**: UML (Class, Sequence, Activity, Use Case, State, Component, Deployment, Object), Mermaid, D2, Graphviz, TikZ, ERD, BlockDiag, BPMN, C4, and more via [Kroki](https://kroki.io/) |
+| **MCP tools** | `generate_uml`, `validate_uml`, `list_diagram_types`, `generate_uml_batch` |
+| **Outputs** | SVG, PNG, PDF, JPEG, base64 (availability varies by diagram type) |
+| **Pipeline** | Kroki first, then [PlantUML](https://plantuml.com/) or [Mermaid.ink](https://mermaid.ink/) |
+| **Deployment** | Local stdio, local HTTP, Docker, [Vercel](https://vercel.com/), [Smithery](https://smithery.ai/) |
+
+| Source | URL |
+| --- | --- |
+| Live MCP (HTTP) | [https://uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp) |
+| Smithery catalog | [Add via Smithery](https://smithery.ai/server/antoinebou12/uml) |
 
 <img width="934" height="1148" alt="577497880-464b5b44-710c-4688-bfdc-432036b59cd1" src="https://github.com/user-attachments/assets/2da4000c-2090-46c5-846c-1f3c834611e4" />
 
@@ -59,34 +71,40 @@ For client config snippets, use:
 
 **Important:** The MCP route is `/mcp`, not the domain root.
 
-## Features
-
-- **30+ diagram types** -- UML (Class, Sequence, Activity, Use Case, State, Component, Deployment, Object), Mermaid, D2, Graphviz, TikZ, ERD, BlockDiag, BPMN, C4, and more via Kroki
-- **MCP-native tools** -- `generate_uml`, `validate_uml` (optional `strict`), `list_diagram_types`, `generate_uml_batch`
-- **Multiple outputs** -- SVG, PNG, PDF, JPEG, and base64 (varies by diagram type)
-- **Fallback pipeline** -- Kroki first, then PlantUML or Mermaid.ink
-- **Flexible deployment** -- local stdio, local HTTP, Docker, Vercel, Smithery
-
 ## Supported Diagram Types
 
-- **UML (PlantUML):** Class, Sequence, Activity, Use Case, State, Component, Deployment, Object
-- **General:** Mermaid, D2, Graphviz, ERD, BlockDiag, BPMN, C4
-- **Specialized:** TikZ, Excalidraw, Nomnoml, Pikchr, Structurizr, SVGBob, WaveDrom, WireViz, and more
+| Category | Examples |
+| --- | --- |
+| UML (PlantUML) | Class, Sequence, Activity, Use Case, State, Component, Deployment, Object |
+| General | Mermaid, D2, Graphviz, ERD, BlockDiag, BPMN, C4 |
+| Specialized | TikZ, Excalidraw, Nomnoml, Pikchr, Structurizr, SVGBob, WaveDrom, WireViz, … |
 
-Full list with supported formats: run `python server.py --list-tools` or query `uml://formats`.
+Full list with supported formats: run `python server.py --list-tools` or query `uml://types` and `uml://formats`.
 
 ## MCP Tools and Resources
 
 ### Tools
 
-- `generate_uml` -- render a diagram; omit `output_dir` for URL/base64 only
-- `validate_uml` -- structural validation before render (`strict` for extra Mermaid/D2 checks)
-- `list_diagram_types` -- same metadata as `uml://types` when resources are awkward
-- `generate_uml_batch` -- multiple diagrams in one call (cap: `MCP_BATCH_MAX_ITEMS`)
+| Tool | Purpose |
+| --- | --- |
+| `generate_uml` | Render a diagram; omit `output_dir` for URL/base64 only |
+| `validate_uml` | Structural validation before render; `strict` enables extra Mermaid/D2 checks |
+| `list_diagram_types` | Same metadata as `uml://types` when resources are awkward |
+| `generate_uml_batch` | Multiple diagrams in one call (cap: `MCP_BATCH_MAX_ITEMS`) |
 
 ### Resources (`uml://`)
 
-`types`, `templates`, `examples`, `formats`, `capabilities`, `server-info`, `mermaid-examples`, `bpmn-guide`, `workflow`
+| Resource | Description |
+| --- | --- |
+| `uml://types` | Diagram types, backends, supported formats per type |
+| `uml://templates` | Starter templates per type |
+| `uml://examples` | Example diagrams per type |
+| `uml://formats` | Output formats per type |
+| `uml://capabilities` | Type → backend → formats matrix used for validation |
+| `uml://server-info` | Server name, version, tools, prompts, Kroki/PlantUML URLs |
+| `uml://mermaid-examples` | Named Mermaid examples (e.g. sequence API, Gantt) |
+| `uml://bpmn-guide` | BPMN 2.0.2 element and flow reference |
+| `uml://workflow` | Recommended plan-then-generate workflow |
 
 ## Deployment
 
@@ -125,15 +143,17 @@ docker run -i uml-mcp python server.py --transport stdio
 
 These variables apply to local/self-hosted runs. Remote Vercel endpoint settings are managed server-side.
 
-- `KROKI_SERVER` -- Kroki server URL (default: `https://kroki.io`)
-- `PLANTUML_SERVER` -- PlantUML server URL (default: `http://plantuml-server:8080`)
-- `MCP_OUTPUT_DIR` -- diagram output directory (default: `./output`)
-- `MCP_READ_ONLY` -- disable file writes (default: `false`)
-- `MCP_MAX_CODE_LENGTH` -- max diagram code length (default: `500000`)
-- `MCP_BATCH_MAX_ITEMS` -- max items per `generate_uml_batch` (default: `20`)
-- `MCP_RATE_LIMIT_PER_MINUTE` -- HTTP rate limit per IP for diagram/MCP routes; `0` = off (default: `0`)
-- `USE_LOCAL_KROKI` -- use local Kroki instance (default: `false`)
-- `USE_LOCAL_PLANTUML` -- use local PlantUML instance (default: `false`)
+| Variable | Description | Default |
+| --- | --- | --- |
+| `KROKI_SERVER` | Kroki server URL | `https://kroki.io` |
+| `PLANTUML_SERVER` | PlantUML server URL | `http://plantuml-server:8080` |
+| `MCP_OUTPUT_DIR` | Diagram output directory | `./output` |
+| `MCP_READ_ONLY` | Disable file writes | `false` |
+| `MCP_MAX_CODE_LENGTH` | Max diagram code length | `500000` |
+| `MCP_BATCH_MAX_ITEMS` | Max items per `generate_uml_batch` | `20` |
+| `MCP_RATE_LIMIT_PER_MINUTE` | HTTP rate limit per IP for diagram/MCP routes (`0` = off) | `0` |
+| `USE_LOCAL_KROKI` | Use local Kroki instance | `false` |
+| `USE_LOCAL_PLANTUML` | Use local PlantUML instance | `false` |
 
 Full options: [docs/configuration.md](docs/configuration.md)
 
@@ -150,8 +170,6 @@ mcp_core/
   resources/           -- uml:// resource handlers
 tools/kroki/           -- Kroki, PlantUML, Mermaid, D2 clients
 ```
-
-Fallback strategy: Kroki (primary) -> PlantUML server (UML types) / Mermaid.ink (Mermaid) -> error with details.
 
 ## Development
 

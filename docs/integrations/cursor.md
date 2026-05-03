@@ -1,16 +1,16 @@
 # Cursor Integration
 
-This guide explains how to integrate UML-MCP with Cursor for generating diagrams directly in your editor.
+Connect UML-MCP to Cursor to generate diagrams in the editor.
 
 ## Overview
 
-Cursor can connect to the UML-MCP server through the Model Context Protocol (MCP), allowing you to generate and visualize UML diagrams and other supported diagram types while you code.
+Cursor connects to UML-MCP as an MCP server so you can generate and view UML and other supported diagram types in the editor.
 
-## Setup Instructions
+## Setup
 
-### 1. Install and Configure UML-MCP
+### 1. Install UML-MCP
 
-Make sure you have the UML-MCP server properly installed and configured on your system. See the [Installation](../installation.md) guide for details.
+Install the server on your machine. See [Installation](../installation.md).
 
 #### Add the server from the registry (Smithery CLI)
 
@@ -22,7 +22,7 @@ smithery auth login
 smithery mcp add antoinebou12/uml --client cursor
 ```
 
-Restart Cursor after the command finishes. This is the supported registry flow; some docs or clients may phrase it informally as “install MCP server uml” — the server id on Smithery is **`antoinebou12/uml`** (same project as this repo’s UML-MCP).
+Restart Cursor after the command finishes. This is the supported registry flow; some docs or clients may phrase it informally as “install MCP server uml.” The server id on Smithery is **`antoinebou12/uml`** (same project as this repo’s UML-MCP).
 
 Legacy one-liner (older CLI shape):
 
@@ -32,7 +32,7 @@ npx -y @smithery/cli install antoinebou12/uml --client cursor
 
 #### Try a backend-to-frontend diagram
 
-After the server is connected, you can render PlantUML from the repo, for example **[`examples/backend-to-frontend.puml`](https://github.com/antoinebou12/uml-mcp/blob/main/examples/backend-to-frontend.puml)** — ask the assistant to run **`generate_uml`** with `diagram_type` **`component`** (or **`deployment`**) and the file’s source, or paste the `@startuml` … `@enduml` block into the tool.
+After the server is connected, you can render PlantUML from the repo, for example **[`examples/backend-to-frontend.puml`](https://github.com/antoinebou12/uml-mcp/blob/main/examples/backend-to-frontend.puml)**. Ask the assistant to run **`generate_uml`** with `diagram_type` **`component`** (or **`deployment`**) and the file’s source, or paste the `@startuml` … `@enduml` block into the tool.
 
 ### 2. Cursor Configuration
 
@@ -47,7 +47,7 @@ After the server is connected, you can render PlantUML from the repo, for exampl
 
 1. Restart Cursor after saving the configuration
 2. In a conversation with Cursor, ask it to create a UML diagram
-3. Cursor should be able to generate the diagram using the UML-MCP server
+3. Cursor can call the UML-MCP server and show the diagram
 
 Example prompt:
 ```
@@ -74,7 +74,7 @@ If diagrams aren't being generated correctly:
 3. Try generating different diagram types to isolate the issue
 4. Verify that all required dependencies are installed
 
-## Advanced Configuration
+## Advanced configuration
 
 ### Custom Templates
 
@@ -84,7 +84,7 @@ You can customize how diagrams appear in Cursor by modifying the templates in th
 
 Cursor works well with SVG and PNG formats. You can specify the preferred format in your prompts or configure defaults in the UML-MCP server.
 
-## Related Resources
+## Related resources
 
 - [Configuration Options](../configuration.md)
 - [UML Diagram Examples](../examples.md)

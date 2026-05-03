@@ -1,15 +1,15 @@
-# UML-MCP — LLM-oriented overview
+# UML-MCP: LLM-oriented overview
 
 Human-oriented index (install, clients, troubleshooting): docs/user-manual.md
 
 Teaser
-Improve your diagramming skills with PlantUML, Mermaid, D2 (and Kroki) by creating optimized diagrams for various purposes using Sequence, Use Case, Class, Activity, Component, State, Object, Deployment, Mermaid, D2, Graphviz, ERD, BPMN, C4.
+UML-MCP renders PlantUML, Mermaid, D2, and Kroki-backed types (Sequence, Use Case, Class, Activity, Component, State, Object, Deployment, Mermaid, D2, Graphviz, ERD, BPMN, C4) from text you or the user supply.
 
 Prompt hint
-[DIAGRAM TYPE] — Sequence, Use Case, Class, Activity, Component, State, Object, Deployment, Mermaid, D2, Graphviz, ERD, BPMN, C4.
-[ELEMENT TYPE] — Actors, Messages, Objects, Classes, Interfaces, Components, States, Nodes, Edges, Links, Frames, Constraints, Entities, Relationships, Tasks, Events, Modules.
-[PURPOSE] — Communication, Planning, Design, Analysis, Modeling, Documentation, Implementation, Testing, Debugging.
-[DIAGRAMMING TOOL] — PlantUML, Mermaid, D2 (Kroki for rendering).
+[DIAGRAM TYPE]: Sequence, Use Case, Class, Activity, Component, State, Object, Deployment, Mermaid, D2, Graphviz, ERD, BPMN, C4.
+[ELEMENT TYPE]: Actors, Messages, Objects, Classes, Interfaces, Components, States, Nodes, Edges, Links, Frames, Constraints, Entities, Relationships, Tasks, Events, Modules.
+[PURPOSE]: Communication, Planning, Design, Analysis, Modeling, Documentation, Implementation, Testing, Debugging.
+[DIAGRAMMING TOOL]: PlantUML, Mermaid, D2 (Kroki for rendering).
 
 Recommended: use the uml_diagram or uml_diagram_with_thinking prompt so the model plans first (diagram type, purpose, elements), then generates code and calls generate_uml.
 
@@ -30,25 +30,25 @@ UML-MCP is a diagram generation server that implements the Model Context Protoco
 
 ## MCP tools (summary)
 
-- generate_uml — Render a diagram. Params: diagram_type, code, output_dir (optional), output_format, theme, scale. Omit output_dir for URL/base64 only. Use uml://types for valid types.
-- validate_uml — Validate inputs locally before render. Params: diagram_type, code, output_format.
+- generate_uml: Render a diagram. Params: diagram_type, code, output_dir (optional), output_format, theme, scale. Omit output_dir for URL/base64 only. Use uml://types for valid types.
+- validate_uml: Validate inputs locally before render. Params: diagram_type, code, output_format.
 
 Full list and parameters: docs/api/tools.md
 
 ## MCP resources
 
-- uml://types — diagram types.
-- uml://templates — diagram templates.
-- uml://examples — examples.
-- uml://formats — output formats.
-- uml://server-info — server info.
-- uml://workflow — recommended workflow: plan first (type, elements, relationships), then call generate_uml.
+- uml://types: diagram types.
+- uml://templates: diagram templates.
+- uml://examples: examples.
+- uml://formats: output formats.
+- uml://server-info: server info.
+- uml://workflow: recommended workflow: plan first (type, elements, relationships), then call generate_uml.
 
 ## Configuration
 
-- MCP_OUTPUT_DIR / UML_MCP_OUTPUT_DIR — where to save diagrams (default: ./output).
-- KROKI_SERVER, PLANTUML_SERVER — backend URLs.
-- USE_LOCAL_KROKI, USE_LOCAL_PLANTUML — use local backends.
+- MCP_OUTPUT_DIR / UML_MCP_OUTPUT_DIR: where to save diagrams (default: ./output).
+- KROKI_SERVER, PLANTUML_SERVER: backend URLs.
+- USE_LOCAL_KROKI, USE_LOCAL_PLANTUML: use local backends.
 Details: docs/configuration.md
 
 ## Running
@@ -59,11 +59,11 @@ Details: docs/configuration.md
 
 ## Project layout
 
-- server.py — MCP server entry point.
-- mcp_core/ — server, config, tools, resources, prompts.
-- plantuml/, kroki/, mermaid/, D2/ — diagram backends.
-- config/ — example MCP client configs (Cursor, Claude Desktop).
-- docs/ — documentation (this file, api/tools.md, configuration.md, installation.md, integrations/, testing.md).
+- server.py: MCP server entry point.
+- mcp_core/: server, config, tools, resources, prompts.
+- plantuml/, kroki/, mermaid/, D2/: diagram backends.
+- config/: example MCP client configs (Cursor, Claude Desktop).
+- docs/: documentation (this file, api/tools.md, configuration.md, installation.md, integrations/, testing.md).
 
 ## Deploy and publish
 

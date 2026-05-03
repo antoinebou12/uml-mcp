@@ -1,6 +1,6 @@
 # Diagram Assistant
 
-The Diagram Assistant is the set of MCP tools, resources, and prompts that help users generate and understand UML and other diagrams. This page describes four example user prompts and how the server satisfies them.
+Diagram Assistant lists the MCP tools, resources, and prompts used to generate and read UML and other diagram types. The table shows four example prompts and how the server handles them.
 
 ## Example prompts and behavior
 
@@ -13,28 +13,28 @@ The Diagram Assistant is the set of MCP tools, resources, and prompts that help 
 
 ## Tools
 
-- **generate_uml** — Pass `diagram_type` (e.g. `class`, `sequence`, `mermaid`, `bpmn`) and `code`. Omit **`output_dir`** for URL / base64 only; set **`output_dir`** to save a file. Rendering goes through **`mcp_core/core/diagram_service.py`** → **`generate_diagram`** → **`diagram_rendering.run_diagram_pipeline`** (Kroki first, with optional fallbacks). Responses may include **`source`** (`kroki`, `plantuml_server`, or `mermaid_ink`).
-- **validate_uml** — Local validation of type, format, and light syntax before render (no network).
+- **generate_uml**: Pass `diagram_type` (e.g. `class`, `sequence`, `mermaid`, `bpmn`) and `code`. Omit **`output_dir`** for URL / base64 only; set **`output_dir`** to save a file. **`generate_from_request`** in **`mcp_core/core/diagram_service.py`** calls **`generate_diagram`** in **`mcp_core/core/utils.py`**, then **`diagram_rendering.run_diagram_pipeline`** (Kroki first, optional fallbacks). Responses may include **`source`** (`kroki`, `plantuml_server`, or `mermaid_ink`).
+- **validate_uml**: Local validation of type, format, and light syntax before render (no network).
 
 ## Resources
 
-- **uml://types** — Available diagram types and backends.
-- **uml://templates** — Starter template code per diagram type (including `mermaid`, `mermaid_gantt`-style content via Mermaid examples).
-- **uml://examples** — Full examples per diagram type.
-- **uml://mermaid-examples** — Named Mermaid examples: `sequence_api` (API call sequence), `gantt` (Gantt chart).
-- **uml://bpmn-guide** — Short BPMN 2.0.2-oriented guide: core elements (Start/End events, Task, Gateways, Sequence Flow, Lanes), flow rules, and pointer to BPMN template/tools.
-- **uml://formats** — Supported output formats per type.
-- **uml://server-info** — Server name, version, tools, prompts.
-- **uml://workflow** — Recommended workflow: plan first (type, elements, relationships), then call generate_uml.
+- **uml://types**: Available diagram types and backends.
+- **uml://templates**: Starter template code per diagram type (including `mermaid`, `mermaid_gantt`-style content via Mermaid examples).
+- **uml://examples**: Full examples per diagram type.
+- **uml://mermaid-examples**: Named Mermaid examples: `sequence_api` (API call sequence), `gantt` (Gantt chart).
+- **uml://bpmn-guide**: Short BPMN 2.0.2-oriented guide: core elements (Start/End events, Task, Gateways, Sequence Flow, Lanes), flow rules, and pointer to BPMN template/tools.
+- **uml://formats**: Supported output formats per type.
+- **uml://server-info**: Server name, version, tools, prompts.
+- **uml://workflow**: Recommended workflow: plan first (type, elements, relationships), then call generate_uml.
 
 ## Prompts
 
 Registered prompts that support the four scenarios above:
 
-- **mermaid_sequence_api** — Produce a Mermaid sequence diagram for an API call (client, API, auth/DB, request/response, optional `alt`); then call `generate_uml("mermaid", code)`.
-- **mermaid_gantt** — Produce a Mermaid Gantt chart with title, dateFormat, sections, and tasks; then call `generate_uml("mermaid", code)`.
-- **bpmn_process_guide** — Explain how to draw a BPMN process (elements, flow, BPMN 2.0.2); point to `uml://bpmn-guide` and `generate_uml("bpmn", ...)`.
-- **convert_class_to_mermaid** — Convert a class diagram (PlantUML or prose) into Mermaid `classDiagram` and optionally call `generate_uml("mermaid", code)`.
+- **mermaid_sequence_api**: Produce a Mermaid sequence diagram for an API call (client, API, auth/DB, request/response, optional `alt`); then call `generate_uml("mermaid", code)`.
+- **mermaid_gantt**: Produce a Mermaid Gantt chart with title, dateFormat, sections, and tasks; then call `generate_uml("mermaid", code)`.
+- **bpmn_process_guide**: Explain how to draw a BPMN process (elements, flow, BPMN 2.0.2); point to `uml://bpmn-guide` and `generate_uml("bpmn", ...)`.
+- **convert_class_to_mermaid**: Convert a class diagram (PlantUML or prose) into Mermaid `classDiagram` and optionally call `generate_uml("mermaid", code)`.
 
 Other diagram prompts (e.g. `class_diagram`, `sequence_diagram`, `uml_diagram_with_thinking`) remain available for general UML generation.
 

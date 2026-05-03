@@ -1,6 +1,6 @@
 # Deploy to Vercel and Publish on Smithery
 
-This guide walks you through deploying the UML-MCP server to Vercel and publishing it on Smithery so users can connect via **Streamable HTTP** without installing anything. For the full Smithery docs index, see [smithery.ai/docs/llms.txt](https://smithery.ai/docs/llms.txt).
+Deploy the UML-MCP server to Vercel and publish it on Smithery so users can connect via **Streamable HTTP** without installing anything. For the full Smithery docs index, see [smithery.ai/docs/llms.txt](https://smithery.ai/docs/llms.txt).
 
 ## 1. Deploy to Vercel
 
@@ -13,7 +13,7 @@ This guide walks you through deploying the UML-MCP server to Vercel and publishi
 
 1. **Connect the repo** in the [Vercel dashboard](https://vercel.com/new): Import your `uml-mcp` repository.
 2. **Build settings** (match [vercel.json](https://github.com/antoinebou12/uml-mcp/blob/main/vercel.json) in the repo root; clear dashboard overrides if they disagree):
-   - Framework Preset: **FastAPI** (`"framework": "fastapi"`—needed so Vercel runs the custom install inside the Python build virtualenv)
+   - Framework Preset: **FastAPI** (`"framework": "fastapi"`). That setting lets Vercel run the custom install inside the Python build virtualenv.
    - Install Command: `bash scripts/vercel-install.sh` (exports runtime deps from `uv.lock` and installs them with `uv pip`, avoiding stale `requirements.txt` drift)
    - Build Command: `python -m mcp_core.build_static_server_card` (writes `public/.well-known/mcp/server-card.json` and related files)
    - Serverless entrypoint: `app.py` at the repo root (see `functions` in `vercel.json`); routing and output are handled by `vercel.json`
@@ -65,7 +65,7 @@ Example: `https://smithery.ai/server/@antoinebou12/uml`
 
 ### Option B: Hosted (Smithery hosts it)
 
-**Note:** Hosted deployment is in private early access — [contact Smithery](mailto:support@smithery.ai) if interested.
+**Note:** Hosted deployment is in private early access. [Contact Smithery](mailto:support@smithery.ai) if interested.
 
 If you use Smithery-hosted deployment, the existing `smithery.yaml` defines the server. Connect your GitHub repo and deploy via the **Deployments** tab on your server's Smithery page. The `smithery.yaml` includes a [Session Configuration](https://smithery.ai/docs/build/session-config) schema for output directory, Kroki URL, log level, and other settings.
 

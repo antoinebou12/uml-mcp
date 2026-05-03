@@ -1,6 +1,30 @@
-# UML Diagrams
+---
+title: UML (PlantUML)
+description: PlantUML-based UML diagram types (class, sequence, activity, use case, state, component, deployment, object).
+tags:
+  - uml
+  - plantuml
+---
 
-UML-MCP supports various UML diagram types through PlantUML.
+# UML (PlantUML)
+
+UML-MCP supports the eight standard UML diagram types through the PlantUML backend on Kroki, plus a raw `plantuml` type for arbitrary `@startuml` source.
+
+| `diagram_type` | Use it for |
+| --- | --- |
+| `class` | Static structure: classes, attributes, methods, relationships |
+| `sequence` | Object interactions over time |
+| `activity` | Workflows and business processes |
+| `usecase` | Actors and system functionality |
+| `state` | Object lifecycle states |
+| `component` | Components and dependencies |
+| `deployment` | Physical architecture |
+| `object` | Class instances and their relationships |
+| `plantuml` | Raw PlantUML (any kind) |
+
+!!! tip "Plan before you generate"
+
+    The default `uml_diagram_with_thinking` prompt produces a brief plan (purpose, elements, relationships) before the code, which dramatically improves first-shot diagram quality.
 
 ## Class Diagrams
 
@@ -143,3 +167,12 @@ package "Backend" {
    note right of User: This class represents system users
    @enduml
    ```
+
+---
+
+## Related
+
+- [Diagram catalog](index.md): all supported types with output formats.
+- [Mermaid](mermaid.md): alternative syntax if you prefer Mermaid.
+- [Tutorials, Getting started](../tutorials/getting-started.md): step-by-step generation walkthrough.
+- [MCP tools reference](../api/tools.md).
