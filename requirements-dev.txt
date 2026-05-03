@@ -30,7 +30,7 @@ babel==2.18.0
     # via
     #   mkdocs-git-revision-date-localized-plugin
     #   mkdocs-material
-backrefs==6.2
+backrefs==7.0
     # via mkdocs-material
 beartype==0.22.9
     # via py-key-value-aio
