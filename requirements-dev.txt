@@ -24,7 +24,7 @@ attrs==26.1.0
     #   cyclopts
     #   jsonschema
     #   referencing
-authlib==1.7.0
+authlib==1.7.1
     # via fastmcp
 babel==2.18.0
     # via
