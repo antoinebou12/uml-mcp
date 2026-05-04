@@ -3,6 +3,9 @@
   "extends": [
     "config:base"
   ],
+  "pep621": {
+    "enabled": false
+  },
   "description": "Python deps: pyproject.toml + uv.lock; transitive pins under [tool.uv] override-dependencies — bump/remove those when raising direct floors (e.g. fastmcp).",
   "packageRules": [
     {
@@ -10,12 +13,6 @@
       "matchManagers": ["dockerfile"],
       "matchPackageNames": ["python"],
       "allowedVersions": "/^3\\.12/"
-    },
-    {
-      "description": "Do not auto-bump PEP 621 requires-python; align manually with CI matrix",
-      "matchManagers": ["pep621"],
-      "matchPackageNames": ["python"],
-      "enabled": false
     },
     {
       "description": "Do not auto-bump Poetry python constraint; align manually with CI matrix",

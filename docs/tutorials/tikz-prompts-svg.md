@@ -27,13 +27,13 @@ Ask your assistant in plain language, then have it call **`generate_uml`** with 
 
 ### State machine (template `automata`)
 
-> Generate TikZ for a simple state machine: states Idle, Running, Stopped with transitions  
-> start → Idle, Idle → Running on begin, Running → Stopped on halt, Stopped → Idle on reset.  
+> Generate TikZ for a simple state machine: states Idle, Running, Stopped with transitions
+> start → Idle, Idle → Running on begin, Running → Stopped on halt, Stopped → Idle on reset.
 > Use `tikzpicture` and draw circles for states with labeled arrows.
 
 ### Unit circle and axes (template `geometry_circle`)
 
-> TikZ snippet only: draw the unit circle, axes from -1.5 to 1.5, label the axes x and y,  
+> TikZ snippet only: draw the unit circle, axes from -1.5 to 1.5, label the axes x and y,
 > place a node at (0,-1.35) with text "UML-MCP".
 
 ### Mind map (template `mindmap_simple`)
