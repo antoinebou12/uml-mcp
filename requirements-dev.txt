@@ -71,7 +71,7 @@ colorama==0.4.6
     #   pytest
 coverage==7.13.5
     # via pytest-cov
-cryptography==47.0.0
+cryptography==48.0.0
     # via
     #   authlib
     #   joserfc
