@@ -156,16 +156,6 @@
       "description": "Returns server metadata: name, version, tools, prompts, Kroki URL. Use for discovery and health checks."
     },
     {
-      "uri": "uml://mermaid-examples",
-      "name": "uml://mermaid-examples",
-      "description": "Returns named Mermaid examples (sequence_api, gantt) for API-call flows and Gantt charts. Reference for mermaid_sequence_api and mermaid_gantt prompts."
-    },
-    {
-      "uri": "uml://bpmn-guide",
-      "name": "uml://bpmn-guide",
-      "description": "Structured reference for BPMN 2.0.2: start/end events, tasks, gateways, sequence flow, lanes, pools. Use with generate_uml (diagram_type 'bpmn') or bpmn_process_guide prompt."
-    },
-    {
       "uri": "uml://workflow",
       "name": "uml://workflow",
       "description": "Recommended workflow: plan first (diagram type, elements, relationships), then call generate_uml with the final code. Use uml_diagram or uml_diagram_with_thinking prompt."

@@ -1,26 +1,28 @@
 ---
 title: BPMN guide
-description: "Short structured BPMN 2.0.2 reference; same content as the uml://bpmn-guide MCP resource."
+description: "Short structured BPMN 2.0.2 reference for readers and assistants."
 tags:
   - bpmn
 ---
 
 # BPMN guide
 
-This page mirrors `uml://bpmn-guide` for readers on the docs site; MCP clients can load the same text from the resource URI. It is a compact BPMN 2.0.2 reference; for the full specification see the [OMG BPMN page](https://www.omg.org/spec/BPMN/2.0.2/).
+This page is a compact BPMN 2.0.2 reference for the docs site; for the full specification see the [OMG BPMN page](https://www.omg.org/spec/BPMN/2.0.2/).
 
-!!! tip "Use it as an MCP resource"
+!!! tip "Load BPMN starters via MCP"
 
-    Any MCP client can load this content directly:
+    MCP clients can fetch minimal BPMN XML from **`uml://templates`** (read the **`bpmn`** key in the JSON payload):
 
     ```json
     {
       "jsonrpc": "2.0",
       "id": 1,
       "method": "resources/read",
-      "params": { "uri": "uml://bpmn-guide" }
+      "params": { "uri": "uml://templates" }
     }
     ```
+
+    Use **`uml://examples`** the same way for a fuller BPMN example (key **`bpmn`**).
 
 ## Core elements
 

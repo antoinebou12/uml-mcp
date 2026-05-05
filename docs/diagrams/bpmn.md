@@ -8,7 +8,7 @@ tags:
 
 # BPMN (Kroki XML)
 
-For BPMN concepts, flow rules, and the same content as `uml://bpmn-guide`, see the **[BPMN guide](../tutorials/bpmn.md)**. For copy-paste prompts, a full `tools/call` JSON example, and a committed Kroki SVG, see **[BPMN prompts and SVG](../tutorials/bpmn-prompts-svg.md)**. This page shows a minimal BPMN 2.0 XML snippet you can pass to `generate_uml` with `diagram_type: bpmn` for rendering through Kroki.
+For BPMN concepts, flow rules, and the BPMN guide, see the **[BPMN guide](../tutorials/bpmn.md)**. For copy-paste prompts, a full `tools/call` JSON example, and a committed Kroki SVG, see **[BPMN prompts and SVG](../tutorials/bpmn-prompts-svg.md)**. This page shows a minimal BPMN 2.0 XML snippet you can pass to `generate_uml` with `diagram_type: bpmn` for rendering through Kroki.
 
 ## Example
 

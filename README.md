@@ -109,13 +109,11 @@ Full list with supported formats: run `python server.py --list-tools` or query `
 | Resource | Description |
 | --- | --- |
 | `uml://types` | Diagram types, backends, supported formats per type |
-| `uml://templates` | Starter templates per type |
-| `uml://examples` | Example diagrams per type |
+| `uml://templates` | Starter templates per type; see [BPMN 2.0.2 guide](docs/tutorials/bpmn.md) for element and flow reference (docs) |
+| `uml://examples` | Example diagrams per type; [Mermaid](docs/diagrams/mermaid.md) documents named samples (sequence API, Gantt) alongside `uml://examples` (key `mermaid`) |
 | `uml://formats` | Output formats per type |
 | `uml://capabilities` | Type → backend → formats matrix used for validation |
 | `uml://server-info` | Server name, version, tools, prompts, Kroki/PlantUML URLs |
-| `uml://mermaid-examples` | Named Mermaid examples (e.g. sequence API, Gantt) |
-| `uml://bpmn-guide` | BPMN 2.0.2 element and flow reference |
 | `uml://workflow` | Recommended plan-then-generate workflow |
 
 ## Deployment

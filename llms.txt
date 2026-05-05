@@ -21,13 +21,11 @@ Full parameters: docs/api/tools.md (in repo) or the published docs site under Re
 ## MCP resources (uml://)
 
 - uml://types: types, backends, formats per type
-- uml://templates: starters per type
-- uml://examples: examples per type
+- uml://templates: starters per type; BPMN element/flow reference is documented at docs/tutorials/bpmn.md (not a separate uml:// URI)
+- uml://examples: examples per type; named Mermaid samples (sequence API, Gantt) are described in docs/diagrams/mermaid.md (use key mermaid in the resource payload)
 - uml://formats: output formats
 - uml://capabilities: type → backend → formats matrix
 - uml://server-info: version, tools, prompts, backend URLs
-- uml://mermaid-examples: named Mermaid samples
-- uml://bpmn-guide: BPMN reference
 - uml://workflow: plan-then-generate workflow
 
 ## MCP prompts (optional; when the client lists prompts)

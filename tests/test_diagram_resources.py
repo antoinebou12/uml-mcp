@@ -159,8 +159,6 @@ class TestRegisterDiagramResources:
             "uml://formats",
             "uml://capabilities",
             "uml://server-info",
-            "uml://mermaid-examples",
-            "uml://bpmn-guide",
             "uml://workflow",
         ]
         for uri in expected_uris:

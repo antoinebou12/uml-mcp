@@ -4,6 +4,8 @@ import hashlib
 
 from mcp_core.core.agent_discovery import (
     AGENT_SKILLS_SCHEMA,
+    DOCUMENTATION_SITE_URL,
+    PUBLIC_DEPLOYMENT_URL,
     build_agent_skills_index,
     build_api_catalog,
     build_oauth_protected_resource,
@@ -34,6 +36,7 @@ def test_build_sitemap_xml():
     assert 'xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"' in xml
     assert "<urlset" in xml
     assert "https://example.com/openapi.json" in xml
+    assert "https://example.com/status" in xml
     assert "https://example.com/.well-known/api-catalog" in xml
 
 
@@ -64,16 +67,23 @@ def test_link_header_values_contains_relations():
 
 def test_negotiate_root_format():
     assert negotiate_root_format(None) == "json"
+    assert negotiate_root_format("") == "json"
     assert negotiate_root_format("text/markdown") == "markdown"
     assert negotiate_root_format("text/html, application/json;q=0.9") == "html"
     assert negotiate_root_format("application/json") == "json"
     assert negotiate_root_format("*/*") == "json"
+    # JSON listed first but same q as HTML — browsers / proxies; prefer HTML
+    assert negotiate_root_format("application/json, text/html") == "html"
+    assert negotiate_root_format("application/json;q=1, text/html;q=0.9") == "json"
 
 
 def test_homepage_markdown_non_empty():
     md = homepage_markdown()
     assert "# UML" in md or "UML" in md
     assert "/openapi.json" in md
+    assert "/status" in md
+    assert DOCUMENTATION_SITE_URL in md
+    assert PUBLIC_DEPLOYMENT_URL in md
 
 
 def test_build_agent_skills_index_tmp(tmp_path):

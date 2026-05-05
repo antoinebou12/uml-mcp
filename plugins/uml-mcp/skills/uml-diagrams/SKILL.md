@@ -28,7 +28,7 @@ Produce valid `diagram_type` and DSL `code`, call **generate_uml**, and give the
 ## Tools and resources
 
 - **Tools:** `generate_uml`, `validate_uml`, `list_diagram_types`, `generate_uml_batch`
-- **Resources:** `uml://types`, `uml://formats`, `uml://templates`, `uml://examples`, `uml://capabilities`, `uml://server-info`, `uml://mermaid-examples`, and related `uml://` URIs
+- **Resources:** `uml://types`, `uml://formats`, `uml://templates`, `uml://examples`, `uml://capabilities`, `uml://server-info`, `uml://workflow`, and any extra `uml://` URIs from **`resources/list`** (e.g. named Mermaid samples, BPMN reference)
 
 ## generate_uml inputs
 

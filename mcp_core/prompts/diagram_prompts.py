@@ -444,7 +444,7 @@ def bpmn_process_guide_prompt(context: Optional[Dict[str, Any]] = None) -> str:
     """
     Prompt that instructs the model to explain how to draw a BPMN process model:
     start/end events, tasks, gateways, sequence flow, lanes, aligned with BPMN 2.0.2.
-    Optionally point to uml://bpmn-guide and the BPMN template/example.
+    Optionally point to uml://templates (key bpmn), uml://examples (key bpmn), and generate_uml.
     """
     context = context or {}
     return """You are a process modeling expert. Explain how to draw a BPMN process model.
@@ -460,9 +460,9 @@ Provide concise guidance that covers:
 3. When to use BPMN: business processes, workflows, orchestration.
 
 Optionally point the user to:
-- The resource uml://bpmn-guide for a structured reference.
+- **uml://templates** (key **bpmn**) for a minimal BPMN XML starter and element naming.
+- **uml://examples** (key **bpmn**) for a fuller BPMN XML example.
 - **generate_uml** with diagram_type **bpmn** to produce BPMN XML.
-- The uml://templates resource (key "bpmn") for a minimal BPMN XML starter.
 """
 
 
@@ -530,12 +530,12 @@ Use valid YAML (no tabs; consistent indentation). Output the YAML in a fenced bl
     category="bpmn",
 )
 def bpmn_executable_process_prompt(context: Optional[Dict[str, Any]] = None) -> str:
-    """Task-first BPMN XML; aligned with uml://templates bpmn and uml://bpmn-guide."""
+    """Task-first BPMN XML; aligned with uml://templates (key bpmn)."""
     context = context or {}
     return """You are a BPMN modeler. Produce an **executable BPMN 2.0** XML snippet suitable for Kroki **bpmn**.
 
 Before writing code:
-- Read **uml://formats** for **bpmn** and use **uml://templates** (key **bpmn**) / **uml://bpmn-guide** for namespaces and element names.
+- Read **uml://formats** for **bpmn** and use **uml://templates** (key **bpmn**) for namespaces and element names.
 
 Task-first steps:
 1. Define a **bpmn:process** with `isExecutable="true"` (or `false` if the user wants a non-executable overview—match their request).

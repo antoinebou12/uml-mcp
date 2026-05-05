@@ -6,9 +6,9 @@ This page lists the MCP tools, resources, and prompts for generating and reading
 
 | User prompt | Desired behavior | Tools | Resources |
 |-------------|------------------|--------|-----------|
-| "Show me a Mermaid sequence diagram for an API call" | Return valid Mermaid `sequenceDiagram` (client → API → backend) and optionally call `generate_uml("mermaid", code)`. | `generate_uml` | `uml://examples` (mermaid), `uml://mermaid-examples` (sequence_api) |
-| "Generate a Gantt chart using Mermaid syntax" | Return valid Mermaid `gantt` block and optionally call `generate_uml("mermaid", code)`. | `generate_uml` | `uml://mermaid-examples` (gantt), `uml://templates` |
-| "Explain how to draw a BPMN process model" | Return concise guidance (elements, flow, BPMN 2.0.2 alignment) and optionally point to BPMN template/example. | `generate_uml` (`diagram_type` **bpmn**) | `uml://bpmn-guide`, `uml://templates` (bpmn) |
+| "Show me a Mermaid sequence diagram for an API call" | Return valid Mermaid `sequenceDiagram` (client → API → backend) and optionally call `generate_uml("mermaid", code)`. | `generate_uml` | `uml://examples` (mermaid); see [Mermaid](../diagrams/mermaid.md) for sequence API sample text |
+| "Generate a Gantt chart using Mermaid syntax" | Return valid Mermaid `gantt` block and optionally call `generate_uml("mermaid", code)`. | `generate_uml` | `uml://templates` (mermaid), [Mermaid](../diagrams/mermaid.md) (Gantt sample) |
+| "Explain how to draw a BPMN process model" | Return concise guidance (elements, flow, BPMN 2.0.2 alignment) and optionally point to BPMN template/example. | `generate_uml` (`diagram_type` **bpmn**) | [BPMN guide](../tutorials/bpmn.md), `uml://templates` (bpmn), `uml://examples` (bpmn) |
 | "Convert this class diagram into Mermaid code" | Take PlantUML or description and output Mermaid `classDiagram`; optionally call `generate_uml("mermaid", code)`. | `generate_uml` | `uml://templates`, `uml://examples` |
 
 ## Tools
@@ -21,8 +21,6 @@ This page lists the MCP tools, resources, and prompts for generating and reading
 - **uml://types**: Available diagram types and backends.
 - **uml://templates**: Starter template code per diagram type (including `mermaid`, `mermaid_gantt`-style content via Mermaid examples).
 - **uml://examples**: Full examples per diagram type.
-- **uml://mermaid-examples**: Named Mermaid examples: `sequence_api` (API call sequence), `gantt` (Gantt chart).
-- **uml://bpmn-guide**: Short BPMN 2.0.2-oriented guide: core elements (Start/End events, Task, Gateways, Sequence Flow, Lanes), flow rules, and pointer to BPMN template/tools.
 - **uml://formats**: Supported output formats per type.
 - **uml://server-info**: Server name, version, tools, prompts.
 - **uml://workflow**: Recommended workflow: plan first (type, elements, relationships), then call generate_uml.
@@ -33,7 +31,7 @@ Registered prompts that support the four scenarios above:
 
 - **mermaid_sequence_api**: Produce a Mermaid sequence diagram for an API call (client, API, auth/DB, request/response, optional `alt`); then call `generate_uml("mermaid", code)`.
 - **mermaid_gantt**: Produce a Mermaid Gantt chart with title, dateFormat, sections, and tasks; then call `generate_uml("mermaid", code)`.
-- **bpmn_process_guide**: Explain how to draw a BPMN process (elements, flow, BPMN 2.0.2); point to `uml://bpmn-guide` and `generate_uml("bpmn", ...)`.
+- **bpmn_process_guide**: Explain how to draw a BPMN process (elements, flow, BPMN 2.0.2); point to `uml://templates` / `uml://examples` (bpmn), the [BPMN guide](../tutorials/bpmn.md), and `generate_uml("bpmn", ...)`.
 - **convert_class_to_mermaid**: Convert a class diagram (PlantUML or prose) into Mermaid `classDiagram` and optionally call `generate_uml("mermaid", code)`.
 
 Other diagram prompts (e.g. `class_diagram`, `sequence_diagram`, `uml_diagram_with_thinking`) remain available for general UML generation.

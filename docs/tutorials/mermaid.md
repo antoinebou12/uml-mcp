@@ -92,7 +92,7 @@ flowchart LR
 
 ## Sequence (API call)
 
-Same shape as the `mermaid_sequence_api` prompt and the `sequence_api` example under `uml://mermaid-examples`.
+Same shape as the `mermaid_sequence_api` prompt and the sequence-style content under `uml://examples` (key `mermaid`).
 
 ```mermaid
 sequenceDiagram

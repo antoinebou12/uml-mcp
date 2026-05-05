@@ -27,6 +27,7 @@ def test_root_endpoint():
     assert data.get("openapi_json") == "/openapi.json"
     assert data.get("mcp") == "/mcp"
     assert data.get("kroki_encode") == "/kroki_encode"
+    assert data.get("status_page") == "/status"
     assert "Link" in response.headers
     assert response.headers.get("Vary") == "Accept"
     link = response.headers["Link"]
@@ -55,6 +56,14 @@ def test_root_html_webmcp():
     assert b"provideContext" in response.content
 
 
+def test_root_html_when_json_listed_first_equal_q():
+    """HTML wins over application/json when both are q=1 (typical browser/proxy)."""
+    response = client.get("/", headers={"Accept": "application/json, text/html"})
+    assert response.status_code == 200
+    assert "text/html" in response.headers.get("content-type", "")
+    assert b"About" in response.content
+
+
 def test_robots_txt():
     response = client.get("/robots.txt")
     assert response.status_code == 200
@@ -71,6 +80,17 @@ def test_sitemap_xml():
     assert "xml" in response.headers.get("content-type", "")
     assert "<urlset" in response.text
     assert "/openapi.json" in response.text
+    assert "/status" in response.text
+
+
+def test_status_page():
+    """Human-readable status page mirrors /health."""
+    response = client.get("/status")
+    assert response.status_code == 200
+    assert "text/html" in response.headers.get("content-type", "")
+    text = response.text
+    assert "healthy" in text
+    assert "/health" in text
 
 
 def test_health_check():

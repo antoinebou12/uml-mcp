@@ -33,7 +33,7 @@ Turn the user’s intent into valid `diagram_type` + source `code`, call **gener
 ## Before generating
 
 1. **If `diagram_type` is unknown or ambiguous**, read **`uml://types`** (or **`uml://capabilities`**) to list valid types and supported backends.
-2. **For starter syntax**, use **`uml://templates`** or **`uml://examples`**; for Mermaid specifics, **`uml://mermaid-examples`** when relevant.
+2. **For starter syntax**, use **`uml://templates`** or **`uml://examples`**; use **`resources/list`** for extra guides (e.g. named Mermaid samples, BPMN 2.0.2 reference) when those URIs are registered.
 3. **Optional quality pass**: call **`validate_uml`** with the same `diagram_type`, `code`, and planned `output_format`. Use **`strict: true`** for stricter Mermaid/D2 checks when needed.
 4. If you cannot read **`uml://types`**, call **`list_diagram_types`** for the same metadata.
 
@@ -107,7 +107,7 @@ When several types fit, pick the one the user named; otherwise prefer the type w
 ## MCP tools and resources
 
 - **Tools**: `generate_uml`, `validate_uml`, `list_diagram_types`, `generate_uml_batch`
-- **Resources**: `uml://types`, `uml://formats`, `uml://templates`, `uml://examples`, `uml://capabilities`, `uml://server-info`, `uml://mermaid-examples`, `uml://bpmn-guide`, `uml://workflow`
+- **Resources**: `uml://types`, `uml://formats`, `uml://templates`, `uml://examples`, `uml://capabilities`, `uml://server-info`, `uml://workflow`, plus type-specific URIs from **`resources/list`** (named Mermaid samples, BPMN guide, …)
 
 **Prompts** (when the client exposes them): `uml_diagram`, `uml_diagram_with_thinking`, and type-specific prompts (`class_diagram`, `sequence_diagram`, `activity_diagram`, `usecase_diagram`, `mermaid_sequence_api`, `mermaid_gantt`, `bpmn_process_guide`, `c4_model`, `wireviz_harness`, `bpmn_executable_process`, `convert_class_to_mermaid`) help structure code before `generate_uml`.
 

@@ -24,6 +24,7 @@ from mcp_core.core.agent_discovery import (
     homepage_markdown,
     link_header_values,
     negotiate_root_format,
+    status_html,
 )
 
 # Suppress deprecation warnings from Vercel's vendored websockets/uvicorn (not from this app).
@@ -275,6 +276,7 @@ async def root(request: Request):
             "openapi_yaml": "/openapi.yaml",
             "mcp": "/mcp",
             "kroki_encode": "/kroki_encode",
+            "status_page": "/status",
         },
         headers=headers,
     )
@@ -294,10 +296,21 @@ async def sitemap_xml(request: Request):
     return Response(content=body, media_type="application/xml; charset=utf-8")
 
 
+def _health_payload() -> dict[str, Any]:
+    """Shared body for ``/health`` and ``/status``."""
+    return {"status": "healthy", "modules_available": HAS_MODULES}
+
+
 @app.get("/health", tags=[TAG_REST])
 async def health_check():
     """Health check endpoint"""
-    return {"status": "healthy", "modules_available": HAS_MODULES}
+    return _health_payload()
+
+
+@app.get("/status", include_in_schema=False)
+async def service_status_page():
+    """Human-readable status page (same payload as ``/health``)."""
+    return HTMLResponse(content=status_html(_health_payload()))
 
 
 @app.post("/generate_diagram", response_model=DiagramResponse, tags=[TAG_REST])

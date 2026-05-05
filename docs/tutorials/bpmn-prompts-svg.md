@@ -9,7 +9,7 @@ tags:
 
 # BPMN prompts and SVG
 
-Use this track when you want **BPMN 2.0** process models as **XML** rendered to **SVG** through Kroki (`diagram_type: bpmn`). For a compact element and flow reference, see the [BPMN guide](bpmn.md) (same ideas as `uml://bpmn-guide`). For minimal XML syntax, see [BPMN (Kroki XML)](../diagrams/bpmn.md).
+Use this track when you want **BPMN 2.0** process models as **XML** rendered to **SVG** through Kroki (`diagram_type: bpmn`). For a compact element and flow reference, see the [BPMN guide](bpmn.md). For minimal XML syntax, see [BPMN (Kroki XML)](../diagrams/bpmn.md).
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ Use this track when you want **BPMN 2.0** process models as **XML** rendered to 
 
 ## Natural-language prompts (copy-paste)
 
-Ask your assistant in plain language, then let it load `uml://templates` (key `bpmn`), `uml://bpmn-guide`, and call **`generate_uml`** with `diagram_type: bpmn`:
+Ask your assistant in plain language, then let it load `uml://templates` (key `bpmn`), `uml://examples` (key `bpmn`) if helpful, and call **`generate_uml`** with `diagram_type: bpmn`:
 
 ```
 Model a change approval in BPMN 2.0 XML: start, submit change request, exclusive gateway "needs manager approval?",
@@ -53,7 +53,7 @@ Single pool with two lanes (Requester, Approver): task submit in Requester lane,
 | --- | --- |
 | `uml_diagram` | Generic plan-then-generate for any supported type (steer toward `bpmn` in context). |
 | `uml_diagram_with_thinking` | Same, with an explicit planning step before XML. |
-| `bpmn_process_guide` | Explain BPMN elements and flow rules (BPMN 2.0.2); pairs with `uml://bpmn-guide`. |
+| `bpmn_process_guide` | Explain BPMN elements and flow rules (BPMN 2.0.2); pairs with `uml://templates` / `uml://examples` (bpmn) and the [BPMN guide](bpmn.md). |
 | `bpmn_executable_process` | Produce minimal executable BPMN 2.0 XML (start, tasks, gateways, end, `sequenceFlow`). |
 
 Fetch text with `prompts/get` (see [MCP prompts](../reference/prompts.md)).

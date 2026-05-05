@@ -61,7 +61,7 @@ Pick a starting point. Each tutorial is self-contained and assumes you have a wo
 
     ---
 
-    A short, structured BPMN 2.0.2 reference: events, tasks, gateways, sequence flow, lanes and pools (same content as the `uml://bpmn-guide` resource).
+    A short, structured BPMN 2.0.2 reference: events, tasks, gateways, sequence flow, lanes and pools.
 
     [:octicons-arrow-right-24: Read the BPMN guide](bpmn.md)
 

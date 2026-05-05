@@ -14,7 +14,7 @@ tags:
 | `diagram_type` | `mermaid` |
 | Backend | Mermaid (via Kroki) → Mermaid.ink fallback |
 | Output formats | `svg`, `png` |
-| Resource shortcuts | `uml://templates` (key `mermaid`), `uml://mermaid-examples` |
+| Resource shortcuts | `uml://templates` (key `mermaid`), `uml://examples` (key `mermaid`) |
 | Prompts | `mermaid_sequence_api`, `mermaid_gantt`, `convert_class_to_mermaid` |
 
 !!! tip "Browser-rendered preview vs server render"

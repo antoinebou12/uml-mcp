@@ -6,6 +6,8 @@ OAuth protected resource metadata (RFC 9728), homepage HTML/Markdown, Link heade
 from __future__ import annotations
 
 import hashlib
+import html
+import json
 import re
 from pathlib import Path
 from typing import Any, Literal
@@ -14,6 +16,11 @@ from xml.sax.saxutils import escape
 # Default GitHub raw URLs for skills (plan: raw.githubusercontent.com/.../main/.skill/skills/...)
 DEFAULT_GITHUB_REPO = "antoinebou12/uml-mcp"
 DEFAULT_GITHUB_BRANCH = "main"
+# Keep in sync with mkdocs.yml site_url / repo_url
+DOCUMENTATION_SITE_URL = "https://antoinebou12.github.io/uml-mcp/"
+PUBLIC_DEPLOYMENT_URL = "https://uml-mcp.vercel.app"
+GITHUB_REPO_URL = f"https://github.com/{DEFAULT_GITHUB_REPO}"
+SMITHERY_LISTING_URL = "https://smithery.ai/server/antoinebou12/uml"
 AGENT_SKILLS_SCHEMA = "https://agentskills.io/schemas/agent-skills-index-v0.2.0.json"
 
 _AI_USER_AGENTS = (
@@ -65,6 +72,7 @@ def build_sitemap_xml(base_url: str) -> str:
         "/openapi.json",
         "/openapi.yaml",
         "/health",
+        "/status",
         "/supported_formats",
         "/.well-known/mcp/server-card.json",
         "/.well-known/ai-plugin.json",
@@ -219,21 +227,32 @@ def link_header_values(_base_url: str) -> str:
 
 def homepage_markdown() -> str:
     """Markdown summary for Accept: text/markdown."""
-    return """# UML Diagram Generator (UML-MCP)
+    return f"""# UML Diagram Generator (UML-MCP)
 
 REST API and **Model Context Protocol (MCP)** service for generating UML and other diagrams (PlantUML, Mermaid, D2, Kroki).
+
+## About
+
+UML-MCP helps you produce diagrams from natural-language prompts or from diagram source you write yourself (PlantUML, Mermaid, D2, and other [Kroki](https://kroki.io/) backends). Use the hosted [interactive API (Swagger)]({PUBLIC_DEPLOYMENT_URL}/docs), read the [full documentation]({DOCUMENTATION_SITE_URL}), or clone the [GitHub repository]({GITHUB_REPO_URL}).
+
+## Documentation
+
+Full guides and deployment notes: [{DOCUMENTATION_SITE_URL}]({DOCUMENTATION_SITE_URL})
 
 ## Quick links
 
 | Resource | Path |
 |----------|------|
 | OpenAPI (JSON) | `/openapi.json` |
+| OpenAPI (YAML) | `/openapi.yaml` |
 | Swagger UI | `/docs` |
 | ReDoc | `/redoc` |
-| Health | `/health` |
+| Health (JSON) | `/health` |
+| Status (HTML) | `/status` |
 | MCP (Streamable HTTP) | `/mcp` |
 | Kroki URL encode (no disk) | `POST /kroki_encode` |
 | Generate diagram | `POST /generate_diagram` |
+| Supported formats | `/supported_formats` |
 | MCP server card | `/.well-known/mcp/server-card.json` |
 | API catalog (RFC 9727) | `/.well-known/api-catalog` |
 | Agent skills index | `/.well-known/agent-skills/index.json` |
@@ -246,8 +265,218 @@ Use an MCP client to connect to `/mcp` or call the REST endpoints above.
 """
 
 
+def _landing_page_css() -> str:
+    """Shared inline styles for HTML landing and status pages."""
+    return """
+:root {
+  color-scheme: light dark;
+  --bg: #f0f2f7;
+  --fg: #141824;
+  --muted: #5a6270;
+  --card: #ffffff;
+  --border: #d8dce6;
+  --accent: #4338ca;
+  --accent-hover: #3730a3;
+  --link: #2563eb;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1117;
+    --fg: #e8eaef;
+    --muted: #9aa1b0;
+    --card: #181b24;
+    --border: #2c3140;
+    --accent: #a5b4fc;
+    --accent-hover: #c7d2fe;
+    --link: #93c5fd;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Ubuntu, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.55;
+  min-height: 100vh;
+}
+a { color: var(--link); }
+a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 2.5rem;
+}
+header {
+  margin-bottom: 1.75rem;
+}
+header h1 {
+  font-size: 1.65rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5rem;
+}
+header p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 42rem;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin-top: 1rem;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+}
+@media (prefers-color-scheme: dark) {
+  .btn { color: var(--fg); }
+}
+.btn:hover { background: var(--accent-hover); }
+.btn-secondary {
+  background: var(--card);
+  color: var(--fg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.btn-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.2rem;
+  box-shadow: var(--shadow);
+}
+.card h2 {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0 0 0.75rem;
+  font-weight: 600;
+}
+.card ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.card li {
+  padding: 0.35rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.card li:last-child { border-bottom: none; }
+.card a { font-weight: 500; }
+footer {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.about-card {
+  grid-column: 1 / -1;
+}
+.about-card p {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  max-width: 52rem;
+}
+.about-card p:last-child {
+  margin-bottom: 0;
+}
+"""
+
+
+def status_html(health: dict[str, Any]) -> str:
+    """Human-readable status page HTML (same facts as ``/health``)."""
+    payload = html.escape(json.dumps(health, indent=2, sort_keys=True))
+    status_val = str(health.get("status", "unknown"))
+    modules = health.get("modules_available")
+    mod_ok = bool(modules)
+    status_label = html.escape(status_val)
+    mod_text = "Available" if mod_ok else "Unavailable"
+    css = _landing_page_css()
+    return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="UML-MCP service status and health."/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
+  <title>Service status — UML Diagram Generator</title>
+  <style>{css}
+.status-pill {{
+  display: inline-block;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--card);
+  border: 1px solid var(--border);
+}}
+.status-pill.ok {{ color: #15803d; border-color: #86efac; }}
+@media (prefers-color-scheme: dark) {{
+  .status-pill.ok {{ color: #86efac; border-color: #166534; }}
+}}
+.status-pill.warn {{ color: #b45309; border-color: #fcd34d; }}
+pre.raw {{
+  margin: 1rem 0 0;
+  padding: 1rem;
+  overflow: auto;
+  font-size: 0.8rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <h1>Service status</h1>
+      <p>Live view of the same payload as <a href="/health"><code>/health</code></a> (JSON).</p>
+    </header>
+    <div class="card">
+      <p style="margin:0 0 0.75rem">
+        <span class="status-pill ok" aria-label="Overall status">{status_label}</span>
+        <span style="margin-left:0.75rem;color:var(--muted)">Diagram modules: <strong>{html.escape(mod_text)}</strong></span>
+      </p>
+      <pre class="raw" tabindex="0"><code>{payload}</code></pre>
+    </div>
+    <p style="margin-top:1.25rem"><a href="/">← Back to home</a></p>
+  </div>
+</body>
+</html>
+"""
+
+
 def homepage_html() -> str:
-    """Minimal HTML landing page with WebMCP tool registration."""
+    """HTML landing page with discovery links and WebMCP tool registration."""
     # Inline script: WebMCP / model context — register site tools for capable browsers.
     script = """
 (function () {
@@ -297,23 +526,85 @@ def homepage_html() -> str:
   });
 })();
 """
+    css = _landing_page_css()
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="description" content="UML-MCP: REST API and MCP for diagram generation via Kroki, PlantUML, Mermaid, and more."/>
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"/>
   <title>UML Diagram Generator</title>
+  <style>{css}</style>
 </head>
 <body>
-  <main>
-    <h1>UML Diagram Generator</h1>
-    <p>REST API and MCP for UML and diagram generation. Open <a href="/docs">Swagger UI</a> or <a href="/redoc">ReDoc</a>.</p>
-    <ul>
-      <li><a href="/openapi.json">OpenAPI JSON</a></li>
-      <li><a href="/health">Health</a></li>
-      <li><a href="/.well-known/mcp/server-card.json">MCP server card</a></li>
-    </ul>
-  </main>
+  <div class="wrap">
+    <header>
+      <h1>UML Diagram Generator</h1>
+      <p>REST API and <strong>Model Context Protocol (MCP)</strong> for UML and diagram generation — PlantUML, Mermaid, D2, Kroki, and more.</p>
+      <div class="actions">
+        <a class="btn" href="{DOCUMENTATION_SITE_URL}">Documentation (MkDocs)</a>
+        <a class="btn btn-secondary" href="/docs">Swagger UI</a>
+        <a class="btn btn-secondary" href="/redoc">ReDoc</a>
+        <a class="btn btn-secondary" href="{GITHUB_REPO_URL}">GitHub</a>
+        <a class="btn btn-secondary" href="/status">Status</a>
+      </div>
+    </header>
+    <div class="grid">
+      <section class="card about-card" aria-labelledby="h-about">
+        <h2 id="h-about">About</h2>
+        <p>
+          <strong>UML-MCP</strong> is a diagram generation service built on the
+          <strong>Model Context Protocol (MCP)</strong>. Describe what you need in natural language,
+          or send PlantUML, Mermaid, D2, and other sources supported by
+          <a href="https://kroki.io/">Kroki</a>.
+        </p>
+        <p>
+          <a href="/docs">Swagger UI</a> (same as
+          <a href="{PUBLIC_DEPLOYMENT_URL}/docs">uml-mcp.vercel.app/docs</a>),
+          <a href="{DOCUMENTATION_SITE_URL}">full documentation on GitHub Pages</a>,
+          and <a href="{GITHUB_REPO_URL}">source &amp; issues on GitHub</a>.
+          MCP clients connect to <a href="/mcp"><code>/mcp</code></a> (Streamable HTTP).
+        </p>
+      </section>
+      <section class="card" aria-labelledby="h-api">
+        <h2 id="h-api">API reference</h2>
+        <ul>
+          <li><a href="/docs">Swagger UI</a> — interactive REST</li>
+          <li><a href="/redoc">ReDoc</a> — readable spec</li>
+          <li><a href="/openapi.json">OpenAPI JSON</a></li>
+          <li><a href="/openapi.yaml">OpenAPI YAML</a></li>
+        </ul>
+      </section>
+      <section class="card" aria-labelledby="h-svc">
+        <h2 id="h-svc">Service</h2>
+        <ul>
+          <li><a href="/health"><code>/health</code></a> — JSON health</li>
+          <li><a href="/status">Status page</a> — human-readable</li>
+          <li><a href="/supported_formats">Supported formats</a></li>
+        </ul>
+      </section>
+      <section class="card" aria-labelledby="h-mcp">
+        <h2 id="h-mcp">MCP</h2>
+        <ul>
+          <li><a href="/mcp"><code>/mcp</code></a> — Streamable HTTP</li>
+          <li><a href="/.well-known/mcp/server-card.json">MCP server card</a></li>
+          <li><a href="{SMITHERY_LISTING_URL}">Smithery catalog</a> (external)</li>
+        </ul>
+      </section>
+      <section class="card" aria-labelledby="h-docs">
+        <h2 id="h-docs">Repository</h2>
+        <ul>
+          <li><a href="{DOCUMENTATION_SITE_URL}">MkDocs site</a></li>
+          <li><a href="{GITHUB_REPO_URL}">GitHub</a> — source &amp; issues</li>
+        </ul>
+      </section>
+    </div>
+    <footer>
+      Version 1.3.0 · Browsers get HTML for <code>GET /</code>; send <code>Accept: application/json</code> for JSON.
+      Public deployment: <a href="{PUBLIC_DEPLOYMENT_URL}">{PUBLIC_DEPLOYMENT_URL}</a>.
+    </footer>
+  </div>
   <script>
 {script}
   </script>
@@ -354,25 +645,40 @@ def negotiate_root_format(
 ) -> Literal["json", "html", "markdown"]:
     """
     Choose response type for GET /.
-    Default JSON; text/markdown and text/html when explicitly negotiated with q > 0.
-    */* does not force HTML — defaults to json for API clients sending */* only.
+
+    Picks the highest ``q`` within each family (markdown, HTML, JSON). Markdown
+    wins if its ``q`` is greatest. Otherwise HTML wins over JSON when
+    ``q_html >= q_json`` so typical browser ``Accept`` lists still return HTML
+    even if ``application/json`` appears with equal weight. ``*/*`` alone
+    yields JSON for API-style clients.
     """
-    if not accept_header:
+    if not accept_header or not accept_header.strip():
         return "json"
     parsed = _parse_accept(accept_header)
     if not parsed:
         return "json"
-    # Walk in quality order; first concrete match wins
+
+    q_markdown = 0.0
+    q_html = 0.0
+    q_json = 0.0
+
     for media, q, _ in parsed:
         if q <= 0:
             continue
-        if media == "text/markdown":
-            return "markdown"
-        if media == "text/html":
-            return "html"
-        if media == "application/json":
-            return "json"
-    # */* or unknown — default json
+        m = media.split(";")[0].strip().lower()
+        if m == "text/markdown":
+            q_markdown = max(q_markdown, q)
+        elif m in ("text/html", "application/xhtml+xml"):
+            q_html = max(q_html, q)
+        elif m == "application/json":
+            q_json = max(q_json, q)
+
+    if q_markdown > 0 and q_markdown >= q_html and q_markdown >= q_json:
+        return "markdown"
+    if q_html > 0 and q_html >= q_json:
+        return "html"
+    if q_json > 0:
+        return "json"
     return "json"
 
 

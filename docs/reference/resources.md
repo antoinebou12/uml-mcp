@@ -8,7 +8,7 @@ tags:
 
 # MCP resources
 
-Resources are read-only data that an MCP client can fetch with `resources/read`. UML-MCP serves nine `uml://` URIs. Source of truth: [`mcp_core/resources/diagram_resources.py`](https://github.com/antoinebou12/uml-mcp/blob/main/mcp_core/resources/diagram_resources.py).
+Resources are read-only data that an MCP client can fetch with `resources/read`. UML-MCP serves seven `uml://` URIs. Source of truth: [`mcp_core/resources/diagram_resources.py`](https://github.com/antoinebou12/uml-mcp/blob/main/mcp_core/resources/diagram_resources.py).
 
 ## Calling a resource
 
@@ -33,8 +33,6 @@ The response wraps a JSON string in MCP's standard envelope. Every UML-MCP resou
 | [`uml://formats`](#umlformats) | Supported `output_format` values per type | Pick a valid format before render |
 | [`uml://capabilities`](#umlcapabilities) | `diagram_type` → backend + formats matrix | Tooling and validation use case |
 | [`uml://server-info`](#umlserver-info) | Server name, version, tools, prompts, Kroki URL | Discovery and health checks |
-| [`uml://mermaid-examples`](#umlmermaid-examples) | Named Mermaid examples (`sequence_api`, `gantt`) | Reference for `mermaid_sequence_api` / `mermaid_gantt` prompts |
-| [`uml://bpmn-guide`](#umlbpmn-guide) | Structured BPMN 2.0.2 reference | Pair with `generate_uml(diagram_type="bpmn")` |
 | [`uml://workflow`](#umlworkflow) | Recommended plan-then-generate workflow | Add to agent system prompts |
 
 ---
@@ -82,14 +80,6 @@ Server identity and runtime metadata:
   "plantuml_server": "..."
 }
 ```
-
-### `uml://mermaid-examples`
-
-Two named keys: `sequence_api` (an API call sequence) and `gantt` (a Gantt schedule). These are the same examples consumed by the `mermaid_sequence_api` and `mermaid_gantt` prompts.
-
-### `uml://bpmn-guide`
-
-Structured BPMN 2.0.2 reference with `core_elements`, `flow_rules`, `tool`, and `template_uri` keys. Mirrors the [BPMN guide tutorial page](../tutorials/bpmn.md).
 
 ### `uml://workflow`
 

@@ -145,53 +145,6 @@ def get_server_info() -> str:
 
 
 @mcp_resource(
-    "uml://mermaid-examples",
-    description="Returns named Mermaid examples (sequence_api, gantt) for API-call flows and Gantt charts. Reference for mermaid_sequence_api and mermaid_gantt prompts.",
-)
-def get_mermaid_examples() -> str:
-    """Return named Mermaid examples (sequence_api, gantt) for API-call and Gantt prompts."""
-    return json.dumps(
-        {
-            "sequence_api": DiagramExamples.get_example("mermaid_api"),
-            "gantt": DiagramExamples.get_example("mermaid_gantt"),
-        },
-        indent=2,
-    )
-
-
-@mcp_resource(
-    "uml://bpmn-guide",
-    description="Structured reference for BPMN 2.0.2: start/end events, tasks, gateways, sequence flow, lanes, pools. Use with generate_uml (diagram_type 'bpmn') or bpmn_process_guide prompt.",
-)
-def get_bpmn_guide() -> str:
-    """Return a short guide to BPMN process modeling aligned with BPMN 2.0.2."""
-    return json.dumps(
-        {
-            "title": "BPMN process model guide (BPMN 2.0.2)",
-            "core_elements": {
-                "start_event": "Start Event (circle, single border): process trigger.",
-                "end_event": "End Event (circle, thick border): process end.",
-                "task": "Task (rounded rectangle): work performed in the process.",
-                "gateway": "Exclusive (X), Parallel (+), Inclusive (O): control flow branching/merge.",
-                "sequence_flow": "Solid arrow: order of flow between elements.",
-                "message_flow": "Dashed arrow: message between pools.",
-                "lane": "Lane: sub-partition of a pool (e.g. role or system).",
-                "pool": "Pool: process or participant boundary.",
-            },
-            "flow_rules": [
-                "Each process has at least one Start and one End Event.",
-                "Sequence flows connect activities, events, and gateways.",
-                "Gateways split or merge flows; use the correct type (exclusive, parallel, inclusive).",
-                "Lanes group tasks by role or system within a pool.",
-            ],
-            "tool": "Use generate_uml with diagram_type 'bpmn' for BPMN XML.",
-            "template_uri": "uml://templates (key: bpmn) for a minimal BPMN XML starter.",
-        },
-        indent=2,
-    )
-
-
-@mcp_resource(
     "uml://workflow",
     description="Recommended workflow: plan first (diagram type, elements, relationships), then call generate_uml with the final code. Use uml_diagram or uml_diagram_with_thinking prompt.",
 )

@@ -10,7 +10,7 @@ Tools, resources, prompts, and Python modules exposed by UML-MCP. Use the table 
 | Section | What's here |
 | --- | --- |
 | [MCP tools](../api/tools.md) | `generate_uml`, `validate_uml`, `list_diagram_types`, `generate_uml_batch`. Parameters, returns, examples, fallback behavior. |
-| [MCP resources](resources.md) | The full `uml://` URI catalog: `types`, `templates`, `examples`, `formats`, `capabilities`, `server-info`, `mermaid-examples`, `bpmn-guide`, `workflow`. |
+| [MCP resources](resources.md) | Full `uml://` URI catalog on one page: core discovery URIs plus Mermaid- and BPMN-focused resources (see the page for names and payloads). |
 | [MCP prompts](prompts.md) | Registered named prompts for plan-then-generate, Mermaid sequence/Gantt, BPMN, C4, WireViz, class-to-Mermaid, and more. |
 | [Python API](python/index.md) | Auto-generated reference for `mcp_core` and `tools.kroki` modules (mkdocstrings). |
 | [Configuration](../configuration.md) | Environment variables, MCP client config, fallback knobs, server card, Smithery / Vercel options. |
