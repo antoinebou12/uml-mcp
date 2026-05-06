@@ -404,7 +404,7 @@ typing-inspection==0.4.2
     #   pydantic-settings
 tzdata==2026.2
     # via mkdocs-git-revision-date-localized-plugin
-uncalled-for==0.3.1
+uncalled-for==0.3.2
     # via fastmcp
 urllib3==2.6.3
     # via requests
