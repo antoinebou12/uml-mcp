@@ -269,7 +269,7 @@ py-key-value-aio==0.4.4
     # via fastmcp
 pycparser==3.0 ; implementation_name != 'PyPy'
     # via cffi
-pydantic==2.13.3
+pydantic==2.13.4
     # via
     #   fastapi
     #   fastmcp
