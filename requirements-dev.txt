@@ -182,7 +182,7 @@ markdown==3.10.2
     #   mkdocs-material
     #   mkdocstrings
     #   pymdown-extensions
-markdown-it-py==4.0.0
+markdown-it-py==4.2.0
     # via rich
 markupsafe==3.0.3
     # via
