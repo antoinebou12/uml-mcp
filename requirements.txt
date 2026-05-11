@@ -217,7 +217,7 @@ shellingham==1.5.4
     # via typer
 six==1.17.0
     # via python-dateutil
-sse-starlette==3.4.1
+sse-starlette==3.4.3
     # via mcp
 starlette==1.0.0
     # via
