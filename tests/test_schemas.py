@@ -27,17 +27,23 @@ class TestGenerateUMLInput:
     def test_diagram_type_whitespace_only_raises(self):
         with pytest.raises(ValidationError) as ei:
             GenerateUMLInput(diagram_type="   ", code="body")
-        assert "diagram_type" in str(ei.value).lower() or "empty" in str(ei.value).lower()
+        assert (
+            "diagram_type" in str(ei.value).lower() or "empty" in str(ei.value).lower()
+        )
 
     def test_empty_code_raises(self):
         with pytest.raises(ValidationError) as ei:
             GenerateUMLInput(diagram_type="class", code="   ")
         msg = str(ei.value).lower()
-        assert "empty" in msg or "at least 1 character" in msg or "string_too_short" in msg
+        assert (
+            "empty" in msg or "at least 1 character" in msg or "string_too_short" in msg
+        )
 
     def test_invalid_global_output_format_raises(self):
         with pytest.raises(ValidationError) as ei:
-            GenerateUMLInput(diagram_type="class", code="@startuml\n@enduml", output_format="exe")
+            GenerateUMLInput(
+                diagram_type="class", code="@startuml\n@enduml", output_format="exe"
+            )
         assert "output_format" in str(ei.value)
 
     def test_output_format_not_supported_for_diagram_type_raises(self):
@@ -63,7 +69,10 @@ class TestGenerateUMLInput:
                 code="@startuml\n@enduml",
                 output_dir="/tmp/out",
             )
-        assert "read_only" in str(ei.value).lower() or "output_dir" in str(ei.value).lower()
+        assert (
+            "read_only" in str(ei.value).lower()
+            or "output_dir" in str(ei.value).lower()
+        )
 
 
 class TestValidateUMLInput:
@@ -84,7 +93,9 @@ class TestValidateUMLInput:
 
     def test_invalid_output_format_raises(self):
         with pytest.raises(ValidationError):
-            ValidateUMLInput(diagram_type="class", code="@startuml\n@enduml", output_format="xyz")
+            ValidateUMLInput(
+                diagram_type="class", code="@startuml\n@enduml", output_format="xyz"
+            )
 
     def test_format_mismatch_for_type_raises(self):
         with pytest.raises(ValidationError) as ei:
