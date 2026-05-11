@@ -131,6 +131,24 @@ class TestRegisterToolsWithServer:
         assert "validate_uml" in result
         assert len(result) == 4
 
+    def test_register_tools_typeerror_fallback_chain(self):
+        """When server.tool rejects kwargs styles, fall back to bare tool(func)."""
+        server = MagicMock()
+        call_state = {"n": 0}
+
+        def tool_side_effect(*args, **kwargs):
+            call_state["n"] += 1
+            if call_state["n"] % 4 in (1, 2, 3):
+                raise TypeError("unsupported signature")
+            return lambda f: f
+
+        server.tool.side_effect = tool_side_effect
+
+        registered = register_tools_with_server(server)
+
+        assert len(registered) == len(get_tool_registry())
+        assert call_state["n"] == 4 * len(registered)
+
 
 class TestClearToolRegistry:
     """Tests for clear_tool_registry (isolation helper)."""

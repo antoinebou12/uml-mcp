@@ -71,7 +71,7 @@ jobs:
 
       - name: Run tests
         run: |
-          uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html
+          uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html --cov-fail-under=82
 
       - name: Build documentation
         run: uv run mkdocs build

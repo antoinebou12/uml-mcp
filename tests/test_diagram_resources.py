@@ -6,6 +6,7 @@ import json
 from unittest.mock import MagicMock
 
 from mcp_core.resources.diagram_resources import (
+    get_capabilities,
     get_diagram_examples,
     get_diagram_templates,
     get_diagram_types,
@@ -13,6 +14,7 @@ from mcp_core.resources.diagram_resources import (
     get_recommended_workflow,
     get_server_info,
     register_diagram_resources,
+    register_resources_with_server,
 )
 
 
@@ -95,6 +97,23 @@ class TestGetDiagramExamples:
             assert "No specific example" not in e, f"Default example for {diagram_type}"
 
 
+class TestGetCapabilities:
+    """Tests for get_capabilities resource (uml://capabilities)."""
+
+    def test_returns_matrix_with_backend_formats_description(self):
+        """Each diagram type maps to backend, formats list, and description."""
+        result = json.loads(get_capabilities())
+        assert isinstance(result, dict)
+        assert "class" in result
+        assert "mermaid" in result
+        for _name, entry in result.items():
+            assert "backend" in entry
+            assert "formats" in entry
+            assert isinstance(entry["formats"], list)
+            assert "description" in entry
+            assert isinstance(entry["description"], str)
+
+
 class TestGetOutputFormats:
     """Tests for get_output_formats resource."""
 
@@ -175,3 +194,20 @@ class TestRegisterDiagramResources:
         assert isinstance(result, list)
         assert "uml://types" in result
         assert "uml://workflow" in result
+
+
+class TestRegisterResourcesWithServer:
+    """Tests for register_resources_with_server."""
+
+    def test_registers_each_decorated_resource(self):
+        """Each URI in the decorator registry is passed to server.resource(uri)."""
+        server = MagicMock()
+        server.resource.return_value = lambda f: f
+
+        uris = register_resources_with_server(server)
+
+        assert isinstance(uris, list)
+        assert len(uris) > 0
+        assert server.resource.call_count == len(uris)
+        for uri in uris:
+            server.resource.assert_any_call(uri)
