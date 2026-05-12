@@ -59,7 +59,7 @@ override-dependencies = [
     "pydantic-settings==2.14.1",
     "pytest-cov==7.1.0",
     "tzdata==2026.2",
-    "virtualenv==21.3.0",
+    "virtualenv==21.3.2",
     "anyio==4.13.0",
     "attrs>=26,<27",
     "authlib==1.7.2",
@@ -90,6 +90,7 @@ override-dependencies = [
     "selectolax==0.4.8",
     "sse-starlette==3.4.3",
     "uncalled-for==0.3.2",
+    "urllib3==2.7.0",
     "uvicorn==0.46.0",
 ]
 

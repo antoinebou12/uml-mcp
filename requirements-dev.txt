@@ -406,14 +406,14 @@ tzdata==2026.2
     # via mkdocs-git-revision-date-localized-plugin
 uncalled-for==0.3.1
     # via fastmcp
-urllib3==2.6.3
+urllib3==2.7.0
     # via requests
 uvicorn==0.46.0
     # via
     #   fastmcp
     #   mcp
     #   uml-mcp
-virtualenv==21.3.1
+virtualenv==21.3.2
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
