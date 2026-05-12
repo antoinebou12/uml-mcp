@@ -88,7 +88,7 @@ override-dependencies = [
     "python-dotenv==1.2.2",
     "rich==15.0.0",
     "selectolax==0.4.8",
-    "sse-starlette==3.4.3",
+    "sse-starlette==3.4.4",
     "uncalled-for==0.3.2",
     "urllib3==2.7.0",
     "uvicorn==0.46.0",
