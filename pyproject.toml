@@ -51,7 +51,7 @@ mcp = ">=1.27.1,<2.0.0"
 override-dependencies = [
     "filelock==3.29.0",
     "librt==0.11.0",
-    "mypy==1.20.2",
+    "mypy==2.1.0",
     "pathspec==1.1.1",
     "pre-commit==4.6.0",
     "pydantic==2.13.4",
@@ -167,7 +167,7 @@ dev = [
     "ruff>=0.15.12",
     "ty>=0.0.35",
     "pytest-asyncio>=0.21.1",
-    "mypy>=1.20.2",
+    "mypy>=2.0.0,<3",
     "mkdocs>=1.6.0",
     "mkdocs-material[imaging]>=9.7.6",
     "pymdown-extensions>=10.21.2",

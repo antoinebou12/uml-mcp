@@ -7,7 +7,6 @@ import logging
 from typing import Any, Callable, Dict, List, Optional, TypeVar, cast
 
 from tools.kroki.kroki_templates import DiagramExamples, DiagramTemplates
-from mcp_core.server.fastmcp_wrapper import FastMCP
 
 from ..core.config import MCP_SETTINGS
 from ..core.diagram_catalog import get_diagram_types_dict
@@ -201,7 +200,7 @@ def get_recommended_workflow() -> str:
     )
 
 
-def register_resources_with_server(server: FastMCP) -> List[str]:
+def register_resources_with_server(server: Any) -> List[str]:
     """
     Register all decorated resources with the MCP server
 
@@ -230,7 +229,7 @@ def register_resources_with_server(server: FastMCP) -> List[str]:
     return registered_resource_uris
 
 
-def register_diagram_resources(server: FastMCP) -> List[str]:
+def register_diagram_resources(server: Any) -> List[str]:
     """
     Register diagram resources with the MCP server
 

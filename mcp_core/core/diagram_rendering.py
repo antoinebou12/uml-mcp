@@ -177,15 +177,15 @@ def _generate_diagram_plantuml_fallback(
         filename_prefix = (
             f"{diagram_type}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
         )
-        out = Path(output_dir)
+        out_dir = Path(output_dir)
         try:
-            out.mkdir(parents=True, exist_ok=True)
-            path = out / f"{filename_prefix}.{output_format}"
+            out_dir.mkdir(parents=True, exist_ok=True)
+            path = out_dir / f"{filename_prefix}.{output_format}"
             path.write_bytes(content)
             local_path = str(path)
             logger.info("Diagram saved to %s via PlantUML fallback", local_path)
         except OSError as e:
-            logger.warning("Could not save diagram to %s (%s)", out, e)
+            logger.warning("Could not save diagram to %s (%s)", out_dir, e)
             local_path = None
 
     out: Dict[str, Any] = {
@@ -235,15 +235,15 @@ def _generate_diagram_mermaid_fallback(
         filename_prefix = (
             f"{diagram_type}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
         )
-        out = Path(output_dir)
+        out_dir = Path(output_dir)
         try:
-            out.mkdir(parents=True, exist_ok=True)
-            path = out / f"{filename_prefix}.{output_format}"
+            out_dir.mkdir(parents=True, exist_ok=True)
+            path = out_dir / f"{filename_prefix}.{output_format}"
             path.write_bytes(content)
             local_path = str(path)
             logger.info("Diagram saved to %s via Mermaid.ink fallback", local_path)
         except OSError as e:
-            logger.warning("Could not save diagram to %s (%s)", out, e)
+            logger.warning("Could not save diagram to %s (%s)", out_dir, e)
             local_path = None
 
     out: Dict[str, Any] = {
@@ -307,10 +307,10 @@ def try_kroki_render(
 
         local_path = None
         if ctx.output_dir:
-            out = Path(ctx.output_dir)
-            path = out / f"{filename_prefix}.{ctx.output_format}"
+            out_dir = Path(ctx.output_dir)
+            path = out_dir / f"{filename_prefix}.{ctx.output_format}"
             try:
-                out.mkdir(parents=True, exist_ok=True)
+                out_dir.mkdir(parents=True, exist_ok=True)
                 path.write_bytes(content)
                 local_path = str(path)
                 logger.info("Diagram saved to %s", local_path)

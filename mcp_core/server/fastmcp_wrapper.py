@@ -10,6 +10,10 @@ from typing import Any, Callable, Dict, Optional
 
 logger = logging.getLogger(__name__)
 
+# Resolved at import time (production vs mock); avoids mypy no-redef on import vs class.
+_FastMCP_cls: type[Any]
+_Context_cls: type[Any]
+
 # Determine if we should use the mock implementation
 use_mock = False
 
@@ -38,27 +42,34 @@ else:
         if not hasattr(fastmcp, "FastMCP"):
             raise ImportError("FastMCP class not found in fastmcp package")
         logger.info("Using production FastMCP implementation")
-        from fastmcp import FastMCP
+        from fastmcp import FastMCP as _ImportedFastMCP
+
+        _FastMCP_cls = _ImportedFastMCP
 
         # Context may be in fastmcp or fastmcp.context (2.x / 3.x)
         try:
-            from fastmcp import Context
+            from fastmcp import Context as _ImportedContext
+
+            _Context_cls = _ImportedContext
         except ImportError:
             try:
                 import importlib
 
-                Context = importlib.import_module("fastmcp.context").Context
+                _ctx_mod = importlib.import_module("fastmcp.context")
+                _Context_cls = _ctx_mod.Context
             except ImportError:
-                # Stub so callers always get a class when not using mock
-                class Context:  # noqa: F811
-                    def __init__(self):
-                        self.data = {}
+
+                class _StubContext:
+                    def __init__(self) -> None:
+                        self.data: Dict[str, Any] = {}
 
                     def get(self, key: str, default: Any = None) -> Any:
                         return self.data.get(key, default)
 
-                    def set(self, key: str, value: Any):
+                    def set(self, key: str, value: Any) -> None:
                         self.data[key] = value
+
+                _Context_cls = _StubContext
     except ImportError as e:
         logger.error(f"FastMCP package error: {str(e)}")
         raise ImportError(
@@ -70,27 +81,32 @@ USING_MOCK_FASTMCP = use_mock
 # Define mock classes if needed
 if use_mock:
 
-    class Context:  # noqa: F811
-        def __init__(self):
-            self.data = {}
+    class _MockContext:
+        def __init__(self) -> None:
+            self.data: Dict[str, Any] = {}
 
         def get(self, key: str, default: Any = None) -> Any:
             return self.data.get(key, default)
 
-        def set(self, key: str, value: Any):
+        def set(self, key: str, value: Any) -> None:
             self.data[key] = value
 
-    class FastMCP:  # noqa: F811
+    class _MockFastMCP:
         def __init__(self, name: str, **kwargs):
             self.name = name
-            self._tools = {}
-            self._prompts = {}
-            self._resources = {}
+            self._tools: Dict[str, Callable[..., Any]] = {}
+            self._prompts: Dict[str, Callable[..., Any]] = {}
+            self._resources: Dict[str, Callable[..., Any]] = {}
             self.logger = logging.getLogger(__name__)
 
         def tool(self, *args, **kwargs):
             def decorator(func: Callable) -> Callable:
-                tool_name = kwargs.get("name", getattr(func, "__name__", "tool"))
+                tool_name_raw = kwargs.get("name", getattr(func, "__name__", "tool"))
+                tool_name = (
+                    tool_name_raw
+                    if isinstance(tool_name_raw, str)
+                    else str(tool_name_raw)
+                )
                 self._tools[tool_name] = func
                 return func
 
@@ -98,7 +114,12 @@ if use_mock:
 
         def prompt(self, prompt_name: Optional[str] = None):
             def decorator(func: Callable) -> Callable:
-                name = prompt_name or getattr(func, "__name__", "prompt")
+                raw = (
+                    prompt_name
+                    if prompt_name is not None
+                    else getattr(func, "__name__", "prompt")
+                )
+                name = raw if isinstance(raw, str) else str(raw)
                 self._prompts[name] = func
                 return func
 
@@ -190,6 +211,12 @@ if use_mock:
             except Exception as e:
                 return {"error": str(e)}
 
+    _Context_cls = _MockContext
+    _FastMCP_cls = _MockFastMCP
+
+
+FastMCP = _FastMCP_cls
+Context = _Context_cls
 
 # Export the required classes
 __all__ = ["FastMCP", "Context", "USING_MOCK_FASTMCP"]

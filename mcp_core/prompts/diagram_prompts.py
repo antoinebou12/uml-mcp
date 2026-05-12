@@ -5,9 +5,6 @@ MCP prompts for diagram generation using the decorator pattern
 import logging
 from typing import Any, Callable, Dict, List, Optional, TypeVar, cast
 
-# Import FastMCP from wrapper to avoid circular imports
-from mcp_core.server.fastmcp_wrapper import FastMCP
-
 from ..core.config import MCP_SETTINGS
 
 logger = logging.getLogger(__name__)
@@ -736,7 +733,7 @@ Avoid:
     return prompt + _layout_overlap_appendix()
 
 
-def register_prompts_with_server(server: FastMCP) -> List[str]:
+def register_prompts_with_server(server: Any) -> List[str]:
     """
     Register all decorated prompts with the MCP server
 
@@ -763,7 +760,7 @@ def register_prompts_with_server(server: FastMCP) -> List[str]:
     return registered_prompt_names
 
 
-def register_diagram_prompts(server: FastMCP) -> List[str]:
+def register_diagram_prompts(server: Any) -> List[str]:
     """
     Register diagram prompts with the MCP server
 

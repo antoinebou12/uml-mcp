@@ -19,6 +19,8 @@ anyio==4.13.0
     #   sse-starlette
     #   starlette
     #   watchfiles
+ast-serialize==0.3.0
+    # via mypy
 attrs==26.1.0
     # via
     #   cyclopts
@@ -227,7 +229,7 @@ more-itertools==11.0.2
     # via
     #   jaraco-classes
     #   jaraco-functools
-mypy==1.20.2
+mypy==2.1.0
 mypy-extensions==1.1.0
     # via mypy
 nodeenv==1.10.0

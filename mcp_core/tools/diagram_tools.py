@@ -7,7 +7,6 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import ValidationError
 
-from mcp_core.server.fastmcp_wrapper import FastMCP
 
 from ..core.config import MCP_SETTINGS
 from ..core.diagram_catalog import get_diagram_types_dict
@@ -228,7 +227,7 @@ def validate_uml(
     return validate_uml_inputs(diagram_type, code, output_format, strict=strict)
 
 
-def register_diagram_tools(server: FastMCP) -> List[str]:
+def register_diagram_tools(server: Any) -> List[str]:
     """
     Register all diagram generation tools with the MCP server
 

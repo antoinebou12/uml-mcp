@@ -6,8 +6,6 @@ import inspect
 import logging
 from typing import Any, Callable, Dict, List, Optional, TypeVar, cast
 
-from mcp_core.server.fastmcp_wrapper import FastMCP
-
 logger = logging.getLogger(__name__)
 
 # Store for registered tools when using decorator pattern
@@ -67,7 +65,7 @@ def mcp_tool(
             param_info[param_name] = {
                 "type": (
                     param_type.__name__
-                    if hasattr(param_type, "__name__")
+                    if param_type is not None and hasattr(param_type, "__name__")
                     else str(param_type)
                 ),
                 "required": param.default is inspect.Parameter.empty,
@@ -98,7 +96,7 @@ def mcp_tool(
     return decorator
 
 
-def register_tools_with_server(server: FastMCP) -> List[str]:
+def register_tools_with_server(server: Any) -> List[str]:
     """
     Register all decorated tools with the MCP server
 
@@ -176,7 +174,7 @@ def get_tool_categories() -> Dict[str, List[str]]:
     Returns:
         Dictionary mapping categories to tool names
     """
-    categories = {}
+    categories: Dict[str, List[str]] = {}
 
     for tool_name, tool_info in _registered_tools.items():
         category = tool_info["category"]
