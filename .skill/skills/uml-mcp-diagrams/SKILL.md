@@ -52,6 +52,7 @@ These rules apply to **diagram source** (Mermaid, PlantUML, D2, etc.), not to HT
 - **Sequence**: Time flows **top → bottom**. Do not model upward message arrows. Use activation where the notation supports it (PlantUML `activate` / `deactivate`; Mermaid `activate` / `deactivate` when appropriate). Close every activation interval you open.
 - **State and flowchart**: Label **every** transition or decision branch (event/guard or yes/no). Avoid drawing the same “to error” edge from every state; prefer one note, a group, or a single `*` / global exception path where the DSL allows.
 - **Emphasis**: At most **one** strong visual highlight when the backend allows it (e.g. one Mermaid `classDef` / highlighted participant, one PlantUML `skinparam` / styled element, one D2 node style). Avoid rainbow or per-node rainbow fills — hierarchy and labels carry meaning.
+- **Arrow overlap**: Set one layout direction (`flowchart TD`/`LR`, PlantUML `left to right direction` + `skinparam linetype ortho`, D2 `direction: right`), group related nodes (`subgraph` / `together { }` / D2 container), and use directional arrows (`-down->`, `-right->`) on edges that would otherwise cross. Canonical per-backend rules live in the `algorithm_explainer` and `paper_concept_diagram` prompt outputs (and `uml_diagram_with_thinking`).
 
 ## LLM prompt channels: positive vs negative
 
@@ -107,8 +108,8 @@ When several types fit, pick the one the user named; otherwise prefer the type w
 ## MCP tools and resources
 
 - **Tools**: `generate_uml`, `validate_uml`, `list_diagram_types`, `generate_uml_batch`
-- **Resources**: `uml://types`, `uml://formats`, `uml://templates`, `uml://examples`, `uml://capabilities`, `uml://server-info`, `uml://workflow`, plus type-specific URIs from **`resources/list`** (named Mermaid samples, BPMN guide, …)
+- **Resources**: `uml://types`, `uml://formats`, `uml://templates`, `uml://examples`, `uml://capabilities`, `uml://recipes`, `uml://server-info`, `uml://workflow`, plus type-specific URIs from **`resources/list`** (named Mermaid samples, BPMN guide, …)
 
-**Prompts** (when the client exposes them): `uml_diagram`, `uml_diagram_with_thinking`, and type-specific prompts (`class_diagram`, `sequence_diagram`, `activity_diagram`, `usecase_diagram`, `mermaid_sequence_api`, `mermaid_gantt`, `bpmn_process_guide`, `c4_model`, `wireviz_harness`, `bpmn_executable_process`, `convert_class_to_mermaid`) help structure code before `generate_uml`.
+**Prompts** (when the client exposes them): `uml_diagram`, `uml_diagram_with_thinking`, and type-specific prompts (`class_diagram`, `sequence_diagram`, `activity_diagram`, `usecase_diagram`, `mermaid_sequence_api`, `mermaid_gantt`, `bpmn_process_guide`, `c4_model`, `wireviz_harness`, `bpmn_executable_process`, `convert_class_to_mermaid`, `algorithm_explainer`, `paper_concept_diagram`) help structure code before `generate_uml`.
 
 Always use the **MCP tool/resource APIs** exposed in the environment; do not guess unsupported `diagram_type` or `output_format` values when unsure—confirm with `uml://types` / `uml://formats`.

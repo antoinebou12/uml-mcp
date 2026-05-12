@@ -108,6 +108,45 @@ Quality: proper notation, all requested elements, readable layout, correct relat
     return prompt
 
 
+def _layout_overlap_appendix() -> str:
+    """Concrete, per-backend rules to minimize crossing/overlapping arrows.
+
+    Reused across prompts that produce arrow-heavy diagrams (algorithms,
+    architectures, concept graphs). Keep it short and declarative — these
+    rules are advice for the LLM, not enforced by the rendering pipeline.
+    """
+    return """
+## Reduce arrow overlap / crossings
+
+General:
+- Keep elements under ~25 (Mermaid) / ~30 (PlantUML). Split into an overview plus a detail diagram when larger.
+- Declare related nodes adjacent in the source so the layout engine places them adjacent on screen.
+- Prefer linear chains over hubs; if a hub is unavoidable, put it on its own row or column.
+
+Mermaid (`mermaid`):
+- Pick **one** direction header: `flowchart TD` (top–down) for algorithms; `flowchart LR` (left–right) for pipelines and architectures.
+- Wrap related nodes in `subgraph name [Label] ... end` so they cluster together.
+- Use `linkStyle` only on the **single** emphasis edge; do not mix `-->`, `-.->`, and `==>` arbitrarily.
+- Prefer short edge labels; long labels force the engine to detour and cross other edges.
+
+PlantUML (`class`, `sequence`, `activity`, `usecase`, `state`, `component`, `deployment`, `object`, `c4plantuml`):
+- For non-sequence diagrams, add `skinparam linetype ortho` (or `polyline`) and `left to right direction` near the top.
+- Use directional arrows (`-down->`, `-right->`, `-up->`, `-left->`) on edges that would otherwise cross.
+- Group related elements with `together { ... }` so the layout keeps them on the same row/column.
+- On sequence diagrams: declare participants in left-to-right contact order, use `autoactivate on`, and add `hide footbox` when there are no return messages. Never draw upward message arrows.
+
+D2 (`d2`):
+- Set `direction: right` (or `down`) at the top.
+- Wrap related shapes in containers (`group: { a; b; a -> b }`) so the layout engine can route around them as a unit.
+- When dagre still produces crossings, switch to ELK with `vars: { d2-config: { layout-engine: elk } }`.
+
+Graphviz (`graphviz`):
+- Start with `rankdir=LR;` (or `TB`) and consider `splines=ortho;` for clean orthogonal routing.
+- Use `subgraph cluster_x { ... }` to keep related nodes adjacent.
+- Constrain crossing edges with `constraint=false` only as a last resort.
+"""
+
+
 # UML diagram with explicit planning step (alias for plan-then-generate workflow)
 @mcp_prompt(
     "uml_diagram_with_thinking",
@@ -128,7 +167,7 @@ def uml_diagram_with_thinking_prompt(context: Optional[Dict[str, Any]] = None) -
 If a **sequential-thinking** MCP tool is available, use it for steps 1–3 so thoughts stay ordered and revisable before you emit source.
 
 """
-    return planning_preamble + uml_diagram_prompt(context)
+    return planning_preamble + uml_diagram_prompt(context) + _layout_overlap_appendix()
 
 
 # Class diagram prompt
@@ -577,6 +616,124 @@ Steps:
 
 After producing the Mermaid code, call **generate_uml** with `diagram_type` **mermaid** and the raw source as `code`. Omit **output_dir** when no file should be written.
 """
+
+
+@mcp_prompt(
+    "algorithm_explainer",
+    description=(
+        "Explain an algorithm visually: control flow, recursion, or data-structure operation. "
+        "Maps intent to diagram_type (mermaid flowchart, activity, state, d2), labels each step "
+        "with its Big-O complexity, and applies layout rules that minimize arrow overlap."
+    ),
+    category="algorithm",
+)
+def algorithm_explainer_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+    """Task-focused prompt for explaining algorithms as diagrams.
+
+    Steers the model through (1) picking a diagram shape that matches the
+    algorithm's structure, (2) labeling each step with its complexity, and
+    (3) using layout directives that reduce crossing arrows. Then call
+    `generate_uml` with the chosen `diagram_type` and the raw source.
+    """
+    context = context or {}
+    prompt = """You are a software engineer explaining an algorithm with a diagram.
+
+Step 1 — Pick the diagram shape that matches the algorithm:
+- **Linear / branching control flow** (sort, search, parser pass): Mermaid `flowchart TD` → `diagram_type` **mermaid**, or PlantUML activity → `diagram_type` **activity**.
+- **Recursion or divide-and-conquer call tree** (merge sort, quicksort, DP recursion): Mermaid `flowchart TD` as a tree → `diagram_type` **mermaid**, or D2 with `direction: down` → `diagram_type` **d2**.
+- **State changes of a data structure** (stack/queue/lock state machine, automaton): PlantUML state → `diagram_type` **state**.
+- **Pipeline / dataflow stages**: Mermaid `flowchart LR` → `diagram_type` **mermaid**, or D2 with `direction: right` → `diagram_type` **d2**.
+
+Step 2 — Annotate each step with its **time complexity** in the node label:
+- Mermaid: `Step["Partition<br/><i>O(n)</i>"]` and place the overall complexity in the diagram title or a top note.
+- PlantUML activity: `:Partition\\n<i>O(n)</i>;`
+- D2: `Partition: "Partition\\nO(n)"` (multi-line labels with `\\n`).
+- Place the **aggregate** complexity (e.g. `T(n) = 2T(n/2) + O(n) = O(n log n)`) in a single note or title — do not repeat it on every node.
+
+Step 3 — Use consistent shapes:
+- Mermaid: `Start([Start])` and `End([Stop])` for terminals (stadium); `{Decision?}` for branches; `[[Recursive call]]` for subroutine invocations; `[/Input/]` and `[\\Output\\]` for I/O when relevant.
+- PlantUML activity: `start`, `stop`, `if/elseif/else/endif`, `repeat`/`while` for loops, `fork`/`join` for parallel branches.
+- D2: `shape: stadium` for terminals, `shape: diamond` for decisions.
+
+Step 4 — Mark **base cases** clearly (rounded / stadium) and **recursive calls** clearly (rectangles), so the reader can scan the tree quickly.
+
+Step 5 — Workflow:
+1. State briefly which shape and `diagram_type` you chose and why.
+2. Emit the complete diagram source in a fenced block for the human reader (Mermaid / PlantUML / D2 as appropriate).
+3. Call **generate_uml** with the chosen `diagram_type` and the **raw source** as `code` (no markdown fences inside the tool argument). Omit `output_dir` unless the user asked for a saved file. Prefer `output_format` **svg**.
+
+Avoid:
+- Skipping the complexity labels — they are the whole point of the diagram.
+- Drawing every error path from every node (use one global error sink / note).
+- Mixing arrow styles (`-->`, `-.->`, `==>`) inside one Mermaid diagram unless the change carries meaning.
+"""
+    if "algorithm" in context:
+        prompt += f"\nTarget algorithm: **{context['algorithm']}**. Name it in the title and the first node.\n"
+    return prompt + _layout_overlap_appendix()
+
+
+@mcp_prompt(
+    "paper_concept_diagram",
+    description=(
+        "Visualize a concept from an academic paper (ML architecture, method comparison, "
+        "concept/citation graph). Encodes citations in node labels and adds clickable links "
+        "to arXiv/DOI in Mermaid, PlantUML, D2, and Graphviz. Recommends SVG output."
+    ),
+    category="research",
+)
+def paper_concept_diagram_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+    """Task-focused prompt for academic-paper concept diagrams with clickable citation links."""
+    context = context or {}
+    prompt = """You are a research engineer explaining a concept from one or more academic papers as a diagram.
+
+Step 1 — Pick the diagram language by intent:
+- **ML / system architecture** (encoder–decoder, transformer block, training pipeline): Mermaid `flowchart LR` → `diagram_type` **mermaid**, or D2 → `diagram_type` **d2**.
+- **Method comparison** (baseline vs. proposed) or **relationship between concepts**: Mermaid `flowchart` → `diagram_type` **mermaid**, or Graphviz `digraph` → `diagram_type` **graphviz**.
+- **Citation / concept graph** (how papers depend on each other): Graphviz `digraph` → `diagram_type` **graphviz**.
+
+Step 2 — Encode citations as short, in-label tags (e.g. `[Vaswani+ 2017]`), then attach a **clickable link** to the paper. Prefer arXiv `abs/` URLs (stable); fall back to DOI / publisher URL. **Never fabricate links** — if the user did not give a URL, leave the citation as text only.
+
+Clickable-link syntax per backend:
+- **Mermaid**: declare the node, then add a `click` line.
+  ```
+  flowchart LR
+    Attn["Attention<br/>[Vaswani+ 2017]"]
+    click Attn "https://arxiv.org/abs/1706.03762" "Attention Is All You Need" _blank
+  ```
+- **PlantUML** (works in `class`, `usecase`, `component`, `c4plantuml`): `[[url label]]` after the element.
+  ```
+  class Attention as "Attention\\n[Vaswani+ 2017]" [[https://arxiv.org/abs/1706.03762 Attention Is All You Need]]
+  ```
+- **D2**: `link:` property on the node.
+  ```
+  Attention: {
+    label: "Attention\\n[Vaswani+ 2017]"
+    link: "https://arxiv.org/abs/1706.03762"
+  }
+  ```
+- **Graphviz**: `URL=`, optionally with `tooltip=` and `target="_blank"`.
+  ```
+  Attention [label="Attention\\n[Vaswani+ 2017]", URL="https://arxiv.org/abs/1706.03762", tooltip="Vaswani+ 2017", target="_blank"];
+  ```
+
+Step 3 — Keep labels short. Put long titles in the `tooltip` / second argument of `click`, not in the visible label.
+
+Step 4 — Workflow:
+1. State briefly which view (architecture / comparison / citation graph) and `diagram_type` you chose.
+2. Emit complete diagram source in a fenced block for the human reader.
+3. Call **generate_uml** with the chosen `diagram_type` and the **raw source** as `code`. Omit `output_dir` unless the user asked for a saved file.
+4. Use `output_format` **svg** — PNG/JPEG renderings strip hyperlinks, so the `click` / `[[ ]]` / `URL=` directives become invisible.
+
+Avoid:
+- Inventing arXiv IDs, DOIs, or paper titles. If unsure, drop the link and keep only the textual citation.
+- Putting full paper titles inside node labels (they bloat the layout and force arrow detours). Use `[Author+ Year]` in the label and the full title in the link's title/tooltip.
+- Mixing diagram_types inside one diagram (e.g. PlantUML class syntax inside a Mermaid block).
+"""
+    if "paper" in context:
+        prompt += (
+            f"\nPrimary paper: **{context['paper']}**. Cite it on the focal node.\n"
+        )
+    return prompt + _layout_overlap_appendix()
 
 
 def register_prompts_with_server(server: FastMCP) -> List[str]:

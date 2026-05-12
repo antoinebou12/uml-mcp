@@ -587,6 +587,46 @@ user1 --> sys1: uses
     Task A2    :a2, after a1, 5d
     section Section B
     Task B1    :b1, 2024-01-01, 14d""",
+            # Algorithm explainer starter: Mermaid flowchart with complexity labels,
+            # base case vs recursive call shapes, and a layout direction to reduce
+            # crossings. Use diagram_type "mermaid" with generate_uml.
+            "algorithm_flowchart": """flowchart TD
+    Start([Start: sort(arr)])
+    Check{len(arr) <= 1?}
+    Base([Return arr<br/><i>O(1)</i>])
+    Pick["Pick pivot<br/><i>O(1)</i>"]
+    Partition["Partition around pivot<br/><i>O(n)</i>"]
+    Left[[Recurse on left half<br/><i>T(n/2)</i>]]
+    Right[[Recurse on right half<br/><i>T(n/2)</i>]]
+    Combine["Concat left + pivot + right<br/><i>O(n)</i>"]
+    Done([Return sorted arr])
+
+    Start --> Check
+    Check -- yes --> Base
+    Check -- no --> Pick --> Partition
+    Partition --> Left
+    Partition --> Right
+    Left --> Combine
+    Right --> Combine
+    Combine --> Done
+
+    %% Aggregate complexity: T(n) = 2T(n/2) + O(n) = O(n log n)
+""",
+            # Paper-concept starter: Mermaid flowchart with citation labels and one
+            # clickable arXiv link. Use diagram_type "mermaid" with generate_uml and
+            # output_format svg so the link survives the render.
+            "paper_concept": """flowchart LR
+    Input[/"Tokens"/]
+    Embed["Embedding<br/>[Mikolov+ 2013]"]
+    Attn["Self-Attention<br/>[Vaswani+ 2017]"]
+    FFN["Feed-Forward<br/>[Vaswani+ 2017]"]
+    Out[/"Logits"/]
+
+    Input --> Embed --> Attn --> FFN --> Out
+
+    click Attn "https://arxiv.org/abs/1706.03762" "Attention Is All You Need" _blank
+    click Embed "https://arxiv.org/abs/1301.3781" "Efficient Estimation of Word Representations" _blank
+""",
             # Basic diagram for D2
             "d2": """User -> System: Request
 System -> User: Response""",

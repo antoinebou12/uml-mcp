@@ -145,6 +145,44 @@ def get_server_info() -> str:
 
 
 @mcp_resource(
+    "uml://recipes",
+    description=(
+        "Named recipe templates that span multiple diagram_types (e.g. algorithm_flowchart, "
+        "paper_concept). Each entry pairs a recipe key with a starter source body and the "
+        "diagram_type to pass to generate_uml. Use after the algorithm_explainer or "
+        "paper_concept_diagram prompts."
+    ),
+)
+def get_diagram_recipes() -> str:
+    """Return curated starter recipes that map a use case to a ready-to-edit source body."""
+    recipes = {
+        "algorithm_flowchart": {
+            "diagram_type": "mermaid",
+            "output_format": "svg",
+            "description": (
+                "Mermaid flowchart for explaining an algorithm. Each step is labelled "
+                "with its time complexity and the aggregate complexity is noted at the "
+                "bottom."
+            ),
+            "prompt": "algorithm_explainer",
+            "template": DiagramTemplates.get_template("algorithm_flowchart"),
+        },
+        "paper_concept": {
+            "diagram_type": "mermaid",
+            "output_format": "svg",
+            "description": (
+                "Mermaid flowchart visualising a paper concept (e.g. transformer block) "
+                "with clickable arXiv links on the cited nodes. Render as SVG so the "
+                "links remain clickable."
+            ),
+            "prompt": "paper_concept_diagram",
+            "template": DiagramTemplates.get_template("paper_concept"),
+        },
+    }
+    return json.dumps(recipes, indent=2)
+
+
+@mcp_resource(
     "uml://workflow",
     description="Recommended workflow: plan first (diagram type, elements, relationships), then call generate_uml with the final code. Use uml_diagram or uml_diagram_with_thinking prompt.",
 )

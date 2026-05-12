@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 from mcp_core.resources.diagram_resources import (
     get_capabilities,
     get_diagram_examples,
+    get_diagram_recipes,
     get_diagram_templates,
     get_diagram_types,
     get_output_formats,
@@ -161,6 +162,70 @@ class TestGetRecommendedWorkflow:
         assert "plan" in result["workflow"].lower()
 
 
+class TestGetDiagramRecipes:
+    """Tests for the uml://recipes resource."""
+
+    def test_returns_dict_with_known_recipes(self):
+        """get_diagram_recipes exposes algorithm_flowchart and paper_concept."""
+        result = json.loads(get_diagram_recipes())
+        assert isinstance(result, dict)
+        assert "algorithm_flowchart" in result
+        assert "paper_concept" in result
+
+    def test_each_recipe_has_required_fields(self):
+        """Each recipe entry has diagram_type, output_format, description, prompt, template."""
+        result = json.loads(get_diagram_recipes())
+        for name, recipe in result.items():
+            assert recipe["diagram_type"], f"{name} missing diagram_type"
+            assert recipe["output_format"], f"{name} missing output_format"
+            assert isinstance(recipe["description"], str) and recipe["description"]
+            assert isinstance(recipe["prompt"], str) and recipe["prompt"]
+            assert isinstance(recipe["template"], str) and recipe["template"]
+
+    def test_algorithm_template_has_complexity_labels(self):
+        """The algorithm starter ships with at least one Big-O label."""
+        result = json.loads(get_diagram_recipes())
+        template = result["algorithm_flowchart"]["template"]
+        assert "flowchart TD" in template
+        assert "O(n" in template
+        assert template.strip().startswith("flowchart TD")
+
+    def test_paper_concept_template_has_clickable_link(self):
+        """The paper-concept starter has a Mermaid click directive to an arXiv URL."""
+        result = json.loads(get_diagram_recipes())
+        template = result["paper_concept"]["template"]
+        assert "flowchart LR" in template
+        assert "click " in template
+        assert "arxiv.org" in template
+
+    def test_recipes_point_back_to_named_prompts(self):
+        """Each recipe references the matching MCP prompt name."""
+        result = json.loads(get_diagram_recipes())
+        assert result["algorithm_flowchart"]["prompt"] == "algorithm_explainer"
+        assert result["paper_concept"]["prompt"] == "paper_concept_diagram"
+
+    def test_recipes_recommend_svg_output(self):
+        """SVG is the only output_format that preserves clickable links and crisp arrows."""
+        result = json.loads(get_diagram_recipes())
+        for name, recipe in result.items():
+            assert recipe["output_format"] == "svg", (
+                f"{name} should recommend svg to keep links and arrows crisp"
+            )
+
+    def test_recipes_target_mermaid_backend(self):
+        """Both recipes ship Mermaid bodies; diagram_type should match."""
+        result = json.loads(get_diagram_recipes())
+        for name, recipe in result.items():
+            assert recipe["diagram_type"] == "mermaid", name
+
+    def test_recipes_are_valid_json(self):
+        """The resource body should be valid, indented JSON (matches uml://types style)."""
+        body = get_diagram_recipes()
+        assert isinstance(body, str)
+        json.loads(body)
+        assert "\n" in body and "  " in body
+
+
 class TestRegisterDiagramResources:
     """Tests for register_diagram_resources."""
 
@@ -177,6 +242,7 @@ class TestRegisterDiagramResources:
             "uml://examples",
             "uml://formats",
             "uml://capabilities",
+            "uml://recipes",
             "uml://server-info",
             "uml://workflow",
         ]
