@@ -196,7 +196,7 @@ referencing==0.37.0
     #   jsonschema
     #   jsonschema-path
     #   jsonschema-specifications
-requests==2.33.1
+requests==2.34.0
     # via uml-mcp
 rich==15.0.0
     # via
