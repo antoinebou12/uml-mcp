@@ -378,7 +378,7 @@ tinycss2==1.5.1
     #   cairosvg
     #   cssselect2
 tomli==2.4.1
-ty==0.0.34
+ty==0.0.35
 typer==0.25.1
     # via uml-mcp
 typing-extensions==4.15.0
