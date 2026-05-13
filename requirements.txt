@@ -84,7 +84,7 @@ httpx==0.28.1
     #   uml-mcp
 httpx-sse==0.4.3
     # via mcp
-idna==3.14
+idna==3.15
     # via
     #   anyio
     #   httpx
