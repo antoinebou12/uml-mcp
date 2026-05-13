@@ -292,7 +292,7 @@ pygments==2.20.0
     #   rich
 pyjwt==2.12.1
     # via mcp
-pymdown-extensions==10.21.2
+pymdown-extensions==10.21.3
     # via
     #   mkdocs-material
     #   mkdocstrings
