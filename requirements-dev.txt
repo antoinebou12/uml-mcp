@@ -358,7 +358,7 @@ rpds-py==0.30.0
 ruff==0.15.14
 secretstorage==3.5.0 ; sys_platform == 'linux'
     # via keyring
-selectolax==0.4.8
+selectolax==0.4.9
     # via mkdocs-glightbox
 shellingham==1.5.4
     # via typer
