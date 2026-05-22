@@ -36,7 +36,7 @@ backrefs==7.0
     # via mkdocs-material
 beartype==0.22.9
     # via py-key-value-aio
-cachetools==7.1.1
+cachetools==7.1.4
     # via py-key-value-aio
 caio==0.9.25
     # via aiofile
