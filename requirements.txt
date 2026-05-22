@@ -134,7 +134,7 @@ more-itertools==11.0.2
     #   jaraco-functools
 openapi-pydantic==0.5.1
     # via fastmcp-slim
-opentelemetry-api==1.41.1
+opentelemetry-api==1.42.1
     # via fastmcp-slim
 packaging==26.2
     # via fastmcp-slim
