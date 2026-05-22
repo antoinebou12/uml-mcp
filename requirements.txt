@@ -126,7 +126,7 @@ mcp==1.27.1
     #   uml-mcp
 mdurl==0.1.2
     # via markdown-it-py
-more-itertools==11.0.2
+more-itertools==11.1.0
     # via
     #   jaraco-classes
     #   jaraco-functools

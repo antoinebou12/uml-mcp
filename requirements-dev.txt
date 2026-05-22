@@ -225,7 +225,7 @@ mkdocstrings==1.0.4
     # via mkdocstrings-python
 mkdocstrings-python==2.0.3
     # via mkdocstrings
-more-itertools==11.0.2
+more-itertools==11.1.0
     # via
     #   jaraco-classes
     #   jaraco-functools
