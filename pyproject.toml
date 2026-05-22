@@ -68,7 +68,7 @@ override-dependencies = [
     "certifi==2026.5.20",
     "coverage==7.14.0",
     "cryptography>=48,<49",
-    "opentelemetry-api==1.41.1",
+    "opentelemetry-api==1.42.1",
     "packaging==26.2",
     "platformdirs==4.9.6",
     "aiofile==3.11.1",
