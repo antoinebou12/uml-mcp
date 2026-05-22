@@ -255,7 +255,7 @@ uvicorn==0.47.0
     #   fastmcp-slim
     #   mcp
     #   uml-mcp
-watchfiles==1.1.1
+watchfiles==1.2.0
     # via fastmcp-slim
 websockets==16.0
     # via fastmcp-slim

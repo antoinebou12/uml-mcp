@@ -424,7 +424,7 @@ virtualenv==21.3.3
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
-watchfiles==1.1.1
+watchfiles==1.2.0
     # via fastmcp-slim
 webencodings==0.5.1
     # via
