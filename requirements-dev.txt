@@ -280,7 +280,7 @@ pydantic==2.13.4
     #   openapi-pydantic
     #   pydantic-settings
     #   uml-mcp
-pydantic-core==2.46.4
+pydantic-core==2.47.0
     # via
     #   pydantic
     #   uml-mcp
