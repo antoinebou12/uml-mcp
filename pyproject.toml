@@ -29,7 +29,7 @@ pydantic-core = ">=2.27.0,<3"
 rich = "==15.0.0"
 httpx = "^0.28.0"
 typer = "==0.25.1"
-python-multipart = "==0.0.28"
+python-multipart = "==0.0.29"
 python-dotenv = "==1.2.2"
 starlette = ">=1.0.0,<2.0.0"
 jinja2 = "^3.1.2"
@@ -64,8 +64,8 @@ override-dependencies = [
     "attrs>=26,<27",
     "authlib==1.7.2",
     "backrefs==7.0",
-    "cachetools==7.1.1",
-    "certifi==2026.4.22",
+    "cachetools==7.1.4",
+    "certifi==2026.5.20",
     "coverage==7.14.0",
     "cryptography>=48,<49",
     "opentelemetry-api==1.41.1",
@@ -78,11 +78,11 @@ override-dependencies = [
     "graphviz==0.21",
     "gitpython==3.1.50",
     "joserfc==1.6.5",
-    "jsonschema-path==0.4.6",
+    "jsonschema-path==0.5.0",
     "markdown-it-py==4.2.0",
     "mkdocs-get-deps==0.2.2",
     "identify==2.6.19",
-    "idna==3.15",
+    "idna==3.16",
     "importlib-metadata==9.0.0",
     "pygments==2.20.0",
     "pyjwt==2.12.1",
@@ -91,7 +91,7 @@ override-dependencies = [
     "rich==15.0.0",
     "rich-rst==2.0.1",
     "requests==2.34.2",
-    "selectolax==0.4.8",
+    "selectolax==0.4.9",
     "sse-starlette==3.4.4",
     "uncalled-for==0.3.2",
     "urllib3==2.7.0",
