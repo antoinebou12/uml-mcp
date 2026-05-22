@@ -44,7 +44,7 @@ def mcp_tool(
     """
 
     def decorator(func: F) -> F:
-        func_name = name or func.__name__
+        func_name = name or getattr(func, "__name__", "tool")
         func_doc = inspect.getdoc(func) or ""
         func_description = description or func_doc.split("\n")[0] if func_doc else ""
 
