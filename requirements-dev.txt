@@ -60,7 +60,7 @@ charset-normalizer==3.4.7
     # via
     #   requests
     #   uml-mcp
-click==8.3.3
+click==8.4.1
     # via
     #   mkdocs
     #   typer
