@@ -432,5 +432,5 @@ webencodings==0.5.1
     #   tinycss2
 websockets==16.0
     # via fastmcp-slim
-zipp==3.23.1
+zipp==4.1.0
     # via importlib-metadata
