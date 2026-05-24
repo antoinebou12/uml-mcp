@@ -415,7 +415,7 @@ uncalled-for==0.3.2
     # via fastmcp-slim
 urllib3==2.7.0
     # via requests
-uvicorn==0.47.0
+uvicorn==0.48.0
     # via
     #   fastmcp-slim
     #   mcp
