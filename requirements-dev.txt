@@ -60,7 +60,7 @@ charset-normalizer==3.4.7
     # via
     #   requests
     #   uml-mcp
-click==8.3.3
+click==8.4.1
     # via
     #   mkdocs
     #   typer
@@ -83,7 +83,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cssselect2==0.9.0
     # via cairosvg
-cyclopts==4.15.0
+cyclopts==4.16.0
     # via fastmcp-slim
 defusedxml==0.7.1
     # via cairosvg
@@ -93,7 +93,7 @@ docstring-parser==0.18.0
     # via cyclopts
 exceptiongroup==1.3.1
     # via fastmcp-slim
-fastapi==0.136.1
+fastapi==0.136.3
     # via uml-mcp
 fastmcp==3.3.1
     # via uml-mcp
@@ -161,7 +161,7 @@ jinja2==3.1.6
     #   mkdocs-material
     #   mkdocstrings
     #   uml-mcp
-joserfc==1.6.5
+joserfc==1.6.7
     # via authlib
 jsmin==3.0.1
     # via mkdocs-minify-plugin
@@ -225,7 +225,7 @@ mkdocstrings==1.0.4
     # via mkdocstrings-python
 mkdocstrings-python==2.0.3
     # via mkdocstrings
-more-itertools==11.0.2
+more-itertools==11.1.0
     # via
     #   jaraco-classes
     #   jaraco-functools
@@ -293,7 +293,7 @@ pygments==2.20.0
     #   pytest
     #   rich
     #   rich-rst
-pyjwt==2.12.1
+pyjwt==2.13.0
     # via mcp
 pymdown-extensions==10.21.3
     # via
@@ -373,7 +373,7 @@ smmap==5.0.3
     # via gitdb
 sse-starlette==3.4.4
     # via mcp
-starlette==1.0.1
+starlette==1.1.0
     # via
     #   fastapi
     #   mcp
@@ -384,7 +384,7 @@ tinycss2==1.5.1
     #   cairosvg
     #   cssselect2
 tomli==2.4.1
-ty==0.0.38
+ty==0.0.39
 typer==0.25.1
     # via uml-mcp
 typing-extensions==4.15.0
@@ -415,7 +415,7 @@ uncalled-for==0.3.2
     # via fastmcp-slim
 urllib3==2.7.0
     # via requests
-uvicorn==0.47.0
+uvicorn==0.48.0
     # via
     #   fastmcp-slim
     #   mcp
@@ -424,7 +424,7 @@ virtualenv==21.3.3
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
-watchfiles==1.1.1
+watchfiles==1.2.0
     # via fastmcp-slim
 webencodings==0.5.1
     # via
@@ -432,5 +432,5 @@ webencodings==0.5.1
     #   tinycss2
 websockets==16.0
     # via fastmcp-slim
-zipp==3.23.1
+zipp==4.1.0
     # via importlib-metadata
