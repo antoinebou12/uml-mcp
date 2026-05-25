@@ -1,6 +1,6 @@
 {
   "name": "uml-mcp",
-  "version": "1.0.0",
+  "version": "1.3.0",
   "description": "Diagram generation for Claude Code via UML-MCP (PlantUML, Mermaid, D2, Graphviz, and more) over HTTP MCP.",
   "author": {
     "name": "Antoine Boucher",

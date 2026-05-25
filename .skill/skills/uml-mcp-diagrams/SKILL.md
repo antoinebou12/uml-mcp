@@ -7,7 +7,7 @@ description: >-
   or diagram_type.
 ---
 
-> **Maintainers:** Keep tool tables and `output_dir` wording aligned with the Smithery bundle **[uml-skill/SKILL.md](https://github.com/antoinebou12/uml-skill/blob/main/SKILL.md)** (`diagramming-uml`) when you edit either file. Mirror edits under **`.cursor/skills/uml-mcp-diagrams/SKILL.md`** so Cursor and repo-local skills stay in sync.
+> **Maintainers:** Keep tool tables and `output_dir` wording aligned with the Smithery bundle **[uml-skill/SKILL.md](https://github.com/antoinebou12/uml-skill/blob/main/SKILL.md)** (`diagramming-uml`) and the Claude Code plugin skill **`plugins/uml-mcp/skills/uml-diagrams/SKILL.md`** when you edit any of them.
 
 # uml-mcp diagram workflow
 

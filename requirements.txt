@@ -56,7 +56,7 @@ cryptography==48.0.0
     #   authlib
     #   joserfc
     #   secretstorage
-cyclopts==4.16.0
+cyclopts==4.16.1
     # via fastmcp-slim
 docstring-parser==0.18.0
     # via cyclopts

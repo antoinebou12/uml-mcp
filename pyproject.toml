@@ -73,7 +73,7 @@ override-dependencies = [
     "platformdirs==4.9.6",
     "aiofile==3.11.1",
     "ast-serialize==0.5.0",
-    "cyclopts==4.16.0",
+    "cyclopts==4.16.1",
     "docstring-parser==0.18.0",
     "graphviz==0.21",
     "gitpython==3.1.50",

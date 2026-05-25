@@ -65,7 +65,7 @@ The default plugin ships HTTP MCP pointing at the public deployment. To use anot
 1. Edit **`plugins/uml-mcp/.mcp.json`** in your clone and reinstall or update the plugin from that clone, or
 2. Keep using [manual MCP configuration](../configuration.md) in Claude Code settings instead of the plugin.
 
-The plugin directory is copied into Claude Code’s plugin cache when installed, so changes apply after you bump the plugin **`version`** in **`plugins/uml-mcp/.claude-plugin/plugin.json`** (and reinstall/update) or reinstall from a branch that contains your edits.
+The plugin **`version`** in **`plugins/uml-mcp/.claude-plugin/plugin.json`** and [`.claude-plugin/marketplace.json`](https://github.com/antoinebou12/uml-mcp/blob/main/.claude-plugin/marketplace.json) should match the Python package version in **`pyproject.toml`** (currently **1.3.0**). Bump both when releasing, then reinstall or update the plugin from your clone so Claude Code refreshes its cache.
 
 ## Related resources
 

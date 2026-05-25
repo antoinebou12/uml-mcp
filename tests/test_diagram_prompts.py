@@ -267,14 +267,19 @@ class TestNewPromptsRegistered:
 
 
 class TestSkillFilesMentionNewPrompts:
-    """Both copies of the uml-mcp-diagrams skill must list the new prompts."""
+    """Skill copies must list the new prompts and resources."""
 
     def _repo_root(self) -> Path:
         return Path(__file__).resolve().parents[1]
 
-    def test_cursor_skill_mentions_new_prompts(self):
+    def test_plugin_skill_mentions_new_prompts(self):
         path = (
-            self._repo_root() / ".cursor" / "skills" / "uml-mcp-diagrams" / "SKILL.md"
+            self._repo_root()
+            / "plugins"
+            / "uml-mcp"
+            / "skills"
+            / "uml-diagrams"
+            / "SKILL.md"
         )
         text = path.read_text(encoding="utf-8")
         assert "algorithm_explainer" in text

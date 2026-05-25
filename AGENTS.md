@@ -7,5 +7,5 @@
 ## Learned Workspace Facts
 
 - Python dependencies and the lockfile are driven by `uv` (`pyproject.toml`, `uv.lock`); after constraint changes, expect `uv lock` / `uv sync` and CI parity with `uv lock --check` where applicable; when the checked-in `requirements.txt` / `requirements-dev.txt` pins are maintained, regenerate them with `uv export` so they match the lockfile.
-- `tests/test_diagram_prompts.py` expects `.cursor/skills/uml-mcp-diagrams/SKILL.md` in the clone; `.gitignore` ignores `.cursor/*` except that path so CI can read it—keep the file in sync with `.skill/skills/uml-mcp-diagrams/SKILL.md`.
+- Diagram skills: canonical copy in `.skill/skills/uml-mcp-diagrams/SKILL.md`; Claude Code plugin copy in `plugins/uml-mcp/skills/uml-diagrams/SKILL.md`. Cursor uses `.cursor/mcp.json` (hosted MCP) plus the `.skill` skill path—see `docs/integrations/cursor.md`.
 - Multi-version Python work in this repo has treated 3.12 as the primary baseline while also exercising 3.14 in CI matrices when supported; widening `requires-python` and regenerating the lock goes with that pattern.

@@ -1,7 +1,8 @@
 {
   "name": "uml-mcp-plugins",
   "metadata": {
-    "description": "Official Claude Code plugins for the UML-MCP diagram MCP server."
+    "description": "Official Claude Code plugins for the UML-MCP diagram MCP server (PlantUML, Mermaid, D2, Kroki).",
+    "version": "1.3.0"
   },
   "owner": {
     "name": "Antoine Boucher",
@@ -11,8 +12,12 @@
     {
       "name": "uml-mcp",
       "source": "./plugins/uml-mcp",
-      "description": "HTTP MCP to UML-MCP for diagrams (UML, Mermaid, D2, Kroki) plus an /uml-diagrams skill.",
-      "version": "1.0.0"
+      "description": "Hosted HTTP MCP at uml-mcp.vercel.app plus /uml-mcp:uml-diagrams skill for URL-first diagram workflows.",
+      "version": "1.3.0",
+      "homepage": "https://github.com/antoinebou12/uml-mcp",
+      "repository": "https://github.com/antoinebou12/uml-mcp",
+      "license": "MIT",
+      "keywords": ["mcp", "diagrams", "uml", "mermaid", "plantuml", "kroki", "d2"]
     }
   ]
 }

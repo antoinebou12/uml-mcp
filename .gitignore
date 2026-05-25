@@ -90,11 +90,9 @@ Desktop.ini
 !.env.example
 .claude
 .gemini
-# Cursor IDE: ignore local config except tracked mirror skill (CI tests)
+# Cursor IDE: ignore local overrides except tracked project MCP defaults
 .cursor/*
-!.cursor/skills/
-!.cursor/skills/uml-mcp-diagrams/
-!.cursor/skills/uml-mcp-diagrams/SKILL.md
+!.cursor/mcp.json
 
 # Distribution / packaging
 *.whl

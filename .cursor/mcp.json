@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "uml-mcp": {
+      "url": "https://uml-mcp.vercel.app/mcp"
+    }
+  }
+}
