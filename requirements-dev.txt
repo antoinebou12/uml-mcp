@@ -267,7 +267,7 @@ pluggy==1.6.0
     #   pytest
     #   pytest-cov
 pre-commit==4.6.0
-py-key-value-aio==0.4.4
+py-key-value-aio==0.4.5
     # via fastmcp-slim
 pycparser==3.0 ; implementation_name != 'PyPy'
     # via cffi

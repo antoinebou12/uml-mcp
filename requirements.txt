@@ -142,7 +142,7 @@ pillow==12.2.0
     # via uml-mcp
 platformdirs==4.9.6
     # via fastmcp-slim
-py-key-value-aio==0.4.4
+py-key-value-aio==0.4.5
     # via fastmcp-slim
 pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
