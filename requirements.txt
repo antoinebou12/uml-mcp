@@ -46,11 +46,12 @@ charset-normalizer==3.4.7
     #   uml-mcp
 click==8.4.1
     # via
-    #   typer
     #   uml-mcp
     #   uvicorn
 colorama==0.4.6 ; sys_platform == 'win32'
-    # via click
+    # via
+    #   click
+    #   typer
 cryptography==48.0.0
     # via
     #   authlib
@@ -104,7 +105,7 @@ jeepney==0.9.0 ; sys_platform == 'linux'
     #   secretstorage
 jinja2==3.1.6
     # via uml-mcp
-joserfc==1.6.7
+joserfc==1.6.8
     # via authlib
 jsonref==1.1.0
     # via fastmcp-slim
@@ -142,7 +143,7 @@ pillow==12.2.0
     # via uml-mcp
 platformdirs==4.9.6
     # via fastmcp-slim
-py-key-value-aio==0.4.4
+py-key-value-aio==0.4.5
     # via fastmcp-slim
 pycparser==3.0 ; implementation_name != 'PyPy' and platform_python_implementation != 'PyPy'
     # via cffi
@@ -224,7 +225,7 @@ starlette==1.1.0
     #   mcp
     #   sse-starlette
     #   uml-mcp
-typer==0.25.1
+typer==0.26.2
     # via uml-mcp
 typing-extensions==4.15.0
     # via

@@ -7,6 +7,15 @@
     "enabled": false
   },
   "description": "Python deps: pyproject.toml + uv.lock; transitive pins under [tool.uv] override-dependencies — bump/remove those when raising direct floors (e.g. fastmcp).",
+  "postUpgradeTasks": {
+    "commands": [
+      "uv lock",
+      "uv export --no-dev --no-hashes -o requirements.txt",
+      "uv export --no-hashes -o requirements-dev.txt"
+    ],
+    "executionMode": "branch",
+    "fileFilters": ["uv.lock", "requirements.txt", "requirements-dev.txt"]
+  },
   "packageRules": [
     {
       "description": "Keep official Python Docker base images on the 3.12 line (matches CI / uv)",

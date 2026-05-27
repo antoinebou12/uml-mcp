@@ -63,7 +63,6 @@ charset-normalizer==3.4.7
 click==8.4.1
     # via
     #   mkdocs
-    #   typer
     #   uml-mcp
     #   uvicorn
 colorama==0.4.6
@@ -72,7 +71,8 @@ colorama==0.4.6
     #   mkdocs
     #   mkdocs-material
     #   pytest
-coverage==7.14.0
+    #   typer
+coverage==7.14.1
     # via pytest-cov
 cryptography==48.0.0
     # via
@@ -161,7 +161,7 @@ jinja2==3.1.6
     #   mkdocs-material
     #   mkdocstrings
     #   uml-mcp
-joserfc==1.6.7
+joserfc==1.6.8
     # via authlib
 jsmin==3.0.1
     # via mkdocs-minify-plugin
@@ -267,7 +267,7 @@ pluggy==1.6.0
     #   pytest
     #   pytest-cov
 pre-commit==4.6.0
-py-key-value-aio==0.4.4
+py-key-value-aio==0.4.5
     # via fastmcp-slim
 pycparser==3.0 ; implementation_name != 'PyPy'
     # via cffi
@@ -305,7 +305,7 @@ pytest==9.0.3
     # via
     #   pytest-asyncio
     #   pytest-cov
-pytest-asyncio==1.3.0
+pytest-asyncio==1.4.0
 pytest-cov==7.1.0
 python-dateutil==2.9.0.post0
     # via
@@ -363,7 +363,7 @@ rpds-py==0.30.0
 ruff==0.15.14
 secretstorage==3.5.0 ; sys_platform == 'linux'
     # via keyring
-selectolax==0.4.9
+selectolax==0.4.10
     # via mkdocs-glightbox
 shellingham==1.5.4
     # via typer
@@ -385,7 +385,7 @@ tinycss2==1.5.1
     #   cssselect2
 tomli==2.4.1
 ty==0.0.39
-typer==0.25.1
+typer==0.26.2
     # via uml-mcp
 typing-extensions==4.15.0
     # via
