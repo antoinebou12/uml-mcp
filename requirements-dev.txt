@@ -385,7 +385,7 @@ tinycss2==1.5.1
     #   cssselect2
 tomli==2.4.1
 ty==0.0.39
-typer==0.26.2
+typer==0.26.4
     # via uml-mcp
 typing-extensions==4.15.0
     # via
