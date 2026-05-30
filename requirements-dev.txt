@@ -132,7 +132,7 @@ httpx-sse==0.4.3
     # via mcp
 identify==2.6.19
     # via pre-commit
-idna==3.16
+idna==3.17
     # via
     #   anyio
     #   httpx
