@@ -86,7 +86,7 @@ httpx==0.28.1
     #   uml-mcp
 httpx-sse==0.4.3
     # via mcp
-idna==3.16
+idna==3.17
     # via
     #   anyio
     #   httpx
@@ -121,7 +121,7 @@ markdown-it-py==4.2.0
     # via rich
 markupsafe==3.0.3
     # via jinja2
-mcp==1.27.1
+mcp==1.27.2
     # via
     #   fastmcp-slim
     #   uml-mcp
@@ -141,7 +141,7 @@ pathable==0.6.0
     # via jsonschema-path
 pillow==12.2.0
     # via uml-mcp
-platformdirs==4.9.6
+platformdirs==4.10.0
     # via fastmcp-slim
 py-key-value-aio==0.4.5
     # via fastmcp-slim
@@ -219,13 +219,13 @@ six==1.17.0
     # via python-dateutil
 sse-starlette==3.4.4
     # via mcp
-starlette==1.1.0
+starlette==1.2.1
     # via
     #   fastapi
     #   mcp
     #   sse-starlette
     #   uml-mcp
-typer==0.26.2
+typer==0.26.4
     # via uml-mcp
 typing-extensions==4.15.0
     # via
