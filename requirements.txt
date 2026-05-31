@@ -219,7 +219,7 @@ six==1.17.0
     # via python-dateutil
 sse-starlette==3.4.4
     # via mcp
-starlette==1.1.0
+starlette==1.2.0
     # via
     #   fastapi
     #   mcp
