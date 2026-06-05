@@ -72,7 +72,11 @@ jobs:
             head -20 "$raw"
             exit 1
           fi
-          echo "$payload" | jq -e 'any(.result.tools[]?; .name == "generate_uml")' >/dev/null
+          if ! echo "$payload" | jq -e '[.result.tools[].name] | contains(["generate_uml"])'; then
+            echo "MCP tools/list response:"
+            echo "$payload" | jq .
+            exit 1
+          fi
 
       - name: Test Vercel – MCP list_diagram_types
         run: |
@@ -89,7 +93,11 @@ jobs:
             head -20 "$raw"
             exit 1
           fi
-          echo "$payload" | jq -e '.result.content | length > 0' >/dev/null
+          if ! echo "$payload" | jq -e '.result.content | length > 0'; then
+            echo "MCP list_diagram_types response:"
+            echo "$payload" | jq .
+            exit 1
+          fi
 
       - name: Publish to Smithery
         if: ${{ inputs.skip_smithery != true && github.event.inputs.skip_smithery != 'true' }}
