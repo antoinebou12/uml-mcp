@@ -61,12 +61,12 @@ jobs:
         run: |
           set -euo pipefail
           raw="$(mktemp)"
-          curl -sN --max-time 30 \
+          curl -sNL --max-time 30 \
             -H 'Accept: application/json, text/event-stream' \
             -H 'Content-Type: application/json' \
             -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
             "${VERCEL_URL}/mcp" >"$raw"
-          payload="$(grep '^data: ' "$raw" | head -1 | sed 's/^data: //')"
+          payload="$(grep '^data: ' "$raw" | head -1 | sed 's/^data: //' || true)"
           if [ -z "$payload" ]; then
             echo "MCP tools/list: no SSE data line"
             head -20 "$raw"
@@ -82,12 +82,12 @@ jobs:
         run: |
           set -euo pipefail
           raw="$(mktemp)"
-          curl -sN --max-time 60 \
+          curl -sNL --max-time 60 \
             -H 'Accept: application/json, text/event-stream' \
             -H 'Content-Type: application/json' \
             -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_diagram_types","arguments":{}}}' \
             "${VERCEL_URL}/mcp" >"$raw"
-          payload="$(grep '^data: ' "$raw" | head -1 | sed 's/^data: //')"
+          payload="$(grep '^data: ' "$raw" | head -1 | sed 's/^data: //' || true)"
           if [ -z "$payload" ]; then
             echo "MCP list_diagram_types: no SSE data line"
             head -20 "$raw"
