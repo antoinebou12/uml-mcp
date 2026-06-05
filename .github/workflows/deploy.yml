@@ -12,14 +12,33 @@ on:
         required: false
         type: string
         default: "https://uml-mcp.vercel.app"
+      skip_smithery:
+        description: "Skip Smithery publish (smoke test only)"
+        required: false
+        type: boolean
+        default: false
     secrets:
       SMITHERY_API_KEY:
         description: "Smithery API key for publish (--key)"
         required: true
+  workflow_dispatch:
+    inputs:
+      vercel_url:
+        description: "Vercel deployment root URL (no trailing slash)"
+        required: false
+        type: string
+        default: "https://uml-mcp.vercel.app"
+      skip_smithery:
+        description: "Skip Smithery publish (smoke test only)"
+        required: false
+        type: boolean
+        default: true
 
 jobs:
   test-and-publish:
     runs-on: ubuntu-latest
+    env:
+      VERCEL_URL: ${{ inputs.vercel_url || github.event.inputs.vercel_url || 'https://uml-mcp.vercel.app' }}
     steps:
       # Smithery CLI is the npm package @smithery/cli — there is no PyPI package "smithery-cli".
       - name: Checkout repository
@@ -32,11 +51,11 @@ jobs:
 
       - name: Test Vercel – health
         run: |
-          curl -sf "${{ inputs.vercel_url }}/health" | jq -e '.status == "healthy"' || (echo "Health check failed" && exit 1)
+          curl -sf "${VERCEL_URL}/health" | jq -e '.status == "healthy"' || (echo "Health check failed" && exit 1)
 
       - name: Test Vercel – server card
         run: |
-          curl -sf "${{ inputs.vercel_url }}/.well-known/mcp/server-card.json" | jq -e '.serverInfo and .tools' || (echo "Server card check failed" && exit 1)
+          curl -sf "${VERCEL_URL}/.well-known/mcp/server-card.json" | jq -e '.serverInfo and .tools' || (echo "Server card check failed" && exit 1)
 
       - name: Test Vercel – MCP tools/list
         run: |
@@ -44,7 +63,7 @@ jobs:
             -H 'Accept: application/json, text/event-stream' \
             -H 'Content-Type: application/json' \
             -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
-            "${{ inputs.vercel_url }}/mcp" \
+            "${VERCEL_URL}/mcp" \
           | grep '^data: ' | head -1 | sed 's/^data: //' \
           | jq -e '.result.tools | map(.name) | index("generate_uml") != null' \
           || (echo "MCP tools/list check failed" && exit 1)
@@ -55,15 +74,16 @@ jobs:
             -H 'Accept: application/json, text/event-stream' \
             -H 'Content-Type: application/json' \
             -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_diagram_types","arguments":{}}}' \
-            "${{ inputs.vercel_url }}/mcp" \
+            "${VERCEL_URL}/mcp" \
           | grep '^data: ' | head -1 | sed 's/^data: //' \
           | jq -e '.result.content' \
           || (echo "MCP list_diagram_types check failed" && exit 1)
 
       - name: Publish to Smithery
+        if: ${{ inputs.skip_smithery != true && github.event.inputs.skip_smithery != 'true' }}
         run: |
           npx -y @smithery/cli publish \
             --name @antoinebou12/uml \
-            --url "${{ inputs.vercel_url }}/mcp" \
+            --url "${VERCEL_URL}/mcp" \
             --config-schema smithery-config-schema.json \
             --key "${{ secrets.SMITHERY_API_KEY }}"
