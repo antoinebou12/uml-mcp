@@ -29,7 +29,7 @@ pydantic-core = ">=2.27.0,<3"
 rich = "==15.0.0"
 httpx = "^0.28.0"
 typer = "==0.26.4"
-python-multipart = "==0.0.29"
+python-multipart = "==0.0.30"
 python-dotenv = "==1.2.2"
 starlette = ">=1.0.0,<2.0.0"
 jinja2 = "^3.1.2"
@@ -59,7 +59,7 @@ override-dependencies = [
     "pydantic-settings==2.14.1",
     "pytest-cov==7.1.0",
     "tzdata==2026.2",
-    "virtualenv==21.4.1",
+    "virtualenv==21.4.2",
     "anyio==4.13.0",
     "attrs>=26,<27",
     "authlib==1.7.2",
@@ -104,11 +104,11 @@ pytest = ">=9.0.3,<10"
 pytest-cov = ">=7.1.0,<8"
 pre-commit = "^4.6.0"
 ruff = ">=0.15.15"
-ty = ">=0.0.40"
+ty = ">=0.0.42"
 pytest-asyncio = ">=1.4.0,<2"
 mkdocs = ">=1.6.0"
 mkdocs-material = { version = ">=9.7.6", extras = ["imaging"] }
-mkdocs-git-revision-date-localized-plugin = ">=1.5.2"
+mkdocs-git-revision-date-localized-plugin = ">=1.5.3"
 mkdocs-minify-plugin = ">=0.8.0"
 mkdocs-glightbox = ">=0.4.0"
 mkdocstrings = { version = ">=0.30.0", extras = ["python"] }
@@ -169,13 +169,13 @@ dev = [
     "pytest>=9.0.3",
     "pytest-cov>=7.1.0",
     "ruff>=0.15.15",
-    "ty>=0.0.40",
+    "ty>=0.0.42",
     "pytest-asyncio>=1.4.0,<2",
     "mypy>=2.0.0,<3",
     "mkdocs>=1.6.0",
     "mkdocs-material[imaging]>=9.7.6",
     "pymdown-extensions>=10.21.3",
-    "mkdocs-git-revision-date-localized-plugin>=1.5.2",
+    "mkdocs-git-revision-date-localized-plugin>=1.5.3",
     "mkdocs-minify-plugin>=0.8.0",
     "mkdocs-glightbox>=0.4.0",
     "mkdocstrings[python]>=0.30.0",

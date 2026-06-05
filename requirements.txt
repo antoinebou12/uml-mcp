@@ -178,7 +178,7 @@ python-dotenv==1.2.2
     #   fastmcp-slim
     #   pydantic-settings
     #   uml-mcp
-python-multipart==0.0.29
+python-multipart==0.0.30
     # via
     #   fastmcp-slim
     #   mcp
@@ -207,7 +207,7 @@ rich==15.0.0
     #   uml-mcp
 rich-rst==2.0.1
     # via cyclopts
-rpds-py==0.30.0
+rpds-py==2026.5.1
     # via
     #   jsonschema
     #   referencing
