@@ -59,25 +59,37 @@ jobs:
 
       - name: Test Vercel – MCP tools/list
         run: |
+          set -euo pipefail
+          raw="$(mktemp)"
           curl -sN --max-time 30 \
             -H 'Accept: application/json, text/event-stream' \
             -H 'Content-Type: application/json' \
             -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
-            "${VERCEL_URL}/mcp" \
-          | grep '^data: ' | head -1 | sed 's/^data: //' \
-          | jq -e '.result.tools | map(.name) | index("generate_uml") != null' \
-          || (echo "MCP tools/list check failed" && exit 1)
+            "${VERCEL_URL}/mcp" >"$raw"
+          payload="$(grep '^data: ' "$raw" | head -1 | sed 's/^data: //')"
+          if [ -z "$payload" ]; then
+            echo "MCP tools/list: no SSE data line"
+            head -20 "$raw"
+            exit 1
+          fi
+          echo "$payload" | jq -e 'any(.result.tools[]?; .name == "generate_uml")' >/dev/null
 
       - name: Test Vercel – MCP list_diagram_types
         run: |
+          set -euo pipefail
+          raw="$(mktemp)"
           curl -sN --max-time 60 \
             -H 'Accept: application/json, text/event-stream' \
             -H 'Content-Type: application/json' \
             -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_diagram_types","arguments":{}}}' \
-            "${VERCEL_URL}/mcp" \
-          | grep '^data: ' | head -1 | sed 's/^data: //' \
-          | jq -e '.result.content' \
-          || (echo "MCP list_diagram_types check failed" && exit 1)
+            "${VERCEL_URL}/mcp" >"$raw"
+          payload="$(grep '^data: ' "$raw" | head -1 | sed 's/^data: //')"
+          if [ -z "$payload" ]; then
+            echo "MCP list_diagram_types: no SSE data line"
+            head -20 "$raw"
+            exit 1
+          fi
+          echo "$payload" | jq -e '.result.content | length > 0' >/dev/null
 
       - name: Publish to Smithery
         if: ${{ inputs.skip_smithery != true && github.event.inputs.skip_smithery != 'true' }}
