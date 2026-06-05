@@ -1,6 +1,6 @@
 # Reusable: test Vercel deployment, then publish to Smithery (URL-based).
 # Called from cd.yml when deploy_to_smithery is true or on push to main.
-# Order: test Vercel (health + server-card) -> publish Smithery.
+# Order: test Vercel (health + server-card + MCP JSON-RPC) -> publish Smithery.
 
 name: Deploy (Vercel test + Smithery publish)
 
@@ -37,6 +37,28 @@ jobs:
       - name: Test Vercel – server card
         run: |
           curl -sf "${{ inputs.vercel_url }}/.well-known/mcp/server-card.json" | jq -e '.serverInfo and .tools' || (echo "Server card check failed" && exit 1)
+
+      - name: Test Vercel – MCP tools/list
+        run: |
+          curl -sN --max-time 30 \
+            -H 'Accept: application/json, text/event-stream' \
+            -H 'Content-Type: application/json' \
+            -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
+            "${{ inputs.vercel_url }}/mcp" \
+          | grep '^data: ' | head -1 | sed 's/^data: //' \
+          | jq -e '.result.tools | map(.name) | index("generate_uml") != null' \
+          || (echo "MCP tools/list check failed" && exit 1)
+
+      - name: Test Vercel – MCP list_diagram_types
+        run: |
+          curl -sN --max-time 60 \
+            -H 'Accept: application/json, text/event-stream' \
+            -H 'Content-Type: application/json' \
+            -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_diagram_types","arguments":{}}}' \
+            "${{ inputs.vercel_url }}/mcp" \
+          | grep '^data: ' | head -1 | sed 's/^data: //' \
+          | jq -e '.result.content' \
+          || (echo "MCP list_diagram_types check failed" && exit 1)
 
       - name: Publish to Smithery
         run: |

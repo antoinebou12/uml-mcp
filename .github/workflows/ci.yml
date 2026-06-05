@@ -16,6 +16,7 @@ on:
       - "requirements.txt"
       - ".pre-commit-config.yaml"
       - ".github/workflows/**"
+      - ".cursor/mcp.json"
   pull_request:
     branches: [main]
 
@@ -42,6 +43,14 @@ jobs:
         run: |
           uv run ruff check .
           uv run ruff format --check .
+
+      - name: Validate Cursor MCP config
+        run: |
+          jq -e '
+            .mcpServers["uml-mcp"].transport == "http" and
+            (.mcpServers["uml-mcp"].url | test("/mcp$")) and
+            (.mcpServers["uml-mcp"].url | startswith("https://"))
+          ' .cursor/mcp.json
 
   test:
     runs-on: ubuntu-latest

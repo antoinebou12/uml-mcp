@@ -1,6 +1,7 @@
 {
   "mcpServers": {
     "uml-mcp": {
+      "transport": "http",
       "url": "https://uml-mcp.vercel.app/mcp"
     }
   }

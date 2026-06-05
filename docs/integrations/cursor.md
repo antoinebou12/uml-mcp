@@ -14,6 +14,7 @@ This repository ships a minimal project MCP config at **[`.cursor/mcp.json`](htt
 {
   "mcpServers": {
     "uml-mcp": {
+      "transport": "http",
       "url": "https://uml-mcp.vercel.app/mcp"
     }
   }
@@ -25,6 +26,8 @@ This repository ships a minimal project MCP config at **[`.cursor/mcp.json`](htt
 3. Confirm **uml-mcp** appears under **Cursor Settings → MCP**.
 
 No local Python install is required for the hosted endpoint. The MCP route is **`/mcp`**, not the site root.
+
+On every push to `main`, the CD pipeline ([`.github/workflows/deploy.yml`](https://github.com/antoinebou12/uml-mcp/blob/main/.github/workflows/deploy.yml)) smoke-tests the hosted MCP endpoint with JSON-RPC `tools/list` and `list_diagram_types` against the Vercel URL. CI validates [`.cursor/mcp.json`](https://github.com/antoinebou12/uml-mcp/blob/main/.cursor/mcp.json) on each PR.
 
 ## Diagram skill for Cursor
 
