@@ -178,7 +178,7 @@ python-dotenv==1.2.2
     #   fastmcp-slim
     #   pydantic-settings
     #   uml-mcp
-python-multipart==0.0.30
+python-multipart==0.0.32
     # via
     #   fastmcp-slim
     #   mcp
