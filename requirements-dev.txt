@@ -97,7 +97,7 @@ fastapi==0.136.3
     # via uml-mcp
 fastmcp==3.3.1
     # via uml-mcp
-fastmcp-slim==3.3.1
+fastmcp-slim==3.4.2
     # via fastmcp
 filelock==3.29.0
     # via
