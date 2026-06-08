@@ -360,7 +360,7 @@ rpds-py==2026.5.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.15
+ruff==0.15.16
 secretstorage==3.5.0 ; sys_platform == 'linux'
     # via keyring
 selectolax==0.4.10
