@@ -87,7 +87,7 @@ cyclopts==4.16.1
     # via fastmcp-slim
 defusedxml==0.7.1
     # via cairosvg
-distlib==0.4.0
+distlib==0.4.3
     # via virtualenv
 docstring-parser==0.18.0
     # via cyclopts
