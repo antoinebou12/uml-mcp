@@ -99,7 +99,7 @@ fastmcp==3.3.1
     # via uml-mcp
 fastmcp-slim==3.3.1
     # via fastmcp
-filelock==3.29.0
+filelock==3.29.4
     # via
     #   python-discovery
     #   virtualenv
