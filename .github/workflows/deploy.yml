@@ -100,7 +100,7 @@ jobs:
           fi
 
       - name: Publish to Smithery
-        if: ${{ inputs.skip_smithery != true && github.event.inputs.skip_smithery != 'true' && secrets.SMITHERY_API_KEY != '' }}
+        if: ${{ inputs.skip_smithery != true && github.event.inputs.skip_smithery != 'true' }}
         run: |
           npx -y @smithery/cli publish \
             --name @antoinebou12/uml \
