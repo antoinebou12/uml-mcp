@@ -20,7 +20,7 @@ on:
     secrets:
       SMITHERY_API_KEY:
         description: "Smithery API key for publish (--key)"
-        required: true
+        required: false
   workflow_dispatch:
     inputs:
       vercel_url:
@@ -100,7 +100,7 @@ jobs:
           fi
 
       - name: Publish to Smithery
-        if: ${{ inputs.skip_smithery != true && github.event.inputs.skip_smithery != 'true' }}
+        if: ${{ inputs.skip_smithery != true && github.event.inputs.skip_smithery != 'true' && secrets.SMITHERY_API_KEY != '' }}
         run: |
           npx -y @smithery/cli publish \
             --name @antoinebou12/uml \

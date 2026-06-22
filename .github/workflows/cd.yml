@@ -47,4 +47,5 @@ jobs:
     uses: ./.github/workflows/deploy.yml
     with:
       vercel_url: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.vercel_url || 'https://uml-mcp.vercel.app' }}
+      skip_smithery: ${{ github.event_name != 'workflow_dispatch' || github.event.inputs.deploy_to_smithery != 'true' }}
     secrets: inherit
