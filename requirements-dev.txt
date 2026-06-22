@@ -373,7 +373,7 @@ six==1.17.0
     # via python-dateutil
 smmap==5.0.3
     # via gitdb
-sse-starlette==3.4.4
+sse-starlette==3.4.5
     # via mcp
 starlette==1.2.1
     # via
