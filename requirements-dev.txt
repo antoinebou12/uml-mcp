@@ -45,7 +45,7 @@ cairocffi==1.7.1
     # via cairosvg
 cairosvg==2.9.0
     # via mkdocs-material
-certifi==2026.5.20
+certifi==2026.6.17
     # via
     #   httpcore
     #   httpx
