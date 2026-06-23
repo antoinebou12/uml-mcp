@@ -72,7 +72,7 @@ colorama==0.4.6
     #   mkdocs-material
     #   pytest
     #   typer
-coverage==7.14.1
+coverage==7.14.3
     # via pytest-cov
 cryptography==48.0.0
     # via
