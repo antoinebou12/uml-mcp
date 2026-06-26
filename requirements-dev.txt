@@ -11,7 +11,7 @@ annotated-doc==0.0.4
     #   typer
 annotated-types==0.7.0
     # via pydantic
-anyio==4.13.0
+anyio==4.14.1
     # via
     #   httpx
     #   mcp
@@ -45,7 +45,7 @@ cairocffi==1.7.1
     # via cairosvg
 cairosvg==2.9.0
     # via mkdocs-material
-certifi==2026.5.20
+certifi==2026.6.17
     # via
     #   httpcore
     #   httpx
@@ -72,9 +72,9 @@ colorama==0.4.6
     #   mkdocs-material
     #   pytest
     #   typer
-coverage==7.14.1
+coverage==7.14.3
     # via pytest-cov
-cryptography==48.0.0
+cryptography==48.0.1
     # via
     #   authlib
     #   joserfc
@@ -83,7 +83,7 @@ csscompressor==0.9.5
     # via mkdocs-minify-plugin
 cssselect2==0.9.0
     # via cairosvg
-cyclopts==4.16.1
+cyclopts==4.19.0
     # via fastmcp-slim
 defusedxml==0.7.1
     # via cairosvg
@@ -93,7 +93,7 @@ docstring-parser==0.18.0
     # via cyclopts
 exceptiongroup==1.3.1
     # via fastmcp-slim
-fastapi==0.136.3
+fastapi==0.138.1
     # via uml-mcp
 fastmcp==3.4.2
     # via uml-mcp
@@ -285,7 +285,7 @@ pydantic-core==2.46.4
     # via
     #   pydantic
     #   uml-mcp
-pydantic-settings==2.14.1
+pydantic-settings==2.14.2
     # via
     #   fastmcp-slim
     #   mcp
@@ -313,7 +313,7 @@ python-dateutil==2.9.0.post0
     # via
     #   ghp-import
     #   uml-mcp
-python-discovery==1.4.0
+python-discovery==1.4.2
     # via virtualenv
 python-dotenv==1.2.2
     # via
@@ -356,13 +356,13 @@ rich==15.0.0
     #   rich-rst
     #   typer
     #   uml-mcp
-rich-rst==2.0.1
+rich-rst==2.0.2
     # via cyclopts
 rpds-py==2026.5.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.18
+ruff==0.15.20
 secretstorage==3.5.0 ; sys_platform == 'linux'
     # via keyring
 selectolax==0.4.10
@@ -373,7 +373,7 @@ six==1.17.0
     # via python-dateutil
 smmap==5.0.3
     # via gitdb
-sse-starlette==3.4.4
+sse-starlette==3.4.5
     # via mcp
 starlette==1.2.1
     # via
@@ -387,7 +387,7 @@ tinycss2==1.5.1
     #   cairosvg
     #   cssselect2
 tomli==2.4.1
-ty==0.0.44
+ty==0.0.54
 typer==0.26.7
     # via uml-mcp
 typing-extensions==4.15.0
