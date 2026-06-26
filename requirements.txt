@@ -44,7 +44,7 @@ charset-normalizer==3.4.7
     # via
     #   requests
     #   uml-mcp
-click==8.4.1
+click==8.4.2
     # via
     #   uml-mcp
     #   uvicorn
@@ -228,7 +228,7 @@ starlette==1.2.1
     #   mcp
     #   sse-starlette
     #   uml-mcp
-typer==0.26.7
+typer==0.26.8
     # via uml-mcp
 typing-extensions==4.15.0
     # via
