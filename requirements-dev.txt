@@ -356,13 +356,13 @@ rich==15.0.0
     #   rich-rst
     #   typer
     #   uml-mcp
-rich-rst==2.0.1
+rich-rst==2.0.2
     # via cyclopts
 rpds-py==2026.5.1
     # via
     #   jsonschema
     #   referencing
-ruff==0.15.18
+ruff==0.15.20
 secretstorage==3.5.0 ; sys_platform == 'linux'
     # via keyring
 selectolax==0.4.10

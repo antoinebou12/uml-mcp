@@ -89,7 +89,7 @@ override-dependencies = [
     "python-discovery==1.4.2",
     "python-dotenv==1.2.2",
     "rich==15.0.0",
-    "rich-rst==2.0.1",
+    "rich-rst==2.0.2",
     "requests==2.34.2",
     "selectolax==0.4.10",
     "sse-starlette==3.4.5",
