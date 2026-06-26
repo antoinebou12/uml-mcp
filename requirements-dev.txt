@@ -356,7 +356,7 @@ rich==15.0.0
     #   rich-rst
     #   typer
     #   uml-mcp
-rich-rst==2.0.1
+rich-rst==2.0.2
     # via cyclopts
 rpds-py==2026.5.1
     # via
