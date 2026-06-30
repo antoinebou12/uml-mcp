@@ -303,7 +303,7 @@ pymdown-extensions==10.21.3
     #   mkdocstrings
 pyperclip==1.11.0
     # via fastmcp-slim
-pytest==9.0.3
+pytest==9.1.1
     # via
     #   pytest-asyncio
     #   pytest-cov
