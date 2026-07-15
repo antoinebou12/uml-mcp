@@ -6,7 +6,7 @@ PlantUML markup into PNG images.
 """
 
 import logging
-from typing import Dict, Optional, Tuple
+from typing import Any, NotRequired, Tuple, TypedDict
 from zlib import compress
 
 import httpx
@@ -14,6 +14,22 @@ import httpx
 from .kroki import plantuml_playground_path_segment
 
 logger = logging.getLogger(__name__)
+
+
+class BasicAuthConfig(TypedDict):
+    """Basic auth configuration."""
+
+    username: str
+    password: str
+
+
+class FormAuthConfig(TypedDict):
+    """Form login configuration."""
+
+    url: str
+    body: dict[str, Any]
+    method: NotRequired[str]
+    headers: NotRequired[dict[str, str]]
 
 
 class PlantUMLError(Exception):
@@ -42,10 +58,10 @@ class PlantUML:
     def __init__(
         self,
         url: str,
-        basic_auth: Optional[Dict] = None,
-        form_auth: Optional[Dict] = None,
-        http_opts: Optional[Dict] = None,
-        request_opts: Optional[Dict] = None,
+        basic_auth: BasicAuthConfig | None = None,
+        form_auth: FormAuthConfig | None = None,
+        http_opts: dict[str, Any] | None = None,
+        request_opts: dict[str, Any] | None = None,
     ) -> None:
         """Initialize the PlantUML client.
 
@@ -56,54 +72,41 @@ class PlantUML:
             http_opts: Extra options for the HTTP client
             request_opts: Extra options for HTTP requests
         """
-        if basic_auth is None:
-            basic_auth = {}
-        if form_auth is None:
-            form_auth = {}
-        if http_opts is None:
-            http_opts = {}
-        if request_opts is None:
-            request_opts = {}
-
         self.url = url
-        self.request_opts = request_opts
+        self.request_opts = dict(request_opts or {})
 
         # Determine auth type
-        self.auth_type = None
+        self.auth_type: str | None = None
         if basic_auth:
             self.auth_type = "basic_auth"
         elif form_auth:
             self.auth_type = "form_auth"
 
-        self.auth = basic_auth or form_auth or None
-
         # Create HTTP client without proxies argument
         self.client = httpx.Client(
-            **{k: v for k, v in http_opts.items() if k != "proxies"}
+            **{k: v for k, v in (http_opts or {}).items() if k != "proxies"}
         )
 
         # Configure authentication
         if self.auth_type == "basic_auth":
-            auth = self.auth
-            assert auth is not None
-            self.client.auth = (auth["username"], auth["password"])
+            assert basic_auth is not None
+            self.client.auth = (basic_auth["username"], basic_auth["password"])
         elif self.auth_type == "form_auth":
-            auth = self.auth
-            assert auth is not None
-            if "url" not in auth:
+            assert form_auth is not None
+            if "url" not in form_auth:
                 raise PlantUMLError(
                     "The form_auth option 'url' must be provided and point to the login url."
                 )
-            if "body" not in auth:
+            if "body" not in form_auth:
                 raise PlantUMLError(
                     "The form_auth option 'body' must be provided and include "
                     "a dictionary with the form elements required to log in."
                 )
 
-            login_url = auth["url"]
-            body = auth["body"]
-            method = auth.get("method", "POST")
-            headers = auth.get(
+            login_url = form_auth["url"]
+            body = form_auth["body"]
+            method = form_auth.get("method", "POST")
+            headers = form_auth.get(
                 "headers", {"Content-type": "application/x-www-form-urlencoded"}
             )
 
@@ -115,10 +118,6 @@ class PlantUML:
             except httpx.HTTPError as e:
                 raise PlantUMLConnectionError(f"Error authenticating: {str(e)}")
 
-            self.request_opts["Cookie"] = "; ".join(
-                f"{name}={value}" for name, value in response.cookies.items()
-            )
-
     def get_url(self, plantuml_text):
         """Return the server URL for the image."""
         encoded = self.deflate_and_encode(plantuml_text)
@@ -128,7 +127,7 @@ class PlantUML:
         """Process the plantuml text and return the URL and content."""
         url = self.get_url(plantuml_text)
         try:
-            response = self.client.get(url)
+            response = self.client.get(url, **self.request_opts)
             response.raise_for_status()
             return url, plantuml_text
         except httpx.HTTPError as e:
