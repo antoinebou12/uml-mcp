@@ -194,7 +194,7 @@ markupsafe==3.0.3
     #   mkdocs
     #   mkdocs-autorefs
     #   mkdocstrings
-mcp==1.27.2
+mcp==1.29.0
     # via
     #   fastmcp-slim
     #   uml-mcp

@@ -123,7 +123,7 @@ markdown-it-py==4.2.0
     # via rich
 markupsafe==3.0.3
     # via jinja2
-mcp==1.27.2
+mcp==1.29.0
     # via
     #   fastmcp-slim
     #   uml-mcp
