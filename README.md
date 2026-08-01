@@ -8,6 +8,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python >=3.12,<3.13](https://img.shields.io/badge/python-%3E%3D3.12%2C%3C3.13-blue.svg)](https://www.python.org/downloads/)
 [![MseeP.ai Security Assessment](https://img.shields.io/badge/MseeP.ai-Security%20Assessment-green)](https://mseep.ai/app/antoinebou12-uml-mcp)
+[![MCP status](https://mcpvitals.com/badge/6cfb821be2.svg)](https://mcpvitals.com/status/6cfb821be2)
 
 Generate UML and other diagrams through the [Model Context Protocol](https://modelcontextprotocol.io/).
 
