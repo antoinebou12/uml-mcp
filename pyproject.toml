@@ -29,7 +29,7 @@ dependencies = [
     "python-dateutil>=2.8.2,<3",
     "graphviz>=0.21,<0.22",
     "pillow>=12.0.0,<13",
-    "fastmcp==4.0.0b2",
+    "fastmcp-slim[server]==4.0.0b2",
     "mcp>=2.0.0,<3.0.0",
 ]
 
