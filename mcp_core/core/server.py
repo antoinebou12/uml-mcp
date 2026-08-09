@@ -1,8 +1,20 @@
 """
-Core MCP server implementation
+Core MCP server implementation.
+
+The HTTP transport defaults to stateless mode for legacy MCP clients. Modern
+2026-07-28 clients are sessionless at the protocol level and are handled by
+FastMCP 4 / MCP Python SDK 2 without a protocol session.
 """
 
 import logging
+import os
+
+# Default HTTP deployments to stateless transport semantics. This removes
+# Mcp-Session-Id affinity for legacy clients too, which is important for Vercel,
+# Cloud Run, multi-worker Uvicorn, and other horizontally scaled deployments.
+# Operators can explicitly set FASTMCP_STATELESS_HTTP=false if they need a
+# legacy stateful deployment.
+os.environ.setdefault("FASTMCP_STATELESS_HTTP", "true")
 
 # Get logger
 logger = logging.getLogger(__name__)
@@ -24,9 +36,9 @@ def create_mcp_server():
     from ..tools.diagram_tools import register_diagram_tools
     from .config import MCP_SETTINGS
 
-    # Initialize MCP server
-    # Note: stateless_http is configured via the FASTMCP_STATELESS_HTTP env var
-    # (read by run_http_async/http_app at runtime, not the constructor)
+    # FastMCP 4 negotiates both the modern 2026-07-28 sessionless protocol and
+    # legacy protocol revisions on the same server. Transport-level stateless
+    # behavior for legacy HTTP clients is configured by FASTMCP_STATELESS_HTTP.
     logger.info(f"Creating MCP server: {MCP_SETTINGS.server_name}")
     server = FastMCP(MCP_SETTINGS.server_name)
 
@@ -83,7 +95,9 @@ def start_server(transport="stdio", host=None, port=None):
     elif transport == "http":
         if not host or not port:
             raise ValueError("Host and port must be specified for HTTP transport")
-        # FastMCP v3 removed run_http(); use run(transport="http") instead
+        # FastMCP v3+ uses run(transport="http"). FASTMCP_STATELESS_HTTP is
+        # intentionally set above so the same setting also applies when this
+        # server is embedded through http_app() in app.py.
         if hasattr(server, "run_http"):
             server.run_http(host=host, port=port)
         else:
