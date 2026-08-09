@@ -1,10 +1,6 @@
 name: Build Package
 
 on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
   workflow_call:
 
@@ -42,7 +38,12 @@ jobs:
           import sys
           import zipfile
 
-          for whl in glob.glob("dist/*.whl"):
+          wheels = glob.glob("dist/*.whl")
+          if not wheels:
+              print("FAIL: no wheel produced", file=sys.stderr)
+              sys.exit(1)
+
+          for whl in wheels:
               with zipfile.ZipFile(whl) as z:
                   tops = {
                       n.split("/")[0]
