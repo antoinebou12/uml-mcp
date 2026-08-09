@@ -1,30 +1,27 @@
 """
-MCP tools for diagram generation using the decorator pattern
+MCP tools for diagram generation using the decorator pattern.
 """
 
+import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 
 from pydantic import ValidationError
 
-
 from ..core.config import MCP_SETTINGS
 from ..core.diagram_catalog import get_diagram_types_dict
 from ..core.diagram_service import DiagramRequest, generate_from_request
 from ..core.diagram_validation import validate_uml_inputs
-
-# Import the tool decorator system
-from .tool_decorator import get_tool_registry, mcp_tool, register_tools_with_server
 from .schemas import GenerateUMLInput
+from .tool_decorator import get_tool_registry, mcp_tool, register_tools_with_server
 
 logger = logging.getLogger(__name__)
 
-# MCP tool annotations per best practices (diagram tools call Kroki, may write files)
 ANNOTATIONS_DIAGRAM = {
-    "readOnlyHint": False,  # May write files when output_dir provided
+    "readOnlyHint": False,
     "destructiveHint": False,
-    "idempotentHint": True,  # Same inputs produce same diagram via Kroki
-    "openWorldHint": True,  # Calls external Kroki service for rendering
+    "idempotentHint": True,
+    "openWorldHint": True,
 }
 
 ANNOTATIONS_VALIDATE = {
@@ -52,11 +49,7 @@ ANNOTATIONS_LIST = {
     annotations=ANNOTATIONS_LIST,
 )
 def list_diagram_types() -> Dict[str, Any]:
-    """Return the uml://types payload as a structured dict.
-
-    Keys are diagram type names (e.g. class, mermaid, c4plantuml); each value has
-    backend, description, and formats.
-    """
+    """Return the uml://types payload as a structured dict."""
     logger.info("Called list_diagram_types tool")
     return get_diagram_types_dict()
 
@@ -135,7 +128,35 @@ def generate_uml_batch(
     return {"results": results}
 
 
-# Main UML generation tool
+@mcp_tool(
+    name="generate_uml_batch_task",
+    description=(
+        "Generate a batch of diagrams using the MCP Tasks extension. Prefer this for "
+        "large batches or expensive renders so the client can poll task status instead "
+        "of holding one request open. Inputs and output match generate_uml_batch."
+    ),
+    category="uml",
+    example=(
+        "generate_uml_batch_task([{'diagram_type': 'mermaid', "
+        "'code': 'graph TD; A-->B;'}])"
+    ),
+    annotations=ANNOTATIONS_DIAGRAM,
+    task=True,
+)
+async def generate_uml_batch_task(
+    items: List[Dict[str, Any]],
+    output_dir: Optional[str] = None,
+) -> Dict[str, Any]:
+    """Task-capable wrapper for expensive batch generation.
+
+    The existing synchronous batch tool is kept for compatibility. This wrapper
+    offloads its blocking render pipeline to a worker thread when executed in the
+    foreground, while FastMCP can execute it through the Tasks extension when the
+    client requests background execution.
+    """
+    return await asyncio.to_thread(generate_uml_batch, items, output_dir)
+
+
 @mcp_tool(
     description="Generate any UML or diagram by type (class, sequence, mermaid, d2, etc.)",
     category="uml",
@@ -153,24 +174,7 @@ def generate_uml(
     theme: Optional[str] = None,
     scale: float = 1.0,
 ) -> Dict[str, Any]:
-    """Generate a diagram using the specified diagram type.
-
-    Use when you need a diagram of any supported type. For complex diagrams the
-    default prompt guides planning first (type, elements, relationships), then
-    you call this tool with the final code.
-
-    Args:
-        diagram_type: Type of diagram (class, sequence, activity, mermaid, d2, etc.)
-        code: Diagram code in the syntax for the chosen type
-        output_dir: Directory to save the image. Omit or None for URL, playground,
-            and content_base64 only (no file write; use in serverless / read-only).
-        output_format: svg, png, pdf, jpeg, txt, or base64 (default: svg). See uml://formats per type.
-        theme: PlantUML theme for UML diagrams (e.g. cerulean)
-        scale: Scale factor for SVG only (default 1.0, min 0.1). Ignored for other formats.
-
-    Returns:
-        Dict with code, url, playground; local_path when output_dir set; content_base64 when not saving; or error.
-    """
+    """Generate a diagram using the specified diagram type."""
     logger.info(
         "Called generate_uml tool: type=%s, code length=%s",
         diagram_type,
@@ -203,21 +207,7 @@ def validate_uml(
     output_format: str = "svg",
     strict: bool = False,
 ) -> Dict[str, Any]:
-    """Check inputs and light structure without rendering.
-
-    Use to catch unsupported types, bad output_format for the type, empty code, or obvious
-    PlantUML/Mermaid/D2 issues before calling generate_uml.
-
-    Args:
-        diagram_type: Same as generate_uml (see uml://types).
-        code: Diagram source text.
-        output_format: Intended output format (default svg); must be allowed for the type.
-        strict: When True, apply extra Mermaid/D2 checks (no extra PlantUML rules).
-
-    Returns:
-        Dict with valid (bool), errors, suggestions, backend, diagram_type, prepared_code,
-        optional corrected_code when only trivial wrapping changed the text, and strict.
-    """
+    """Check inputs and light structure without rendering."""
     logger.info(
         "Called validate_uml tool: type=%s, code length=%s, strict=%s",
         diagram_type,
@@ -228,21 +218,10 @@ def validate_uml(
 
 
 def register_diagram_tools(server: Any) -> List[str]:
-    """
-    Register all diagram generation tools with the MCP server
-
-    Args:
-        server: The MCP server instance
-
-    Returns:
-        List of registered tool names
-    """
+    """Register all diagram generation tools with the MCP server."""
     logger.info("Registering diagram tools")
 
-    # Register all tools that were decorated with @mcp_tool
     registered_tools = register_tools_with_server(server)
-
-    # Store registered tools in MCP_SETTINGS.tools (which is a standard attribute)
     MCP_SETTINGS.tools = registered_tools
 
     logger.info("Registered %s diagram tools successfully", len(registered_tools))
@@ -252,10 +231,5 @@ def register_diagram_tools(server: Any) -> List[str]:
 
 
 def get_tool_info() -> Dict[str, Dict[str, Any]]:
-    """
-    Get information about all registered tools
-
-    Returns:
-        Dictionary mapping tool names to their information
-    """
+    """Get information about all registered tools."""
     return get_tool_registry()
