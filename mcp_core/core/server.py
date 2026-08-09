@@ -8,7 +8,6 @@ FastMCP 4 / MCP Python SDK 2 without a protocol session.
 
 import logging
 import os
-from typing import Any
 
 # Default HTTP deployments to stateless transport semantics. This removes
 # Mcp-Session-Id affinity for legacy clients too, which is important for Vercel,
@@ -24,41 +23,20 @@ logger = logging.getLogger(__name__)
 _mcp_server = None
 
 
-def get_mcp_cache_hints() -> dict[str, Any]:
-    """Return MCP 2026-07-28 cache hints for deterministic discovery data.
+def get_mcp_cache_policy() -> dict[str, object]:
+    """Return FastMCP 4 server-wide SEP-2549 cache policy.
 
-    UML-MCP's tool, prompt, resource, and discovery catalogs are deployment
-    metadata rather than per-user state, so they are safe to cache publicly.
-    Resource reads are also static catalog/documentation resources in this
-    server and receive a shorter TTL to make future content changes visible
-    quickly after a deployment.
+    FastMCP 4.0.0b1 exposes cache hints as ``cache_ttl`` (seconds) and
+    ``cache_scope`` constructor arguments. The policy is intentionally public
+    because UML-MCP's tools, prompts, resource catalog and documentation
+    resources are deployment metadata rather than authorization-specific data.
 
-    The Python SDK only emits these hints on protocol revisions that support
-    SEP-2549; legacy MCP responses remain unchanged.
+    FastMCP applies this uniform hint to every MCP 2026 cacheable method:
+    ``tools/list``, ``prompts/list``, ``resources/list``,
+    ``resources/templates/list``, ``resources/read`` and ``server/discover``.
+    Legacy protocol responses are unaffected.
     """
-    try:
-        from mcp.server.caching import CacheHint
-    except ImportError:
-        # Tests using the lightweight FastMCP mock do not need the MCP v2
-        # caching classes. Returning plain metadata keeps the policy testable
-        # while production always uses CacheHint objects from MCP SDK 2.x.
-        return {
-            "tools/list": {"ttl_ms": 300_000, "scope": "public"},
-            "prompts/list": {"ttl_ms": 300_000, "scope": "public"},
-            "resources/list": {"ttl_ms": 300_000, "scope": "public"},
-            "resources/templates/list": {"ttl_ms": 300_000, "scope": "public"},
-            "resources/read": {"ttl_ms": 60_000, "scope": "public"},
-            "server/discover": {"ttl_ms": 300_000, "scope": "public"},
-        }
-
-    return {
-        "tools/list": CacheHint(ttl_ms=300_000, scope="public"),
-        "prompts/list": CacheHint(ttl_ms=300_000, scope="public"),
-        "resources/list": CacheHint(ttl_ms=300_000, scope="public"),
-        "resources/templates/list": CacheHint(ttl_ms=300_000, scope="public"),
-        "resources/read": CacheHint(ttl_ms=60_000, scope="public"),
-        "server/discover": CacheHint(ttl_ms=300_000, scope="public"),
-    }
+    return {"cache_ttl": 300, "cache_scope": "public"}
 
 
 def create_mcp_server():
@@ -80,7 +58,7 @@ def create_mcp_server():
     logger.info(f"Creating MCP server: {MCP_SETTINGS.server_name}")
     server = FastMCP(
         MCP_SETTINGS.server_name,
-        cache_hints=get_mcp_cache_hints(),
+        **get_mcp_cache_policy(),
     )
 
     # Register all tools, resources, and prompts
