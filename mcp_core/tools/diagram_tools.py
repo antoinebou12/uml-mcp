@@ -2,7 +2,6 @@
 MCP tools for diagram generation using the decorator pattern.
 """
 
-import asyncio
 import logging
 from typing import Any, Dict, List, Optional
 
@@ -126,35 +125,6 @@ def generate_uml_batch(
         )
         results.append({"index": i, **out})
     return {"results": results}
-
-
-@mcp_tool(
-    name="generate_uml_batch_task",
-    description=(
-        "Generate a batch of diagrams using the MCP Tasks extension. Prefer this for "
-        "large batches or expensive renders so the client can poll task status instead "
-        "of holding one request open. Inputs and output match generate_uml_batch."
-    ),
-    category="uml",
-    example=(
-        "generate_uml_batch_task([{'diagram_type': 'mermaid', "
-        "'code': 'graph TD; A-->B;'}])"
-    ),
-    annotations=ANNOTATIONS_DIAGRAM,
-    task=True,
-)
-async def generate_uml_batch_task(
-    items: List[Dict[str, Any]],
-    output_dir: Optional[str] = None,
-) -> Dict[str, Any]:
-    """Task-capable wrapper for expensive batch generation.
-
-    The existing synchronous batch tool is kept for compatibility. This wrapper
-    offloads its blocking render pipeline to a worker thread when executed in the
-    foreground, while FastMCP can execute it through the Tasks extension when the
-    client requests background execution.
-    """
-    return await asyncio.to_thread(generate_uml_batch, items, output_dir)
 
 
 @mcp_tool(
