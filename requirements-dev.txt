@@ -423,7 +423,7 @@ uvicorn==0.48.0
     #   fastmcp-slim
     #   mcp
     #   uml-mcp
-virtualenv==21.4.2
+virtualenv==21.7.3
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
