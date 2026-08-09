@@ -8,6 +8,7 @@ FastMCP 4 / MCP Python SDK 2 without a protocol session.
 
 import logging
 import os
+from typing import Any
 
 # Default HTTP deployments to stateless transport semantics. This removes
 # Mcp-Session-Id affinity for legacy clients too, which is important for Vercel,
@@ -21,6 +22,43 @@ logger = logging.getLogger(__name__)
 
 # Create a singleton MCP server instance
 _mcp_server = None
+
+
+def get_mcp_cache_hints() -> dict[str, Any]:
+    """Return MCP 2026-07-28 cache hints for deterministic discovery data.
+
+    UML-MCP's tool, prompt, resource, and discovery catalogs are deployment
+    metadata rather than per-user state, so they are safe to cache publicly.
+    Resource reads are also static catalog/documentation resources in this
+    server and receive a shorter TTL to make future content changes visible
+    quickly after a deployment.
+
+    The Python SDK only emits these hints on protocol revisions that support
+    SEP-2549; legacy MCP responses remain unchanged.
+    """
+    try:
+        from mcp.server.caching import CacheHint
+    except ImportError:
+        # Tests using the lightweight FastMCP mock do not need the MCP v2
+        # caching classes. Returning plain metadata keeps the policy testable
+        # while production always uses CacheHint objects from MCP SDK 2.x.
+        return {
+            "tools/list": {"ttl_ms": 300_000, "scope": "public"},
+            "prompts/list": {"ttl_ms": 300_000, "scope": "public"},
+            "resources/list": {"ttl_ms": 300_000, "scope": "public"},
+            "resources/templates/list": {"ttl_ms": 300_000, "scope": "public"},
+            "resources/read": {"ttl_ms": 60_000, "scope": "public"},
+            "server/discover": {"ttl_ms": 300_000, "scope": "public"},
+        }
+
+    return {
+        "tools/list": CacheHint(ttl_ms=300_000, scope="public"),
+        "prompts/list": CacheHint(ttl_ms=300_000, scope="public"),
+        "resources/list": CacheHint(ttl_ms=300_000, scope="public"),
+        "resources/templates/list": CacheHint(ttl_ms=300_000, scope="public"),
+        "resources/read": CacheHint(ttl_ms=60_000, scope="public"),
+        "server/discover": CacheHint(ttl_ms=300_000, scope="public"),
+    }
 
 
 def create_mcp_server():
@@ -40,7 +78,10 @@ def create_mcp_server():
     # legacy protocol revisions on the same server. Transport-level stateless
     # behavior for legacy HTTP clients is configured by FASTMCP_STATELESS_HTTP.
     logger.info(f"Creating MCP server: {MCP_SETTINGS.server_name}")
-    server = FastMCP(MCP_SETTINGS.server_name)
+    server = FastMCP(
+        MCP_SETTINGS.server_name,
+        cache_hints=get_mcp_cache_hints(),
+    )
 
     # Register all tools, resources, and prompts
     tool_names = register_diagram_tools(server)
