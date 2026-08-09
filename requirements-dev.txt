@@ -238,7 +238,7 @@ nodeenv==1.10.0
     # via pre-commit
 openapi-pydantic==0.5.1
     # via fastmcp-slim
-opentelemetry-api==1.42.1
+opentelemetry-api==1.44.0
     # via fastmcp-slim
 packaging==26.2
     # via
