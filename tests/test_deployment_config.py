@@ -18,6 +18,8 @@ def test_pyproject_is_canonical_mcp_2026_manifest() -> None:
 
     assert "fastmcp[tasks]==4.0.0b1" in dependencies
     assert "mcp>=2.0.0,<3.0.0" in dependencies
+    assert "fastapi>=0.141.1,<0.200.0" in dependencies
+    assert "starlette>=1.6.0,<2.0.0" in dependencies
     assert project["requires-python"] == ">=3.12,<3.15"
 
     # Runtime dependencies belong to PEP 621. Keeping a second Poetry dependency
@@ -25,16 +27,14 @@ def test_pyproject_is_canonical_mcp_2026_manifest() -> None:
     assert "dependencies" not in pyproject.get("tool", {}).get("poetry", {})
 
 
-def test_transitive_overrides_match_consolidated_dependency_updates() -> None:
+def test_pyproject_does_not_override_transitive_constraints() -> None:
     pyproject = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
-    overrides = set(pyproject["tool"]["uv"]["override-dependencies"])
 
-    assert "virtualenv==21.7.3" in overrides
-    assert "cryptography==49.0.0" in overrides
-    assert "opentelemetry-api==1.44.0" in overrides
-    assert "cyclopts==4.22.5" in overrides
-    assert "griffelib==2.1.0" in overrides
-    assert "joserfc==1.7.4" in overrides
+    # Transitive versions belong to their owning packages. In particular this
+    # keeps FastMCP 4 / MCP 2 free to resolve a mutually compatible graph on
+    # Vercel instead of bypassing upstream constraints with uv overrides.
+    uv_config = pyproject.get("tool", {}).get("uv", {})
+    assert "override-dependencies" not in uv_config
 
 
 def test_vercel_uses_native_fastapi_routing_and_stateless_storage() -> None:
