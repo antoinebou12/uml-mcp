@@ -68,27 +68,11 @@ jobs:
           curl -fsS --max-time 20 "${VERCEL_URL}/.well-known/mcp/server-card.json" \
             | jq -e '.serverInfo and .tools'
 
-      - name: Check deployed stateless lifecycle
+      - name: Run full deployed MCP 2026-07-28 conformance suite
         run: |
           npx -y @modelcontextprotocol/conformance@0.2.0-alpha.9 server \
             --url "${VERCEL_URL}/mcp" \
-            --scenario server-stateless \
-            --spec-version 2026-07-28 \
-            --verbose
-
-      - name: Check deployed cache hints
-        run: |
-          npx -y @modelcontextprotocol/conformance@0.2.0-alpha.9 server \
-            --url "${VERCEL_URL}/mcp" \
-            --scenario caching \
-            --spec-version 2026-07-28 \
-            --verbose
-
-      - name: Check deployed HTTP headers
-        run: |
-          npx -y @modelcontextprotocol/conformance@0.2.0-alpha.9 server \
-            --url "${VERCEL_URL}/mcp" \
-            --scenario http-header-validation \
+            --suite all \
             --spec-version 2026-07-28 \
             --verbose
 
