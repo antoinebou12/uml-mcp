@@ -71,7 +71,7 @@ fastmcp-slim==3.4.2
     # via fastmcp
 graphviz==0.21
     # via uml-mcp
-griffelib==2.0.2
+griffelib==2.1.0
     # via fastmcp-slim
 h11==0.16.0
     # via
