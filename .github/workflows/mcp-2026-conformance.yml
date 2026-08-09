@@ -1,0 +1,76 @@
+name: MCP 2026 Conformance
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - "app.py"
+      - "api/**"
+      - "mcp_core/**"
+      - "tests/test_mcp_2026.py"
+      - "pyproject.toml"
+      - "vercel.json"
+      - ".github/workflows/mcp-2026-conformance.yml"
+
+jobs:
+  protocol-conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v9.0.0
+        with:
+          version: "latest"
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Start UML-MCP in Vercel-compatible stateless mode
+        env:
+          FASTMCP_STATELESS_HTTP: "true"
+          MCP_MEMORY_ONLY: "true"
+          MCP_URL_ONLY: "true"
+          MCP_OUTPUT_DIR: /tmp/diagrams
+          VERCEL_OUTPUT_DIR: /tmp/diagrams
+        run: |
+          uv run uvicorn app:app --host 127.0.0.1 --port 8766 > /tmp/uml-mcp.log 2>&1 &
+          echo $! > /tmp/uml-mcp.pid
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8766/health | jq -e '.status == "healthy"' >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/uml-mcp.log
+          exit 1
+
+      - name: Run full MCP 2026-07-28 server conformance suite
+        run: |
+          npx -y @modelcontextprotocol/conformance@0.2.0-alpha.9 server \
+            --url http://127.0.0.1:8766/mcp \
+            --suite all \
+            --spec-version 2026-07-28 \
+            --verbose
+
+      - name: Show server log on failure
+        if: failure()
+        run: cat /tmp/uml-mcp.log
+
+      - name: Stop UML-MCP
+        if: always()
+        run: |
+          if [ -f /tmp/uml-mcp.pid ]; then
+            kill "$(cat /tmp/uml-mcp.pid)" || true
+          fi

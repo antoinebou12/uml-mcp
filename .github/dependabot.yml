@@ -1,17 +1,10 @@
-# Dependabot: keep dependencies and GitHub Actions up to date
-# https://docs.github.com/en/code-security/dependabot
+# Dependabot complements Renovate without opening duplicate Python PRs.
+# Python dependencies are managed by Renovate from the canonical PEP 621
+# pyproject.toml. Dependabot remains responsible for Actions and Docker updates.
+# Dependabot security alerts/updates are configured in repository settings.
 
 version: 2
 updates:
-  # Single source of truth with CI: pyproject.toml + uv.lock (+ exported requirements.txt).
-  # Avoid pip+poetry here; duplicate ecosystems open conflicting PRs for the same packages.
-  - package-ecosystem: "uv"
-    directory: "/"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    labels: ["dependencies"]
-
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:

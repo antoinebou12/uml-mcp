@@ -1,8 +1,6 @@
-# Reusable: test Vercel deployment, then publish to Smithery (URL-based).
-# Called from cd.yml when deploy_to_smithery is true or on push to main.
-# Order: test Vercel (health + server-card + MCP JSON-RPC) -> publish Smithery.
+# Reusable: wait for the Vercel Git deployment, validate MCP 2026, then publish to Smithery.
 
-name: Deploy (Vercel test + Smithery publish)
+name: Deploy (Vercel conformance + Smithery publish)
 
 on:
   workflow_call:
@@ -37,67 +35,46 @@ on:
 jobs:
   test-and-publish:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       VERCEL_URL: ${{ inputs.vercel_url || github.event.inputs.vercel_url || 'https://uml-mcp.vercel.app' }}
     steps:
-      # Smithery CLI is the npm package @smithery/cli — there is no PyPI package "smithery-cli".
       - name: Checkout repository
         uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "24"
 
-      - name: Test Vercel – health
-        run: |
-          curl -sf "${VERCEL_URL}/health" | jq -e '.status == "healthy"' || (echo "Health check failed" && exit 1)
-
-      - name: Test Vercel – server card
-        run: |
-          curl -sf "${VERCEL_URL}/.well-known/mcp/server-card.json" | jq -e '.serverInfo and .tools' || (echo "Server card check failed" && exit 1)
-
-      - name: Test Vercel – MCP tools/list
+      - name: Wait for Vercel deployment
         run: |
           set -euo pipefail
-          raw="$(mktemp)"
-          curl -sNL --max-time 30 \
-            -H 'Accept: application/json, text/event-stream' \
-            -H 'Content-Type: application/json' \
-            -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}' \
-            "${VERCEL_URL}/mcp" >"$raw"
-          payload="$(grep '^data: ' "$raw" | head -1 | sed 's/^data: //' || true)"
-          if [ -z "$payload" ]; then
-            echo "MCP tools/list: no SSE data line"
-            head -20 "$raw"
-            exit 1
-          fi
-          if ! echo "$payload" | jq -e '[.result.tools[].name] | contains(["generate_uml"])'; then
-            echo "MCP tools/list response:"
-            echo "$payload" | jq .
-            exit 1
-          fi
+          for i in {1..60}; do
+            if payload="$(curl -fsS --max-time 10 "${VERCEL_URL}/health" 2>/dev/null)" \
+              && echo "$payload" | jq -e '.status == "healthy"' >/dev/null; then
+              echo "Vercel deployment is healthy: ${VERCEL_URL}"
+              exit 0
+            fi
+            echo "Waiting for Vercel deployment (${i}/60)..."
+            sleep 5
+          done
+          echo "Vercel deployment did not become healthy"
+          curl -i --max-time 15 "${VERCEL_URL}/health" || true
+          exit 1
 
-      - name: Test Vercel – MCP list_diagram_types
+      - name: Validate MCP server card
         run: |
-          set -euo pipefail
-          raw="$(mktemp)"
-          curl -sNL --max-time 60 \
-            -H 'Accept: application/json, text/event-stream' \
-            -H 'Content-Type: application/json' \
-            -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"list_diagram_types","arguments":{}}}' \
-            "${VERCEL_URL}/mcp" >"$raw"
-          payload="$(grep '^data: ' "$raw" | head -1 | sed 's/^data: //' || true)"
-          if [ -z "$payload" ]; then
-            echo "MCP list_diagram_types: no SSE data line"
-            head -20 "$raw"
-            exit 1
-          fi
-          if ! echo "$payload" | jq -e '.result.content | length > 0'; then
-            echo "MCP list_diagram_types response:"
-            echo "$payload" | jq .
-            exit 1
-          fi
+          curl -fsS --max-time 20 "${VERCEL_URL}/.well-known/mcp/server-card.json" \
+            | jq -e '.serverInfo and .tools'
+
+      - name: Run full deployed MCP 2026-07-28 conformance suite
+        run: |
+          npx -y @modelcontextprotocol/conformance@0.2.0-alpha.9 server \
+            --url "${VERCEL_URL}/mcp" \
+            --suite all \
+            --spec-version 2026-07-28 \
+            --verbose
 
       - name: Publish to Smithery
         if: ${{ inputs.skip_smithery != true && github.event.inputs.skip_smithery != 'true' }}

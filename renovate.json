@@ -4,29 +4,23 @@
     "config:base"
   ],
   "pep621": {
+    "enabled": true
+  },
+  "poetry": {
     "enabled": false
   },
-  "description": "Python deps: pyproject.toml + uv.lock; transitive pins under [tool.uv] override-dependencies — bump/remove those when raising direct floors (e.g. fastmcp).",
-  "postUpgradeTasks": {
-    "commands": [
-      "uv lock",
-      "uv export --no-dev --no-hashes -o requirements.txt",
-      "uv export --no-hashes -o requirements-dev.txt"
-    ],
-    "executionMode": "branch",
-    "fileFilters": ["uv.lock", "requirements.txt", "requirements-dev.txt"]
-  },
+  "description": "Python dependencies are declared canonically in pyproject.toml using PEP 621 and PEP 735. No generated requirements or lockfile is committed during the FastMCP 4 / MCP 2 migration.",
   "packageRules": [
     {
-      "description": "Keep official Python Docker base images on the 3.12 line (matches CI / uv)",
+      "description": "Keep official Python Docker base images on the 3.12 line (matches the deployment runtime)",
       "matchManagers": ["dockerfile"],
       "matchPackageNames": ["python"],
       "allowedVersions": "/^3\\.12/"
     },
     {
-      "description": "Do not auto-bump Poetry python constraint; align manually with CI matrix",
-      "matchManagers": ["poetry"],
-      "matchPackageNames": ["python"],
+      "description": "Do not auto-bump the project Python constraint; align it manually with the CI matrix and Vercel runtime",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["requires-python"],
       "enabled": false
     }
   ]
