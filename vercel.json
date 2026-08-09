@@ -1,7 +1,7 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "version": 2,
   "buildCommand": "python -m mcp_core.build_static_server_card",
-  "framework": "fastapi",
   "headers": [
     {
       "source": "/.well-known/api-catalog",
@@ -22,20 +22,6 @@
       ]
     }
   ],
-  "rewrites": [
-    {
-      "source": "/mcp",
-      "destination": "/"
-    },
-    {
-      "source": "/mcp/(.*)",
-      "destination": "/"
-    },
-    {
-      "source": "/((?!\\.well-known).*)",
-      "destination": "/"
-    }
-  ],
   "env": {
     "KROKI_SERVER": "https://kroki.io",
     "VERCEL_OUTPUT_DIR": "/tmp/diagrams",
@@ -43,6 +29,5 @@
     "FASTMCP_STATELESS_HTTP": "true",
     "MCP_URL_ONLY": "true",
     "MCP_MEMORY_ONLY": "true"
-  },
-  "installCommand": "uv export --frozen --no-dev --no-hashes | uv pip install --no-compile --no-cache-dir -r -"
+  }
 }
