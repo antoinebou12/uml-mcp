@@ -108,7 +108,7 @@ jobs:
               response = client.get("/health")
               assert response.status_code == 200, response.text
               payload = response.json()
-              assert payload.get("status") == "ok", payload
+              assert payload.get("status") == "healthy", payload
 
           print("Vercel/FastAPI entrypoint smoke test OK")
           PY
