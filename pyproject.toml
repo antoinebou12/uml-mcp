@@ -38,12 +38,14 @@ requests = ">=2.34.2,<3"
 click = "==8.4.2"
 charset-normalizer = "==3.4.7"
 python-dateutil = "^2.8.2"
-# Add diagram-related dependencies
+# Diagram-related dependencies
 graphviz = ">=0.21,<0.22"
 pillow = "^12.0.0"
-# If fastmcp is not your own module but a dependency (2.3.1+ for http_app / Streamable HTTP)
-fastmcp = ">=2.3.1,<4"
-mcp = ">=1.27.1,<2.0.0"
+# FastMCP 4 + MCP Python SDK 2 provide dual-era support: the stateless
+# 2026-07-28 protocol plus legacy 2025 clients on the same endpoint.
+# FastMCP 4 is currently pre-release, so pin exactly until stable 4.0 ships.
+fastmcp = { version = "==4.0.0b1", extras = ["tasks"] }
+mcp = ">=2.0.0,<3.0.0"
 
 # Transitive-only pins (direct versions live in [tool.poetry.dependencies] above).
 # Revisit when bumping fastmcp / httpx / starlette; drop entries when upstream aligns.
