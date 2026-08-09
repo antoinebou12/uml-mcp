@@ -32,41 +32,37 @@ def test_batch_task_is_advertised_as_task_capable():
     assert registry["generate_uml_batch_task"]["task"] is True
 
 
-def test_cache_hints_cover_all_2026_cacheable_server_methods():
-    from mcp_core.core.server import get_mcp_cache_hints
+def test_cache_policy_uses_fastmcp4_server_level_api():
+    from mcp_core.core.server import get_mcp_cache_policy
 
-    hints = get_mcp_cache_hints()
-    assert set(hints) == {
-        "tools/list",
-        "prompts/list",
-        "resources/list",
-        "resources/templates/list",
-        "resources/read",
-        "server/discover",
-    }
+    policy = get_mcp_cache_policy()
+    assert policy == {"cache_ttl": 300, "cache_scope": "public"}
 
 
-def test_cache_hints_are_public_and_positive():
-    from mcp_core.core.server import get_mcp_cache_hints
+def test_create_server_passes_supported_cache_kwargs(monkeypatch):
+    """Guard against reintroducing the removed ``cache_hints=`` constructor kwarg."""
+    import mcp_core.core.server as server_module
+    import mcp_core.server.fastmcp_wrapper as wrapper
 
-    hints = get_mcp_cache_hints()
-    for method, hint in hints.items():
-        if isinstance(hint, dict):
-            ttl_ms = hint["ttl_ms"]
-            scope = hint["scope"]
-        else:
-            ttl_ms = hint.ttl_ms
-            scope = hint.scope
+    captured: dict[str, object] = {}
 
-        assert ttl_ms > 0, method
-        assert scope == "public", method
+    class FakeFastMCP:
+        def __init__(self, name: str, **kwargs):
+            captured["name"] = name
+            captured.update(kwargs)
 
-    read_hint = hints["resources/read"]
-    catalog_hint = hints["tools/list"]
-    read_ttl = read_hint["ttl_ms"] if isinstance(read_hint, dict) else read_hint.ttl_ms
-    catalog_ttl = (
-        catalog_hint["ttl_ms"]
-        if isinstance(catalog_hint, dict)
-        else catalog_hint.ttl_ms
-    )
-    assert read_ttl < catalog_ttl
+        def tool(self, *args, **kwargs):
+            return lambda func: func
+
+        def resource(self, *args, **kwargs):
+            return lambda func: func
+
+        def prompt(self, *args, **kwargs):
+            return lambda func: func
+
+    monkeypatch.setattr(wrapper, "FastMCP", FakeFastMCP)
+    server_module.create_mcp_server()
+
+    assert captured["cache_ttl"] == 300
+    assert captured["cache_scope"] == "public"
+    assert "cache_hints" not in captured
