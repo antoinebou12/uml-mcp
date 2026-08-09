@@ -16,7 +16,8 @@ def test_pyproject_is_canonical_mcp_2026_manifest() -> None:
     project = pyproject["project"]
     dependencies = project["dependencies"]
 
-    assert "fastmcp[tasks]==4.0.0b1" in dependencies
+    assert "fastmcp==4.0.0b1" in dependencies
+    assert all(not dependency.startswith("fastmcp[tasks]") for dependency in dependencies)
     assert "mcp>=2.0.0,<3.0.0" in dependencies
     assert "fastapi>=0.141.1,<0.200.0" in dependencies
     assert "starlette>=1.6.0,<2.0.0" in dependencies
