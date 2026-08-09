@@ -22,14 +22,13 @@ def test_operator_can_override_stateless_default(monkeypatch):
     assert os.environ["FASTMCP_STATELESS_HTTP"] == "false"
 
 
-def test_batch_task_is_advertised_as_task_capable():
-    # Import registers diagram tools in the local decorator registry.
+def test_batch_tool_remains_available_without_task_extension():
     from mcp_core.tools import diagram_tools  # noqa: F401
     from mcp_core.tools.tool_decorator import get_tool_registry
 
     registry = get_tool_registry()
-    assert "generate_uml_batch_task" in registry
-    assert registry["generate_uml_batch_task"]["task"] is True
+    assert "generate_uml_batch" in registry
+    assert "generate_uml_batch_task" not in registry
 
 
 def test_cache_policy_uses_fastmcp4_server_level_api():
