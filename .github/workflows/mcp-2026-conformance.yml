@@ -1,0 +1,87 @@
+name: MCP 2026 Conformance
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "app.py"
+      - "mcp_core/**"
+      - "tests/test_mcp_2026.py"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/mcp-2026-conformance.yml"
+
+jobs:
+  protocol-conformance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v8.2.0
+        with:
+          version: "latest"
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+
+      - name: Start UML-MCP
+        env:
+          FASTMCP_STATELESS_HTTP: "true"
+          USE_REAL_FASTMCP: "1"
+        run: |
+          uv run uvicorn app:app --host 127.0.0.1 --port 8766 > /tmp/uml-mcp.log 2>&1 &
+          echo $! > /tmp/uml-mcp.pid
+          for i in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8766/health >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/uml-mcp.log
+          exit 1
+
+      - name: Check stateless lifecycle
+        run: |
+          npx -y @modelcontextprotocol/conformance@0.2.0-alpha.9 server \
+            --url http://127.0.0.1:8766/mcp \
+            --scenario server-stateless \
+            --spec-version 2026-07-28 \
+            --verbose
+
+      - name: Check cache hints
+        run: |
+          npx -y @modelcontextprotocol/conformance@0.2.0-alpha.9 server \
+            --url http://127.0.0.1:8766/mcp \
+            --scenario caching \
+            --spec-version 2026-07-28 \
+            --verbose
+
+      - name: Check standard HTTP headers
+        run: |
+          npx -y @modelcontextprotocol/conformance@0.2.0-alpha.9 server \
+            --url http://127.0.0.1:8766/mcp \
+            --scenario http-header-validation \
+            --spec-version 2026-07-28 \
+            --verbose
+
+      - name: Show server log on failure
+        if: failure()
+        run: cat /tmp/uml-mcp.log
+
+      - name: Stop UML-MCP
+        if: always()
+        run: |
+          if [ -f /tmp/uml-mcp.pid ]; then
+            kill "$(cat /tmp/uml-mcp.pid)" || true
+          fi
