@@ -1,5 +1,5 @@
 """
-Decorator system for MCP tools.
+Decorator system for MCP tools
 """
 
 import inspect
@@ -21,9 +21,9 @@ def mcp_tool(
     required_params: Optional[List[str]] = None,
     example: Optional[str] = None,
     annotations: Optional[Dict[str, Any]] = None,
-    task: bool = False,
 ) -> Callable[[F], F]:
-    """Decorator for registering a function as an MCP tool.
+    """
+    Decorator for registering a function as an MCP tool.
 
     Args:
         name: Tool name (defaults to function name if not provided)
@@ -32,11 +32,15 @@ def mcp_tool(
         required_params: List of required parameter names
         example: Example usage of the tool
         annotations: MCP tool hints (readOnlyHint, destructiveHint, idempotentHint, openWorldHint)
-        task: Whether the tool supports the MCP Tasks extension. Task-enabled tools
-            must be async when registered with FastMCP.
 
     Returns:
         Decorated function
+
+    Example:
+        @mcp_tool(description="Generate a class diagram", category="uml")
+        def generate_class_diagram(code: str, output_dir: str) -> Dict[str, Any]:
+            # Implementation
+            return {"code": code, "url": "..."}
     """
 
     def decorator(func: F) -> F:
@@ -44,6 +48,7 @@ def mcp_tool(
         func_doc = inspect.getdoc(func) or ""
         func_description = description or func_doc.split("\n")[0] if func_doc else ""
 
+        # Get parameter annotations from function signature
         sig = inspect.signature(func)
         param_info = {}
 
@@ -67,6 +72,7 @@ def mcp_tool(
                 "default": param_default,
             }
 
+        # Store tool metadata
         _registered_tools[func_name] = {
             "function": func,
             "name": func_name,
@@ -77,7 +83,6 @@ def mcp_tool(
             or [p for p, info in param_info.items() if info["required"]],
             "example": example,
             "annotations": annotations or {},
-            "task": task,
             "return_type": (
                 sig.return_annotation
                 if sig.return_annotation is not inspect.Parameter.empty
@@ -85,13 +90,22 @@ def mcp_tool(
             ),
         }
 
+        # Return function unchanged
         return cast(F, func)
 
     return decorator
 
 
 def register_tools_with_server(server: Any) -> List[str]:
-    """Register all decorated tools with the MCP server."""
+    """
+    Register all decorated tools with the MCP server
+
+    Args:
+        server: The MCP server instance
+
+    Returns:
+        List of registered tool names
+    """
     logger.info(f"Registering {len(_registered_tools)} tools with the MCP server")
 
     registered_tools = []
@@ -100,53 +114,42 @@ def register_tools_with_server(server: Any) -> List[str]:
     for tool_name, tool_info in _registered_tools.items():
         func = tool_info["function"]
         annotations = tool_info.get("annotations") or {}
-        task_enabled = bool(tool_info.get("task", False))
 
-        tool_kwargs: Dict[str, Any] = {
-            "name": tool_name,
-            "description": tool_info["description"],
-        }
+        # Build tool registration kwargs
+        tool_kwargs = {"name": tool_name, "description": tool_info["description"]}
         if annotations:
             tool_kwargs["annotations"] = annotations
-        if task_enabled:
-            tool_kwargs["task"] = True
 
-        # FastMCP 4 supports annotations and task=True. The compatibility
-        # fallbacks keep development mocks and older test doubles working.
+        # Register with server (handle different server APIs)
         try:
             dec = server_any.tool(**tool_kwargs)
             dec(func)
         except TypeError:
             try:
-                fallback_kwargs = {
-                    "name": tool_name,
-                    "description": tool_info["description"],
-                }
-                if annotations:
-                    fallback_kwargs["annotations"] = annotations
-                dec = server_any.tool(**fallback_kwargs)
+                # Try without annotations (server may not support them)
+                dec = server_any.tool(
+                    name=tool_name, description=tool_info["description"]
+                )
                 dec(func)
             except TypeError:
                 try:
-                    dec = server_any.tool(
-                        name=tool_name, description=tool_info["description"]
-                    )
+                    # Try just passing the description (alternate style)
+                    dec = server_any.tool(tool_info["description"])
                     dec(func)
                 except TypeError:
-                    try:
-                        dec = server_any.tool(tool_info["description"])
-                        dec(func)
-                    except TypeError:
-                        server_any.tool(func)
+                    # Fallback to simple decorator with no args (basic style)
+                    server_any.tool(func)
 
-                    if tool_name != func.__name__:
-                        if hasattr(server, "_tools"):
-                            tools_map: Any = getattr(server, "_tools")
-                            tools_map[tool_name] = tools_map.pop(func.__name__, func)
-                        else:
-                            logger.warning(
-                                f"Could not rename tool '{func.__name__}' to '{tool_name}' - server API doesn't support it"
-                            )
+                # If that didn't throw an error but we need to rename the function
+                if tool_name != func.__name__:
+                    # Use the _tools dictionary directly if we can access it
+                    if hasattr(server, "_tools"):
+                        tools_map: Any = getattr(server, "_tools")
+                        tools_map[tool_name] = tools_map.pop(func.__name__, func)
+                    else:
+                        logger.warning(
+                            f"Could not rename tool '{func.__name__}' to '{tool_name}' - server API doesn't support it"
+                        )
 
         registered_tools.append(tool_name)
         logger.debug(f"Registered tool: {tool_name}")
@@ -155,12 +158,22 @@ def register_tools_with_server(server: Any) -> List[str]:
 
 
 def get_tool_registry() -> Dict[str, Dict[str, Any]]:
-    """Get information about all registered tools."""
+    """
+    Get the registry of all tools registered with the decorator
+
+    Returns:
+        Dictionary of tool metadata
+    """
     return _registered_tools
 
 
 def get_tool_categories() -> Dict[str, List[str]]:
-    """Get tools organized by category."""
+    """
+    Get tools organized by category
+
+    Returns:
+        Dictionary mapping categories to tool names
+    """
     categories: Dict[str, List[str]] = {}
 
     for tool_name, tool_info in _registered_tools.items():
@@ -174,5 +187,7 @@ def get_tool_categories() -> Dict[str, List[str]]:
 
 
 def clear_tool_registry():
-    """Clear the tool registry (mainly for testing)."""
+    """
+    Clear the tool registry (mainly for testing)
+    """
     _registered_tools.clear()
