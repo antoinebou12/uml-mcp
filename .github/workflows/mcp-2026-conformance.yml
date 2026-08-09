@@ -3,12 +3,14 @@ name: MCP 2026 Conformance
 on:
   workflow_dispatch:
   pull_request:
+    branches: [main]
     paths:
       - "app.py"
+      - "api/**"
       - "mcp_core/**"
       - "tests/test_mcp_2026.py"
       - "pyproject.toml"
-      - "uv.lock"
+      - "vercel.json"
       - ".github/workflows/mcp-2026-conformance.yml"
 
 jobs:
@@ -21,7 +23,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.2.0
+        uses: astral-sh/setup-uv@v9.0.0
         with:
           version: "latest"
           python-version: "3.12"
@@ -31,19 +33,22 @@ jobs:
         run: uv sync --all-groups
 
       - name: Set up Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: "20"
+          node-version: "24"
 
-      - name: Start UML-MCP
+      - name: Start UML-MCP in Vercel-compatible stateless mode
         env:
           FASTMCP_STATELESS_HTTP: "true"
-          USE_REAL_FASTMCP: "1"
+          MCP_MEMORY_ONLY: "true"
+          MCP_URL_ONLY: "true"
+          MCP_OUTPUT_DIR: /tmp/diagrams
+          VERCEL_OUTPUT_DIR: /tmp/diagrams
         run: |
           uv run uvicorn app:app --host 127.0.0.1 --port 8766 > /tmp/uml-mcp.log 2>&1 &
           echo $! > /tmp/uml-mcp.pid
           for i in {1..30}; do
-            if curl --fail --silent http://127.0.0.1:8766/health >/dev/null; then
+            if curl --fail --silent http://127.0.0.1:8766/health | jq -e '.status == "healthy"' >/dev/null; then
               exit 0
             fi
             sleep 1
