@@ -56,27 +56,11 @@ jobs:
           cat /tmp/uml-mcp.log
           exit 1
 
-      - name: Check stateless lifecycle
+      - name: Run full MCP 2026-07-28 server conformance suite
         run: |
           npx -y @modelcontextprotocol/conformance@0.2.0-alpha.9 server \
             --url http://127.0.0.1:8766/mcp \
-            --scenario server-stateless \
-            --spec-version 2026-07-28 \
-            --verbose
-
-      - name: Check cache hints
-        run: |
-          npx -y @modelcontextprotocol/conformance@0.2.0-alpha.9 server \
-            --url http://127.0.0.1:8766/mcp \
-            --scenario caching \
-            --spec-version 2026-07-28 \
-            --verbose
-
-      - name: Check standard HTTP headers
-        run: |
-          npx -y @modelcontextprotocol/conformance@0.2.0-alpha.9 server \
-            --url http://127.0.0.1:8766/mcp \
-            --scenario http-header-validation \
+            --suite all \
             --spec-version 2026-07-28 \
             --verbose
 
