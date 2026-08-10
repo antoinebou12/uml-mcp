@@ -227,4 +227,6 @@ Built with [MkDocs](https://www.mkdocs.org/) + [Material](https://squidfunk.gith
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=antoinebou12/uml-mcp&type=Date)](https://star-history.com/#antoinebou12/uml-mcp&Date)
+[![GitHub Star History](docs/assets/star-history.svg)](https://github.com/antoinebou12/uml-mcp/stargazers)
+
+_Updated daily by GitHub Actions from GitHub's timestamped stargazer API. The refresh job prefers the optional `STAR_HISTORY_TOKEN` repository secret and safely falls back to the per-run `GITHUB_TOKEN`._
