@@ -45,6 +45,40 @@ _MERMAID_HEAD = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 
+# Mermaid sequence messages use [Actor][Arrow][Actor]:Message. Keep this intentionally
+# conservative: catch only a message line that ends immediately after a documented
+# standard arrow token (optionally followed by an activation +/- marker). This rejects
+# obvious malformed input such as `A->>` without trying to duplicate Mermaid's parser.
+_MERMAID_SEQUENCE_DANGLING_ARROW = re.compile(
+    r"(?:<<-->>|<<->>|-->>|->>|-->|->|--x|-x|--\)|-\))\s*[+-]?\s*$"
+)
+
+
+def _strict_mermaid_sequence_errors(prepared_code: str) -> List[str]:
+    errors: List[str] = []
+    lines = prepared_code.splitlines()
+    first_content_seen = False
+
+    for line_number, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith("%%"):
+            continue
+
+        if not first_content_seen:
+            first_content_seen = True
+            if stripped.lower().startswith("sequencediagram"):
+                continue
+            return errors
+
+        if _MERMAID_SEQUENCE_DANGLING_ARROW.search(stripped):
+            errors.append(
+                "Mermaid (strict): sequence message on line "
+                f"{line_number} has an arrow but no target actor."
+            )
+            break
+
+    return errors
+
 
 def _structural_errors_strict_mermaid(prepared_code: str) -> List[str]:
     """Extra checks when strict=True; conservative to limit false positives."""
@@ -62,6 +96,7 @@ def _structural_errors_strict_mermaid(prepared_code: str) -> List[str]:
         errors.append(
             "Mermaid (strict): subgraph blocks typically need a matching `end`."
         )
+    errors.extend(_strict_mermaid_sequence_errors(s))
     return errors
 
 
@@ -84,6 +119,10 @@ def _suggestions_for_errors(errors: List[str]) -> List[str]:
         if "Mermaid" in e:
             sug.append(
                 "Start with a diagram keyword such as `graph TD`, `flowchart LR`, or `sequenceDiagram`."
+            )
+        if "target actor" in e:
+            sug.append(
+                "Complete sequence messages with a target actor, for example `A->>B: message`."
             )
         if "D2" in e:
             sug.append("Define at least one shape or connection (e.g. `a -> b`).")
