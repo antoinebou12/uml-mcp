@@ -57,6 +57,29 @@ def test_validate_uml_strict_mermaid_rejects_garbage():
     assert any("strict" in e.lower() for e in out["errors"])
 
 
+def test_validate_uml_strict_mermaid_rejects_dangling_sequence_arrow():
+    out = validate_uml_inputs(
+        "mermaid",
+        "sequenceDiagram\nA->>",
+        "svg",
+        strict=True,
+    )
+    assert out["valid"] is False
+    assert any("target actor" in e.lower() for e in out["errors"])
+    assert any("A->>B: message" in s for s in out["suggestions"])
+
+
+def test_validate_uml_strict_mermaid_accepts_complete_sequence_message():
+    out = validate_uml_inputs(
+        "mermaid",
+        "sequenceDiagram\nA->>B: message\nB-->>A: reply",
+        "svg",
+        strict=True,
+    )
+    assert out["valid"] is True
+    assert out["errors"] == []
+
+
 def test_validate_uml_strict_mermaid_ok():
     out = validate_uml_inputs(
         "mermaid",
