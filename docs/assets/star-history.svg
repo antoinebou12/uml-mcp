@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="960" height="520" viewBox="0 0 960 520" role="img" aria-labelledby="title desc">
+  <title id="title">GitHub Star History</title>
+  <desc id="desc">Initial placeholder. GitHub Actions will replace this with the timestamped star history after merge.</desc>
+  <style>
+    :root { color-scheme: light dark; }
+    .background { fill: #ffffff; }
+    .title { fill: #1f2328; font: 600 22px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    .text { fill: #57606a; font: 16px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+    .line { stroke: #0969da; stroke-width: 3; }
+    @media (prefers-color-scheme: dark) {
+      .background { fill: #0d1117; }
+      .title { fill: #f0f6fc; }
+      .text { fill: #8b949e; }
+      .line { stroke: #58a6ff; }
+    }
+  </style>
+  <rect class="background" width="100%" height="100%" rx="8" />
+  <text class="title" x="72" y="64">GitHub Star History</text>
+  <line class="line" x1="72" y1="310" x2="888" y2="310" />
+  <text class="text" x="480" y="250" text-anchor="middle">Automated history refresh is configured.</text>
+  <text class="text" x="480" y="282" text-anchor="middle">The first main-branch workflow run will replace this placeholder with real star timestamps.</text>
+</svg>
