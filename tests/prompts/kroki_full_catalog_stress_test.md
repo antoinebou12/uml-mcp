@@ -1,59 +1,63 @@
-# Kroki full-catalog MCP stress-test prompt
+# Tool-only Kroki full-catalog MCP smoke/stress test
 
-Use this prompt after connecting the UML MCP server at:
+Use this prompt in a ChatGPT conversation where the UML MCP app exposes these tools:
+
+- `list_diagram_types`
+- `validate_uml`
+- `generate_uml`
+- `generate_uml_batch`
+
+Endpoint used by the project:
 
 `https://uml-mcp.vercel.app/mcp`
 
-This is intentionally much stricter than the basic smoke test. It verifies MCP tool discovery, MCP resources, catalog completeness, complex Mermaid rendering, complex PlantUML rendering, all currently exposed Kroki-backed diagram types, batching, stateless repeatability, validation failures, and returned artifacts.
+This test is intentionally **tool-only**. It does not require MCP resource reads such as `uml://examples`.
 
-## Expected catalog
+## Execution rule
 
-The server currently exposes these 35 `diagram_type` values:
-
-`class`, `sequence`, `activity`, `usecase`, `state`, `component`, `deployment`, `object`, `mermaid`, `d2`, `graphviz`, `erd`, `blockdiag`, `packetdiag`, `bpmn`, `c4plantuml`, `actdiag`, `bytefield`, `seqdiag`, `nwdiag`, `rackdiag`, `dbml`, `ditaa`, `excalidraw`, `nomnoml`, `pikchr`, `plantuml`, `structurizr`, `svgbob`, `symbolator`, `tikz`, `vega`, `vegalite`, `wavedrom`, `wireviz`.
-
-If the live server exposes additional types, report them as catalog drift and test them too when `uml://examples` provides a non-empty example. If any expected type is missing, the test fails.
-
-## Full stress-test prompt
-
-Copy and paste the following into an MCP-enabled ChatGPT conversation:
+Copy and paste the prompt below into the MCP-enabled conversation. The assistant must execute it immediately with the tools that are available.
 
 ```text
-Use only the connected UML MCP server for every diagram operation in this test. Do not render diagrams yourself, do not substitute built-in diagram knowledge for MCP tool calls, and do not claim success unless a real MCP result is returned.
+EXECUTE THIS TEST NOW.
 
-This is a multi-phase conformance/stress test. Keep a running result table and do not stop after the first successful diagram.
+Use only these connected UML MCP tools:
+- list_diagram_types
+- validate_uml
+- generate_uml
+- generate_uml_batch
 
-PHASE 1 - DISCOVERY AND MCP RESOURCES
+Do NOT require or attempt to read MCP resources such as uml://types, uml://examples, uml://templates, uml://formats, or uml://capabilities.
+Do NOT stop and ask me to paste outputs.
+Do NOT ask me which resources are available.
+Do NOT explain that the test is too large.
+Do NOT render diagrams locally or substitute built-in diagram rendering.
+If a tool call fails, record the failure, continue when safe, and include it in the final report.
 
-1. Discover the available UML MCP tools and confirm these are callable:
-   - list_diagram_types
-   - validate_uml
-   - generate_uml
-   - generate_uml_batch
+The purpose is to execute a real end-to-end UML MCP smoke/stress test in this conversation using only the four exposed tools.
 
-2. Read these MCP resources when the client supports MCP resources:
-   - uml://types
-   - uml://formats
-   - uml://examples
-   - uml://capabilities
-   - uml://server-info
+PHASE 1 - TOOL DISCOVERY AND CATALOG
 
-3. Call list_diagram_types as well, even if uml://types was readable.
+1. Call list_diagram_types now.
+2. Confirm the returned catalog contains these 35 expected diagram_type values:
 
-4. Confirm that the live catalog contains at least these 35 diagram_type values:
-   class, sequence, activity, usecase, state, component, deployment, object,
-   mermaid, d2, graphviz, erd, blockdiag, packetdiag, bpmn, c4plantuml,
-   actdiag, bytefield, seqdiag, nwdiag, rackdiag, dbml, ditaa, excalidraw,
-   nomnoml, pikchr, plantuml, structurizr, svgbob, symbolator, tikz, vega,
-   vegalite, wavedrom, wireviz.
+class, sequence, activity, usecase, state, component, deployment, object,
+mermaid, d2, graphviz, erd, blockdiag, packetdiag, bpmn, c4plantuml,
+actdiag, bytefield, seqdiag, nwdiag, rackdiag, dbml, ditaa, excalidraw,
+nomnoml, pikchr, plantuml, structurizr, svgbob, symbolator, tikz, vega,
+vegalite, wavedrom, wireviz.
 
-5. If an expected type is missing, record it and continue the rest of the test, but the final result must be FAIL.
+3. Record each type's backend and supported output formats from list_diagram_types.
+4. If an expected type is missing, record it but continue. The final result must be FAIL.
+5. If extra live types exist, report them as catalog drift. They are informational and do not block execution of the fixed 35-type test.
 
-PHASE 2 - SUPER-COMPLEX MERMAID
+PHASE 2 - COMPLEX MERMAID SMOKE TESTS
 
-Validate and render every Mermaid case below as SVG. Use validate_uml before generate_uml or generate_uml_batch. All cases must be rendered by the MCP server.
+For each Mermaid case below:
+- call validate_uml with diagram_type="mermaid", output_format="svg", strict=true;
+- if validation succeeds, include it in one generate_uml_batch call;
+- if validation fails, record the validation error and continue with the other cases.
 
-MERMAID CASE A - distributed architecture flowchart
+MERMAID A - distributed architecture
 
 flowchart LR
   subgraph Client[Client Layer]
@@ -96,7 +100,7 @@ flowchart LR
   Billing --> PG
   Redis -. cache .-> Gateway
 
-MERMAID CASE B - concurrent OAuth and diagram-render sequence
+MERMAID B - concurrent OAuth and render sequence
 
 sequenceDiagram
   autonumber
@@ -114,7 +118,7 @@ sequenceDiagram
     Auth->>DB: Load user + roles
     DB-->>Auth: user record
     Auth-->>Edge: authorized
-  and Warm metadata
+  and Discover
     Edge->>MCP: list_diagram_types
     MCP-->>Edge: catalog
   end
@@ -124,19 +128,19 @@ sequenceDiagram
   Edge->>MCP: validate_uml(...)
   MCP-->>Edge: valid
   Edge->>MCP: generate_uml(...)
-  MCP->>Kroki: render Mermaid SVG
+  MCP->>Kroki: Render Mermaid SVG
   alt Render succeeds
     Kroki-->>MCP: SVG
-    MCP-->>Edge: URL/artifact
+    MCP-->>Edge: artifact URL
     Edge-->>Browser: 200 result
     Browser-->>User: Show diagram
   else Render fails
     Kroki-->>MCP: error
     MCP-->>Edge: structured error
-    Edge-->>Browser: 502 render failure
+    Edge-->>Browser: 502
   end
 
-MERMAID CASE C - class model
+MERMAID C - class model
 
 classDiagram
   class MCPServer {
@@ -168,22 +172,22 @@ classDiagram
   DiagramService --> DiagramRequest
   MCPServer --> CachePolicy
 
-MERMAID CASE D - state machine
+MERMAID D - state machine
 
 stateDiagram-v2
   [*] --> Disconnected
   Disconnected --> Discovering: connect
-  Discovering --> Ready: tools/resources discovered
-  Discovering --> Failed: handshake error
+  Discovering --> Ready: tools discovered
+  Discovering --> Failed: protocol error
   Ready --> Validating: validate_uml
   Validating --> Rendering: valid
   Validating --> Ready: invalid source
-  Rendering --> Ready: result returned
+  Rendering --> Ready: artifact returned
   Rendering --> Failed: backend error
   Failed --> Discovering: retry
   Ready --> Disconnected: close
 
-MERMAID CASE E - ER diagram
+MERMAID E - ER model
 
 erDiagram
   USER ||--o{ SESSION : owns
@@ -222,7 +226,7 @@ erDiagram
     string endpoint
   }
 
-MERMAID CASE F - Gantt
+MERMAID F - Gantt
 
 gantt
   title MCP 2026 migration and verification
@@ -240,7 +244,7 @@ gantt
   Vercel verification      :vercel, after stress, 2d
   Merge                    :milestone, merge, after vercel, 0d
 
-MERMAID CASE G - mind map
+MERMAID G - mind map
 
 mindmap
   root((UML MCP))
@@ -253,24 +257,28 @@ mindmap
       validate_uml
       generate_uml
       generate_uml_batch
-    Resources
-      types
-      examples
-      formats
-      capabilities
-    Backends
+    Rendering
       Mermaid
       PlantUML
       Kroki catalog
+    Verification
+      batches
+      artifacts
+      negative tests
 
-Render all seven Mermaid cases. Prefer one generate_uml_batch call for the seven render operations after validation. Record success, returned format, and whether each result contains a usable artifact URL or returned payload.
+After validation, call generate_uml_batch exactly once for every Mermaid case that passed validation.
+Use output_format="svg" and scale=1.0.
+Record one result row per case.
 
-PHASE 3 - SUPER-COMPLEX PLANTUML FAMILY
+PHASE 3 - COMPLEX PLANTUML FAMILY SMOKE TESTS
 
-Validate and render these PlantUML-backed cases as SVG. Use the diagram_type shown for each case.
+For each case below:
+- call validate_uml using the specified diagram_type, output_format="svg", strict=true;
+- include every validation-success case in one generate_uml_batch call;
+- record validation or render errors per case instead of stopping the test.
 
-PLANTUML CASE A - class
-Diagram type: class
+PLANTUML A
+diagram_type=class
 
 @startuml
 skinparam classAttributeIconSize 0
@@ -309,8 +317,8 @@ DiagramService --> Renderer
 Renderer <|.. KrokiRenderer
 @enduml
 
-PLANTUML CASE B - sequence
-Diagram type: sequence
+PLANTUML B
+diagram_type=sequence
 
 @startuml
 autonumber
@@ -342,8 +350,8 @@ MCP --> ChatGPT: URL/artifact
 ChatGPT --> User: Show result
 @enduml
 
-PLANTUML CASE C - activity
-Diagram type: activity
+PLANTUML C
+diagram_type=activity
 
 @startuml
 start
@@ -374,8 +382,8 @@ endif
 stop
 @enduml
 
-PLANTUML CASE D - usecase
-Diagram type: usecase
+PLANTUML D
+diagram_type=usecase
 
 @startuml
 left to right direction
@@ -384,26 +392,24 @@ actor "ChatGPT Client" as Client
 actor Maintainer
 rectangle "UML MCP" {
   usecase "Discover diagram types" as UC1
-  usecase "Read examples/resources" as UC2
-  usecase "Validate diagram" as UC3
-  usecase "Render one diagram" as UC4
-  usecase "Render batch" as UC5
-  usecase "Run conformance suite" as UC6
+  usecase "Validate diagram" as UC2
+  usecase "Render one diagram" as UC3
+  usecase "Render batch" as UC4
+  usecase "Run conformance suite" as UC5
 }
 Developer --> UC1
 Developer --> UC2
-Developer --> UC3
 Client --> UC1
+Client --> UC2
 Client --> UC3
 Client --> UC4
-Client --> UC5
-Maintainer --> UC6
-UC4 .> UC3 : <<include>>
-UC5 .> UC3 : <<include>>
+Maintainer --> UC5
+UC3 .> UC2 : <<include>>
+UC4 .> UC2 : <<include>>
 @enduml
 
-PLANTUML CASE E - state
-Diagram type: state
+PLANTUML E
+diagram_type=state
 
 @startuml
 [*] --> Offline
@@ -425,8 +431,8 @@ state Rendering {
 }
 @enduml
 
-PLANTUML CASE F - component
-Diagram type: component
+PLANTUML F
+diagram_type=component
 
 @startuml
 package "Client" {
@@ -436,7 +442,6 @@ package "Client" {
 package "UML MCP" {
   [FastMCP Server]
   [Tool Registry]
-  [Resource Registry]
   [Diagram Service]
 }
 package "External" {
@@ -446,14 +451,13 @@ database "Metadata Cache" as Cache
 [ChatGPT] --> [MCP Adapter]
 [MCP Adapter] --> [FastMCP Server] : MCP 2026 HTTP
 [FastMCP Server] --> [Tool Registry]
-[FastMCP Server] --> [Resource Registry]
 [Tool Registry] --> [Diagram Service]
 [Diagram Service] --> [Kroki API] : render
 [Diagram Service] --> Cache
 @enduml
 
-PLANTUML CASE G - deployment
-Diagram type: deployment
+PLANTUML G
+diagram_type=deployment
 
 @startuml
 node "Developer Device" as dev {
@@ -472,12 +476,12 @@ node "GitHub" as github {
 }
 dev --> fn : HTTPS /mcp
 fn --> kroki : diagram render
-fn --> github : metadata/status
+fn --> github : deployment status
 github --> fn : deployment trigger
 @enduml
 
-PLANTUML CASE H - object
-Diagram type: object
+PLANTUML H
+diagram_type=object
 
 @startuml
 object server {
@@ -503,8 +507,8 @@ server --> request : receives
 request --> result : produces
 @enduml
 
-PLANTUML CASE I - raw PlantUML mind map
-Diagram type: plantuml
+PLANTUML I
+diagram_type=plantuml
 
 @startmindmap
 * UML MCP full stress test
@@ -514,7 +518,6 @@ Diagram type: plantuml
 *** cache hints
 ** Discovery
 *** tools
-*** resources
 *** diagram catalog
 ** Rendering
 *** Mermaid
@@ -527,95 +530,449 @@ Diagram type: plantuml
 *** negative cases
 @endmindmap
 
-Render all nine PlantUML-family cases. Prefer a single generate_uml_batch call after validation. Record success and artifact information for each case.
+After validation, call generate_uml_batch exactly once for every PlantUML-family case that passed validation.
+Use output_format="svg" and scale=1.0.
 
-PHASE 4 - FULL 35-TYPE CATALOG SWEEP
+PHASE 4 - TOOL-ONLY FULL 35-TYPE CATALOG SWEEP
 
-1. Use the live list_diagram_types result as the source of truth for backend and supported formats.
-2. Read uml://examples. If resources are unavailable in the client, report that limitation and use uml://templates if available. If neither resource can be read, this phase fails because the test must not invent 35 backend-specific fixtures silently.
-3. For every expected diagram type, obtain its non-empty example from uml://examples. If an example is empty, use the matching non-empty template from uml://templates and mark that row as TEMPLATE_FALLBACK.
-4. Choose output_format = svg whenever the live catalog says svg is supported. Otherwise use the first supported format reported for that type.
-5. Build exactly two generate_uml_batch calls because the server batch limit is 20:
-   - batch 1: first 20 catalog entries
-   - batch 2: remaining 15 catalog entries
-6. Do not omit difficult formats such as bpmn, bytefield, excalidraw, symbolator, tikz, vega, vegalite, wavedrom, or wireviz.
-7. For every result, verify all of the following:
-   - the batch returned an entry for the requested index;
-   - the entry did not contain an error;
-   - a usable URL, content/result payload, saved artifact, or other explicit successful render artifact was returned;
-   - the returned artifact corresponds to the requested diagram type and output format as far as the response metadata allows.
-8. If the live server exposes additional catalog types beyond the expected 35 and uml://examples contains a non-empty example for them, render those too in one or more additional batches of at most 20 items.
+Do not read any MCP resources for this phase.
+
+Use list_diagram_types from Phase 1 to choose each output format:
+- use "svg" if supported;
+- otherwise use the first supported format returned by list_diagram_types.
+
+Use these embedded fixtures exactly as the source inputs.
+
+1. class
+@startuml
+class Account
+class Customer
+Customer "1" --> "*" Account : owns
+@enduml
+
+2. sequence
+@startuml
+participant Client
+participant API
+participant DB
+Client -> API: GET /resource
+API -> DB: query
+DB --> API: result
+API --> Client: 200
+@enduml
+
+3. activity
+@startuml
+start
+:Receive order;
+if (Valid?) then (yes)
+  :Process order;
+else (no)
+  :Reject order;
+endif
+stop
+@enduml
+
+4. usecase
+@startuml
+left to right direction
+actor User
+rectangle System {
+  usecase (View diagram)
+  usecase (Generate diagram)
+}
+User --> (View diagram)
+User --> (Generate diagram)
+@enduml
+
+5. state
+@startuml
+[*] --> Idle
+Idle --> Running: start
+Running --> Idle: stop
+@enduml
+
+6. component
+@startuml
+component [Web]
+component [API]
+database DB
+[Web] --> [API]
+[API] --> DB
+@enduml
+
+7. deployment
+@startuml
+node "App Server" {
+  artifact "app"
+}
+node "Database Server" {
+  database "PostgreSQL"
+}
+"App Server" --> "Database Server"
+@enduml
+
+8. object
+@startuml
+object user
+object request
+object result
+user --> request
+request --> result
+@enduml
+
+9. mermaid
+flowchart LR
+  Client --> MCP
+  MCP --> Kroki
+  Kroki --> MCP
+  MCP --> Client
+
+10. d2
+User -> API: HTTP Request
+API -> Database: Query
+Database -> API: Result
+API -> User: JSON Response
+
+11. graphviz
+digraph G {
+  rankdir=LR;
+  Client -> API [label="request"];
+  API -> DB [label="query"];
+  DB -> API [label="result"];
+  API -> Client [label="response"];
+}
+
+12. erd
+[Person]
+*name
+height
+--
+[Order]
+*id
+date
+Person *-- Order
+
+13. blockdiag
+blockdiag {
+  Client -> API -> Database;
+  Database -> API -> Client;
+}
+
+14. packetdiag
+packetdiag {
+  colwidth = 32;
+  0-15: Source Port;
+  16-31: Destination Port;
+  32-63: Sequence Number;
+  64-95: Acknowledgment Number;
+}
+
+15. bpmn
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+                  xmlns:dc="http://www.omg.org/spec/DD/20100524/DC"
+                  id="Definitions_1"
+                  targetNamespace="http://bpmn.io/schema/bpmn">
+  <bpmn:process id="Process_1" isExecutable="false">
+    <bpmn:startEvent id="StartEvent_1"/>
+    <bpmn:task id="Task_1" name="Process"/>
+    <bpmn:endEvent id="EndEvent_1"/>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_1"/>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_1" targetRef="EndEvent_1"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1">
+      <bpmndi:BPMNShape id="StartShape" bpmnElement="StartEvent_1">
+        <dc:Bounds x="100" y="100" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="TaskShape" bpmnElement="Task_1">
+        <dc:Bounds x="200" y="80" width="100" height="80"/>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndShape" bpmnElement="EndEvent_1">
+        <dc:Bounds x="370" y="100" width="36" height="36"/>
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
+
+16. c4plantuml
+!include <C4/C4_Context>
+title UML MCP Context
+Person(user, "User")
+System(mcp, "UML MCP")
+System_Ext(kroki, "Kroki")
+Rel(user, mcp, "Generates diagrams")
+Rel(mcp, kroki, "Renders")
+
+17. actdiag
+actdiag {
+  write -> validate -> render -> result
+  lane user {
+    label = "Client"
+    write [label = "Write source"];
+    result [label = "Receive result"];
+  }
+  lane server {
+    label = "UML MCP"
+    validate [label = "Validate"];
+    render [label = "Render"];
+  }
+}
+
+18. bytefield
+(defattrs :bg-green {:fill "#a0ffa0"})
+(draw-column-headers)
+(draw-box 0x11 :bg-green)
+(draw-box 0x872349ae [{:span 4} :bg-green])
+(draw-box 0x10)
+(draw-box 0x4702 [{:span 2}])
+
+19. seqdiag
+seqdiag {
+  client -> mcp [label = "generate_uml"];
+  mcp -> kroki [label = "render"];
+  mcp <-- kroki [label = "SVG"];
+  client <-- mcp [label = "result"];
+}
+
+20. nwdiag
+nwdiag {
+  network public {
+    address = "10.0.0.0/24";
+    client [address = "10.0.0.10"];
+    gateway [address = "10.0.0.1"];
+  }
+  network service {
+    address = "10.1.0.0/24";
+    gateway [address = "10.1.0.1"];
+    mcp [address = "10.1.0.10"];
+  }
+}
+
+21. rackdiag
+rackdiag {
+  16U;
+  1: UPS [2U];
+  3: API Server [2U];
+  5: MCP Server [2U];
+  7: Switch [1U];
+}
+
+22. dbml
+Table users {
+  id int [pk, increment]
+  email varchar [unique]
+}
+Table diagrams {
+  id int [pk, increment]
+  user_id int [ref: > users.id]
+  type varchar
+}
+
+23. ditaa
++--------+      +---------+      +-------+
+| Client | ---> | UML MCP | ---> | Kroki |
++--------+      +---------+      +-------+
+
+24. excalidraw
+{"type":"excalidraw","version":2,"source":"kroki","elements":[{"id":"rect","type":"rectangle","x":100,"y":100,"width":200,"height":100,"angle":0,"strokeColor":"#000000","backgroundColor":"#ffffff","fillStyle":"solid","strokeWidth":1,"strokeStyle":"solid","roughness":1,"opacity":100,"groupIds":[],"frameId":null,"roundness":null,"seed":1,"version":1,"versionNonce":1,"isDeleted":false,"boundElements":[],"updated":1,"link":null,"locked":false}],"appState":{"viewBackgroundColor":"#ffffff"},"files":{}}
+
+25. nomnoml
+[Client] -> [UML MCP]
+[UML MCP] -> [Kroki]
+[Kroki] -> [Artifact]
+
+26. pikchr
+box "Client" fit
+arrow
+box "UML MCP" fit
+arrow
+box "Kroki" fit
+
+27. plantuml
+@startuml
+actor User
+participant "UML MCP" as MCP
+participant Kroki
+User -> MCP: generate
+MCP -> Kroki: render
+Kroki --> MCP: SVG
+MCP --> User: result
+@enduml
+
+28. structurizr
+workspace "UML MCP" "Tool-only smoke test" {
+  model {
+    user = person "User"
+    mcp = softwareSystem "UML MCP"
+    kroki = softwareSystem "Kroki"
+    user -> mcp "Uses"
+    mcp -> kroki "Renders diagrams with"
+  }
+  views {
+    systemLandscape "Landscape" {
+      include *
+      autoLayout
+    }
+  }
+}
+
+29. svgbob
+    .--------.       .--------.
+   /  Client  \---->| UML MCP |
+   \__________/      \________/
+
+30. symbolator
+(symbol "RES" (pin_names (line (pin "1") (pin "2"))))
+
+31. tikz
+\documentclass[border=2pt]{standalone}
+\usepackage{tikz}
+\begin{document}
+\begin{tikzpicture}
+  \node[draw] (client) at (0,0) {Client};
+  \node[draw] (mcp) at (3,0) {UML MCP};
+  \node[draw] (kroki) at (6,0) {Kroki};
+  \draw[->] (client) -- (mcp);
+  \draw[->] (mcp) -- (kroki);
+\end{tikzpicture}
+\end{document}
+
+32. vega
+{"$schema":"https://vega.github.io/schema/vega/v5.json","width":240,"height":160,"data":[{"name":"table","values":[{"x":1,"y":2},{"x":2,"y":5},{"x":3,"y":3}]}],"scales":[{"name":"x","type":"linear","range":"width","domain":{"data":"table","field":"x"}},{"name":"y","type":"linear","range":"height","domain":{"data":"table","field":"y"}}],"marks":[{"type":"symbol","from":{"data":"table"},"encode":{"enter":{"x":{"scale":"x","field":"x"},"y":{"scale":"y","field":"y"},"size":{"value":100}}}}]}
+
+33. vegalite
+{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"engine":"Mermaid","count":7},{"engine":"PlantUML","count":9},{"engine":"Other","count":19}]},"mark":"bar","encoding":{"x":{"field":"engine","type":"nominal"},"y":{"field":"count","type":"quantitative"}}}
+
+34. wavedrom
+{"signal":[{"name":"clk","wave":"p......."},{"name":"request","wave":"01..0..."},{"name":"response","wave":"0...10.."}]}
+
+35. wireviz
+connectors:
+  J1:
+    type: Molex
+    pinlabels: [GND, VCC, SDA, SCL]
+  J2:
+    type: Header
+    pinlabels: [GND, VCC, SDA, SCL]
+cables:
+  W1:
+    wirecount: 4
+    length: 0.5
+connections:
+  -
+    - J1: [1, 2, 3, 4]
+    - W1: [1, 2, 3, 4]
+    - J2: [1, 2, 3, 4]
+
+Build exactly two generate_uml_batch calls from those fixtures:
+- batch 1 = fixtures 1 through 20
+- batch 2 = fixtures 21 through 35
+
+Every item must include:
+- diagram_type
+- code
+- output_format selected from live list_diagram_types
+- scale=1.0
+
+Do not silently omit a fixture. If one fixture fails, preserve the other batch results and record the individual error.
 
 PHASE 5 - STATELESS REPEATABILITY
 
-1. Pick the complex Mermaid sequence case from Phase 2.
-2. Call generate_uml twice with identical arguments.
-3. Both calls must succeed independently without relying on a prior session-specific server state.
-4. If URL generation is deterministic, note whether the URLs are identical. Different successful artifacts are acceptable, but both calls must independently return a valid result.
+Use MERMAID B from Phase 2.
+
+Call generate_uml twice with identical arguments:
+- diagram_type="mermaid"
+- output_format="svg"
+- scale=1.0
+- identical source code
+
+Both calls must independently succeed.
+Record whether the two returned URLs/artifacts are identical or different.
+Either is acceptable; both calls must return successful artifacts.
 
 PHASE 6 - NEGATIVE TESTS
 
-Run these and confirm they fail safely without breaking the MCP connection:
+Run all four negative tests.
 
-1. validate_uml with diagram_type=mermaid and malformed source `sequenceDiagram\nA->>`.
-2. generate_uml with an invalid diagram_type such as `not-a-real-diagram-type`.
-3. generate_uml_batch with an empty items array.
-4. If safe to do so, send one mixed batch containing one valid Mermaid item and one invalid item and verify the valid result is preserved while the invalid item reports its own error.
+NEGATIVE 1
+Call validate_uml with:
+- diagram_type="mermaid"
+- output_format="svg"
+- strict=true
+- code="sequenceDiagram\nA->>"
+
+Expected: controlled validation failure or invalid result.
+
+NEGATIVE 2
+Call generate_uml with:
+- diagram_type="not-a-real-diagram-type"
+- code="A"
+- output_format="svg"
+
+Expected: controlled error.
+
+NEGATIVE 3
+Call generate_uml_batch with:
+- items=[]
+
+Expected: controlled error containing or equivalent to "items must not be empty".
+
+NEGATIVE 4
+Call generate_uml_batch with exactly two items:
+- one valid Mermaid item: graph TD; A-->B;
+- one invalid diagram_type: not-a-real-diagram-type
+
+Expected:
+- valid item succeeds;
+- invalid item has a per-index error;
+- the batch call itself remains usable;
+- after this call, call list_diagram_types one more time to prove the MCP connection is still healthy.
 
 PHASE 7 - FINAL REPORT
 
-Return a compact table with one row per catalog diagram type and these columns:
+Do not ask me for any additional input.
 
-- diagram_type
-- backend
-- source (EXAMPLE or TEMPLATE_FALLBACK)
-- output_format
-- render status
-- artifact returned (yes/no)
-- short error if any
+Return:
+1. the exact MCP tools called;
+2. catalog count and missing/extra types;
+3. Mermaid results: passed/7;
+4. PlantUML-family results: passed/9;
+5. full catalog results: passed/35;
+6. stateless repeatability: PASS/FAIL;
+7. negative tests: passed/4;
+8. total generate_uml calls;
+9. total generate_uml_batch calls;
+10. a table for all 35 catalog fixtures with:
+   - diagram_type
+   - backend
+   - output_format
+   - render status
+   - artifact returned yes/no
+   - short error if any
 
-Then report these aggregate counters:
+Overall PASS requires:
+- all four MCP tools are available;
+- all expected 35 types are discovered;
+- all 7 Mermaid cases render;
+- all 9 PlantUML-family cases render;
+- all 35 catalog fixtures render;
+- both stateless repeat renders succeed;
+- all four negative tests behave safely;
+- no diagram was locally fabricated;
+- no MCP resource was required to complete the test.
 
-- expected catalog types
-- discovered catalog types
-- catalog types rendered successfully
-- catalog types failed
-- complex Mermaid cases passed / total
-- complex PlantUML-family cases passed / total
-- negative tests passed / total
-- MCP resources successfully read
-- total generate_uml calls
-- total generate_uml_batch calls
+Finish with exactly one line:
 
-The overall result is PASS only if:
+MCP_KROKI_TOOL_ONLY_STRESS_TEST: PASS
 
-- all expected 35 diagram types are discovered;
-- all 35 expected types render successfully;
-- all 7 complex Mermaid cases render successfully;
-- all 9 complex PlantUML-family cases render successfully;
-- stateless repeatability succeeds twice;
-- all negative tests fail safely as expected;
-- no diagram is fabricated locally by the client.
+or
 
-Finish with exactly one of these lines:
-
-MCP_KROKI_FULL_STRESS_TEST: PASS
-MCP_KROKI_FULL_STRESS_TEST: FAIL - <short reason>
+MCP_KROKI_TOOL_ONLY_STRESS_TEST: FAIL - <short reason>
 ```
 
-## What this test covers
+## Why this version exists
 
-- MCP 2026 tool discovery and real tool invocation.
-- MCP resource discovery/read behavior.
-- The server's complete 35-type diagram catalog.
-- All eight PlantUML aliases plus raw PlantUML.
-- Multiple complex Mermaid grammars instead of a single trivial sequence diagram.
-- `generate_uml_batch` behavior across the server's 20-item batch limit.
-- Dynamic use of `uml://examples` and `uml://templates` so every backend uses server-owned source fixtures.
-- Stateless repeatability across independent requests.
-- Error isolation and negative validation behavior.
-- Real artifact return from the Kroki-backed rendering pipeline.
-
-## Notes
-
-The repository catalog is the contract for this test. Kroki itself may support additional engines that are not yet exposed by `uml-mcp`; those do not count as missing unless they are present in the live MCP catalog. If the catalog expands later, the test deliberately reports the drift so coverage can be extended rather than silently ignoring new engines.
+Some ChatGPT MCP surfaces expose tools but do not expose arbitrary MCP resource reads to the assistant. This fixture deliberately treats the four UML tools as the complete execution surface and embeds the full catalog fixtures directly, so a client can run the test immediately instead of stopping on `uml://*` resource access.
