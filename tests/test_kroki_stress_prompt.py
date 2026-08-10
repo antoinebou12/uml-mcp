@@ -6,10 +6,17 @@ from mcp_core.core.config import MCP_SETTINGS
 
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "kroki_full_catalog_stress_test.md"
+REPORTING_RULES_PATH = (
+    Path(__file__).parent / "prompts" / "kroki_stress_test_reporting_rules.md"
+)
 
 
 def _prompt_text() -> str:
     return PROMPT_PATH.read_text(encoding="utf-8")
+
+
+def _reporting_rules_text() -> str:
+    return REPORTING_RULES_PATH.read_text(encoding="utf-8")
 
 
 def test_stress_prompt_tracks_every_runtime_diagram_type():
@@ -65,3 +72,24 @@ def test_stress_prompt_keeps_complex_repeatability_and_negative_phases():
     assert "items must not be empty" in text
     assert "MCP_KROKI_TOOL_ONLY_STRESS_TEST: PASS" in text
     assert "MCP_KROKI_TOOL_ONLY_STRESS_TEST: FAIL - <short reason>" in text
+
+
+def test_reporting_rules_count_every_attempted_tool_call():
+    text = _reporting_rules_text()
+
+    assert "every attempted MCP tool invocation" in text
+    assert "generate_uml_calls = 3" in text
+    assert "generate_uml_batch_calls = 6" in text
+    assert "validate_uml_calls = 17" in text
+    assert "list_diagram_types_calls = 2" in text
+    assert "total_mcp_tool_calls = 28" in text
+    assert "Do not infer counts from successful artifacts" in text
+
+
+def test_reporting_rules_require_strict_mermaid_rejection():
+    text = _reporting_rules_text()
+
+    assert "sequenceDiagram\nA->>" in text
+    assert "passes **only** when `validate_uml` returns `valid: false`" in text
+    assert "record `NEGATIVE 1: FAIL`" in text
+    assert "force the overall stress-test verdict to FAIL" in text
