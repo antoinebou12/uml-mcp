@@ -1,0 +1,55 @@
+name: Refresh Star History
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 4 * * *"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/star-history.yml"
+      - "scripts/generate_star_history.py"
+      - "README.md"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: star-history-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Generate star-history SVG
+        env:
+          # Prefer the repository secret when configured. The script retries with
+          # the per-run GitHub token if the optional secret is missing or unusable.
+          STAR_HISTORY_TOKEN: ${{ secrets.STAR_HISTORY_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/generate_star_history.py
+
+      - name: Commit refreshed chart
+        run: |
+          if git diff --quiet -- docs/assets/star-history.svg; then
+            echo "Star history is already up to date"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/assets/star-history.svg
+          git commit -m "docs: refresh star history [skip ci]"
+          git push
