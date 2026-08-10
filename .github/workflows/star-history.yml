@@ -11,9 +11,12 @@ on:
       - "scripts/generate_star_history.py"
       - "scripts/update_star_history_readme.py"
       - "README.md"
+  issues:
+    types: [opened]
 
 permissions:
   contents: write
+  issues: read
 
 concurrency:
   group: star-history-${{ github.ref }}
@@ -21,6 +24,7 @@ concurrency:
 
 jobs:
   refresh:
+    if: github.event_name != 'issues' || github.event.issue.title == '[automation] refresh star history'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
