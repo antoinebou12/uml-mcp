@@ -19,7 +19,7 @@ dependencies = [
     "httpx>=0.28.0,<0.29",
     "typer==0.27.1",
     "python-multipart==0.0.32",
-    "python-dotenv==1.2.2",
+    "python-dotenv==1.2.3",
     "starlette>=1.6.0,<2.0.0",
     "jinja2>=3.1.2,<4",
     "aiofiles>=25,<26",
