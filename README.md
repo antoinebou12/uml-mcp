@@ -9,6 +9,7 @@
 [![Python >=3.12,<3.13](https://img.shields.io/badge/python-%3E%3D3.12%2C%3C3.13-blue.svg)](https://www.python.org/downloads/)
 [![MseeP.ai Security Assessment](https://img.shields.io/badge/MseeP.ai-Security%20Assessment-green)](https://mseep.ai/app/antoinebou12-uml-mcp)
 [![MCP status](https://mcpvitals.com/badge/6cfb821be2.svg)](https://mcpvitals.com/status/6cfb821be2)
+[![Lulu MCPs](https://getlulu.dev/api/mcps/badge/uml-mcp)](https://getlulu.dev/mcps/uml-mcp)
 
 Generate UML and other diagrams through the [Model Context Protocol](https://modelcontextprotocol.io/).
 
@@ -26,6 +27,7 @@ Generate UML and other diagrams through the [Model Context Protocol](https://mod
 | --- | --- |
 | Live MCP (HTTP) | [https://uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp) |
 | Smithery catalog | [Add via Smithery](https://smithery.ai/server/antoinebou12/uml) |
+| Lulu MCPs | [getlulu.dev/mcps/uml-mcp](https://getlulu.dev/mcps/uml-mcp) |
 
 <img width="934" height="1148" alt="577497880-464b5b44-710c-4688-bfdc-432036b59cd1" src="https://github.com/user-attachments/assets/2da4000c-2090-46c5-846c-1f3c834611e4" />
 
