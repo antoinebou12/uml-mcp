@@ -1,18 +1,13 @@
-"""
-Local validation for diagram code before render (no network calls).
-
-Reuses GenerateUMLInput for type/format/length rules, then applies light structural checks.
-"""
+"""Local validation for diagram code before render (no network calls)."""
 
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from pydantic import ValidationError
 
 from ..tools.schemas import GenerateUMLInput
-
 from .config import MCP_SETTINGS
 from .diagram_rendering import prepare_diagram_code
 
@@ -45,13 +40,10 @@ _MERMAID_HEAD = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 
-# Mermaid sequence messages use [Actor][Arrow][Actor]:Message. Keep this intentionally
-# conservative: catch only a message line that ends immediately after a documented
-# standard arrow token (optionally followed by an activation +/- marker). This rejects
-# obvious malformed input such as `A->>` without trying to duplicate Mermaid's parser.
 _MERMAID_SEQUENCE_DANGLING_ARROW = re.compile(
     r"(?:<<-->>|<<->>|-->>|->>|-->|->|--x|-x|--\)|-\))\s*[+-]?\s*$"
 )
+_LINE_NUMBER = re.compile(r"\bline\s+(\d+)\b", re.IGNORECASE)
 
 
 def _strict_mermaid_sequence_errors(prepared_code: str) -> List[str]:
@@ -83,54 +75,122 @@ def _strict_mermaid_sequence_errors(prepared_code: str) -> List[str]:
 def _structural_errors_strict_mermaid(prepared_code: str) -> List[str]:
     """Extra checks when strict=True; conservative to limit false positives."""
     errors: List[str] = []
-    s = prepared_code.strip()
-    if not s:
+    source = prepared_code.strip()
+    if not source:
         errors.append("Mermaid diagram code is empty.")
         return errors
-    if not _MERMAID_HEAD.search(s):
+    if not _MERMAID_HEAD.search(source):
         errors.append(
             "Mermaid (strict): start with a diagram keyword such as "
             "`graph TD`, `flowchart LR`, or `sequenceDiagram`."
         )
-    if "subgraph" in s.lower() and "end" not in s.lower():
+    if "subgraph" in source.lower() and "end" not in source.lower():
         errors.append(
             "Mermaid (strict): subgraph blocks typically need a matching `end`."
         )
-    errors.extend(_strict_mermaid_sequence_errors(s))
+    errors.extend(_strict_mermaid_sequence_errors(source))
     return errors
 
 
 def _structural_errors_strict_d2(prepared_code: str) -> List[str]:
     errors: List[str] = []
-    for i, line in enumerate(prepared_code.splitlines(), 1):
+    for line_number, line in enumerate(prepared_code.splitlines(), 1):
         if line.count('"') % 2 != 0:
-            errors.append(f"D2 (strict): line {i} may have an unclosed double quote.")
+            errors.append(
+                f"D2 (strict): line {line_number} may have an unclosed double quote."
+            )
             break
     return errors
 
 
 def _suggestions_for_errors(errors: List[str]) -> List[str]:
-    sug: List[str] = []
-    for e in errors:
-        if "@startuml" in e or "@enduml" in e:
-            sug.append(
+    suggestions: List[str] = []
+    for error in errors:
+        if "@startuml" in error or "@enduml" in error:
+            suggestions.append(
                 "Close every @startuml with @enduml, or use a single unbroken diagram block."
             )
-        if "Mermaid" in e:
-            sug.append(
+        if "Mermaid" in error:
+            suggestions.append(
                 "Start with a diagram keyword such as `graph TD`, `flowchart LR`, or `sequenceDiagram`."
             )
-        if "target actor" in e:
-            sug.append(
+        if "target actor" in error:
+            suggestions.append(
                 "Complete sequence messages with a target actor, for example `A->>B: message`."
             )
-        if "D2" in e:
-            sug.append("Define at least one shape or connection (e.g. `a -> b`).")
-        if "strict" in e.lower() and "Mermaid" in e:
-            sug.append(
+        if "D2" in error:
+            suggestions.append("Define at least one shape or connection (e.g. `a -> b`).")
+        if "strict" in error.lower() and "Mermaid" in error:
+            suggestions.append(
                 "Use a standard Mermaid diagram header on the first line (e.g. graph TD;)."
             )
-    return list(dict.fromkeys(sug))
+    return list(dict.fromkeys(suggestions))
+
+
+def _diagnostic_code(message: str) -> str:
+    lower = message.lower()
+    if "unsupported diagram type" in lower:
+        return "UNSUPPORTED_DIAGRAM_TYPE"
+    if "output_format" in lower or "not supported" in lower:
+        return "UNSUPPORTED_OUTPUT_FORMAT"
+    if "exceeds maximum length" in lower:
+        return "SOURCE_TOO_LARGE"
+    if "target actor" in lower:
+        return "MERMAID_DANGLING_ARROW"
+    if "diagram keyword" in lower:
+        return "MERMAID_MISSING_HEADER"
+    if "subgraph" in lower:
+        return "MERMAID_UNCLOSED_SUBGRAPH"
+    if "unclosed double quote" in lower:
+        return "D2_UNCLOSED_QUOTE"
+    if "@startuml" in lower or "@enduml" in lower:
+        return "PLANTUML_UNBALANCED_BLOCK"
+    if "too short" in lower or "empty" in lower:
+        return "SOURCE_TOO_SHORT"
+    return "INVALID_DIAGRAM"
+
+
+def _line_from_message(message: str) -> Optional[int]:
+    match = _LINE_NUMBER.search(message)
+    return int(match.group(1)) if match else None
+
+
+def _build_diagnostics(
+    errors: List[str], suggestions: List[str]
+) -> list[dict[str, Any]]:
+    diagnostics: list[dict[str, Any]] = []
+    for index, message in enumerate(errors):
+        suggestion = suggestions[index] if index < len(suggestions) else None
+        diagnostics.append(
+            {
+                "severity": "error",
+                "code": _diagnostic_code(message),
+                "message": message,
+                "line": _line_from_message(message),
+                "column": None,
+                "suggestion": suggestion,
+            }
+        )
+    return diagnostics
+
+
+def _normalization_changes(
+    original: str, prepared: str, backend: str
+) -> list[str]:
+    if prepared == original.strip():
+        return []
+    changes: list[str] = []
+    stripped = original.strip()
+    if backend == "plantuml":
+        if "@startuml" not in stripped:
+            changes.append("added @startuml wrapper")
+        if "@enduml" not in stripped:
+            changes.append("added @enduml wrapper")
+    elif backend == "tikz" and "\\documentclass" not in stripped:
+        changes.append("wrapped TikZ snippet in a standalone document")
+    if not changes:
+        changes.append("normalized diagram source")
+    return changes
 
 
 def validate_uml_inputs(
@@ -139,12 +199,7 @@ def validate_uml_inputs(
     output_format: str = "svg",
     strict: bool = False,
 ) -> Dict[str, Any]:
-    """
-    Validate diagram inputs without calling Kroki or other renderers.
-
-    Returns a dict with valid, errors, suggestions, backend, diagram_type, and prepared_code
-    (when schema validation passed).
-    """
+    """Validate diagram inputs locally and return actionable diagnostics."""
     try:
         validated = GenerateUMLInput(
             diagram_type=diagram_type,
@@ -155,19 +210,25 @@ def validate_uml_inputs(
             scale=1.0,
         )
     except ValidationError as exc:
-        errs: List[str] = []
-        for err in exc.errors():
-            loc = err.get("loc", ())
+        errors: List[str] = []
+        for error in exc.errors():
+            loc = error.get("loc", ())
             name = str(loc[0]) if loc else "input"
-            errs.append(f"{name}: {err['msg']}")
+            errors.append(f"{name}: {error['msg']}")
+        suggestions = _suggestions_for_errors(errors)
         return {
             "valid": False,
             "diagram_type": (diagram_type or "").strip().lower() or None,
             "backend": None,
-            "errors": errs,
-            "suggestions": _suggestions_for_errors(errs),
+            "errors": errors,
+            "warnings": [],
+            "suggestions": suggestions,
+            "diagnostics": _build_diagnostics(errors, suggestions),
             "corrected_code": None,
             "prepared_code": None,
+            "strict": strict,
+            "normalized": False,
+            "changes": [],
         }
 
     dt_key = validated.diagram_type
@@ -181,15 +242,20 @@ def validate_uml_inputs(
         elif cfg.backend == "d2":
             extra.extend(_structural_errors_strict_d2(prepared))
     all_errors = structural + extra
-    valid = len(all_errors) == 0
+    suggestions = _suggestions_for_errors(all_errors)
+    changes = _normalization_changes(validated.code, prepared, cfg.backend)
 
     return {
-        "valid": valid,
+        "valid": len(all_errors) == 0,
         "diagram_type": dt_key,
         "backend": cfg.backend,
         "errors": all_errors,
-        "suggestions": _suggestions_for_errors(all_errors),
+        "warnings": [],
+        "suggestions": suggestions,
+        "diagnostics": _build_diagnostics(all_errors, suggestions),
         "corrected_code": prepared if prepared != validated.code.strip() else None,
         "prepared_code": prepared,
         "strict": strict,
+        "normalized": bool(changes),
+        "changes": changes,
     }
