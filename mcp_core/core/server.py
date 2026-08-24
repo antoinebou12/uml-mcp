@@ -11,6 +11,7 @@ import json
 import logging
 import os
 from typing import Any
+from urllib.parse import urlsplit
 
 # Default HTTP deployments to stateless transport semantics. This removes
 # Mcp-Session-Id affinity for legacy clients too, which is important for Vercel,
@@ -37,25 +38,59 @@ def _parse_env_list(value: str) -> list[str]:
     return [item.strip() for item in raw.split(",") if item.strip()]
 
 
-def _configure_fastmcp_http_security() -> None:
-    """Map UML-MCP security env vars to FastMCP's native request guard.
+def _host_from_urlish(value: str) -> str:
+    """Extract a hostname from a host or URL-like environment value."""
+    raw = value.strip()
+    if not raw:
+        return ""
+    parsed = urlsplit(raw if "://" in raw else f"https://{raw}")
+    return parsed.hostname or ""
 
-    With no explicit allowlists FastMCP uses ``auto`` protection, which protects
-    localhost-bound direct servers without breaking reverse-proxy/serverless hosts.
-    Providing MCP_ALLOWED_HOSTS and/or MCP_ALLOWED_ORIGINS enables strict checking.
+
+def _vercel_allowed_hosts() -> list[str]:
+    """Return the exact Vercel public hosts exposed for this deployment."""
+    hosts: list[str] = []
+    for name in (
+        "VERCEL_URL",
+        "VERCEL_BRANCH_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL",
+    ):
+        host = _host_from_urlish(os.environ.get(name, ""))
+        if host and host not in hosts:
+            hosts.append(host)
+    return hosts
+
+
+def _configure_fastmcp_http_security() -> None:
+    """Configure FastMCP Host/Origin protection for direct and proxied HTTP.
+
+    Explicit MCP_ALLOWED_HOSTS / MCP_ALLOWED_ORIGINS remain authoritative. On
+    Vercel, append the exact deployment hosts supplied by Vercel so FastMCP does
+    not mistake the platform's loopback ASGI server address for a local-only
+    deployment and reject the public Host header with HTTP 421.
     """
     hosts = _parse_env_list(os.environ.get("MCP_ALLOWED_HOSTS", ""))
     origins = _parse_env_list(os.environ.get("MCP_ALLOWED_ORIGINS", ""))
 
+    if os.environ.get("VERCEL") == "1":
+        for host in _vercel_allowed_hosts():
+            if host not in hosts:
+                hosts.append(host)
+
     if hosts:
         os.environ["FASTMCP_HTTP_ALLOWED_HOSTS"] = json.dumps(hosts)
+    else:
+        os.environ.pop("FASTMCP_HTTP_ALLOWED_HOSTS", None)
+
     if origins:
         os.environ["FASTMCP_HTTP_ALLOWED_ORIGINS"] = json.dumps(origins)
+    else:
+        os.environ.pop("FASTMCP_HTTP_ALLOWED_ORIGINS", None)
 
     if hosts or origins:
         os.environ["FASTMCP_HTTP_HOST_ORIGIN_PROTECTION"] = "true"
     else:
-        os.environ.setdefault("FASTMCP_HTTP_HOST_ORIGIN_PROTECTION", "auto")
+        os.environ["FASTMCP_HTTP_HOST_ORIGIN_PROTECTION"] = "auto"
 
 
 _configure_fastmcp_http_security()
