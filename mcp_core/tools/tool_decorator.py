@@ -79,7 +79,7 @@ def _as_mcp_tool_result(tool_name: str, result: Any) -> Any:
     image_data = result.get("content_base64")
     if image_data and mime_type in {"image/png", "image/jpeg"}:
         content.append(
-            ImageContent(type="image", data=str(image_data), mimeType=mime_type)
+            ImageContent(type="image", data=str(image_data), mime_type=mime_type)
         )
 
     meta: dict[str, Any] = {}
