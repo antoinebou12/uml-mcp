@@ -67,6 +67,7 @@ def setup_logging(debug=False):
         format="%(message)s",
         datefmt="[%X]",
         handlers=[console_handler],
+        force=True,
     )
 
     logger = logging.getLogger()
