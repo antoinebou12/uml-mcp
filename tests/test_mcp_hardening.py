@@ -18,7 +18,10 @@ from mcp_core.tools.diagram_tools import (
     validate_uml,
 )
 from mcp_core.tools.schemas import DiagramResult, DiagramTypesOutput, GenerateUMLInput
-from mcp_core.tools.tool_decorator import _normalize_output_schema
+from mcp_core.tools.tool_decorator import (
+    _as_mcp_tool_result,
+    _normalize_output_schema,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -45,6 +48,43 @@ def test_dynamic_diagram_type_schema_matches_raw_map_shape():
     assert "additionalProperties" in schema
 
 
+def test_protocol_adapter_returns_structured_content_and_image():
+    from fastmcp.tools import ToolResult
+    from mcp.types import ImageContent, TextContent
+
+    payload = {
+        "code": "digraph { A -> B; }",
+        "success": True,
+        "diagram_type": "graphviz",
+        "output_format": "png",
+        "url": "https://example.test/graph.png",
+        "content_base64": "aW1hZ2U=",
+        "source": "kroki",
+        "render_ms": 9.5,
+        "cache_hit": False,
+        "mime_type": "image/png",
+    }
+    result = _as_mcp_tool_result("generate_uml", payload)
+
+    assert isinstance(result, ToolResult)
+    assert result.structured_content == payload
+    assert isinstance(result.content[0], TextContent)
+    assert any(isinstance(block, ImageContent) for block in result.content)
+    image = next(block for block in result.content if isinstance(block, ImageContent))
+    assert image.mime_type == "image/png"
+    assert result.meta["render_ms"] == 9.5
+
+
+def test_protocol_adapter_raises_tool_error_for_execution_failure():
+    from fastmcp.exceptions import ToolError
+
+    with pytest.raises(ToolError, match="renderer unavailable"):
+        _as_mcp_tool_result(
+            "generate_uml",
+            {"error": "renderer unavailable", "code": "class A"},
+        )
+
+
 def test_list_diagram_types_filters_without_breaking_zero_argument_shape():
     all_types = list_diagram_types()
     assert "class" in all_types
@@ -52,13 +92,16 @@ def test_list_diagram_types_filters_without_breaking_zero_argument_shape():
     sequence_types = list_diagram_types(query="sequence")
     assert "sequence" in sequence_types
     assert all(
-        "sequence" in (
-            name + " " + info["description"] + " " + info["backend"]
-        ).lower()
+        "sequence"
+        in (name + " " + info["description"] + " " + info["backend"]).lower()
         for name, info in sequence_types.items()
     )
 
-    plantuml_svg = list_diagram_types(backend="plantuml", output_format="svg", limit=2)
+    plantuml_svg = list_diagram_types(
+        backend="plantuml",
+        output_format="svg",
+        limit=2,
+    )
     assert 1 <= len(plantuml_svg) <= 2
     assert all(info["backend"] == "plantuml" for info in plantuml_svg.values())
     assert all("svg" in info["formats"] for info in plantuml_svg.values())
@@ -88,7 +131,8 @@ def test_validate_uml_reports_deterministic_normalization():
 
 
 def test_output_dir_is_sandboxed_when_arbitrary_paths_are_not_allowed(
-    monkeypatch, tmp_path
+    monkeypatch,
+    tmp_path,
 ):
     root = tmp_path / "allowed"
     root.mkdir()
@@ -126,7 +170,10 @@ def test_generate_uml_uses_real_cache_when_enabled(monkeypatch):
         "render_ms": 12.5,
         "mime_type": "image/svg+xml",
     }
-    with patch("mcp_core.core.diagram_service.generate_diagram", return_value=rendered) as render:
+    with patch(
+        "mcp_core.core.diagram_service.generate_diagram",
+        return_value=rendered,
+    ) as render:
         first = generate_uml("mermaid", "graph TD; A-->B;")
         second = generate_uml("mermaid", "graph TD; A-->B;")
 
@@ -149,7 +196,10 @@ def test_cache_key_changes_for_render_options(monkeypatch):
         "local_path": None,
         "source": "kroki",
     }
-    with patch("mcp_core.core.diagram_service.generate_diagram", return_value=rendered) as render:
+    with patch(
+        "mcp_core.core.diagram_service.generate_diagram",
+        return_value=rendered,
+    ) as render:
         generate_uml("class", "class A", scale=1.0)
         generate_uml("class", "class A", scale=2.0)
     assert render.call_count == 2
@@ -159,6 +209,7 @@ def test_batch_keeps_input_order_under_concurrency(monkeypatch):
     monkeypatch.setenv("MCP_BATCH_CONCURRENCY", "3")
 
     def fake_render(index, raw, output_dir):
+        del output_dir
         time.sleep((2 - index) * 0.01)
         return {"index": index, "code": raw["code"], "success": True}
 
@@ -167,7 +218,10 @@ def test_batch_keeps_input_order_under_concurrency(monkeypatch):
         {"diagram_type": "mermaid", "code": "b"},
         {"diagram_type": "mermaid", "code": "c"},
     ]
-    with patch("mcp_core.tools.diagram_tools._render_batch_item", side_effect=fake_render):
+    with patch(
+        "mcp_core.tools.diagram_tools._render_batch_item",
+        side_effect=fake_render,
+    ):
         result = generate_uml_batch(items)
 
     assert [row["index"] for row in result["results"]] == [0, 1, 2]
