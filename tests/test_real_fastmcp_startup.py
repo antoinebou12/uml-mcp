@@ -20,6 +20,7 @@ def test_real_fastmcp_http_app_initializes() -> None:
             "MOCK_FASTMCP": "0",
             "TESTING": "0",
             "DEVELOPMENT": "0",
+            "PYTHONUNBUFFERED": "1",
         }
     )
 
