@@ -7,6 +7,7 @@ Kroki client is lazy-loaded for testability.
 
 import hashlib
 import logging
+import os
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional
 
@@ -109,17 +110,59 @@ def generate_diagram(
         fp12,
     )
 
-    if output_dir:
+    def _sanitize_output_dir(output_dir: str) -> Optional[str]:
+        """Enforce MCP_OUTPUT_ROOT sandbox and opt-in arbitrary output."""
+        if not output_dir:
+            return None
+        # Hosted / read-only mode must not write
+        if MCP_SETTINGS.read_only or MCP_SETTINGS.memory_only:
+            return None
+        # Resolve absolute path
         try:
-            Path(output_dir).mkdir(parents=True, exist_ok=True)
-            logger.debug("Using output directory: %s", output_dir)
-        except OSError as e:
-            logger.warning(
-                "Could not create output directory %s (%s); returning URL only.",
-                output_dir,
-                e,
-            )
+            target_path = Path(output_dir).resolve()
+        except Exception:
+            logger.warning("Invalid output_dir path: %s", output_dir)
+            return None
+        # Check sandbox root
+        root_env = os.environ.get("MCP_OUTPUT_ROOT", "").strip()
+        allow_arbitrary = os.environ.get("MCP_ALLOW_ARBITRARY_OUTPUT_DIR", "false").lower() in ("true","1","yes")
+        if root_env:
+            try:
+                root_path = Path(root_env).resolve()
+                # Prevent escape via .. or symlink
+                try:
+                    target_path.relative_to(root_path)
+                except ValueError:
+                    logger.warning("output_dir %s escapes MCP_OUTPUT_ROOT %s", target_path, root_path)
+                    if not allow_arbitrary:
+                        return None
+            except Exception:
+                logger.warning("Could not resolve MCP_OUTPUT_ROOT")
+                return None
+        else:
+            # No root configured; require explicit opt-in for absolute paths
+            if target_path.is_absolute() and not allow_arbitrary:
+                logger.warning("Absolute output_dir %s requires MCP_ALLOW_ARBITRARY_OUTPUT_DIR=true", target_path)
+                return None
+        return str(target_path)
+
+    if output_dir:
+        sanitized = _sanitize_output_dir(output_dir)
+        if sanitized is None:
+            logger.debug("Output dir rejected by sandbox policy, returning URL only")
             output_dir = None
+        else:
+            output_dir = sanitized
+            try:
+                Path(output_dir).mkdir(parents=True, exist_ok=True)
+                logger.debug("Using output directory: %s", output_dir)
+            except OSError as e:
+                logger.warning(
+                    "Could not create output directory %s (%s); returning URL only.",
+                    output_dir,
+                    e,
+                )
+                output_dir = None
 
     diagram_config = MCP_SETTINGS.diagram_types.get(diagram_type.lower())
     if not diagram_config:
