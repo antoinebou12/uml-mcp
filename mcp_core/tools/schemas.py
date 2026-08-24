@@ -2,7 +2,7 @@
 Pydantic schemas for MCP tool inputs and outputs.
 """
 
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
