@@ -201,3 +201,24 @@ class DiagramResult(BaseModel):
     render_ms: Optional[float] = None
     cache_hit: Optional[bool] = None
     mime_type: Optional[str] = None
+
+
+class ValidationResult(BaseModel):
+    """Structured output for validate_uml."""
+
+    valid: bool
+    errors: list[str] = []
+    warnings: list[str] = []
+    suggestions: list[str] = []
+
+
+class BatchDiagramResult(BaseModel):
+    """Structured output for generate_uml_batch."""
+
+    results: list[DiagramResult]
+
+
+class DiagramTypesOutput(BaseModel):
+    """Structured output for list_diagram_types."""
+
+    types: dict[str, Any]

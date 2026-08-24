@@ -21,6 +21,7 @@ def mcp_tool(
     required_params: Optional[List[str]] = None,
     example: Optional[str] = None,
     annotations: Optional[Dict[str, Any]] = None,
+    output_schema: Optional[Any] = None,
 ) -> Callable[[F], F]:
     """
     Decorator for registering a function as an MCP tool.
@@ -32,6 +33,7 @@ def mcp_tool(
         required_params: List of required parameter names
         example: Example usage of the tool
         annotations: MCP tool hints (readOnlyHint, destructiveHint, idempotentHint, openWorldHint)
+        output_schema: Pydantic model or dict for FastMCP outputSchema
 
     Returns:
         Decorated function
@@ -83,6 +85,7 @@ def mcp_tool(
             or [p for p, info in param_info.items() if info["required"]],
             "example": example,
             "annotations": annotations or {},
+            "output_schema": output_schema,
             "return_type": (
                 sig.return_annotation
                 if sig.return_annotation is not inspect.Parameter.empty
@@ -114,11 +117,14 @@ def register_tools_with_server(server: Any) -> List[str]:
     for tool_name, tool_info in _registered_tools.items():
         func = tool_info["function"]
         annotations = tool_info.get("annotations") or {}
+        output_schema = tool_info.get("output_schema")
 
         # Build tool registration kwargs
         tool_kwargs = {"name": tool_name, "description": tool_info["description"]}
         if annotations:
             tool_kwargs["annotations"] = annotations
+        if output_schema is not None:
+            tool_kwargs["output_schema"] = output_schema
 
         # Register with server (handle different server APIs)
         try:

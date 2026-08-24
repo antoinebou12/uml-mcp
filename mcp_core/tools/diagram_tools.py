@@ -11,7 +11,7 @@ from ..core.config import MCP_SETTINGS
 from ..core.diagram_catalog import get_diagram_types_dict
 from ..core.diagram_service import DiagramRequest, generate_from_request
 from ..core.diagram_validation import validate_uml_inputs
-from .schemas import GenerateUMLInput
+from .schemas import BatchDiagramResult, DiagramResult, DiagramTypesOutput, GenerateUMLInput, ValidationResult
 from .tool_decorator import get_tool_registry, mcp_tool, register_tools_with_server
 
 logger = logging.getLogger(__name__)
@@ -46,6 +46,7 @@ ANNOTATIONS_LIST = {
     category="uml",
     example="list_diagram_types()",
     annotations=ANNOTATIONS_LIST,
+    output_schema=DiagramTypesOutput,
 )
 def list_diagram_types() -> Dict[str, Any]:
     """Return the uml://types payload as a structured dict."""
@@ -74,6 +75,7 @@ def _format_validation_error(exc: ValidationError) -> str:
         "output_dir=None)"
     ),
     annotations=ANNOTATIONS_DIAGRAM,
+    output_schema=BatchDiagramResult,
 )
 def generate_uml_batch(
     items: List[Dict[str, Any]],
@@ -135,6 +137,7 @@ def generate_uml_batch(
         "or generate_uml('class', code, './output') to save"
     ),
     annotations=ANNOTATIONS_DIAGRAM,
+    output_schema=DiagramResult,
 )
 def generate_uml(
     diagram_type: str,
@@ -170,6 +173,7 @@ def generate_uml(
     category="uml",
     example="validate_uml('class', '@startuml\\nclass A\\n@enduml', 'svg')",
     annotations=ANNOTATIONS_VALIDATE,
+    output_schema=ValidationResult,
 )
 def validate_uml(
     diagram_type: str,
