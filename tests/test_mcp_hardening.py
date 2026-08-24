@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import time
 from unittest.mock import patch
@@ -227,14 +228,23 @@ def test_batch_keeps_input_order_under_concurrency(monkeypatch):
     assert [row["index"] for row in result["results"]] == [0, 1, 2]
 
 
-def test_fastmcp_security_env_mapping(monkeypatch):
+def _clear_fastmcp_security_env(monkeypatch):
     for name in (
         "FASTMCP_HTTP_ALLOWED_HOSTS",
         "FASTMCP_HTTP_ALLOWED_ORIGINS",
         "FASTMCP_HTTP_HOST_ORIGIN_PROTECTION",
+        "MCP_ALLOWED_HOSTS",
+        "MCP_ALLOWED_ORIGINS",
+        "VERCEL",
+        "VERCEL_URL",
+        "VERCEL_BRANCH_URL",
+        "VERCEL_PROJECT_PRODUCTION_URL",
     ):
         monkeypatch.delenv(name, raising=False)
 
+
+def test_fastmcp_security_env_mapping(monkeypatch):
+    _clear_fastmcp_security_env(monkeypatch)
     monkeypatch.setenv("MCP_ALLOWED_HOSTS", "uml-mcp.vercel.app,localhost")
     monkeypatch.setenv("MCP_ALLOWED_ORIGINS", '["https://example.test"]')
     server_module._configure_fastmcp_http_security()
@@ -242,3 +252,33 @@ def test_fastmcp_security_env_mapping(monkeypatch):
     assert os.environ["FASTMCP_HTTP_HOST_ORIGIN_PROTECTION"] == "true"
     assert "uml-mcp.vercel.app" in os.environ["FASTMCP_HTTP_ALLOWED_HOSTS"]
     assert "https://example.test" in os.environ["FASTMCP_HTTP_ALLOWED_ORIGINS"]
+
+
+def test_fastmcp_security_derives_vercel_public_hosts(monkeypatch):
+    _clear_fastmcp_security_env(monkeypatch)
+    monkeypatch.setenv("VERCEL", "1")
+    monkeypatch.setenv(
+        "VERCEL_URL",
+        "uml-mcp-git-fix-mcp-http-startup-regression-antoinebou12.vercel.app",
+    )
+    monkeypatch.setenv("VERCEL_PROJECT_PRODUCTION_URL", "uml-mcp.vercel.app")
+
+    server_module._configure_fastmcp_http_security()
+
+    hosts = json.loads(os.environ["FASTMCP_HTTP_ALLOWED_HOSTS"])
+    assert "uml-mcp.vercel.app" in hosts
+    assert (
+        "uml-mcp-git-fix-mcp-http-startup-regression-antoinebou12.vercel.app"
+        in hosts
+    )
+    assert os.environ["FASTMCP_HTTP_HOST_ORIGIN_PROTECTION"] == "true"
+
+
+def test_fastmcp_security_uses_auto_for_non_vercel_without_allowlists(monkeypatch):
+    _clear_fastmcp_security_env(monkeypatch)
+
+    server_module._configure_fastmcp_http_security()
+
+    assert os.environ["FASTMCP_HTTP_HOST_ORIGIN_PROTECTION"] == "auto"
+    assert "FASTMCP_HTTP_ALLOWED_HOSTS" not in os.environ
+    assert "FASTMCP_HTTP_ALLOWED_ORIGINS" not in os.environ
