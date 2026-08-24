@@ -161,14 +161,57 @@ class _MCPAcceptHeaderMiddleware:
         await self.app(scope, receive, send)
 
 
+class _MCPOriginValidationMiddleware:
+    """Validate Origin for Streamable HTTP MCP requests per MCP security requirements."""
+
+    def __init__(self, app):
+        self.app = app
+        allowed_origins_env = os.environ.get("MCP_ALLOWED_ORIGINS", "").strip()
+        self.allowed_origins = set(o.strip() for o in allowed_origins_env.split(",") if o.strip()) if allowed_origins_env else set()
+        allowed_hosts_env = os.environ.get("MCP_ALLOWED_HOSTS", "").strip()
+        self.allowed_hosts = set(h.strip().lower() for h in allowed_hosts_env.split(",") if h.strip()) if allowed_hosts_env else set()
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] == "http":
+            path = scope.get("path", "")
+            if path.startswith("/mcp"):
+                headers = dict(scope.get("headers", []))
+                origin = None
+                for k, v in scope.get("headers", []):
+                    if k.lower() == b"origin":
+                        origin = v.decode("utf-8")
+                        break
+                # Non-browser MCP clients may omit Origin; allow if no origin present
+                if origin:
+                    if self.allowed_origins and origin not in self.allowed_origins:
+                        # Reject invalid origin
+                        from starlette.responses import JSONResponse
+                        resp = JSONResponse({"detail": "Origin not allowed"}, status_code=403)
+                        await resp(scope, receive, send)
+                        return
+                # Host validation optional
+                host = scope.get("headers")
+                # Continue
+        await self.app(scope, receive, send)
+
+
 # Configure CORS (cast: Starlette stubs expect a factory type; classes work at runtime)
+# Secure default: do not allow wildcard with credentials. Allow origins via MCP_ALLOWED_ORIGINS env var (comma-separated) or default to empty.
+_allowed_origins_env = os.environ.get("MCP_ALLOWED_ORIGINS", "").strip()
+if _allowed_origins_env:
+    allow_origins = [o.strip() for o in _allowed_origins_env.split(",") if o.strip()]
+else:
+    allow_origins = []
+
 app.add_middleware(
     cast(Any, CORSMiddleware),
-    allow_origins=["*"],
-    allow_credentials=True,
+    allow_origins=allow_origins,
+    allow_credentials=bool(allow_origins),
     allow_methods=["*"],
     allow_headers=["*"],
 )
+# Origin validation for MCP Streamable HTTP
+app.add_middleware(cast(Any, _MCPOriginValidationMiddleware))
 # Run first (outermost): normalize Accept for /mcp so MCP Streamable HTTP accepts the request.
 app.add_middleware(cast(Any, _MCPAcceptHeaderMiddleware))
 
