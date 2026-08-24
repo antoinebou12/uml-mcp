@@ -54,9 +54,9 @@ def _bounded_limit(limit: Optional[int]) -> Optional[int]:
 
 @mcp_tool(
     description=(
-        "Find supported diagram types and their renderer/formats. Input optional query, "
-        "backend, output_format, and limit filters; returns matching type metadata. Use "
-        "this when you are unsure which diagram type or format to choose."
+        "Find supported diagram types and their renderer/formats. All filters are optional; "
+        "returns matching type metadata. Use this when you are unsure which diagram type "
+        "or format to choose."
     ),
     category="uml",
     example="list_diagram_types(query='sequence', output_format='svg')",
@@ -69,7 +69,14 @@ def list_diagram_types(
     output_format: Optional[str] = None,
     limit: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Return optionally filtered diagram type metadata."""
+    """Return optionally filtered diagram type metadata.
+
+    Args:
+        query: Optional text matched against type name, backend, and description.
+        backend: Optional renderer/backend name to match exactly.
+        output_format: Optional required output format such as svg or png.
+        limit: Optional maximum number of results, clamped to 1-100.
+    """
     logger.info(
         "Called list_diagram_types: query=%s backend=%s format=%s limit=%s",
         query,
@@ -186,7 +193,12 @@ def generate_uml_batch(
     items: List[Dict[str, Any]],
     output_dir: Optional[str] = None,
 ) -> Dict[str, Any]:
-    """Render multiple diagrams with bounded concurrency and stable ordering."""
+    """Render multiple diagrams with bounded concurrency and stable ordering.
+
+    Args:
+        items: Diagram request objects; each requires diagram_type and code.
+        output_dir: Optional shared local output directory for all rendered files.
+    """
     logger.info(
         "Called generate_uml_batch: count=%s, output_dir=%s",
         len(items) if items else 0,
@@ -234,7 +246,16 @@ def generate_uml(
     theme: Optional[str] = None,
     scale: float = 1.0,
 ) -> Dict[str, Any]:
-    """Generate a diagram using the specified diagram type."""
+    """Generate a diagram using the specified diagram type.
+
+    Args:
+        diagram_type: Supported diagram type, for example class, sequence, or mermaid.
+        code: Diagram source code in the syntax required by diagram_type.
+        output_dir: Optional local directory for the rendered file; omit on hosted deployments.
+        output_format: Requested output format, default svg.
+        theme: Optional PlantUML theme; ignored by non-PlantUML backends.
+        scale: SVG scale factor; ignored for non-SVG output.
+    """
     logger.info(
         "Called generate_uml tool: type=%s, code length=%s",
         diagram_type,
@@ -270,7 +291,14 @@ def validate_uml(
     output_format: str = "svg",
     strict: bool = False,
 ) -> Dict[str, Any]:
-    """Check inputs and light structure without rendering."""
+    """Check inputs and light structure without rendering.
+
+    Args:
+        diagram_type: Supported diagram type to validate.
+        code: Diagram source code to validate locally without rendering.
+        output_format: Output format whose compatibility should be checked.
+        strict: Enable additional syntax checks when supported.
+    """
     logger.info(
         "Called validate_uml tool: type=%s, code length=%s, strict=%s",
         diagram_type,
