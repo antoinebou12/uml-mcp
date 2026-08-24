@@ -112,6 +112,7 @@ def create_mcp_server():
     from ..resources.diagram_resources import register_diagram_resources
     from ..server.fastmcp_wrapper import FastMCP
     from ..tools.diagram_tools import register_diagram_tools
+    from ..tools.schema_compat import install_schema_compat
     from .config import MCP_SETTINGS
 
     logger.info("Creating MCP server: %s", MCP_SETTINGS.server_name)
@@ -123,6 +124,7 @@ def create_mcp_server():
     tool_names = register_diagram_tools(server)
     resource_names = register_diagram_resources(server)
     prompt_names = register_diagram_prompts(server)
+    install_schema_compat(server)
 
     MCP_SETTINGS.tools = tool_names
     MCP_SETTINGS.prompts = prompt_names
