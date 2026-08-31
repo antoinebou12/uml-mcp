@@ -117,6 +117,7 @@ nav:
       - Docker: deploy/docker.md
       - Vercel & Smithery: integrations/vercel_smithery.md
       - Claude Desktop: integrations/claude_desktop.md
+      - Claude Desktop extension (.mcpb): integrations/claude_desktop_mcpb.md
       - Claude Code: integrations/claude_code.md
       - Cursor: integrations/cursor.md
       - Fallback strategy: fallback-mechanism.md

@@ -2,6 +2,10 @@
 
 Connect UML-MCP to Claude Desktop to generate diagrams in chat.
 
+For a one-click install, use the [Claude Desktop extension (.mcpb)](claude_desktop_mcpb.md)
+instead — it bundles the server so you do not have to clone the repo or edit JSON by hand.
+This page covers the manual configuration.
+
 For **Claude Code** (CLI / IDE extension) and the bundled marketplace plugin, see [Claude Code integration](claude_code.md).
 
 ## Overview
