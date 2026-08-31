@@ -28,6 +28,49 @@ Stop the stack:
 docker compose down
 ```
 
+## Optional local PlantUML
+
+The compose file ships a `plantuml-server` service behind an opt-in profile, so it is not
+started by a plain `docker compose up`:
+
+```bash
+docker compose --profile plantuml up -d
+```
+
+That adds one container, `plantuml/plantuml-server:jetty-v1.2026.6`, published on host port
+`8002` (`8000` and `8001` are already taken by `uml-mcp` and `kroki`). It has an HTTP health
+check, so `docker compose ps` reports `healthy` once Jetty is serving.
+
+### Making UML-MCP actually use it
+
+PlantUML is a **fallback** renderer: UML-MCP tries Kroki first and only reaches for PlantUML
+when Kroki fails (see [Fallback strategy](../fallback-mechanism.md)). The compose stack runs
+with a local Kroki and therefore disables the fallback chain by default. Starting the profile
+on its own changes nothing about how diagrams are rendered — you also need to turn the chain
+back on:
+
+```bash
+MCP_DIAGRAM_FALLBACK=true USE_LOCAL_PLANTUML=true docker compose --profile plantuml up -d
+```
+
+`USE_LOCAL_PLANTUML`, `PLANTUML_SERVER` and `MCP_DIAGRAM_FALLBACK` are passed through from
+your shell with the previous defaults (`false`, `http://plantuml-server:8080`, `false`), so
+omitting them leaves today's behavior exactly as it was.
+
+A successful PlantUML render reports `"source": "plantuml_server"` in the tool response.
+
+### Fully offline
+
+Local Kroki plus local PlantUML means no outbound calls for any supported diagram type:
+
+```bash
+MCP_DIAGRAM_FALLBACK=true USE_LOCAL_PLANTUML=true docker compose --profile plantuml up -d
+```
+
+Without the profile, the `PLANTUML_SERVER` default points at a `plantuml-server` host that
+does not exist in the default stack — so the fallback simply fails and the Kroki error is
+returned, which is the current behavior.
+
 ## API + MCP only (public Kroki)
 
 If you don't need a local Kroki and want a single small image:
@@ -56,7 +99,7 @@ The Docker image reads the same variables as the local server. The most useful f
 | Variable | Description | Default |
 | --- | --- | --- |
 | `KROKI_SERVER` | Kroki gateway URL | `https://kroki.io` |
-| `PLANTUML_SERVER` | PlantUML server URL (fallback) | `http://plantuml-server:8080` |
+| `PLANTUML_SERVER` | PlantUML server URL (fallback); resolves to the `plantuml` profile service | `http://plantuml-server:8080` |
 | `USE_LOCAL_KROKI` | Use a local Kroki instance (`true`/`false`) | `false` |
 | `USE_LOCAL_PLANTUML` | Use a local PlantUML instance (`true`/`false`) | `false` |
 | `MCP_OUTPUT_DIR` | Where to write rendered diagrams | `./output` |

@@ -151,7 +151,13 @@ docker build -t uml-mcp . && docker run -p 8000:8000 uml-mcp
 
 # stdio MCP subprocess mode
 docker run -i uml-mcp python server.py --transport stdio
+
+# Optional: add a local PlantUML server (opt-in profile, host port 8002)
+docker compose --profile plantuml up -d
 ```
+
+PlantUML is a fallback renderer, so set `MCP_DIAGRAM_FALLBACK=true` alongside the profile for
+UML-MCP to use it. See [docs/deploy/docker.md](docs/deploy/docker.md).
 
 ## Configuration (Local runtime)
 
