@@ -14,8 +14,10 @@ services:
       - MCP_OUTPUT_DIR=/app/output
       - USE_LOCAL_KROKI=true
       - KROKI_SERVER=http://kroki:8000
-      - MCP_DIAGRAM_FALLBACK=false
+      - MCP_DIAGRAM_FALLBACK=${MCP_DIAGRAM_FALLBACK:-false}
       - FASTMCP_STATELESS_HTTP=true
+      - USE_LOCAL_PLANTUML=${USE_LOCAL_PLANTUML:-false}
+      - PLANTUML_SERVER=${PLANTUML_SERVER:-http://plantuml-server:8080}
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
       interval: 30s
@@ -23,9 +25,17 @@ services:
       retries: 3
       start_period: 20s
     depends_on:
-      - kroki
-      - blockdiag
-      - mermaid
+      kroki:
+        condition: service_started
+      blockdiag:
+        condition: service_started
+      mermaid:
+        condition: service_started
+      # Only present under `--profile plantuml`; a plain `docker compose up`
+      # starts the same three services it always has.
+      plantuml-server:
+        condition: service_started
+        required: false
     restart: unless-stopped
 
   kroki:
@@ -43,6 +53,23 @@ services:
 
   blockdiag:
     image: yuzutech/kroki-blockdiag
+    restart: unless-stopped
+
+  # Opt-in only: `docker compose --profile plantuml up -d`.
+  # PlantUML is a *fallback* renderer, so also set MCP_DIAGRAM_FALLBACK=true to
+  # let UML-MCP reach for it when Kroki cannot render a PlantUML-family diagram.
+  plantuml-server:
+    image: plantuml/plantuml-server:jetty-v1.2026.6
+    profiles:
+      - plantuml
+    ports:
+      - "8002:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
     restart: unless-stopped
 
 volumes:
