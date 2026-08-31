@@ -77,8 +77,11 @@ def test_generate_diagram_exception(mock_kroki_client):
     assert "Test error" in result["error"]
 
 
-def test_output_directory_creation(tmp_path):
+def test_output_directory_creation(tmp_path, monkeypatch):
     """Test that the output directory is created if it doesn't exist."""
+    # Absolute output_dir outside MCP_OUTPUT_ROOT needs the explicit opt-in
+    # enforced by mcp_core.core.utils._sanitize_output_dir.
+    monkeypatch.setenv("MCP_ALLOW_ARBITRARY_OUTPUT_DIR", "true")
     non_existent_dir = os.path.join(tmp_path, "new_dir")
 
     # Directory shouldn't exist initially
