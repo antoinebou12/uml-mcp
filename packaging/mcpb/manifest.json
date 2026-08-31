@@ -1,0 +1,82 @@
+{
+  "manifest_version": "0.4",
+  "name": "uml-mcp",
+  "display_name": "UML Diagram Generator",
+  "version": "1.3.0",
+  "description": "Generate UML and other diagrams through MCP",
+  "long_description": "UML-MCP renders UML, Mermaid, D2, Graphviz, BPMN, C4, TikZ and the rest of the Kroki catalog from plain diagram source. It runs locally over stdio and returns a shareable render URL, inline image data, or a saved file when you configure an output directory.",
+  "author": {
+    "name": "Antoine Boucher",
+    "url": "https://github.com/antoinebou12"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/antoinebou12/uml-mcp"
+  },
+  "homepage": "https://antoinebou12.github.io/uml-mcp/",
+  "documentation": "https://antoinebou12.github.io/uml-mcp/integrations/claude_desktop_mcpb/",
+  "support": "https://github.com/antoinebou12/uml-mcp/issues",
+  "license": "MIT",
+  "keywords": ["uml", "plantuml", "mermaid", "d2", "diagrams", "kroki"],
+  "server": {
+    "type": "uv",
+    "entry_point": "server.py",
+    "mcp_config": {
+      "command": "uv",
+      "args": ["run", "--directory", "${__dirname}", "python", "server.py"],
+      "env": {
+        "MCP_OUTPUT_DIR": "${user_config.output_dir}",
+        "MCP_OUTPUT_ROOT": "${user_config.output_dir}",
+        "KROKI_SERVER": "${user_config.kroki_server}",
+        "PLANTUML_SERVER": "${user_config.plantuml_server}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "generate_uml",
+      "description": "Render one diagram from source code and return its URL, inline image, or saved file path."
+    },
+    {
+      "name": "generate_uml_batch",
+      "description": "Render several independent diagrams in one call, keeping partial failures isolated."
+    },
+    {
+      "name": "validate_uml",
+      "description": "Check diagram type, format, size, and syntax locally without rendering."
+    },
+    {
+      "name": "list_diagram_types",
+      "description": "Discover supported diagram types with their renderer backend and output formats."
+    }
+  ],
+  "tools_generated": false,
+  "user_config": {
+    "output_dir": {
+      "type": "directory",
+      "title": "Diagram output directory",
+      "description": "Optional. Leave empty to get render URLs and inline images only. Pick a folder to also save diagram files there; that folder becomes the write sandbox.",
+      "required": false
+    },
+    "kroki_server": {
+      "type": "string",
+      "title": "Kroki server URL",
+      "description": "Rendering backend. Point this at a self-hosted Kroki instance to keep diagram source off the public service.",
+      "default": "https://kroki.io",
+      "required": false
+    },
+    "plantuml_server": {
+      "type": "string",
+      "title": "PlantUML server URL",
+      "description": "PlantUML fallback used when Kroki cannot render a PlantUML-family diagram.",
+      "default": "https://www.plantuml.com/plantuml",
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": ["darwin", "linux", "win32"],
+    "runtimes": {
+      "python": ">=3.12"
+    }
+  }
+}

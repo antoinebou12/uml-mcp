@@ -1,0 +1,78 @@
+name: Build MCPB Bundle
+
+on:
+  workflow_dispatch:
+  workflow_call:
+
+jobs:
+  mcpb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: "latest"
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "24"
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Validate manifest
+        run: npx -y @anthropic-ai/mcpb@2.1.2 validate packaging/mcpb/manifest.json
+
+      - name: Build bundle
+        run: uv run python scripts/build_mcpb.py
+
+      - name: Inspect archive contents
+        run: |
+          python - <<'PY'
+          import glob
+          import sys
+          import zipfile
+
+          bundles = glob.glob("dist/*.mcpb")
+          if len(bundles) != 1:
+              print(f"FAIL: expected one bundle, found {bundles}", file=sys.stderr)
+              sys.exit(1)
+
+          with zipfile.ZipFile(bundles[0]) as archive:
+              names = archive.namelist()
+
+          for required in ("manifest.json", "pyproject.toml", "server.py", "uv.lock"):
+              if required not in names:
+                  print(f"FAIL: bundle is missing {required}", file=sys.stderr)
+                  sys.exit(1)
+
+          forbidden = [
+              name
+              for name in names
+              if name.startswith(("tests/", "docs/", ".venv/", "logs/", ".env"))
+              or "__pycache__" in name
+              or name.endswith((".pyc", ".log", ".pdf"))
+          ]
+          if forbidden:
+              print(f"FAIL: bundle ships excluded paths: {forbidden}", file=sys.stderr)
+              sys.exit(1)
+
+          print(f"bundle OK: {bundles[0]} ({len(names)} entries)")
+          PY
+
+      - name: Smoke-test tool discovery from the staged bundle
+        run: uv run --directory dist/mcpb-stage python server.py --list-tools
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v7
+        with:
+          name: uml-mcp-mcpb
+          path: dist/*.mcpb
+          retention-days: 14
