@@ -119,6 +119,7 @@ nav:
       - Claude Desktop: integrations/claude_desktop.md
       - Claude Code: integrations/claude_code.md
       - Cursor: integrations/cursor.md
+      - OI OS (community): integrations/oi_os.md
       - Fallback strategy: fallback-mechanism.md
   - Developers:
       - developers/index.md

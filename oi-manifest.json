@@ -1,0 +1,22 @@
+{
+  "server_name": "uml_mcp",
+  "version": "1.3.0",
+  "intents": [
+    { "keyword": "generate uml", "tool_name": "generate_uml", "priority": 10 },
+    { "keyword": "create diagram", "tool_name": "generate_uml", "priority": 10 },
+    { "keyword": "draw diagram", "tool_name": "generate_uml", "priority": 10 },
+    { "keyword": "class diagram", "tool_name": "generate_uml", "priority": 10 },
+    { "keyword": "sequence diagram", "tool_name": "generate_uml", "priority": 10 },
+    { "keyword": "activity diagram", "tool_name": "generate_uml", "priority": 10 },
+    { "keyword": "mermaid diagram", "tool_name": "generate_uml", "priority": 10 },
+    { "keyword": "plantuml", "tool_name": "generate_uml", "priority": 9 },
+    { "keyword": "validate uml", "tool_name": "validate_uml", "priority": 10 },
+    { "keyword": "check diagram syntax", "tool_name": "validate_uml", "priority": 10 },
+    { "keyword": "list diagram types", "tool_name": "list_diagram_types", "priority": 10 },
+    { "keyword": "supported diagram types", "tool_name": "list_diagram_types", "priority": 9 },
+    { "keyword": "generate diagrams batch", "tool_name": "generate_uml_batch", "priority": 10 },
+    { "keyword": "multiple diagrams", "tool_name": "generate_uml_batch", "priority": 9 }
+  ],
+  "parameter_extractors": {},
+  "reminder_message": "UML-MCP tools: generate_uml renders one diagram, generate_uml_batch renders several, validate_uml checks syntax without rendering, list_diagram_types discovers supported types and formats. Pass diagram_type and code as structured arguments and send the diagram source through unmodified. PlantUML code must be wrapped in @startuml and @enduml. Render any returned URL as a clickable link, e.g. [View Diagram](URL)."
+}
