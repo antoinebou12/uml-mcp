@@ -28,10 +28,8 @@ class TestDiagramTools:
                 output_dir="/tmp/out",
             )
             assert "error" in result
-            assert (
-                "read_only" in result["error"].lower()
-                or "mcp_read_only" in result["error"].lower()
-            )
+            error = result["error"].lower()
+            assert "read-only" in error or "read_only" in error
         finally:
             config.MCP_SETTINGS.read_only = original
 
