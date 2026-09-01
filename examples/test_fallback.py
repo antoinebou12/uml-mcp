@@ -12,8 +12,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from mcp_core.core.utils import generate_diagram  # noqa: E402
-from mcp_core.core.config import MCP_SETTINGS  # noqa: E402
+from mcp_core.core.config import MCP_SETTINGS
+from mcp_core.core.utils import generate_diagram
 
 
 def test_diagram_generation_with_fallback():
@@ -62,7 +62,7 @@ def test_diagram_generation_with_fallback():
         output_dir=str(output_dir),
     )
 
-    if "error" in result and result["error"]:
+    if result.get("error"):
         print(f"  [ERROR] {result['error']}")
     else:
         print("  [SUCCESS]")
@@ -91,7 +91,7 @@ def test_diagram_generation_with_fallback():
         output_dir=str(output_dir),
     )
 
-    if "error" in result and result["error"]:
+    if result.get("error"):
         print(f"  [ERROR] {result['error']}")
     else:
         print("  [SUCCESS]")
@@ -121,7 +121,7 @@ def test_diagram_generation_with_fallback():
         output_dir=str(output_dir),
     )
 
-    if "error" in result and result["error"]:
+    if result.get("error"):
         print(f"  [ERROR] {result['error']}")
     else:
         print("  [SUCCESS]")

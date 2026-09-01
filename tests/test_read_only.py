@@ -30,8 +30,8 @@ class TestReadOnlyMode:
 
     def test_read_only_still_registers_generate_uml(self, _reset_tool_registry):
         """With MCP_READ_ONLY=true, generate_uml stays registered; output_dir is rejected at validation."""
-        from mcp_core.tools import tool_decorator
         from mcp_core.core import config
+        from mcp_core.tools import tool_decorator
 
         assert "generate_uml" in tool_decorator._registered_tools
 

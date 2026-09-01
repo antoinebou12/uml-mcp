@@ -3,17 +3,25 @@ FastAPI application for UML diagram generation service on Vercel.
 Provides REST API and MCP (Model Context Protocol) at /mcp for Smithery and clients.
 """
 
+import asyncio
 import json
 import logging
 import os
+import time
 import warnings
 from pathlib import Path
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import get_redoc_html, get_swagger_ui_html
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, Response
+from fastapi.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    Response,
+    StreamingResponse,
+)
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from mcp_core.core.agent_discovery import (
@@ -56,18 +64,27 @@ try:
         logger.warning(
             "FastMCP instance has no http_app (need fastmcp>=2.3.1); MCP at /mcp will be unavailable."
         )
-except Exception as e:  # noqa: BLE001
+except Exception as e:
     logger.warning("MCP HTTP not available: %s", e, exc_info=True)
 
 # OpenAPI tag groups for Swagger UI / ReDoc
 TAG_REST = "rest"
 TAG_WELL_KNOWN = "well-known"
 TAG_OPENAPI_META = "openapi"
+TAG_AGUI = "agui"
 
 _OPENAPI_TAGS = [
     {
         "name": TAG_REST,
         "description": "Diagram generation, encoding, and health endpoints.",
+    },
+    {
+        "name": TAG_AGUI,
+        "description": (
+            "AG-UI (Agent-User Interaction Protocol) event streaming endpoints. "
+            "Emit RUN_STARTED/TOOL_CALL_*/RUN_FINISHED events over SSE for inline, "
+            "live diagram rendering in chat frontends."
+        ),
     },
     {
         "name": TAG_WELL_KNOWN,
@@ -167,30 +184,41 @@ class _MCPOriginValidationMiddleware:
     def __init__(self, app):
         self.app = app
         allowed_origins_env = os.environ.get("MCP_ALLOWED_ORIGINS", "").strip()
-        self.allowed_origins = set(o.strip() for o in allowed_origins_env.split(",") if o.strip()) if allowed_origins_env else set()
+        self.allowed_origins = (
+            {o.strip() for o in allowed_origins_env.split(",") if o.strip()}
+            if allowed_origins_env
+            else set()
+        )
         allowed_hosts_env = os.environ.get("MCP_ALLOWED_HOSTS", "").strip()
-        self.allowed_hosts = set(h.strip().lower() for h in allowed_hosts_env.split(",") if h.strip()) if allowed_hosts_env else set()
+        self.allowed_hosts = (
+            {h.strip().lower() for h in allowed_hosts_env.split(",") if h.strip()}
+            if allowed_hosts_env
+            else set()
+        )
 
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
             path = scope.get("path", "")
             if path.startswith("/mcp"):
-                headers = dict(scope.get("headers", []))
                 origin = None
                 for k, v in scope.get("headers", []):
                     if k.lower() == b"origin":
                         origin = v.decode("utf-8")
                         break
                 # Non-browser MCP clients may omit Origin; allow if no origin present
-                if origin:
-                    if self.allowed_origins and origin not in self.allowed_origins:
-                        # Reject invalid origin
-                        from starlette.responses import JSONResponse
-                        resp = JSONResponse({"detail": "Origin not allowed"}, status_code=403)
-                        await resp(scope, receive, send)
-                        return
-                # Host validation optional
-                host = scope.get("headers")
+                if (
+                    origin
+                    and self.allowed_origins
+                    and origin not in self.allowed_origins
+                ):
+                    # Reject invalid origin
+                    from starlette.responses import JSONResponse
+
+                    resp = JSONResponse(
+                        {"detail": "Origin not allowed"}, status_code=403
+                    )
+                    await resp(scope, receive, send)
+                    return
                 # Continue
         await self.app(scope, receive, send)
 
@@ -224,9 +252,9 @@ except Exception as e:  # noqa: BLE001
 
 # Import local modules
 try:
-    from tools.kroki.kroki import LANGUAGE_OUTPUT_SUPPORT
     from mcp_core.core.config import MCP_SETTINGS
     from mcp_core.core.utils import generate_diagram
+    from tools.kroki.kroki import LANGUAGE_OUTPUT_SUPPORT
 
     HAS_MODULES = True
 except ImportError:
@@ -234,6 +262,19 @@ except ImportError:
         "Some UML-MCP modules could not be imported. Limited functionality available."
     )
     HAS_MODULES = False
+
+# AG-UI event streaming (imported separately: failure here only disables /ag-ui routes)
+try:
+    from mcp_core.core.agui import (
+        diagram_generation_events,
+        new_run_id,
+        sse_frame,
+    )
+
+    HAS_AGUI = True
+except ImportError as _agui_exc:
+    HAS_AGUI = False
+    logger.warning("AG-UI endpoint unavailable: %s", _agui_exc)
 
 
 # Models
@@ -256,7 +297,7 @@ class DiagramRequest(BaseModel):
     type: str = Field(description="The type of the diagram like class, sequence, etc.")
     code: str = Field(description="The code of the diagram.", min_length=1)
     theme: str = Field(default="", description="Optional theme for the diagram.")
-    output_format: Optional[str] = Field(
+    output_format: str | None = Field(
         default="svg", description="Output format for the diagram (svg, png, etc.)"
     )
 
@@ -279,13 +320,13 @@ class DiagramRequest(BaseModel):
 
 class DiagramResponse(BaseModel):
     url: str = Field(description="URL to the generated diagram.")
-    message: Optional[str] = Field(
+    message: str | None = Field(
         default=None, description="A message about the diagram generation."
     )
-    playground: Optional[str] = Field(
+    playground: str | None = Field(
         default=None, description="URL to an interactive playground."
     )
-    local_path: Optional[str] = Field(
+    local_path: str | None = Field(
         default=None, description="Local path to the diagram file."
     )
 
@@ -375,9 +416,13 @@ async def generate_diagram_endpoint(request: DiagramRequest):
         # Apply theme if provided - store original code for testing purposes
         original_code = request.code
         code = original_code
-        if request.theme and "plantuml" in request.lang.lower():
-            if "@startuml" in code and "!theme" not in code:
-                code = code.replace("@startuml", f"@startuml\n!theme {request.theme}")
+        if (
+            request.theme
+            and "plantuml" in request.lang.lower()
+            and "@startuml" in code
+            and "!theme" not in code
+        ):
+            code = code.replace("@startuml", f"@startuml\n!theme {request.theme}")
 
         # No disk writes in read-only or memory-only mode (default on Vercel via memory_only).
         if MCP_SETTINGS.read_only or MCP_SETTINGS.memory_only:
@@ -399,7 +444,7 @@ async def generate_diagram_endpoint(request: DiagramRequest):
         )
 
         # If error occurred during generation
-        if "error" in result and result["error"]:
+        if result.get("error"):
             raise HTTPException(status_code=400, detail=result["error"])
 
         # Prepare response
@@ -416,9 +461,9 @@ async def generate_diagram_endpoint(request: DiagramRequest):
         # Re-raise HTTP exceptions as they already have status codes
         raise
     except Exception as e:
-        logger.exception(f"Error generating diagram: {str(e)}")
+        logger.exception("Error generating diagram")
         raise HTTPException(
-            status_code=500, detail=f"Failed to generate diagram: {str(e)}"
+            status_code=500, detail=f"Failed to generate diagram: {e!s}"
         )
 
 
@@ -441,7 +486,7 @@ class KrokiEncodeRequest(BaseModel):
     output_format: str = Field(
         default="svg", description="Output format: svg, png, or pdf."
     )
-    theme: Optional[str] = Field(
+    theme: str | None = Field(
         default=None,
         description="PlantUML theme (e.g. cerulean). Ignored for non-PlantUML backends.",
     )
@@ -449,7 +494,7 @@ class KrokiEncodeRequest(BaseModel):
 
 class KrokiEncodeResponse(BaseModel):
     url: str = Field(description="Kroki URL for the rendered diagram.")
-    playground: Optional[str] = Field(
+    playground: str | None = Field(
         default=None,
         description="Optional URL to an interactive editor when available.",
     )
@@ -459,9 +504,9 @@ class KrokiEncodeResponse(BaseModel):
 async def kroki_encode_endpoint(request: KrokiEncodeRequest):
     """Return the Kroki-encoded URL for a diagram (no file write). Use when running on a read-only filesystem (e.g. serverless)."""
     try:
-        from tools.kroki.kroki import Kroki
         from mcp_core.core.config import MCP_SETTINGS
         from mcp_core.core.diagram_rendering import prepare_diagram_code
+        from tools.kroki.kroki import Kroki
     except ImportError as e:
         logger.warning("kroki_encode dependencies unavailable: %s", e)
         raise HTTPException(
@@ -491,6 +536,180 @@ async def kroki_encode_endpoint(request: KrokiEncodeRequest):
     return {"url": url, "playground": playground}
 
 
+# ---------------------------------------------------------------------------
+# AG-UI (Agent-User Interaction Protocol) event streaming
+# ---------------------------------------------------------------------------
+# These endpoints either stream AG-UI events for one render in a single request
+# (POST /ag-ui/generate — stateless, recommended on serverless) or use the canonical
+# start-then-subscribe pattern (POST /ag-ui/start -> GET /ag-ui/events/{run_id}).
+# The run store is intentionally per-process; ``POST /ag-ui/generate`` avoids it.
+_AGUI_RUNS: dict[str, list[dict[str, Any]]] = {}
+_AGUI_RUN_DONE: dict[str, asyncio.Event] = {}
+
+
+class AguiRunRequest(BaseModel):
+    """Input for an AG-UI diagram run (mirrors the ``generate_uml`` tool arguments)."""
+
+    diagram_type: str = Field(
+        ..., min_length=1, description="Diagram type (class, sequence, mermaid, …)."
+    )
+    code: str = Field(..., min_length=1, description="Diagram source code.")
+    output_format: str = Field(
+        default="svg", description="Output format: svg, png, etc."
+    )
+    theme: str | None = Field(default=None, description="Optional PlantUML theme.")
+    scale: float = Field(default=1.0, ge=0.1, description="SVG scale factor.")
+    run_id: str | None = Field(
+        default=None,
+        description="Optional caller-supplied run id (auto-generated if omitted).",
+    )
+
+    @field_validator("output_format")
+    @classmethod
+    def _normalize_format(cls, v: str) -> str:
+        return (v or "svg").strip().lower() or "svg"
+
+
+class AguiRunResponse(BaseModel):
+    """Response from POST /ag-ui/start: where to subscribe for events."""
+
+    run_id: str
+    endpoint: str
+    events_url: str
+    status: str
+
+
+def _build_agui_diagram_request(req: AguiRunRequest):
+    """Convert the AG-UI run request into the shared render pipeline request."""
+    from mcp_core.core.diagram_service import DiagramRequest
+
+    return DiagramRequest(
+        diagram_type=req.diagram_type,
+        code=req.code,
+        output_format=req.output_format,
+        theme=req.theme,
+        scale=req.scale,
+    )
+
+
+async def _agui_worker(run_id: str, req: AguiRunRequest) -> None:
+    """Background worker: run the render and append AG-UI events to the run store."""
+    store = _AGUI_RUNS.get(run_id, [])
+    try:
+        async for ev in diagram_generation_events(
+            _build_agui_diagram_request(req), run_id=run_id
+        ):
+            store.append(ev)
+    except Exception:
+        logger.exception("AG-UI worker crashed for run %s", run_id)
+        store.append(
+            {
+                "type": "RUN_ERROR",
+                "run_id": run_id,
+                "timestamp": int(time.time() * 1000),
+                "error": {
+                    "code": "RENDER_FAILED",
+                    "message": "Unexpected AG-UI worker failure.",
+                    "retryable": False,
+                },
+            }
+        )
+    finally:
+        _AGUI_RUN_DONE.get(run_id, asyncio.Event()).set()
+
+
+async def _agui_events_stream(run_id: str):
+    """Incrementally drain the run store as SSE frames until the run settles."""
+    store = _AGUI_RUNS.get(run_id)
+    done = _AGUI_RUN_DONE.get(run_id)
+    index = 0
+    try:
+        while store is not None and done is not None:
+            while index < len(store):
+                yield sse_frame(store[index])
+                index += 1
+            if done.is_set():
+                break
+            try:
+                await asyncio.wait_for(done.wait(), timeout=0.5)
+            except TimeoutError:
+                pass
+    finally:
+        _AGUI_RUN_DONE.pop(run_id, None)
+        _AGUI_RUNS.pop(run_id, None)
+
+
+@app.post("/ag-ui/start", response_model=AguiRunResponse, tags=[TAG_AGUI])
+async def agui_start(request: Request, body: AguiRunRequest):
+    """Start an AG-UI diagram run and return the SSE events URL (start-then-subscribe).
+
+    Generation runs in the background; subscribe to ``GET /ag-ui/events/{run_id}`` to
+    stream RUN_STARTED/TOOL_CALL_*/RUN_FINISHED events and render the diagram inline.
+    """
+    if not HAS_AGUI:
+        raise HTTPException(status_code=503, detail="AG-UI streaming not available")
+    run_id = body.run_id or new_run_id()
+    if run_id in _AGUI_RUNS:
+        raise HTTPException(
+            status_code=409, detail=f"run_id {run_id} is already in progress"
+        )
+    _AGUI_RUNS[run_id] = []
+    _AGUI_RUN_DONE[run_id] = asyncio.Event()
+    asyncio.create_task(_agui_worker(run_id, body))
+    base = str(request.base_url).rstrip("/")
+    return AguiRunResponse(
+        run_id=run_id,
+        endpoint="/ag-ui/start",
+        events_url=f"{base}/ag-ui/events/{run_id}",
+        status="started",
+    )
+
+
+@app.get("/ag-ui/events/{run_id}", tags=[TAG_AGUI])
+async def agui_events(run_id: str):
+    """Stream the AG-UI events for a started run as Server-Sent Events."""
+    if run_id not in _AGUI_RUNS:
+        raise HTTPException(status_code=404, detail="Unknown run_id")
+    return StreamingResponse(
+        _agui_events_stream(run_id),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+        },
+    )
+
+
+@app.post("/ag-ui/generate", tags=[TAG_AGUI])
+async def agui_generate(body: AguiRunRequest):
+    """Render a diagram and stream the full AG-UI event sequence over SSE in one request.
+
+    Stateless (no run store) — the recommended path on serverless deployments such as
+    Vercel. The terminal CUSTOM event carries the generative-UI payload (base64 image,
+    URL, editable source) so frontends render the diagram inline.
+    """
+    if not HAS_AGUI:
+        raise HTTPException(status_code=503, detail="AG-UI streaming not available")
+    run_id = body.run_id or new_run_id()
+    render_req = _build_agui_diagram_request(body)
+
+    async def event_source():
+        async for ev in diagram_generation_events(render_req, run_id=run_id):
+            yield sse_frame(ev)
+
+    return StreamingResponse(
+        event_source(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+            "X-Run-Id": run_id,
+        },
+    )
+
+
 @app.get(
     "/logo.png",
     tags=[TAG_WELL_KNOWN],
@@ -512,7 +731,7 @@ async def get_logo():
 
 
 @app.get("/.well-known/ai-plugin.json", tags=[TAG_WELL_KNOWN])
-async def get_plugin_manifest(request: Request):
+def get_plugin_manifest(request: Request):
     """Return the plugin manifest for OpenAI plugins and Smithery (base URL from request)."""
     try:
         with open(
@@ -523,8 +742,8 @@ async def get_plugin_manifest(request: Request):
         manifest["api"] = {"type": "openapi", "url": f"{base}/openapi.json"}
         manifest["logo_url"] = f"{base}/logo.png"
         return JSONResponse(content=manifest)
-    except Exception as e:
-        logger.exception(f"Error loading plugin manifest: {str(e)}")
+    except Exception:
+        logger.exception("Error loading plugin manifest")
         raise HTTPException(status_code=500, detail="Failed to load plugin manifest")
 
 
@@ -534,7 +753,7 @@ def _build_server_card():
         from mcp_core.core.server_card import build_server_card
 
         return build_server_card()
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - best-effort card build; fall back to a static card
         logger.warning("Could not build dynamic server card: %s", e)
         return {
             "serverInfo": {"name": "UML Diagram Generator", "version": "1.3.0"},
@@ -561,8 +780,8 @@ async def get_privacy_policy():
             return FileResponse(privacy_path, media_type="text/plain")
         else:
             raise HTTPException(status_code=404, detail="Privacy policy not found")
-    except Exception as e:
-        logger.exception(f"Error loading privacy policy: {str(e)}")
+    except Exception:
+        logger.exception("Error loading privacy policy")
         raise HTTPException(status_code=500, detail="Failed to load privacy policy")
 
 

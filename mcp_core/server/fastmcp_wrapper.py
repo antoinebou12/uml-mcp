@@ -6,7 +6,8 @@ import json
 import logging
 import os
 import sys
-from typing import Any, Callable, Dict, Optional
+from collections.abc import Callable
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -61,7 +62,7 @@ else:
 
                 class _StubContext:
                     def __init__(self) -> None:
-                        self.data: Dict[str, Any] = {}
+                        self.data: dict[str, Any] = {}
 
                     def get(self, key: str, default: Any = None) -> Any:
                         return self.data.get(key, default)
@@ -71,7 +72,7 @@ else:
 
                 _Context_cls = _StubContext
     except ImportError as e:
-        logger.error(f"FastMCP package error: {str(e)}")
+        logger.error(f"FastMCP package error: {e!s}")
         raise ImportError(
             "FastMCP package is required but not installed. Set MOCK_FASTMCP=true to use mock implementation."
         )
@@ -83,7 +84,7 @@ if use_mock:
 
     class _MockContext:
         def __init__(self) -> None:
-            self.data: Dict[str, Any] = {}
+            self.data: dict[str, Any] = {}
 
         def get(self, key: str, default: Any = None) -> Any:
             return self.data.get(key, default)
@@ -94,9 +95,9 @@ if use_mock:
     class _MockFastMCP:
         def __init__(self, name: str, **kwargs):
             self.name = name
-            self._tools: Dict[str, Callable[..., Any]] = {}
-            self._prompts: Dict[str, Callable[..., Any]] = {}
-            self._resources: Dict[str, Callable[..., Any]] = {}
+            self._tools: dict[str, Callable[..., Any]] = {}
+            self._prompts: dict[str, Callable[..., Any]] = {}
+            self._resources: dict[str, Callable[..., Any]] = {}
             self.logger = logging.getLogger(__name__)
 
         def tool(self, *args, **kwargs):
@@ -112,7 +113,7 @@ if use_mock:
 
             return decorator
 
-        def prompt(self, prompt_name: Optional[str] = None):
+        def prompt(self, prompt_name: str | None = None):
             def decorator(func: Callable) -> Callable:
                 raw = (
                     prompt_name
@@ -135,8 +136,8 @@ if use_mock:
         def run(
             self,
             transport: str = "stdio",
-            host: Optional[str] = None,
-            port: Optional[int] = None,
+            host: str | None = None,
+            port: int | None = None,
         ):
             if transport == "stdio":
                 self._run_stdio()
@@ -158,7 +159,7 @@ if use_mock:
                     print(json.dumps(response))
                 except EOFError:
                     break
-                except Exception as e:
+                except Exception as e:  # noqa: BLE001 - keep the stdio loop alive for any request error
                     self.logger.error(f"Error handling request: {e}")
                     response = {"error": str(e)}
                     print(json.dumps(response))
@@ -173,7 +174,7 @@ if use_mock:
             """Public HTTP entry point called by start_server()."""
             self._run_http(host, port)
 
-        def _handle_request(self, request: Dict[str, Any]) -> Dict[str, Any]:
+        def _handle_request(self, request: dict[str, Any]) -> dict[str, Any]:
             """Handle an MCP request and return the response."""
             try:
                 if "type" not in request:
@@ -208,7 +209,7 @@ if use_mock:
                 else:
                     raise ValueError(f"Unknown request type: {request['type']}")
 
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - any tool failure becomes an error response
                 return {"error": str(e)}
 
     _Context_cls = _MockContext
@@ -219,4 +220,4 @@ FastMCP = _FastMCP_cls
 Context = _Context_cls
 
 # Export the required classes
-__all__ = ["FastMCP", "Context", "USING_MOCK_FASTMCP"]
+__all__ = ["USING_MOCK_FASTMCP", "Context", "FastMCP"]

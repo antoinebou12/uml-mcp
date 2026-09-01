@@ -12,9 +12,8 @@ import pytest
 # Ensure mock FastMCP is used (TESTING or pytest already set in test env)
 os.environ.setdefault("TESTING", "true")
 
-from mcp_core.server.fastmcp_wrapper import USING_MOCK_FASTMCP  # noqa: E402
-
-from mcp_core.core.server import create_mcp_server  # noqa: E402
+from mcp_core.core.server import create_mcp_server
+from mcp_core.server.fastmcp_wrapper import USING_MOCK_FASTMCP
 
 pytestmark = pytest.mark.skipif(
     not USING_MOCK_FASTMCP,

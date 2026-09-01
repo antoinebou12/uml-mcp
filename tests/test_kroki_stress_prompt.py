@@ -4,7 +4,6 @@ from pathlib import Path
 
 from mcp_core.core.config import MCP_SETTINGS
 
-
 PROMPT_PATH = Path(__file__).parent / "prompts" / "kroki_full_catalog_stress_test.md"
 REPORTING_RULES_PATH = (
     Path(__file__).parent / "prompts" / "kroki_stress_test_reporting_rules.md"

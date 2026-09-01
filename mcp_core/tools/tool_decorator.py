@@ -4,17 +4,18 @@ from __future__ import annotations
 
 import inspect
 import logging
+from collections.abc import Callable
 from functools import wraps
-from typing import Any, Callable, Dict, List, Optional, TypeVar, cast
+from typing import Any, TypeVar, cast
 
 logger = logging.getLogger(__name__)
 
-_registered_tools: Dict[str, Dict[str, Any]] = {}
+_registered_tools: dict[str, dict[str, Any]] = {}
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
-def _normalize_output_schema(output_schema: Any) -> Optional[dict[str, Any]]:
+def _normalize_output_schema(output_schema: Any) -> dict[str, Any] | None:
     """Convert a Pydantic model class or mapping to FastMCP's JSON Schema shape."""
     if output_schema is None:
         return None
@@ -95,13 +96,13 @@ def _as_mcp_tool_result(tool_name: str, result: Any) -> Any:
 
 
 def mcp_tool(
-    name: Optional[str] = None,
-    description: Optional[str] = None,
+    name: str | None = None,
+    description: str | None = None,
     category: str = "default",
-    required_params: Optional[List[str]] = None,
-    example: Optional[str] = None,
-    annotations: Optional[Dict[str, Any]] = None,
-    output_schema: Optional[Any] = None,
+    required_params: list[str] | None = None,
+    example: str | None = None,
+    annotations: dict[str, Any] | None = None,
+    output_schema: Any | None = None,
 ) -> Callable[[F], F]:
     """Decorator for registering a function as an MCP tool."""
 
@@ -153,7 +154,7 @@ def mcp_tool(
     return decorator
 
 
-def register_tools_with_server(server: Any) -> List[str]:
+def register_tools_with_server(server: Any) -> list[str]:
     """Register all decorated tools with the MCP server."""
     logger.info("Registering %s tools with the MCP server", len(_registered_tools))
 
@@ -199,7 +200,7 @@ def register_tools_with_server(server: Any) -> List[str]:
 
                 if tool_name != protocol_func.__name__:
                     if hasattr(server, "_tools"):
-                        tools_map: Any = getattr(server, "_tools")
+                        tools_map: Any = server._tools
                         tools_map[tool_name] = tools_map.pop(
                             protocol_func.__name__, protocol_func
                         )
@@ -216,14 +217,14 @@ def register_tools_with_server(server: Any) -> List[str]:
     return registered_tools
 
 
-def get_tool_registry() -> Dict[str, Dict[str, Any]]:
+def get_tool_registry() -> dict[str, dict[str, Any]]:
     """Get information about all registered tools."""
     return _registered_tools
 
 
-def get_tool_categories() -> Dict[str, List[str]]:
+def get_tool_categories() -> dict[str, list[str]]:
     """Get tools organized by category."""
-    categories: Dict[str, List[str]] = {}
+    categories: dict[str, list[str]] = {}
     for tool_name, tool_info in _registered_tools.items():
         category = tool_info["category"]
         categories.setdefault(category, []).append(tool_name)

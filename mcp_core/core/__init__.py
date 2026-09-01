@@ -6,9 +6,9 @@ entrypoints (e.g. Vercel server-card generation) do not pull the full stack unti
 __all__ = [
     "MCP_SETTINGS",
     "create_mcp_server",
+    "generate_diagram",
     "get_mcp_server",
     "start_server",
-    "generate_diagram",
 ]
 
 

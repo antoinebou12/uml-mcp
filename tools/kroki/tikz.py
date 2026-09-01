@@ -8,14 +8,13 @@ import base64
 import logging
 import re
 from dataclasses import dataclass
-from typing import List
 
-from .kroki import Kroki, LANGUAGE_OUTPUT_SUPPORT
+from .kroki import LANGUAGE_OUTPUT_SUPPORT, Kroki
 
 logger = logging.getLogger(__name__)
 
 # TikZ supported output formats from Kroki
-TIKZ_FORMATS: List[str] = LANGUAGE_OUTPUT_SUPPORT.get(
+TIKZ_FORMATS: list[str] = LANGUAGE_OUTPUT_SUPPORT.get(
     "tikz", ["png", "svg", "jpeg", "pdf"]
 )
 
@@ -101,7 +100,7 @@ def _strip_hoistable_preamble_lines(snippet: str) -> tuple[str, bool]:
     Returns (body, stripped_usepackage_pgfplots).
     """
     lines = snippet.splitlines()
-    out: List[str] = []
+    out: list[str] = []
     stripped_pgfplots = False
     for line in lines:
         if (
@@ -116,7 +115,7 @@ def _strip_hoistable_preamble_lines(snippet: str) -> tuple[str, bool]:
     return "\n".join(out).strip(), stripped_pgfplots
 
 
-def get_required_libraries(tikz_code: str) -> List[str]:
+def get_required_libraries(tikz_code: str) -> list[str]:
     """Infer required TikZ libraries from diagram code.
 
     Scans for \\usetikzlibrary{...} and common commands/styles that imply
@@ -129,7 +128,7 @@ def get_required_libraries(tikz_code: str) -> List[str]:
         List of TikZ library names (e.g. ['shapes', 'arrows', 'positioning']).
     """
     seen: set[str] = set()
-    libraries: List[str] = []
+    libraries: list[str] = []
 
     # Explicit usetikzlibrary
     for m in _USETIKZLIBRARY_RE.finditer(tikz_code):
@@ -150,10 +149,10 @@ def get_required_libraries(tikz_code: str) -> List[str]:
 
 def wrap_tikz_standalone(
     tikz_code: str,
-    libraries: List[str] | None = None,
+    libraries: list[str] | None = None,
     *,
     border: str = "2pt",
-    extra_packages: List[str] | None = None,
+    extra_packages: list[str] | None = None,
 ) -> str:
     """Wrap TikZ snippet in a minimal standalone LaTeX document.
 
@@ -379,7 +378,7 @@ class TikZTemplateLibrary:
         return templates[key].strip()
 
     @classmethod
-    def list_names(cls) -> List[str]:
+    def list_names(cls) -> list[str]:
         """Return list of available template names."""
         return [
             "flowchart",

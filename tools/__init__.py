@@ -10,14 +10,14 @@ All diagram rendering lives under tools.kroki:
 
 from .kroki import (
     LANGUAGE_OUTPUT_SUPPORT,
+    DiagramTemplates,
     generate_diagram,
     generate_kroki_url,
-    DiagramTemplates,
 )
 
 __all__ = [
     "LANGUAGE_OUTPUT_SUPPORT",
+    "DiagramTemplates",
     "generate_diagram",
     "generate_kroki_url",
-    "DiagramTemplates",
 ]

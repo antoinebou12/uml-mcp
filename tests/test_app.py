@@ -10,7 +10,7 @@ from fastapi.testclient import TestClient
 # Set testing environment variable before importing app
 os.environ["TESTING"] = "true"
 
-from app import app  # noqa: E402
+from app import app
 
 # Create test client
 client = TestClient(app)
@@ -122,7 +122,7 @@ def test_generate_diagram_endpoint_success(mock_generate_diagram):
 
     # Verify mock was called with correct params (app injects !theme when theme is provided)
     mock_generate_diagram.assert_called_once()
-    args, kwargs = mock_generate_diagram.call_args
+    _, kwargs = mock_generate_diagram.call_args
     assert kwargs["diagram_type"] == "class"
     assert (
         "@startuml" in kwargs["code"]

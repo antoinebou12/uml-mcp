@@ -13,11 +13,11 @@ from .diagram_resources import (
 )
 
 __all__ = [
-    "get_diagram_types",
-    "get_diagram_templates",
     "get_diagram_examples",
+    "get_diagram_templates",
+    "get_diagram_types",
     "get_output_formats",
+    "get_resource_registry",
     "get_server_info",
     "mcp_resource",
-    "get_resource_registry",
 ]

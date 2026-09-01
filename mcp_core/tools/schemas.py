@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Optional
 
 from pydantic import (
     BaseModel,
@@ -45,7 +44,7 @@ class GenerateUMLInput(BaseModel):
         description="Diagram source code in the syntax required by diagram_type.",
         min_length=1,
     )
-    output_dir: Optional[str] = Field(
+    output_dir: str | None = Field(
         default=None,
         description=(
             "Local directory to save the rendered file. Omit for URL/base64 output. "
@@ -59,7 +58,7 @@ class GenerateUMLInput(BaseModel):
             "supported by the selected diagram type."
         ),
     )
-    theme: Optional[str] = Field(
+    theme: str | None = Field(
         default=None,
         description="Optional PlantUML theme; ignored by non-PlantUML backends.",
     )
@@ -109,7 +108,7 @@ class GenerateUMLInput(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def validate_output_format_for_diagram_type(self) -> "GenerateUMLInput":
+    def validate_output_format_for_diagram_type(self) -> GenerateUMLInput:
         from ..core.config import MCP_SETTINGS
 
         diagram_type = self.diagram_type.lower()
@@ -125,7 +124,7 @@ class GenerateUMLInput(BaseModel):
         return self
 
     @model_validator(mode="after")
-    def validate_output_location(self) -> "GenerateUMLInput":
+    def validate_output_location(self) -> GenerateUMLInput:
         """Reject file writes in hosted mode and sandbox local writes by default."""
         from ..core.config import MCP_SETTINGS
 
@@ -228,7 +227,7 @@ class ValidateUMLInput(BaseModel):
         return value
 
     @model_validator(mode="after")
-    def validate_output_format_for_diagram_type(self) -> "ValidateUMLInput":
+    def validate_output_format_for_diagram_type(self) -> ValidateUMLInput:
         from ..core.config import MCP_SETTINGS
 
         diagram_type = self.diagram_type.lower()
@@ -248,11 +247,11 @@ class RenderAttempt(BaseModel):
     """One renderer attempt in the generation pipeline."""
 
     backend: str
-    ok: Optional[bool] = None
-    status: Optional[str] = None
-    duration_ms: Optional[float] = None
-    error_summary: Optional[str] = None
-    error_code: Optional[str] = None
+    ok: bool | None = None
+    status: str | None = None
+    duration_ms: float | None = None
+    error_summary: str | None = None
+    error_code: str | None = None
     retry_count: int = 0
 
 
@@ -261,34 +260,34 @@ class DiagramError(BaseModel):
 
     code: str
     message: str
-    diagram_type: Optional[str] = None
-    backend: Optional[str] = None
+    diagram_type: str | None = None
+    backend: str | None = None
     retryable: bool = False
-    line: Optional[int] = None
-    column: Optional[int] = None
-    suggestion: Optional[str] = None
+    line: int | None = None
+    column: int | None = None
+    suggestion: str | None = None
 
 
 class DiagramResult(BaseModel):
     """Structured output for diagram generation tools."""
 
     code: str
-    success: Optional[bool] = None
-    diagram_type: Optional[str] = None
-    output_format: Optional[str] = None
-    url: Optional[str] = None
-    playground: Optional[str] = None
-    local_path: Optional[str] = None
-    content_base64: Optional[str] = None
-    error: Optional[str] = None
-    error_detail: Optional[DiagramError] = None
-    source: Optional[str] = None
-    attempts: Optional[list[RenderAttempt]] = None
-    fallback_used: Optional[bool] = None
-    render_ms: Optional[float] = None
-    cache_hit: Optional[bool] = None
-    cache_lookup_ms: Optional[float] = None
-    mime_type: Optional[str] = None
+    success: bool | None = None
+    diagram_type: str | None = None
+    output_format: str | None = None
+    url: str | None = None
+    playground: str | None = None
+    local_path: str | None = None
+    content_base64: str | None = None
+    error: str | None = None
+    error_detail: DiagramError | None = None
+    source: str | None = None
+    attempts: list[RenderAttempt] | None = None
+    fallback_used: bool | None = None
+    render_ms: float | None = None
+    cache_hit: bool | None = None
+    cache_lookup_ms: float | None = None
+    mime_type: str | None = None
 
 
 class ValidationDiagnostic(BaseModel):
@@ -297,23 +296,23 @@ class ValidationDiagnostic(BaseModel):
     severity: str
     code: str
     message: str
-    line: Optional[int] = None
-    column: Optional[int] = None
-    suggestion: Optional[str] = None
+    line: int | None = None
+    column: int | None = None
+    suggestion: str | None = None
 
 
 class ValidationResult(BaseModel):
     """Structured output for validate_uml."""
 
     valid: bool
-    diagram_type: Optional[str] = None
-    backend: Optional[str] = None
+    diagram_type: str | None = None
+    backend: str | None = None
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     suggestions: list[str] = Field(default_factory=list)
     diagnostics: list[ValidationDiagnostic] = Field(default_factory=list)
-    corrected_code: Optional[str] = None
-    prepared_code: Optional[str] = None
+    corrected_code: str | None = None
+    prepared_code: str | None = None
     strict: bool = False
     normalized: bool = False
     changes: list[str] = Field(default_factory=list)
@@ -323,30 +322,30 @@ class BatchDiagramItem(BaseModel):
     """One indexed item returned by generate_uml_batch."""
 
     index: int
-    code: Optional[str] = None
-    success: Optional[bool] = None
-    diagram_type: Optional[str] = None
-    output_format: Optional[str] = None
-    url: Optional[str] = None
-    playground: Optional[str] = None
-    local_path: Optional[str] = None
-    content_base64: Optional[str] = None
-    error: Optional[str] = None
-    error_detail: Optional[DiagramError] = None
-    source: Optional[str] = None
-    attempts: Optional[list[RenderAttempt]] = None
-    fallback_used: Optional[bool] = None
-    render_ms: Optional[float] = None
-    cache_hit: Optional[bool] = None
-    cache_lookup_ms: Optional[float] = None
-    mime_type: Optional[str] = None
+    code: str | None = None
+    success: bool | None = None
+    diagram_type: str | None = None
+    output_format: str | None = None
+    url: str | None = None
+    playground: str | None = None
+    local_path: str | None = None
+    content_base64: str | None = None
+    error: str | None = None
+    error_detail: DiagramError | None = None
+    source: str | None = None
+    attempts: list[RenderAttempt] | None = None
+    fallback_used: bool | None = None
+    render_ms: float | None = None
+    cache_hit: bool | None = None
+    cache_lookup_ms: float | None = None
+    mime_type: str | None = None
 
 
 class BatchDiagramResult(BaseModel):
     """Structured output for generate_uml_batch."""
 
     results: list[BatchDiagramItem] = Field(default_factory=list)
-    error: Optional[str] = None
+    error: str | None = None
 
 
 class DiagramTypeInfo(BaseModel):

@@ -61,9 +61,11 @@ class TestUrlOnlyMode:
             scale=1.0,
         )
 
-        with patch("mcp_core.core.utils.get_kroki_client", return_value=mock_client):
-            with patch("mcp_core.core.diagram_rendering.httpx.get") as mock_get:
-                out = run_diagram_pipeline(ctx)
+        with (
+            patch("mcp_core.core.utils.get_kroki_client", return_value=mock_client),
+            patch("mcp_core.core.diagram_rendering.httpx.get") as mock_get,
+        ):
+            out = run_diagram_pipeline(ctx)
 
         mock_get.assert_not_called()
         assert out.get("source") == "plantuml_server"

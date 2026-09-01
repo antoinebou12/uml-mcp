@@ -12,7 +12,7 @@ import logging
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import httpx
 
@@ -36,12 +36,12 @@ class DiagramRenderContext:
     backend_type: str
     prepared_code: str
     output_format: str
-    output_dir: Optional[str]
-    theme: Optional[str]
+    output_dir: str | None
+    theme: str | None
     scale: float
 
 
-def prepare_diagram_code(code: str, backend_type: str, theme: Optional[str]) -> str:
+def prepare_diagram_code(code: str, backend_type: str, theme: str | None) -> str:
     """Strip and wrap PlantUML when needed; TikZ snippets get standalone wrap; else strip only."""
     prepared_code = code.strip()
     if backend_type == "plantuml":
@@ -60,7 +60,7 @@ def prepare_diagram_code(code: str, backend_type: str, theme: Optional[str]) -> 
     return prepared_code
 
 
-def _mime_for_output_format(output_format: str) -> Optional[str]:
+def _mime_for_output_format(output_format: str) -> str | None:
     """Normalized MIME type for the requested output format (image/text)."""
     fmt = (output_format or "").lower().strip()
     mapping = {
@@ -75,14 +75,14 @@ def _mime_for_output_format(output_format: str) -> Optional[str]:
 
 
 def _attach_render_metadata(
-    out: Dict[str, Any],
+    out: dict[str, Any],
     *,
-    attempts: List[Dict[str, Any]],
+    attempts: list[dict[str, Any]],
     fallback_used: bool,
     render_ms: float,
     cache_hit: bool,
     output_format: str,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     out["attempts"] = attempts
     out["fallback_used"] = fallback_used
     out["render_ms"] = round(render_ms, 2)
@@ -98,7 +98,7 @@ def _handle_diagram_error(e: Exception, code: str) -> str:
     try:
         from tools.kroki.kroki import KrokiConnectionError, KrokiHTTPError
     except ImportError:
-        return f"Unexpected error generating diagram: {type(e).__name__}: {str(e)}"
+        return f"Unexpected error generating diagram: {type(e).__name__}: {e!s}"
 
     if isinstance(e, KrokiHTTPError):
         status = getattr(e.response, "status_code", None)
@@ -125,16 +125,16 @@ def _handle_diagram_error(e: Exception, code: str) -> str:
             "Cannot connect to diagram service. Check KROKI_SERVER and network "
             "connectivity."
         )
-    return f"Unexpected error generating diagram: {type(e).__name__}: {str(e)}"
+    return f"Unexpected error generating diagram: {type(e).__name__}: {e!s}"
 
 
 def _generate_diagram_plantuml_fallback(
     diagram_type: str,
     code: str,
     output_format: str,
-    output_dir: Optional[str],
+    output_dir: str | None,
     scale: float,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Fallback to PlantUML server when Kroki fails."""
     from tools.kroki.plantuml import PlantUML
 
@@ -174,9 +174,7 @@ def _generate_diagram_plantuml_fallback(
 
     local_path = None
     if output_dir:
-        filename_prefix = (
-            f"{diagram_type}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
-        )
+        filename_prefix = f"{diagram_type}_{datetime.datetime.now(datetime.UTC).strftime('%Y%m%d%H%M%S')}"
         out_dir = Path(output_dir)
         try:
             out_dir.mkdir(parents=True, exist_ok=True)
@@ -188,7 +186,7 @@ def _generate_diagram_plantuml_fallback(
             logger.warning("Could not save diagram to %s (%s)", out_dir, e)
             local_path = None
 
-    out: Dict[str, Any] = {
+    out: dict[str, Any] = {
         "code": code,
         "url": url,
         "playground": playground,
@@ -204,8 +202,8 @@ def _generate_diagram_mermaid_fallback(
     diagram_type: str,
     code: str,
     output_format: str,
-    output_dir: Optional[str],
-) -> Dict[str, Any]:
+    output_dir: str | None,
+) -> dict[str, Any]:
     """Fallback to Mermaid.ink when Kroki fails."""
     from tools.kroki.mermaid import generate_mermaid_urls
 
@@ -232,9 +230,7 @@ def _generate_diagram_mermaid_fallback(
 
     local_path = None
     if output_dir:
-        filename_prefix = (
-            f"{diagram_type}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
-        )
+        filename_prefix = f"{diagram_type}_{datetime.datetime.now(datetime.UTC).strftime('%Y%m%d%H%M%S')}"
         out_dir = Path(output_dir)
         try:
             out_dir.mkdir(parents=True, exist_ok=True)
@@ -246,7 +242,7 @@ def _generate_diagram_mermaid_fallback(
             logger.warning("Could not save diagram to %s (%s)", out_dir, e)
             local_path = None
 
-    out: Dict[str, Any] = {
+    out: dict[str, Any] = {
         "code": code,
         "url": url,
         "playground": playground,
@@ -261,16 +257,14 @@ def _generate_diagram_mermaid_fallback(
 def try_kroki_render(
     ctx: DiagramRenderContext,
     kroki_client: Any = None,
-) -> Tuple[Optional[Dict[str, Any]], Optional[Exception]]:
+) -> tuple[dict[str, Any] | None, Exception | None]:
     """
     Attempt Kroki render. Returns (result_dict, None) on success or (None, exception).
     """
     from mcp_core.core.utils import get_kroki_client
 
     client = kroki_client if kroki_client is not None else get_kroki_client()
-    filename_prefix = (
-        f"{ctx.diagram_type}_{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
-    )
+    filename_prefix = f"{ctx.diagram_type}_{datetime.datetime.now(datetime.UTC).strftime('%Y%m%d%H%M%S')}"
 
     try:
         logger.info("Attempting Kroki for %s diagram", ctx.diagram_type)
@@ -279,7 +273,7 @@ def try_kroki_render(
                 ctx.backend_type, ctx.prepared_code, ctx.output_format
             )
             playground = client.get_playground_url(ctx.backend_type, ctx.prepared_code)
-            out_url_only: Dict[str, Any] = {
+            out_url_only: dict[str, Any] = {
                 "code": ctx.prepared_code,
                 "url": kroki_url,
                 "playground": playground,
@@ -322,7 +316,7 @@ def try_kroki_render(
                 )
                 local_path = None
 
-        out: Dict[str, Any] = {
+        out: dict[str, Any] = {
             "code": ctx.prepared_code,
             "url": result["url"],
             "playground": result.get("playground"),
@@ -334,7 +328,7 @@ def try_kroki_render(
 
         logger.info("Successfully generated %s diagram via Kroki", ctx.diagram_type)
         return out, None
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001 - forward any render failure to the fallback pipeline
         logger.warning(
             "Kroki failed for %s: %s. Attempting fallback...",
             ctx.diagram_type,
@@ -346,7 +340,7 @@ def try_kroki_render(
 def run_fallback_if_needed(
     ctx: DiagramRenderContext,
     kroki_error: Exception,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Run backend-specific fallback after Kroki failure, or return aggregated error dict.
 
@@ -354,7 +348,7 @@ def run_fallback_if_needed(
     On success, returns the same shape as Kroki (no ``attempts``; added by pipeline).
     """
     kroki_summary = _handle_diagram_error(kroki_error, ctx.prepared_code)
-    kroki_attempt: Dict[str, Any] = {
+    kroki_attempt: dict[str, Any] = {
         "backend": "kroki",
         "ok": False,
         "error_summary": kroki_summary,
@@ -370,13 +364,13 @@ def run_fallback_if_needed(
                 ctx.output_dir,
                 ctx.scale,
             )
-        except Exception as fallback_error:
+        except Exception as fallback_error:  # noqa: BLE001 - aggregate any fallback failure into the error dict
             logger.error(
                 "Fallback also failed for %s: %s", ctx.diagram_type, str(fallback_error)
             )
             error_msg = (
                 f"Primary (Kroki) failed: {kroki_summary}. "
-                f"Fallback also failed: {str(fallback_error)}"
+                f"Fallback also failed: {fallback_error!s}"
             )
             return {
                 "code": ctx.prepared_code,
@@ -404,13 +398,13 @@ def run_fallback_if_needed(
                 ctx.output_format,
                 ctx.output_dir,
             )
-        except Exception as fallback_error:
+        except Exception as fallback_error:  # noqa: BLE001 - aggregate any fallback failure into the error dict
             logger.error(
                 "Fallback also failed for %s: %s", ctx.diagram_type, str(fallback_error)
             )
             error_msg = (
                 f"Primary (Kroki) failed: {kroki_summary}. "
-                f"Fallback also failed: {str(fallback_error)}"
+                f"Fallback also failed: {fallback_error!s}"
             )
             return {
                 "code": ctx.prepared_code,
@@ -455,10 +449,10 @@ def run_fallback_if_needed(
 def _kroki_failure_when_fallback_disabled(
     ctx: DiagramRenderContext,
     kroki_error: Exception,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Error shape when Kroki failed and PlantUML/Mermaid fallback is turned off."""
     kroki_summary = _handle_diagram_error(kroki_error, ctx.prepared_code)
-    kroki_attempt: Dict[str, Any] = {
+    kroki_attempt: dict[str, Any] = {
         "backend": "kroki",
         "ok": False,
         "error_summary": kroki_summary,
@@ -488,7 +482,7 @@ def _kroki_failure_when_fallback_disabled(
 def run_diagram_pipeline(
     ctx: DiagramRenderContext,
     kroki_client: Any = None,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Kroki first, then optional fallbacks; returns the standard result dict."""
     t0 = time.perf_counter()
 
@@ -509,7 +503,7 @@ def run_diagram_pipeline(
         return out
 
     assert err is not None
-    kroki_attempt: Dict[str, Any] = {
+    kroki_attempt: dict[str, Any] = {
         "backend": "kroki",
         "ok": False,
         "error_summary": _handle_diagram_error(err, ctx.prepared_code),

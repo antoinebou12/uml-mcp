@@ -10,10 +10,10 @@ import httpx
 import pytest
 
 from tools.kroki.kroki import (
+    LANGUAGE_OUTPUT_SUPPORT,
     Kroki,
     KrokiConnectionError,
     KrokiHTTPError,
-    LANGUAGE_OUTPUT_SUPPORT,
     scale_svg,
 )
 from tools.kroki.kroki_templates import DiagramExamples, DiagramTemplates

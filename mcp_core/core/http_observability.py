@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict, deque
-from typing import Deque, Dict, Tuple
 from uuid import uuid4
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -16,13 +15,13 @@ logger = logging.getLogger(__name__)
 
 # In-memory and intentionally per process. A distributed implementation can replace
 # this helper later without changing HTTP response semantics.
-_rate_buckets: Dict[str, Deque[float]] = defaultdict(deque)
+_rate_buckets: dict[str, deque[float]] = defaultdict(deque)
 
 
 def _rate_limit_state(
     client_ip: str,
     limit_per_minute: int,
-) -> Tuple[bool, int, int]:
+) -> tuple[bool, int, int]:
     """Return (limited, remaining, retry_after_seconds) for one client IP."""
     if limit_per_minute <= 0:
         return False, 0, 0

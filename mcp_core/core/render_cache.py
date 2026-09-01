@@ -14,7 +14,7 @@ import threading
 import time
 from collections import OrderedDict
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -97,7 +97,7 @@ class InMemoryRenderCache:
         if entry is not None:
             self._bytes = max(0, self._bytes - entry.size_bytes)
 
-    def get(self, key: str) -> Optional[dict[str, Any]]:
+    def get(self, key: str) -> dict[str, Any] | None:
         if not self.enabled:
             return None
         now = time.monotonic()
@@ -157,7 +157,7 @@ def build_render_cache_key(
     diagram_type: str,
     code: str,
     output_format: str,
-    theme: Optional[str],
+    theme: str | None,
     scale: float,
     renderer_identity: str,
 ) -> str:

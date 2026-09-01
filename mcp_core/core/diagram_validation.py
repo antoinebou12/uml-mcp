@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -12,8 +12,8 @@ from .config import MCP_SETTINGS
 from .diagram_rendering import prepare_diagram_code
 
 
-def _structural_errors(backend_type: str, prepared_code: str) -> List[str]:
-    errors: List[str] = []
+def _structural_errors(backend_type: str, prepared_code: str) -> list[str]:
+    errors: list[str] = []
     if backend_type == "plantuml":
         n_start = prepared_code.count("@startuml")
         n_end = prepared_code.count("@enduml")
@@ -46,8 +46,8 @@ _MERMAID_SEQUENCE_DANGLING_ARROW = re.compile(
 _LINE_NUMBER = re.compile(r"\bline\s+(\d+)\b", re.IGNORECASE)
 
 
-def _strict_mermaid_sequence_errors(prepared_code: str) -> List[str]:
-    errors: List[str] = []
+def _strict_mermaid_sequence_errors(prepared_code: str) -> list[str]:
+    errors: list[str] = []
     lines = prepared_code.splitlines()
     first_content_seen = False
 
@@ -72,9 +72,9 @@ def _strict_mermaid_sequence_errors(prepared_code: str) -> List[str]:
     return errors
 
 
-def _structural_errors_strict_mermaid(prepared_code: str) -> List[str]:
+def _structural_errors_strict_mermaid(prepared_code: str) -> list[str]:
     """Extra checks when strict=True; conservative to limit false positives."""
-    errors: List[str] = []
+    errors: list[str] = []
     source = prepared_code.strip()
     if not source:
         errors.append("Mermaid diagram code is empty.")
@@ -92,8 +92,8 @@ def _structural_errors_strict_mermaid(prepared_code: str) -> List[str]:
     return errors
 
 
-def _structural_errors_strict_d2(prepared_code: str) -> List[str]:
-    errors: List[str] = []
+def _structural_errors_strict_d2(prepared_code: str) -> list[str]:
+    errors: list[str] = []
     for line_number, line in enumerate(prepared_code.splitlines(), 1):
         if line.count('"') % 2 != 0:
             errors.append(
@@ -103,8 +103,8 @@ def _structural_errors_strict_d2(prepared_code: str) -> List[str]:
     return errors
 
 
-def _suggestions_for_errors(errors: List[str]) -> List[str]:
-    suggestions: List[str] = []
+def _suggestions_for_errors(errors: list[str]) -> list[str]:
+    suggestions: list[str] = []
     for error in errors:
         if "@startuml" in error or "@enduml" in error:
             suggestions.append(
@@ -150,13 +150,13 @@ def _diagnostic_code(message: str) -> str:
     return "INVALID_DIAGRAM"
 
 
-def _line_from_message(message: str) -> Optional[int]:
+def _line_from_message(message: str) -> int | None:
     match = _LINE_NUMBER.search(message)
     return int(match.group(1)) if match else None
 
 
 def _build_diagnostics(
-    errors: List[str], suggestions: List[str]
+    errors: list[str], suggestions: list[str]
 ) -> list[dict[str, Any]]:
     diagnostics: list[dict[str, Any]] = []
     for index, message in enumerate(errors):
@@ -198,7 +198,7 @@ def validate_uml_inputs(
     code: str,
     output_format: str = "svg",
     strict: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Validate diagram inputs locally and return actionable diagnostics."""
     try:
         validated = GenerateUMLInput(
@@ -210,7 +210,7 @@ def validate_uml_inputs(
             scale=1.0,
         )
     except ValidationError as exc:
-        errors: List[str] = []
+        errors: list[str] = []
         for error in exc.errors():
             loc = error.get("loc", ())
             name = str(loc[0]) if loc else "input"
@@ -235,7 +235,7 @@ def validate_uml_inputs(
     cfg = MCP_SETTINGS.diagram_types[dt_key]
     prepared = prepare_diagram_code(validated.code, cfg.backend, None)
     structural = _structural_errors(cfg.backend, prepared)
-    extra: List[str] = []
+    extra: list[str] = []
     if strict:
         if cfg.backend == "mermaid":
             extra.extend(_structural_errors_strict_mermaid(prepared))

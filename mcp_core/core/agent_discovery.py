@@ -626,7 +626,7 @@ def _parse_accept(accept: str) -> list[tuple[str, float, int]]:
             media, rest = part.split(";", 1)
             media = media.strip()
             q = 1.0
-            m = re.search(r"q\s*=\s*([0-9.]+)", rest, re.I)
+            m = re.search(r"q\s*=\s*([0-9.]+)", rest, re.IGNORECASE)
             if m:
                 try:
                     q = float(m.group(1))

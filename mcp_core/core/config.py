@@ -4,7 +4,6 @@ Configuration settings for MCP server.
 
 import os
 from pathlib import Path
-from typing import Dict, List
 
 from pydantic import BaseModel, Field
 
@@ -41,9 +40,7 @@ def _diagram_fallback_default() -> bool:
         return False
     if _env_bool("VERCEL", False):
         return False
-    if _env_use_local_kroki():
-        return False
-    return True
+    return not _env_use_local_kroki()
 
 
 def _default_output_dir() -> str:
@@ -100,7 +97,7 @@ class DiagramType(BaseModel):
 
     backend: str
     description: str
-    formats: List[str] = ["png", "svg"]
+    formats: list[str] = ["png", "svg"]
 
 
 class MCPSettings(BaseModel):
@@ -113,7 +110,11 @@ class MCPSettings(BaseModel):
     memory_only: bool = Field(default_factory=_memory_only_default)
     url_only: bool = Field(default_factory=_url_only_default)
     diagram_fallback_enabled: bool = Field(default_factory=_diagram_fallback_default)
-    lulu_ads_enabled: bool = Field(default_factory=lambda: _env_bool("LULU_ADS_ENABLED", _env_bool("VERCEL", False)))
+    lulu_ads_enabled: bool = Field(
+        default_factory=lambda: _env_bool(
+            "LULU_ADS_ENABLED", _env_bool("VERCEL", False)
+        )
+    )
     description: str = "Generate UML and other diagrams through MCP"
     config_schema_url: str = (
         ""  # Optional URL for session config schema (improves Configuration UX score)
@@ -131,10 +132,10 @@ class MCPSettings(BaseModel):
         default_factory=lambda: int(os.environ.get("MCP_RATE_LIMIT_PER_MINUTE", "0"))
     )
     output_dir: str = _get_output_dir()
-    tools: List[str] = []
-    prompts: List[str] = []
-    resources: List[str] = []  # Added resources field
-    diagram_types: Dict[str, DiagramType] = {}
+    tools: list[str] = []
+    prompts: list[str] = []
+    resources: list[str] = []  # Added resources field
+    diagram_types: dict[str, DiagramType] = {}
     plantuml_server: str = os.environ.get(
         "PLANTUML_SERVER", "http://plantuml-server:8080"
     )

@@ -10,6 +10,12 @@ This package consolidates all diagram rendering clients and utilities:
   - D2 encoding/URL utilities (d2.py)
 """
 
+# D2 utilities
+from .d2 import Layout as D2Layout
+from .d2 import Theme as D2Theme
+from .d2 import decode as d2_decode
+from .d2 import encode as d2_encode
+from .d2 import generate_d2graphviz_url
 from .kroki import LANGUAGE_OUTPUT_SUPPORT, generate_diagram, generate_kroki_url
 from .kroki_templates import DiagramTemplates
 
@@ -36,42 +42,31 @@ from .plantuml import (
 )
 from .plantuml_themes import EXTERNAL_THEMES, THEMES, Theme
 
-# D2 utilities
-from .d2 import Layout as D2Layout
-from .d2 import Theme as D2Theme
-from .d2 import decode as d2_decode
-from .d2 import encode as d2_encode
-from .d2 import generate_d2graphviz_url
-
 __all__ = [
-    # Kroki
+    "EXTERNAL_THEMES",
     "LANGUAGE_OUTPUT_SUPPORT",
-    "generate_diagram",
-    "generate_kroki_url",
-    "DiagramTemplates",
-    # Mermaid
     "MERMAID_INK_BASE",
     "MERMAID_LIVE_EDIT_BASE",
+    "THEMES",
+    "D2Layout",
+    "D2Theme",
+    "DiagramTemplates",
     "MermaidUrls",
+    "PlantUML",
+    "PlantUMLConnectionError",
+    "PlantUMLError",
+    "PlantUMLHTTPError",
+    "Theme",
+    "d2_decode",
+    "d2_encode",
     "deserialize_state",
+    "generate_d2graphviz_url",
+    "generate_diagram",
     "generate_diagram_state",
+    "generate_kroki_url",
     "generate_mermaid_live_editor_url",
     "generate_mermaid_urls",
     "get_edit_url",
     "get_image_url",
     "serialize_state",
-    # PlantUML
-    "PlantUML",
-    "PlantUMLError",
-    "PlantUMLConnectionError",
-    "PlantUMLHTTPError",
-    "THEMES",
-    "EXTERNAL_THEMES",
-    "Theme",
-    # D2
-    "D2Layout",
-    "D2Theme",
-    "d2_encode",
-    "d2_decode",
-    "generate_d2graphviz_url",
 ]

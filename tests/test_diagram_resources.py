@@ -33,7 +33,7 @@ class TestGetDiagramTypes:
     def test_each_entry_has_backend_description_formats(self):
         """Each diagram type has backend, description, formats."""
         result = json.loads(get_diagram_types())
-        for name, config in result.items():
+        for config in result.values():
             assert "backend" in config
             assert "description" in config
             assert "formats" in config
@@ -52,7 +52,7 @@ class TestGetDiagramTemplates:
     def test_values_are_strings(self):
         """Each template value is a non-empty string."""
         result = json.loads(get_diagram_templates())
-        for name, template in result.items():
+        for template in result.values():
             assert isinstance(template, str)
             assert len(template) > 0
 
@@ -69,7 +69,7 @@ class TestGetDiagramExamples:
     def test_values_are_strings(self):
         """Each example value is a string."""
         result = json.loads(get_diagram_examples())
-        for name, example in result.items():
+        for example in result.values():
             assert isinstance(example, str)
 
     def test_every_diagram_type_has_template_and_example(self):
@@ -107,7 +107,7 @@ class TestGetCapabilities:
         assert isinstance(result, dict)
         assert "class" in result
         assert "mermaid" in result
-        for _name, entry in result.items():
+        for entry in result.values():
             assert "backend" in entry
             assert "formats" in entry
             assert isinstance(entry["formats"], list)

@@ -9,7 +9,7 @@ import base64
 import logging
 import re
 import zlib
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, ClassVar
 
 import httpx
 
@@ -99,13 +99,9 @@ def scale_svg(svg_bytes: bytes, scale: float) -> bytes:
 class KrokiError(Exception):
     """Base exception for Kroki errors."""
 
-    pass
-
 
 class KrokiConnectionError(KrokiError):
     """Error connecting or talking to Kroki Service."""
-
-    pass
 
 
 class KrokiHTTPError(KrokiError):
@@ -147,7 +143,7 @@ class Kroki:
     DIAGRAM_TYPES = LANGUAGE_OUTPUT_SUPPORT
 
     # Online editors; see get_playground_url for encoding per type.
-    DIAGRAM_PLAYGROUNDS = {
+    DIAGRAM_PLAYGROUNDS: ClassVar[dict[str, str]] = {
         "mermaid": "https://mermaid.live/edit#",
         "plantuml": "https://www.plantuml.com/plantuml/uml/",
         "d2": "https://play.d2lang.com/?script=",
@@ -198,7 +194,7 @@ class Kroki:
         encoded_diagram = self.deflate_and_encode(diagram_text)
         return f"{self.base_url}/{diagram_type}/{output_format}/{encoded_diagram}"
 
-    def get_playground_url(self, diagram_type: str, diagram_text: str) -> Optional[str]:
+    def get_playground_url(self, diagram_type: str, diagram_text: str) -> str | None:
         """
         Generate a URL to an online playground for editing the diagram.
 
@@ -272,13 +268,13 @@ class Kroki:
         except httpx.HTTPStatusError as e:
             raise KrokiHTTPError(e.response, e.response.content)
         except httpx.RequestError as e:
-            raise KrokiConnectionError(f"Error connecting to Kroki: {str(e)}")
+            raise KrokiConnectionError(f"Error connecting to Kroki: {e!s}")
 
         return response.content
 
     def generate_diagram(
         self, diagram_type: str, diagram_text: str, output_format: str = "svg"
-    ) -> Dict:
+    ) -> dict:
         """
         Generate a diagram and return URLs and data.
 
@@ -307,7 +303,7 @@ class Kroki:
         except httpx.HTTPStatusError as e:
             raise KrokiHTTPError(e.response, e.response.content)
         except httpx.RequestError as e:
-            raise KrokiConnectionError(f"Error connecting to Kroki: {str(e)}")
+            raise KrokiConnectionError(f"Error connecting to Kroki: {e!s}")
 
         return {"url": url, "content": content, "playground": playground}
 
@@ -338,7 +334,7 @@ class Kroki:
             encoded = base64.urlsafe_b64encode(compressed_data).decode("ascii")
             return encoded.replace("+", "-").replace("/", "_")
         except Exception as e:
-            logger.error(f"Error compressing and encoding text: {str(e)}")
+            logger.error(f"Error compressing and encoding text: {e!s}")
             raise
 
     def encode_plantuml(self, text: str) -> str:
@@ -436,7 +432,7 @@ def generate_kroki_url(
 
 async def generate_diagram(
     diagram_type: str, diagram_source: str, output_format: str = "svg"
-) -> Tuple[str, str, str]:
+) -> tuple[str, str, str]:
     """
     Generate a diagram using Kroki API
 
@@ -458,5 +454,5 @@ async def generate_diagram(
 
         return url, content, playground or ""
     except Exception as e:
-        logger.error(f"Error generating {diagram_type} diagram: {str(e)}")
+        logger.error(f"Error generating {diagram_type} diagram: {e!s}")
         raise

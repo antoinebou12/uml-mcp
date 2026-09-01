@@ -37,7 +37,9 @@ def build_server_card(*, strict: bool = False):
         from mcp_core.core.config import MCP_SETTINGS
         from mcp_core.prompts.diagram_prompts import get_prompt_registry
         from mcp_core.resources.diagram_resources import get_resource_registry
-        from mcp_core.tools import diagram_tools  # noqa: F401 - load tools so registry is populated
+        from mcp_core.tools import (
+            diagram_tools,  # noqa: F401 - load tools so registry is populated
+        )
         from mcp_core.tools.tool_decorator import get_tool_registry
 
         tool_registry = get_tool_registry()

@@ -45,7 +45,7 @@ def test_generate_diagram_success(mock_kroki_client, tmp_path):
 
     # Verify mock was called with correct params
     mock_kroki_client.generate_diagram.assert_called_once()
-    args, kwargs = mock_kroki_client.generate_diagram.call_args
+    args, _ = mock_kroki_client.generate_diagram.call_args
     assert args[0] == "plantuml"  # Backend for class diagrams
     assert "@startuml" in args[1]  # Code contains correct markup
     assert args[2] == "svg"  # Correct output format

@@ -9,6 +9,10 @@ UML-MCP is a Python MCP (Model Context Protocol) server that renders diagrams fr
 - Public HTTP MCP: https://uml-mcp.vercel.app/mcp (path must be `/mcp`, not site root)
 - Smithery: https://smithery.ai/server/antoinebou12/uml
 
+## Frontend streaming (AG-UI)
+
+For web apps that render diagrams inline (no click-through URLs): UML-MCP serves AG-UI events over SSE. `POST /ag-ui/generate` streams a render in one stateless request; `POST /ag-ui/start` -> `GET /ag-ui/events/{run_id}` is the start-then-subscribe variant. Events: RUN_STARTED, STEP_STARTED/FINISHED, TOOL_CALL_START/RESULT, STATE_SNAPSHOT, CUSTOM (payload.content_base64 / url / code), RUN_FINISHED, RUN_ERROR. Integrate via CopilotKit (MCP Apps) or consume the stream directly: docs/integrations/frontend.md
+
 ## MCP tools
 
 - generate_uml: diagram_type, code, output_format, optional output_dir/theme/scale; omit output_dir for URL + base64 only (typical on remote)

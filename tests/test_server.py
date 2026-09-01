@@ -79,12 +79,16 @@ class TestStartServer:
 
     def test_start_server_http_without_host_raises(self):
         """start_server(transport='http', host=None) raises ValueError."""
-        with patch("mcp_core.core.server.get_mcp_server", return_value=MagicMock()):
-            with pytest.raises(ValueError, match="Host and port must be specified"):
-                start_server(transport="http", host=None, port=8000)
+        with (
+            patch("mcp_core.core.server.get_mcp_server", return_value=MagicMock()),
+            pytest.raises(ValueError, match="Host and port must be specified"),
+        ):
+            start_server(transport="http", host=None, port=8000)
 
     def test_start_server_unsupported_transport_raises(self):
         """start_server(transport='invalid') raises ValueError."""
-        with patch("mcp_core.core.server.get_mcp_server", return_value=MagicMock()):
-            with pytest.raises(ValueError, match="Unsupported transport: invalid"):
-                start_server(transport="invalid")
+        with (
+            patch("mcp_core.core.server.get_mcp_server", return_value=MagicMock()),
+            pytest.raises(ValueError, match="Unsupported transport: invalid"),
+        ):
+            start_server(transport="invalid")

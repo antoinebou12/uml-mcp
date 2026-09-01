@@ -1,6 +1,6 @@
 """Test that version is consistent across package metadata."""
-import json
 from pathlib import Path
+
 
 def test_version_consistency():
     # Load pyproject

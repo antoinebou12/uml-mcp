@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -24,17 +24,17 @@ class DiagramRequest:
 
     diagram_type: str
     code: str
-    output_dir: Optional[str] = None
+    output_dir: str | None = None
     output_format: str = "svg"
-    theme: Optional[str] = None
+    theme: str | None = None
     scale: float = 1.0
 
 
 def _error_detail(
     message: str,
     *,
-    diagram_type: Optional[str],
-    backend: Optional[str] = None,
+    diagram_type: str | None,
+    backend: str | None = None,
     code: str = "RENDER_FAILED",
 ) -> dict[str, Any]:
     lowered = message.lower()
@@ -68,9 +68,9 @@ def _validation_error_response(
     source_code: str,
     exc: ValidationError,
     *,
-    diagram_type: Optional[str] = None,
-    output_format: Optional[str] = None,
-) -> Dict[str, Any]:
+    diagram_type: str | None = None,
+    output_format: str | None = None,
+) -> dict[str, Any]:
     parts = []
     for err in exc.errors():
         loc = err.get("loc", ())
@@ -109,7 +109,7 @@ def _renderer_identity() -> str:
     )
 
 
-def generate_from_request(req: DiagramRequest) -> Dict[str, Any]:
+def generate_from_request(req: DiagramRequest) -> dict[str, Any]:
     """Validate, optionally use cache, then render a diagram."""
     try:
         validated = GenerateUMLInput(
@@ -154,7 +154,7 @@ def generate_from_request(req: DiagramRequest) -> Dict[str, Any]:
         }
 
     cache = get_render_cache()
-    cache_key: Optional[str] = None
+    cache_key: str | None = None
     # File-producing calls are intentionally not cached because a cached local_path may
     # refer to a different request or a file that has since been removed.
     if validated.output_dir is None and cache.enabled:

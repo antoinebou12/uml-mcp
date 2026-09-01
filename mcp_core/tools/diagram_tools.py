@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from pydantic import ValidationError
 
@@ -46,7 +46,7 @@ ANNOTATIONS_LIST = {
 }
 
 
-def _bounded_limit(limit: Optional[int]) -> Optional[int]:
+def _bounded_limit(limit: int | None) -> int | None:
     if limit is None:
         return None
     return max(1, min(int(limit), 100))
@@ -64,11 +64,11 @@ def _bounded_limit(limit: Optional[int]) -> Optional[int]:
     output_schema=DiagramTypesOutput,
 )
 def list_diagram_types(
-    query: Optional[str] = None,
-    backend: Optional[str] = None,
-    output_format: Optional[str] = None,
-    limit: Optional[int] = None,
-) -> Dict[str, Any]:
+    query: str | None = None,
+    backend: str | None = None,
+    output_format: str | None = None,
+    limit: int | None = None,
+) -> dict[str, Any]:
     """Return optionally filtered diagram type metadata.
 
     Args:
@@ -135,8 +135,8 @@ def _batch_concurrency(item_count: int) -> int:
 def _render_batch_item(
     index: int,
     raw: Any,
-    output_dir: Optional[str],
-) -> Dict[str, Any]:
+    output_dir: str | None,
+) -> dict[str, Any]:
     if not isinstance(raw, dict):
         return {
             "index": index,
@@ -164,7 +164,7 @@ def _render_batch_item(
             )
         )
         return {"index": index, **out}
-    except Exception as exc:  # noqa: BLE001 - isolate each independent batch item
+    except Exception as exc:
         logger.exception("Unexpected batch item failure at index=%s", index)
         return {
             "index": index,
@@ -190,9 +190,9 @@ def _render_batch_item(
     output_schema=BatchDiagramResult,
 )
 def generate_uml_batch(
-    items: List[Dict[str, Any]],
-    output_dir: Optional[str] = None,
-) -> Dict[str, Any]:
+    items: list[dict[str, Any]],
+    output_dir: str | None = None,
+) -> dict[str, Any]:
     """Render multiple diagrams with bounded concurrency and stable ordering.
 
     Args:
@@ -241,11 +241,11 @@ def generate_uml_batch(
 def generate_uml(
     diagram_type: str,
     code: str,
-    output_dir: Optional[str] = None,
+    output_dir: str | None = None,
     output_format: str = "svg",
-    theme: Optional[str] = None,
+    theme: str | None = None,
     scale: float = 1.0,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Generate a diagram using the specified diagram type.
 
     Args:
@@ -290,7 +290,7 @@ def validate_uml(
     code: str,
     output_format: str = "svg",
     strict: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Check inputs and light structure without rendering.
 
     Args:
@@ -308,7 +308,7 @@ def validate_uml(
     return validate_uml_inputs(diagram_type, code, output_format, strict=strict)
 
 
-def register_diagram_tools(server: Any) -> List[str]:
+def register_diagram_tools(server: Any) -> list[str]:
     """Register all diagram generation tools with the MCP server."""
     logger.info("Registering diagram tools")
     registered_tools = register_tools_with_server(server)
@@ -318,6 +318,6 @@ def register_diagram_tools(server: Any) -> List[str]:
     return registered_tools
 
 
-def get_tool_info() -> Dict[str, Dict[str, Any]]:
+def get_tool_info() -> dict[str, dict[str, Any]]:
     """Get information about all registered tools."""
     return get_tool_registry()

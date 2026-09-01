@@ -20,6 +20,7 @@ Generate UML and other diagrams through the [Model Context Protocol](https://mod
 | --- | --- |
 | **Diagrams** | **30+ types**: UML (Class, Sequence, Activity, Use Case, State, Component, Deployment, Object), Mermaid, D2, Graphviz, TikZ, ERD, BlockDiag, BPMN, C4, and more via [Kroki](https://kroki.io/) |
 | **MCP tools** | `generate_uml`, `validate_uml`, `list_diagram_types`, `generate_uml_batch` |
+| **Frontend streaming** | AG-UI SSE events (`/ag-ui/*`) for inline, live diagram rendering in web apps — [guide](docs/integrations/frontend.md) |
 | **Outputs** | SVG, PNG, PDF, JPEG, base64 (availability varies by diagram type) |
 | **Pipeline** | Kroki first, then [PlantUML](https://plantuml.com/) or [Mermaid.ink](https://mermaid.ink/) |
 | **Deployment** | Local stdio, local HTTP, Docker, [Vercel](https://vercel.com/), [Smithery](https://smithery.ai/) |
@@ -107,6 +108,14 @@ Full list with supported formats: run `python server.py --list-tools` or query `
 | `validate_uml` | Structural validation before render; `strict` enables extra Mermaid/D2 checks |
 | `list_diagram_types` | Same metadata as `uml://types` when resources are awkward |
 | `generate_uml_batch` | Multiple diagrams in one call (cap: `MCP_BATCH_MAX_ITEMS`) |
+
+### Frontend streaming (AG-UI)
+
+`app.py` also serves AG-UI (Agent-User Interaction Protocol) events for frontends that want
+to render diagrams **inline** instead of via click-through URLs: `POST /ag-ui/generate`
+(stateless SSE stream), plus the start-then-subscribe pair `POST /ag-ui/start` and
+`GET /ag-ui/events/{run_id}`. Integrate with CopilotKit or consume the SSE stream directly
+— see [docs/integrations/frontend.md](docs/integrations/frontend.md).
 
 ### Resources (`uml://`)
 

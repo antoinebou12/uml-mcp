@@ -4,7 +4,8 @@ MCP resources for diagram information
 
 import json
 import logging
-from typing import Any, Callable, Dict, List, Optional, TypeVar, cast
+from collections.abc import Callable
+from typing import Any, TypeVar, cast
 
 from tools.kroki.kroki_templates import DiagramExamples, DiagramTemplates
 
@@ -14,13 +15,13 @@ from ..core.diagram_catalog import get_diagram_types_dict
 logger = logging.getLogger(__name__)
 
 # Store for registered resources when using decorator pattern
-_registered_resources: Dict[str, Dict[str, Any]] = {}
+_registered_resources: dict[str, dict[str, Any]] = {}
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
 def mcp_resource(
-    uri: str, description: Optional[str] = None, category: str = "default"
+    uri: str, description: str | None = None, category: str = "default"
 ) -> Callable[[F], F]:
     """
     Decorator for registering a function as an MCP resource.
@@ -113,7 +114,7 @@ def get_output_formats() -> str:
 )
 def get_capabilities() -> str:
     """Type → backend → formats matrix for tooling and clients."""
-    caps: Dict[str, Dict[str, Any]] = {}
+    caps: dict[str, dict[str, Any]] = {}
     for name, config in MCP_SETTINGS.diagram_types.items():
         caps[name] = {
             "backend": config.backend,
@@ -200,7 +201,7 @@ def get_recommended_workflow() -> str:
     )
 
 
-def register_resources_with_server(server: Any) -> List[str]:
+def register_resources_with_server(server: Any) -> list[str]:
     """
     Register all decorated resources with the MCP server
 
@@ -229,7 +230,7 @@ def register_resources_with_server(server: Any) -> List[str]:
     return registered_resource_uris
 
 
-def register_diagram_resources(server: Any) -> List[str]:
+def register_diagram_resources(server: Any) -> list[str]:
     """
     Register diagram resources with the MCP server
 
@@ -252,7 +253,7 @@ def register_diagram_resources(server: Any) -> List[str]:
     return registered_resources
 
 
-def get_resource_registry() -> Dict[str, Dict[str, Any]]:
+def get_resource_registry() -> dict[str, dict[str, Any]]:
     """
     Get the registry of all resources registered with the decorator
 

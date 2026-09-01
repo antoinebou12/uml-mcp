@@ -2,7 +2,6 @@
 Unit tests for the Kroki-first diagram rendering pipeline (mcp_core.core.diagram_rendering).
 """
 
-from typing import Optional
 from unittest.mock import MagicMock, patch
 
 from mcp_core.core.diagram_rendering import (
@@ -20,8 +19,8 @@ def _ctx(
     backend_type: str = "plantuml",
     prepared_code: str = "@startuml\nclass A\n@enduml",
     output_format: str = "svg",
-    output_dir: Optional[str] = None,
-    theme: Optional[str] = None,
+    output_dir: str | None = None,
+    theme: str | None = None,
     scale: float = 1.0,
 ) -> DiagramRenderContext:
     return DiagramRenderContext(

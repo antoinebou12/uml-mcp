@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from mcp_core.server.fastmcp_wrapper import FastMCP, USING_MOCK_FASTMCP
+from mcp_core.server.fastmcp_wrapper import USING_MOCK_FASTMCP, FastMCP
 
 pytestmark = pytest.mark.skipif(
     not USING_MOCK_FASTMCP,

@@ -49,7 +49,7 @@ def setup_logging(debug=False):
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    date_str = datetime.datetime.now().strftime("%Y-%m-%d")
+    date_str = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d")
     log_file = os.path.join(log_dir, f"uml_mcp_server_{date_str}.log")
 
     file_handler = logging.FileHandler(log_file)
@@ -282,7 +282,7 @@ def run():
         from mcp_core.core.server import get_mcp_server, start_server
 
         if hasattr(MCP_SETTINGS, "update_from_args"):
-            updater = getattr(MCP_SETTINGS, "update_from_args")
+            updater = MCP_SETTINGS.update_from_args
             if callable(updater):
                 updater(args)
 

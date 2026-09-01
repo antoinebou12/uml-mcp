@@ -3,20 +3,21 @@ MCP prompts for diagram generation using the decorator pattern
 """
 
 import logging
-from typing import Any, Callable, Dict, List, Optional, TypeVar, cast
+from collections.abc import Callable
+from typing import Any, TypeVar, cast
 
 from ..core.config import MCP_SETTINGS
 
 logger = logging.getLogger(__name__)
 
 # Store for registered prompts when using decorator pattern
-_registered_prompts: Dict[str, Dict[str, Any]] = {}
+_registered_prompts: dict[str, dict[str, Any]] = {}
 
 F = TypeVar("F", bound=Callable[..., Any])
 
 
 def mcp_prompt(
-    name: str, description: Optional[str] = None, category: str = "default"
+    name: str, description: str | None = None, category: str = "default"
 ) -> Callable[[F], F]:
     """
     Decorator for registering a function as an MCP prompt.
@@ -59,7 +60,7 @@ def mcp_prompt(
     "uml_diagram",
     description="Base prompt for UML diagram generation. Guides the model to produce diagram code (PlantUML, Mermaid, D2) for any diagram type including class, sequence, activity, use case, and more.",
 )
-def uml_diagram_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def uml_diagram_prompt(context: dict[str, Any] | None = None) -> str:
     """
     Base prompt for UML diagram generation
 
@@ -150,7 +151,7 @@ Graphviz (`graphviz`):
     description="Generate UML diagram with an explicit plan-then-generate workflow. Plan first, then output code and call generate_uml (omit output_dir unless saving a file).",
     category="uml",
 )
-def uml_diagram_with_thinking_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def uml_diagram_with_thinking_prompt(context: dict[str, Any] | None = None) -> str:
     """
     Prompt for generating UML diagrams with plan-then-generate. Same workflow as
     uml_diagram (plan first, then code and generate_uml), plus explicit planning
@@ -172,7 +173,7 @@ If a **sequential-thinking** MCP tool is available, use it for steps 1–3 so th
     "class_diagram",
     description="Generate UML class diagram from a natural language description. Produces PlantUML code with classes, attributes, methods, visibility, inheritance, composition, and associations.",
 )
-def class_diagram_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def class_diagram_prompt(context: dict[str, Any] | None = None) -> str:
     """
     Prompt for generating UML class diagrams
 
@@ -231,7 +232,7 @@ When calling **generate_uml**, use `diagram_type` **class**.
     "sequence_diagram",
     description="Generate UML sequence diagram from a description. Produces PlantUML code with participants, lifelines, messages, activations, and optional return messages.",
 )
-def sequence_diagram_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def sequence_diagram_prompt(context: dict[str, Any] | None = None) -> str:
     """
     Prompt for generating UML sequence diagrams
 
@@ -293,7 +294,7 @@ When calling **generate_uml**, use `diagram_type` **sequence**.
     "activity_diagram",
     description="Generate UML activity diagram from a description. Produces PlantUML code with start/end, activities, decisions, forks, joins, and swimlanes.",
 )
-def activity_diagram_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def activity_diagram_prompt(context: dict[str, Any] | None = None) -> str:
     """
     Prompt for generating UML activity diagrams
 
@@ -353,7 +354,7 @@ When calling **generate_uml**, use `diagram_type` **activity**.
     "usecase_diagram",
     description="Generate UML use case diagram from a description. Produces PlantUML code with actors, use cases, system boundary, include/extend relationships, and associations.",
 )
-def usecase_diagram_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def usecase_diagram_prompt(context: dict[str, Any] | None = None) -> str:
     """
     Prompt for generating UML use case diagrams
 
@@ -416,7 +417,7 @@ When calling **generate_uml**, use `diagram_type` **usecase**.
     description="Produce a Mermaid sequence diagram for an API call flow: client, API, optional Auth/DB, request/response, and optional alt blocks for success vs error.",
     category="mermaid",
 )
-def mermaid_sequence_api_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def mermaid_sequence_api_prompt(context: dict[str, Any] | None = None) -> str:
     """
     Prompt for a Mermaid sequenceDiagram showing a typical API call:
     client, API, optional auth/DB, request/response, and optional alt block.
@@ -445,7 +446,7 @@ Put the diagram in a single mermaid code block. Then call **generate_uml** with 
     description="Generate a Mermaid Gantt chart with title, dateFormat, sections, and tasks including dependencies (after) and durations.",
     category="mermaid",
 )
-def mermaid_gantt_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def mermaid_gantt_prompt(context: dict[str, Any] | None = None) -> str:
     """
     Prompt for a Mermaid gantt chart with title, dateFormat, sections, and tasks.
     """
@@ -476,7 +477,7 @@ Put the diagram in a single mermaid code block. Then call **generate_uml** with 
     description="Explain how to draw a BPMN process model. Covers start/end events, tasks, gateways (XOR, AND, OR), sequence flow, lanes, pools, aligned with BPMN 2.0.2.",
     category="bpmn",
 )
-def bpmn_process_guide_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def bpmn_process_guide_prompt(context: dict[str, Any] | None = None) -> str:
     """
     Prompt that instructs the model to explain how to draw a BPMN process model:
     start/end events, tasks, gateways, sequence flow, lanes, aligned with BPMN 2.0.2.
@@ -510,7 +511,7 @@ Optionally point the user to:
     ),
     category="c4",
 )
-def c4_model_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def c4_model_prompt(context: dict[str, Any] | None = None) -> str:
     """Task-specific guidance for C4 via Kroki c4plantuml backend (aligned with uml://templates key c4plantuml)."""
     context = context or {}
     return """You are a software architect. Produce a **C4 model** diagram using PlantUML C4 syntax.
@@ -540,7 +541,7 @@ Workflow:
     ),
     category="wireviz",
 )
-def wireviz_harness_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def wireviz_harness_prompt(context: dict[str, Any] | None = None) -> str:
     """Aligned with uml://templates and uml://examples for wireviz."""
     context = context or {}
     return """You are an electronics or systems engineer. Produce a **WireViz** harness description in **YAML**.
@@ -565,7 +566,7 @@ Use valid YAML (no tabs; consistent indentation). Output the YAML in a fenced bl
     ),
     category="bpmn",
 )
-def bpmn_executable_process_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def bpmn_executable_process_prompt(context: dict[str, Any] | None = None) -> str:
     """Task-first BPMN XML; aligned with uml://templates (key bpmn)."""
     context = context or {}
     return """You are a BPMN modeler. Produce an **executable BPMN 2.0** XML snippet suitable for Kroki **bpmn**.
@@ -588,7 +589,7 @@ Output the full XML in a fenced block for the reader, then call **generate_uml**
     description="Convert a class diagram (PlantUML code or prose description) into Mermaid classDiagram syntax, mapping visibility, relationships, and inheritance.",
     category="mermaid",
 )
-def convert_class_to_mermaid_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def convert_class_to_mermaid_prompt(context: dict[str, Any] | None = None) -> str:
     """
     Prompt for converting a class diagram (PlantUML or prose) into Mermaid classDiagram.
     Instructs to output Mermaid classDiagram and optionally call generate_uml("mermaid", code).
@@ -624,7 +625,7 @@ After producing the Mermaid code, call **generate_uml** with `diagram_type` **me
     ),
     category="algorithm",
 )
-def algorithm_explainer_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def algorithm_explainer_prompt(context: dict[str, Any] | None = None) -> str:
     """Task-focused prompt for explaining algorithms as diagrams.
 
     Steers the model through (1) picking a diagram shape that matches the
@@ -678,7 +679,7 @@ Avoid:
     ),
     category="research",
 )
-def paper_concept_diagram_prompt(context: Optional[Dict[str, Any]] = None) -> str:
+def paper_concept_diagram_prompt(context: dict[str, Any] | None = None) -> str:
     """Task-focused prompt for academic-paper concept diagrams with clickable citation links."""
     context = context or {}
     prompt = """You are a research engineer explaining a concept from one or more academic papers as a diagram.
@@ -733,7 +734,7 @@ Avoid:
     return prompt + _layout_overlap_appendix()
 
 
-def register_prompts_with_server(server: Any) -> List[str]:
+def register_prompts_with_server(server: Any) -> list[str]:
     """
     Register all decorated prompts with the MCP server
 
@@ -760,7 +761,7 @@ def register_prompts_with_server(server: Any) -> List[str]:
     return registered_prompt_names
 
 
-def register_diagram_prompts(server: Any) -> List[str]:
+def register_diagram_prompts(server: Any) -> list[str]:
     """
     Register diagram prompts with the MCP server
 
@@ -784,7 +785,7 @@ def register_diagram_prompts(server: Any) -> List[str]:
     return registered_prompts
 
 
-def get_prompt_registry() -> Dict[str, Dict[str, Any]]:
+def get_prompt_registry() -> dict[str, dict[str, Any]]:
     """
     Get the registry of all prompts registered with the decorator
 

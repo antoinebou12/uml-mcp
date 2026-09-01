@@ -6,7 +6,7 @@ PlantUML markup into PNG images.
 """
 
 import logging
-from typing import Any, NotRequired, Tuple, TypedDict
+from typing import Any, NotRequired, TypedDict
 from zlib import compress
 
 import httpx
@@ -116,7 +116,7 @@ class PlantUML:
                 )
                 response.raise_for_status()
             except httpx.HTTPError as e:
-                raise PlantUMLConnectionError(f"Error authenticating: {str(e)}")
+                raise PlantUMLConnectionError(f"Error authenticating: {e!s}")
 
     def get_url(self, plantuml_text):
         """Return the server URL for the image."""
@@ -185,7 +185,7 @@ class PlantUML:
             return "-"
         return "_" if b == 1 else "?"
 
-    def generate_image_from_string(self, plantuml_text: str) -> Tuple[str, str, str]:
+    def generate_image_from_string(self, plantuml_text: str) -> tuple[str, str, str]:
         """Generate an image from plantuml markup and return URLs.
 
         Args:

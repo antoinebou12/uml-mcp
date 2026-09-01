@@ -36,6 +36,7 @@ print('real FastMCP HTTP startup OK')
         capture_output=True,
         text=True,
         timeout=30,
+        check=False,
     )
 
     assert completed.returncode == 0, (

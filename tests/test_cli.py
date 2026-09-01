@@ -50,9 +50,11 @@ class TestParseArgs:
 
     def test_invalid_transport_raises(self):
         """Invalid --transport choice causes argparse to raise SystemExit."""
-        with patch.object(sys, "argv", ["prog", "--transport", "invalid"]):
-            with pytest.raises(SystemExit):
-                cli.parse_args()
+        with (
+            patch.object(sys, "argv", ["prog", "--transport", "invalid"]),
+            pytest.raises(SystemExit),
+        ):
+            cli.parse_args()
 
 
 class TestSetupLogging:

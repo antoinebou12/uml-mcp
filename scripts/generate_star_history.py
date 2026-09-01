@@ -36,7 +36,7 @@ def _request_json(url: str, token: str) -> tuple[Any, dict[str, str]]:
         "X-GitHub-Api-Version": API_VERSION,
     }
     request = Request(url, headers=headers)
-    with urlopen(request, timeout=30) as response:  # noqa: S310 - fixed GitHub URL
+    with urlopen(request, timeout=30) as response:
         payload = json.loads(response.read().decode("utf-8"))
         return payload, dict(response.headers.items())
 
@@ -70,7 +70,7 @@ def fetch_stargazer_dates(repository: str) -> list[datetime]:
                 )
                 payload, _headers = _request_json(url, token)
                 if not isinstance(payload, list):
-                    raise RuntimeError("Unexpected GitHub stargazers response shape")
+                    raise TypeError("Unexpected GitHub stargazers response shape")
 
                 for item in payload:
                     if not isinstance(item, dict) or not item.get("starred_at"):
@@ -78,9 +78,7 @@ def fetch_stargazer_dates(repository: str) -> list[datetime]:
                             "GitHub did not return starred_at timestamps; "
                             "the token may not have permission to list stargazers."
                         )
-                    dates.append(
-                        datetime.fromisoformat(item["starred_at"].replace("Z", "+00:00"))
-                    )
+                    dates.append(datetime.fromisoformat(item["starred_at"]))
 
                 if len(payload) < 100:
                     return sorted(dates)
@@ -89,7 +87,7 @@ def fetch_stargazer_dates(repository: str) -> list[datetime]:
             last_error = exc
             if exc.code not in (401, 403, 404):
                 raise
-        except Exception as exc:  # try github.token after an unusable repo secret
+        except Exception as exc:  # noqa: BLE001 - try github.token after an unusable repo secret
             last_error = exc
 
     raise RuntimeError(
@@ -193,11 +191,11 @@ def render_svg(repository: str, dates: list[datetime]) -> str:
   <rect class="background" width="100%" height="100%" rx="8" />
   <text class="title" x="{MARGIN_LEFT}" y="31">GitHub Star History</text>
   <text class="subtitle" x="{WIDTH - MARGIN_RIGHT}" y="31" text-anchor="end">{escaped_repo} · {current_count} stars</text>
-  {''.join(grid_lines)}
+  {"".join(grid_lines)}
   <line class="axis" x1="{MARGIN_LEFT}" y1="{MARGIN_TOP}" x2="{MARGIN_LEFT}" y2="{MARGIN_TOP + plot_height}" />
   <line class="axis" x1="{MARGIN_LEFT}" y1="{MARGIN_TOP + plot_height}" x2="{WIDTH - MARGIN_RIGHT}" y2="{MARGIN_TOP + plot_height}" />
-  {''.join(y_labels)}
-  {''.join(x_labels)}
+  {"".join(y_labels)}
+  {"".join(x_labels)}
   <polyline class="line" points="{polyline}" />
   <circle class="dot" cx="{points[-1][0]:.2f}" cy="{points[-1][1]:.2f}" r="5" />
   <text class="subtitle" x="{MARGIN_LEFT}" y="{HEIGHT - 8}">Updated {updated} from GitHub's timestamped stargazer API</text>
