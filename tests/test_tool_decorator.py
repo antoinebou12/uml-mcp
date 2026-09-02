@@ -19,13 +19,14 @@ class TestGetToolRegistry:
     """Tests for get_tool_registry after diagram_tools is loaded."""
 
     def test_registry_contains_expected_tools(self):
-        """Registry includes list, batch, generate, validate."""
+        """Registry includes list, batch, generate, inline-image, validate."""
         registry = get_tool_registry()
         assert "list_diagram_types" in registry
         assert "generate_uml_batch" in registry
         assert "generate_uml" in registry
+        assert "generate_uml_image" in registry
         assert "validate_uml" in registry
-        assert len(registry) == 4
+        assert len(registry) == 5
 
     def test_registry_tool_has_metadata(self):
         """Each registry entry has function, name, description, category, parameters."""
@@ -54,7 +55,7 @@ class TestGetToolCategories:
         uml_tools = categories.get("uml", [])
         assert "generate_uml" in uml_tools
         assert "validate_uml" in uml_tools
-        assert len(uml_tools) == 4
+        assert len(uml_tools) == 5
 
 
 class TestMcpToolParameterExtraction:
@@ -129,7 +130,8 @@ class TestRegisterToolsWithServer:
         assert isinstance(result, list)
         assert "generate_uml" in result
         assert "validate_uml" in result
-        assert len(result) == 4
+        assert "generate_uml_image" in result
+        assert len(result) == 5
 
     def test_register_tools_typeerror_fallback_chain(self):
         """When server.tool rejects kwargs styles, fall back to bare tool(func)."""

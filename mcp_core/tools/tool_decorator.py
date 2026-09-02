@@ -12,6 +12,15 @@ logger = logging.getLogger(__name__)
 
 _registered_tools: dict[str, dict[str, Any]] = {}
 
+# MIME types we attach to results as inline MCP ``image`` content blocks so that
+# image-capable MCP clients (Cursor, Copilot, etc.) render the diagram directly in
+# the chat instead of showing a URL. PNG/JPEG are universally rendered; SVG is
+# included for clients that support ``image/svg+xml`` content blocks.
+IMAGE_CONTENT_MIMES = frozenset({"image/png", "image/jpeg", "image/svg+xml"})
+
+# Tool names that produce a rendered diagram result (used for the compact summary).
+_RENDER_TOOL_NAMES = frozenset({"generate_uml", "generate_uml_image"})
+
 F = TypeVar("F", bound=Callable[..., Any])
 
 
@@ -33,7 +42,7 @@ def _normalize_output_schema(output_schema: Any) -> dict[str, Any] | None:
 
 def _summarize_tool_result(tool_name: str, result: dict[str, Any]) -> str:
     """Build a compact LLM-facing summary without repeating large payload fields."""
-    if tool_name == "generate_uml":
+    if tool_name in _RENDER_TOOL_NAMES:
         return (
             f"Generated {result.get('diagram_type') or 'diagram'} successfully. "
             f"Renderer: {result.get('source') or 'unknown'}. "
@@ -62,7 +71,9 @@ def _as_mcp_tool_result(tool_name: str, result: Any) -> Any:
     if result.get("error"):
         try:
             from fastmcp.exceptions import ToolError
-        except ImportError as exc:  # pragma: no cover - package is required in production
+        except (
+            ImportError
+        ) as exc:  # pragma: no cover - package is required in production
             raise RuntimeError(str(result["error"])) from exc
         raise ToolError(str(result["error"]))
 
@@ -78,7 +89,7 @@ def _as_mcp_tool_result(tool_name: str, result: Any) -> Any:
     ]
     mime_type = str(result.get("mime_type") or "").lower()
     image_data = result.get("content_base64")
-    if image_data and mime_type in {"image/png", "image/jpeg"}:
+    if image_data and mime_type in IMAGE_CONTENT_MIMES:
         content.append(
             ImageContent(type="image", data=str(image_data), mime_type=mime_type)
         )
@@ -167,7 +178,12 @@ def register_tools_with_server(server: Any) -> list[str]:
         output_schema = _normalize_output_schema(tool_info.get("output_schema"))
 
         @wraps(func)
-        def protocol_func(*args: Any, __func: Callable[..., Any] = func, __name: str = tool_name, **kwargs: Any) -> Any:
+        def protocol_func(
+            *args: Any,
+            __func: Callable[..., Any] = func,
+            __name: str = tool_name,
+            **kwargs: Any,
+        ) -> Any:
             return _as_mcp_tool_result(__name, __func(*args, **kwargs))
 
         tool_kwargs: dict[str, Any] = {

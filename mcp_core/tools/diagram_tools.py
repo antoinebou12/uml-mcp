@@ -215,7 +215,9 @@ def generate_uml_batch(
         }
 
     workers = _batch_concurrency(len(items))
-    with ThreadPoolExecutor(max_workers=workers, thread_name_prefix="uml-batch") as pool:
+    with ThreadPoolExecutor(
+        max_workers=workers, thread_name_prefix="uml-batch"
+    ) as pool:
         futures = [
             pool.submit(_render_batch_item, index, raw, output_dir)
             for index, raw in enumerate(items)
@@ -266,6 +268,53 @@ def generate_uml(
             diagram_type=diagram_type,
             code=code,
             output_dir=output_dir,
+            output_format=output_format,
+            theme=theme,
+            scale=scale,
+        )
+    )
+
+
+@mcp_tool(
+    description=(
+        "Render one UML or diagram and return it as an inline image content block "
+        "(PNG by default) so image-capable MCP clients such as Cursor and Copilot show "
+        "the diagram directly in the chat. Use when you want the picture visible inline "
+        "rather than as a click-through URL. Same input fields as generate_uml; pick "
+        "output_format png (most compatible), svg, or jpeg."
+    ),
+    category="uml",
+    example="generate_uml_image('mermaid', 'graph TD; A-->B;', 'png')",
+    annotations={**ANNOTATIONS_DIAGRAM, "title": "Generate Diagram as Inline Image"},
+    output_schema=DiagramResult,
+)
+def generate_uml_image(
+    diagram_type: str,
+    code: str,
+    output_format: str = "png",
+    theme: str | None = None,
+    scale: float = 1.0,
+) -> dict[str, Any]:
+    """Generate a diagram and return it as an inline MCP image content block.
+
+    Args:
+        diagram_type: Supported diagram type, for example class, sequence, or mermaid.
+        code: Diagram source code in the syntax required by diagram_type.
+        output_format: Output format for the inline image; png (default), svg, or jpeg.
+        theme: Optional PlantUML theme; ignored by non-PlantUML backends.
+        scale: SVG scale factor; ignored unless output_format is svg.
+    """
+    logger.info(
+        "Called generate_uml_image tool: type=%s, format=%s, code length=%s",
+        diagram_type,
+        output_format,
+        len(code),
+    )
+    return generate_from_request(
+        DiagramRequest(
+            diagram_type=diagram_type,
+            code=code,
+            output_dir=None,
             output_format=output_format,
             theme=theme,
             scale=scale,

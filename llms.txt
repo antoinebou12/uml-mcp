@@ -16,6 +16,7 @@ For web apps that render diagrams inline (no click-through URLs): UML-MCP serves
 ## MCP tools
 
 - generate_uml: diagram_type, code, output_format, optional output_dir/theme/scale; omit output_dir for URL + base64 only (typical on remote)
+- generate_uml_image: diagram_type, code, output_format (png default / svg / jpeg); returns the diagram as an inline MCP image content block so image-capable MCP clients (Cursor, Copilot) render it directly in the chat
 - validate_uml: validate before render; `strict` for extra Mermaid/D2 checks
 - list_diagram_types: same idea as uml://types when resources are awkward
 - generate_uml_batch: multiple diagrams; cap via MCP_BATCH_MAX_ITEMS (default 20)

@@ -7,6 +7,7 @@ from unittest.mock import patch
 from mcp_core.tools.diagram_tools import (
     generate_uml,
     generate_uml_batch,
+    generate_uml_image,
     list_diagram_types,
     register_diagram_tools,
 )
@@ -41,6 +42,7 @@ class TestDiagramTools:
             "list_diagram_types",
             "generate_uml_batch",
             "generate_uml",
+            "generate_uml_image",
             "validate_uml",
         ]
 
@@ -76,6 +78,40 @@ class TestDiagramTools:
         mock_generate_diagram.assert_called_once_with(
             "class", "@startuml\nclass Test\n@enduml", "svg", "/tmp/out", None, 1.0
         )
+
+    @patch("mcp_core.core.diagram_service.generate_diagram")
+    def test_generate_uml_image_returns_inline_image_fields(
+        self, mock_generate_diagram
+    ):
+        """generate_uml_image forces memory-only output and passes the result through."""
+        mock_generate_diagram.return_value = {
+            "code": "graph TD; A-->B;",
+            "url": "https://kroki.io/mermaid/svg/abc123",
+            "playground": "https://mermaid.live/edit#x",
+            "local_path": None,
+            "content_base64": "aGVsbG8=",
+            "source": "kroki",
+            "output_format": "png",
+            "mime_type": "image/png",
+        }
+        result = generate_uml_image(
+            diagram_type="mermaid",
+            code="graph TD; A-->B;",
+            output_format="png",
+        )
+        assert result.get("content_base64") == "aGVsbG8="
+        assert result.get("mime_type") == "image/png"
+        # output_dir is forced to None so the inline base64 is returned (memory-only).
+        mock_generate_diagram.assert_called_once_with(
+            "mermaid", "graph TD; A-->B;", "png", None, None, 1.0
+        )
+
+    def test_generate_uml_image_default_format_is_png(self):
+        """generate_uml_image defaults to png (the most MCP-client-compatible format)."""
+        from mcp_core.tools.tool_decorator import get_tool_registry
+
+        params = get_tool_registry()["generate_uml_image"]["parameters"]
+        assert params["output_format"]["default"] == "png"
 
     @patch("mcp_core.core.diagram_service.generate_diagram")
     def test_generate_uml_unsupported_diagram_type_returns_error(

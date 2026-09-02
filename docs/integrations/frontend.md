@@ -22,6 +22,31 @@ extra backend is required.
 
 ---
 
+## Inline images in MCP chat clients (Cursor, Copilot)
+
+If your user has the agent call the MCP tool **in a chat** (Cursor agent, Copilot, etc.)
+and you want the diagram **visible in the message**, use the **`generate_uml_image`** tool:
+
+```jsonc
+// Cursor / Copilot MCP tool call
+{
+  "diagram_type": "mermaid",
+  "code": "graph TD; A-->B;",
+  "output_format": "png"        // png (default) | svg | jpeg
+}
+```
+
+That tool (and `generate_uml`) returns an MCP **`image` content block** (base64 + MIME type)
+instead of just a URL, so image-capable clients render it **inline in the chat**.
+
+- **PNG/JPEG** render in essentially all image-capable clients — use `output_format: "png"`
+  for the widest support.
+- **SVG** is also returned as an image block; support varies by client.
+- If a client does not render image blocks, it still sees the same result as text/JSON with
+  the `url` and `content_base64` fields, so nothing is lost.
+
+---
+
 ## Option A — CopilotKit (add diagram tools to an in-app agent)
 
 Use the standard MCP path so the agent can call `generate_uml`. CopilotKit's runtime

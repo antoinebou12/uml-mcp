@@ -42,6 +42,10 @@
       "description": "Render several independent diagrams in one call, keeping partial failures isolated."
     },
     {
+      "name": "generate_uml_image",
+      "description": "Render one diagram as an inline image content block (PNG/SVG/JPEG) so image-capable clients show it directly in the chat."
+    },
+    {
       "name": "validate_uml",
       "description": "Check diagram type, format, size, and syntax locally without rendering."
     },

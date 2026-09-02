@@ -15,8 +15,11 @@
     { "keyword": "list diagram types", "tool_name": "list_diagram_types", "priority": 10 },
     { "keyword": "supported diagram types", "tool_name": "list_diagram_types", "priority": 9 },
     { "keyword": "generate diagrams batch", "tool_name": "generate_uml_batch", "priority": 10 },
-    { "keyword": "multiple diagrams", "tool_name": "generate_uml_batch", "priority": 9 }
+    { "keyword": "multiple diagrams", "tool_name": "generate_uml_batch", "priority": 9 },
+    { "keyword": "inline diagram", "tool_name": "generate_uml_image", "priority": 10 },
+    { "keyword": "render diagram image", "tool_name": "generate_uml_image", "priority": 10 },
+    { "keyword": "diagram png", "tool_name": "generate_uml_image", "priority": 9 }
   ],
   "parameter_extractors": {},
-  "reminder_message": "UML-MCP tools: generate_uml renders one diagram, generate_uml_batch renders several, validate_uml checks syntax without rendering, list_diagram_types discovers supported types and formats. Pass diagram_type and code as structured arguments and send the diagram source through unmodified. PlantUML code must be wrapped in @startuml and @enduml. Render any returned URL as a clickable link, e.g. [View Diagram](URL)."
+  "reminder_message": "UML-MCP tools: generate_uml renders one diagram, generate_uml_batch renders several, generate_uml_image renders one diagram as an inline image for the chat, validate_uml checks syntax without rendering, list_diagram_types discovers supported types and formats. Pass diagram_type and code as structured arguments and send the diagram source through unmodified. PlantUML code must be wrapped in @startuml and @enduml. Render any returned URL as a clickable link, e.g. [View Diagram](URL)."
 }

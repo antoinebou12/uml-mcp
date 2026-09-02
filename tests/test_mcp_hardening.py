@@ -75,6 +75,32 @@ def test_protocol_adapter_returns_structured_content_and_image():
     assert result.meta["render_ms"] == 9.5
 
 
+def test_protocol_adapter_emits_svg_image_content_block():
+    """SVG results now attach an inline image content block so SVG renders in clients."""
+    from fastmcp.tools import ToolResult
+    from mcp.types import ImageContent
+
+    payload = {
+        "code": "@startuml\nclass A\n@enduml",
+        "success": True,
+        "diagram_type": "class",
+        "output_format": "svg",
+        "url": "https://example.test/class.svg",
+        "content_base64": "c3ZnLWJ5dGVz",
+        "source": "kroki",
+        "render_ms": 3.0,
+        "cache_hit": False,
+        "mime_type": "image/svg+xml",
+    }
+    result = _as_mcp_tool_result("generate_uml", payload)
+
+    assert isinstance(result, ToolResult)
+    assert any(isinstance(block, ImageContent) for block in result.content)
+    image = next(block for block in result.content if isinstance(block, ImageContent))
+    assert image.mime_type == "image/svg+xml"
+    assert image.data == "c3ZnLWJ5dGVz"
+
+
 def test_protocol_adapter_raises_tool_error_for_execution_failure():
     from fastmcp.exceptions import ToolError
 
@@ -92,8 +118,7 @@ def test_list_diagram_types_filters_without_breaking_zero_argument_shape():
     sequence_types = list_diagram_types(query="sequence")
     assert "sequence" in sequence_types
     assert all(
-        "sequence"
-        in (name + " " + info["description"] + " " + info["backend"]).lower()
+        "sequence" in (name + " " + info["description"] + " " + info["backend"]).lower()
         for name, info in sequence_types.items()
     )
 
