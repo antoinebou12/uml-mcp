@@ -32,9 +32,9 @@
     {
       "name": "uml-mcp-diagrams",
       "type": "context",
-      "description": "Creates diagrams via the uml-mcp MCP server (generate_uml, validate_uml, list_diagram_types, generate_uml_batch) and returns shareable Kroki URLs.",
+      "description": "> **Maintainers:** Keep tool tables and `output_dir` wording aligned with the Smithery bundle **[uml-skill/SKILL.md](https://github.com/antoinebou12/uml-skill/blob/main/SKILL.md)** (`diagramming-uml`) and the Claude Code plugin skill **`plugins/uml-mcp/skills/uml-diagrams/SKILL.md`** when you edit any of them.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "c97ea4794ade00e7e8be935db5a1469531f8f41733cdd223c124200dab90c472"
+      "sha256": "be872759dbb8d54bb4b50c0637e9ac40789832f139d054dc8e56c035dbdd9d04"
     }
   ]
 }

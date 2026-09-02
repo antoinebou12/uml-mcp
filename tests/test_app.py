@@ -182,7 +182,9 @@ def test_mcp_server_card_endpoint():
     assert "serverInfo" in data
     assert data["serverInfo"]["name"] == "UML Diagram Generator"
     assert "tools" in data
-    assert any(t["name"] == "generate_uml" for t in data["tools"])
+    tool_names = {t["name"] for t in data["tools"]}
+    assert "generate_uml" in tool_names
+    assert "generate_uml_image" in tool_names
 
 
 def test_openapi_spec():

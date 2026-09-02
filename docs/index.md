@@ -13,6 +13,7 @@ UML-MCP is an MCP server for diagram generation: AI assistants (Cursor, Claude D
 [![Run Tests](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml)
 [![Build Package](https://github.com/antoinebou12/uml-mcp/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/build.yml)
 [![Deploy docs](https://github.com/antoinebou12/uml-mcp/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/docs.yml)
+[![MCP status](https://mcpvitals.com/badge/6cfb821be2.svg)](https://mcpvitals.com/status/6cfb821be2)
 [![GitHub stars](https://img.shields.io/github/stars/antoinebou12/uml-mcp)](https://github.com/antoinebou12/uml-mcp/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12](https://img.shields.io/badge/python-%3E%3D3.12%2C%3C3.13-blue.svg)](https://www.python.org/downloads/)
@@ -54,7 +55,7 @@ sequenceDiagram
 
     ---
 
-    `generate_uml`, `validate_uml`, `list_diagram_types`, and `generate_uml_batch` are MCP tools with annotations (`readOnlyHint`, `idempotentHint`, etc.) and resource URIs under `uml://`.
+    `generate_uml`, `generate_uml_image` (inline PNG/SVG for chat clients), `validate_uml`, `list_diagram_types`, and `generate_uml_batch` are MCP tools with annotations (`readOnlyHint`, `idempotentHint`, etc.) and resource URIs under `uml://`.
 
     [:octicons-arrow-right-24: Tool reference](api/tools.md)
 
@@ -160,7 +161,7 @@ sequenceDiagram
 
 !!! tip "Need an end-to-end stack?"
 
-    Combine UML-MCP with your favourite MCP-aware editor. Cursor and Claude Desktop both work out of the box; see [Cursor](integrations/cursor.md), [Claude Desktop](integrations/claude_desktop.md), and [Claude Code](integrations/claude_code.md) (plugin + marketplace).
+    Combine UML-MCP with your favourite MCP-aware editor. Cursor and Claude Desktop both work out of the box; see [Cursor](integrations/cursor.md), [Claude Desktop](integrations/claude_desktop.md), [Claude Code](integrations/claude_code.md) (plugin + marketplace), and [OI OS](integrations/oi_os.md) (intent manifest for third-party agent runtimes). Set `MCP_READ_ONLY=true` on shared stdio hosts to block file writes.
 
 ---
 

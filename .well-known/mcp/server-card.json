@@ -6,22 +6,40 @@
   "tools": [
     {
       "name": "list_diagram_types",
-      "description": "List supported diagram types with Kroki backend, description, and formats (same data as uml://types resource). Use when the client cannot read resources.",
+      "description": "Find supported diagram types and their renderer/formats. All filters are optional; returns matching type metadata. Use this when you are unsure which diagram type or format to choose.",
       "inputSchema": {
         "type": "object",
-        "properties": {},
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Query"
+          },
+          "backend": {
+            "type": "string",
+            "description": "Backend"
+          },
+          "output_format": {
+            "type": "string",
+            "description": "Output Format"
+          },
+          "limit": {
+            "type": "string",
+            "description": "Limit"
+          }
+        },
         "required": []
       },
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,
-        "openWorldHint": false
+        "openWorldHint": false,
+        "title": "List Diagram Types"
       }
     },
     {
       "name": "generate_uml_batch",
-      "description": "Generate multiple diagrams in one call. Each item is like generate_uml (diagram_type, code, output_format?, theme?, scale?). Optional shared output_dir for all items. Returns a list of per-index results or errors.",
+      "description": "Render several independent diagrams in one call using bounded concurrency. Input items use the same diagram_type/code/format/theme/scale fields as generate_uml; returns ordered per-index results and keeps partial failures isolated. Use this for multiple diagrams, not repeated repair attempts for one invalid diagram.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -42,38 +60,39 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": true,
-        "openWorldHint": true
+        "openWorldHint": true,
+        "title": "Generate Diagram Batch"
       }
     },
     {
       "name": "generate_uml",
-      "description": "Generate any UML or diagram by type (class, sequence, mermaid, d2, etc.)",
+      "description": "Render one UML or diagram from source code. Input diagram_type, code, optional output_format/theme/scale/output_dir; returns renderer metadata plus URL and inline image data when appropriate. Use when you already have valid or nearly valid diagram source; call validate_uml first for uncertain complex syntax.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "diagram_type": {
             "type": "string",
-            "description": "Type of diagram (e.g. class, sequence, activity, mermaid, d2). See uml://types."
+            "description": "Diagram type such as class, sequence, mermaid, d2, or graphviz. Use list_diagram_types when unsure."
           },
           "code": {
             "type": "string",
-            "description": "Diagram code in the format for the chosen type"
+            "description": "Diagram source code in the syntax required by diagram_type."
           },
           "output_dir": {
             "type": "string",
-            "description": "Directory to save the image; omit for URL/base64 only (no file write)"
+            "description": "Local directory to save the rendered file. Omit for URL/base64 output. Hosted/read-only deployments reject file output."
           },
           "output_format": {
             "type": "string",
-            "description": "Output format: svg, png, pdf, jpeg, txt, or base64 (per diagram type; see uml://formats)"
+            "description": "Requested output format: svg, png, pdf, jpeg, txt, or base64 when supported by the selected diagram type."
           },
           "theme": {
             "type": "string",
-            "description": "PlantUML theme (only for PlantUML diagram types)"
+            "description": "Optional PlantUML theme; ignored by non-PlantUML backends."
           },
           "scale": {
             "type": "string",
-            "description": "Scale factor for SVG output (e.g. 2.0 doubles size). Only applied when output_format is svg."
+            "description": "SVG scale factor. For example, 2.0 doubles SVG dimensions. Ignored for non-SVG output."
           }
         },
         "required": [
@@ -85,26 +104,67 @@
         "readOnlyHint": false,
         "destructiveHint": false,
         "idempotentHint": true,
-        "openWorldHint": true
+        "openWorldHint": true,
+        "title": "Generate Diagram"
       }
     },
     {
-      "name": "validate_uml",
-      "description": "Validate diagram type, format, code length, and basic syntax locally before render (no Kroki call). Returns errors and suggestions.",
+      "name": "generate_uml_image",
+      "description": "Render one UML or diagram and return it as an inline image content block (PNG by default) so image-capable MCP clients such as Cursor and Copilot show the diagram directly in the chat. Use when you want the picture visible inline rather than as a click-through URL. Same input fields as generate_uml; pick output_format png (most compatible), svg, or jpeg.",
       "inputSchema": {
         "type": "object",
         "properties": {
           "diagram_type": {
             "type": "string",
-            "description": "Type of diagram (e.g. class, sequence, mermaid, d2). See uml://types."
+            "description": "Diagram Type"
           },
           "code": {
             "type": "string",
-            "description": "Diagram code in the format for the chosen type"
+            "description": "Code"
           },
           "output_format": {
             "type": "string",
-            "description": "Output format: svg, png, pdf, jpeg, txt, or base64 (per diagram type; see uml://formats)"
+            "description": "Output Format"
+          },
+          "theme": {
+            "type": "string",
+            "description": "Theme"
+          },
+          "scale": {
+            "type": "string",
+            "description": "Scale"
+          }
+        },
+        "required": [
+          "diagram_type",
+          "code"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Generate Diagram as Inline Image"
+      }
+    },
+    {
+      "name": "validate_uml",
+      "description": "Validate diagram type, format, size, and syntax locally without rendering. Input diagram_type/code/output_format and optional strict=true for additional Mermaid/D2 checks; returns structured diagnostics, suggestions, and deterministic normalization details. Use before rendering complex or uncertain source.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "diagram_type": {
+            "type": "string",
+            "description": "Diagram type to validate. Use list_diagram_types when unsure."
+          },
+          "code": {
+            "type": "string",
+            "description": "Diagram source code to validate locally without rendering."
+          },
+          "output_format": {
+            "type": "string",
+            "description": "Output format whose compatibility should be validated."
           },
           "strict": {
             "type": "boolean",
@@ -120,7 +180,8 @@
         "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,
-        "openWorldHint": false
+        "openWorldHint": false,
+        "title": "Validate Diagram"
       }
     }
   ],
@@ -154,6 +215,11 @@
       "uri": "uml://server-info",
       "name": "uml://server-info",
       "description": "Returns server metadata: name, version, tools, prompts, Kroki URL. Use for discovery and health checks."
+    },
+    {
+      "uri": "uml://recipes",
+      "name": "uml://recipes",
+      "description": "Named recipe templates that span multiple diagram_types (e.g. algorithm_flowchart, paper_concept). Each entry pairs a recipe key with a starter source body and the diagram_type to pass to generate_uml. Use after the algorithm_explainer or paper_concept_diagram prompts."
     },
     {
       "uri": "uml://workflow",
@@ -213,6 +279,14 @@
     {
       "name": "convert_class_to_mermaid",
       "description": "Convert a class diagram (PlantUML code or prose description) into Mermaid classDiagram syntax, mapping visibility, relationships, and inheritance."
+    },
+    {
+      "name": "algorithm_explainer",
+      "description": "Explain an algorithm visually: control flow, recursion, or data-structure operation. Maps intent to diagram_type (mermaid flowchart, activity, state, d2), labels each step with its Big-O complexity, and applies layout rules that minimize arrow overlap."
+    },
+    {
+      "name": "paper_concept_diagram",
+      "description": "Visualize a concept from an academic paper (ML architecture, method comparison, concept/citation graph). Encodes citations in node labels and adds clickable links to arXiv/DOI in Mermaid, PlantUML, D2, and Graphviz. Recommends SVG output."
     }
   ],
   "configSchemaUrl": "config-schema.json"

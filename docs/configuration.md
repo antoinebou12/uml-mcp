@@ -30,6 +30,7 @@ Command-line options override values in `fastmcp.json` (e.g. `fastmcp run --port
 | `USE_LOCAL_PLANTUML` | Use local PlantUML server (true/false) | `false` |
 | `MCP_DIAGRAM_FALLBACK` | After Kroki fails, try PlantUML server / Mermaid.ink | **On** for typical desktop; **off** when `VERCEL` is set or `USE_LOCAL_KROKI=true` unless overridden |
 | `FASTMCP_STATELESS_HTTP` | Enable stateless HTTP for multi-worker/horizontal scaling (true/false) | `false` |
+| `MCP_READ_ONLY` | Reject `output_dir` and never write diagram files to disk | `false` |
 | `MCP_MAX_CODE_LENGTH` | Maximum diagram source length (characters) | `500000` |
 | `MCP_MAX_RENDER_SECONDS` | HTTP timeout budget for Kroki/fallback image fetch (seconds) | `30` |
 | `MCP_BATCH_MAX_ITEMS` | Maximum items per `generate_uml_batch` call | `20` |
@@ -100,5 +101,5 @@ Set `output_format` in the MCP tool arguments when you generate a diagram.
 Smithery and other MCP clients read the server card for tool metadata and optional session fields:
 
 - The server card at `/.well-known/mcp/server-card.json` lists tool annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) and a config schema URL (`configSchemaUrl`: `config-schema.json`).
-- The session config schema is served at `/.well-known/mcp/config-schema.json` (same path as the card) so clients can resolve it when the card is loaded from that origin.
+- The session config schema is served at `/.well-known/mcp/config-schema.json` (same path as the card) so clients can resolve it when the card is loaded from that origin. It includes `read_only` (maps to `MCP_READ_ONLY`) alongside output directory, Kroki/PlantUML URLs, and theme defaults.
 - When publishing on Smithery, add session configuration from `smithery-config-schema.json` in the project settings (see [Vercel/Smithery integration](integrations/vercel_smithery.md)).

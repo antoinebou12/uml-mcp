@@ -47,6 +47,8 @@ Use this when you want local execution and file output support.
 - `cwd` must be your project root (the folder containing `server.py`)
 - `args: ["-u", "server.py"]` runs unbuffered Python
 - `MCP_OUTPUT_DIR`, `KROKI_SERVER`, and related env vars are local/self-hosted settings
+- Set `MCP_READ_ONLY=true` to block file writes (useful for shared or hosted stdio deployments)
+- Set `MCP_MAX_CODE_LENGTH` to cap diagram source size (default `500000` characters)
 - If you use a virtualenv or Poetry, set `command` to that Python interpreter (for example `C:\\path\\to\\uml-mcp\\.venv\\Scripts\\python.exe` on Windows)
 
 See [Configuration](../docs/configuration.md) for the full local environment variable reference.

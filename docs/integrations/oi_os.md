@@ -53,9 +53,11 @@ the runtime at `oi-manifest.json` for intent routing.
 | `parameter_extractors` | Intentionally empty — see below |
 | `reminder_message` | Guidance shown to the agent: which tool does what, and to render returned URLs as links |
 
-Intents cover every registered tool: `generate_uml` (generation), `validate_uml` (validation),
-`list_diagram_types` (type discovery) and `generate_uml_batch` (batch generation). Keywords are
-unique, so a request never routes ambiguously.
+Intents cover every registered tool: `generate_uml` (generation), `generate_uml_image` (inline
+image for chat clients), `validate_uml` (validation), `list_diagram_types` (type discovery), and
+`generate_uml_batch` (batch generation). Diagram-type keywords (class, sequence, use case, state,
+component, deployment, object, and more) route to `generate_uml`. Keywords are unique, so a
+request never routes ambiguously.
 
 ## Why parameter extraction is empty
 

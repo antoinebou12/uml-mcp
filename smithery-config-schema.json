@@ -54,6 +54,13 @@
       "description": "Default PlantUML theme for diagram appearance (e.g. cerulean, sketchy-outline). Optional; only applies to PlantUML diagram types.",
       "default": "",
       "x-from": { "query": "theme" }
+    },
+    "read_only": {
+      "type": "boolean",
+      "title": "Read-only mode",
+      "description": "When true, reject output_dir and never write diagram files to disk (same as MCP_READ_ONLY=true).",
+      "default": false,
+      "x-from": { "query": "read_only" }
     }
   },
   "additionalProperties": false
