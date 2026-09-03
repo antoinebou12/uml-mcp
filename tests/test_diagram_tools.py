@@ -76,7 +76,13 @@ class TestDiagramTools:
         assert result.get("playground") is not None
         assert result.get("local_path") is not None
         mock_generate_diagram.assert_called_once_with(
-            "class", "@startuml\nclass Test\n@enduml", "svg", "/tmp/out", None, 1.0
+            "class",
+            "@startuml\nclass Test\n@enduml",
+            "svg",
+            "/tmp/out",
+            None,
+            1.0,
+            force_fetch=False,
         )
 
     @patch("mcp_core.core.diagram_service.generate_diagram")
@@ -103,7 +109,13 @@ class TestDiagramTools:
         assert result.get("mime_type") == "image/png"
         # output_dir is forced to None so the inline base64 is returned (memory-only).
         mock_generate_diagram.assert_called_once_with(
-            "mermaid", "graph TD; A-->B;", "png", None, None, 1.0
+            "mermaid",
+            "graph TD; A-->B;",
+            "png",
+            None,
+            None,
+            1.0,
+            force_fetch=True,
         )
 
     def test_generate_uml_image_default_format_is_png(self):
@@ -250,3 +262,25 @@ class TestDiagramTools:
         out = generate_uml_batch([{"diagram_type": "not_a_type", "code": "x"}])
         assert len(out["results"]) == 1
         assert "error" in out["results"][0]
+
+    def test_batch_concurrency_caps_mermaid_majority(self, monkeypatch):
+        from mcp_core.tools.diagram_tools import _batch_concurrency
+
+        monkeypatch.setenv("MCP_BATCH_CONCURRENCY", "8")
+        items = [
+            {"diagram_type": "mermaid", "code": "graph TD; A-->B;"},
+            {"diagram_type": "mermaid", "code": "graph TD; C-->D;"},
+            {"diagram_type": "class", "code": "@startuml\nclass A\n@enduml"},
+        ]
+        assert _batch_concurrency(3, items) == 2
+
+    def test_batch_concurrency_non_mermaid_uses_configured(self, monkeypatch):
+        from mcp_core.tools.diagram_tools import _batch_concurrency
+
+        monkeypatch.setenv("MCP_BATCH_CONCURRENCY", "6")
+        items = [
+            {"diagram_type": "class", "code": "x"},
+            {"diagram_type": "sequence", "code": "y"},
+            {"diagram_type": "mermaid", "code": "z"},
+        ]
+        assert _batch_concurrency(3, items) == 3

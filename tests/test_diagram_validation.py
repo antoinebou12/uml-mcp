@@ -69,6 +69,18 @@ def test_validate_uml_strict_mermaid_rejects_dangling_sequence_arrow():
     assert any("A->>B: message" in s for s in out["suggestions"])
 
 
+def test_validate_uml_strict_mermaid_rejects_semicolon_packed_sequence():
+    out = validate_uml_inputs(
+        "mermaid",
+        "sequenceDiagram; participant A; participant B; A->>B: hi",
+        "svg",
+        strict=True,
+    )
+    assert out["valid"] is False
+    assert any("separate lines" in e.lower() for e in out["errors"])
+    assert any("`;`" in s or "semicolon" in s.lower() or "separate" in s.lower() for s in out["suggestions"])
+
+
 def test_validate_uml_strict_mermaid_accepts_complete_sequence_message():
     out = validate_uml_inputs(
         "mermaid",

@@ -45,6 +45,14 @@ For the current full stress-test specification, if every phase executes exactly 
 
 If a validation failure causes a complex-case render to be omitted as required by the main prompt, report both the actual counters and the expected baseline, and explain the delta. Never fabricate a call just to match the baseline.
 
+When Mermaid batch items fail on hosted deployments and are recovered with solo `generate_uml`, mark the extra `generate_uml` calls as **EXPLAIN** in the ledger (baseline remains 3; recoveries increase the actual count). Optional `generate_uml_image` spot-checks are also **EXPLAIN** and are not part of the 28-call baseline.
+
+Expected catalog size for the current specification is **37** diagram types (includes `goat` and `umlet`).
+
+## Optional visual spot-check
+
+After Phase 4 (or anytime after a successful Mermaid/PlantUML render), you may call `generate_uml_image` once for Mermaid PNG and once for PlantUML PNG to confirm inline image content. Do not increment the baseline counters for these calls; report them as EXPLAIN.
+
 ## Strict Mermaid negative-test semantics
 
 Negative 1 uses:

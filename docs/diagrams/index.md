@@ -73,6 +73,8 @@ Snippets: [ERD](erd.md) · [DBML](dbml.md) · [BlockDiag](blockdiag.md) · [BPMN
 | `pikchr` | Pikchr diagram scripting language | `svg` |
 | `structurizr` | C4 and architecture DSL | `png`, `svg`, `pdf`, `txt`, `base64` |
 | `svgbob` | ASCII art to SVG | `svg` |
+| `goat` | GoAT Markdeep-style ASCII art to SVG | `svg` |
+| `umlet` | UMLet UML diagrams from UXF XML | `png`, `svg`, `jpeg` |
 | `symbolator` | Digital logic / schematic symbols | (varies) |
 | `vega` / `vegalite` | Visualization grammars | (varies) |
 | `wavedrom` | Waveform and digital timing | `svg` |

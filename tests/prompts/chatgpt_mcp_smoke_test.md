@@ -4,7 +4,7 @@ Use this prompt after connecting the UML MCP server at:
 
 `https://uml-mcp.vercel.app/mcp`
 
-The purpose is to verify that an MCP client can discover the UML tools, validate diagram source, and render a real diagram through the server.
+The purpose is to verify that an MCP client can discover the UML tools, validate diagram source, render a real diagram through the server, and show an inline image in chat via `generate_uml_image`.
 
 ## End-to-end smoke-test prompt
 
@@ -38,9 +38,10 @@ Perform these steps in order:
    - diagram_type: `mermaid`
    - output_format: `svg`
    - scale: `1.0`
-4. Report the exact MCP tools you called.
-5. Confirm whether the generated result contains a usable URL, SVG/result payload, or another successful diagram artifact returned by the MCP server.
-6. End with exactly one of these lines:
+4. Call `generate_uml_image` with the same Mermaid code, `output_format: png`. Display the returned inline image in this chat (do not invent a diagram). Confirm that an image content block or `content_base64` is present.
+5. Report the exact MCP tools you called.
+6. Confirm whether the generated results contain a usable URL and a visible inline image from the MCP server.
+7. End with exactly one of these lines:
 
 MCP_SMOKE_TEST: PASS
 MCP_SMOKE_TEST: FAIL - <short reason>
@@ -50,10 +51,11 @@ MCP_SMOKE_TEST: FAIL - <short reason>
 
 The test passes only when all of the following are true:
 
-- the MCP connection exposes `list_diagram_types`;
+- the MCP connection exposes `list_diagram_types` and `generate_uml_image`;
 - Mermaid appears in the supported diagram catalog;
 - `validate_uml` accepts the Mermaid sequence diagram;
 - `generate_uml` is actually invoked;
+- `generate_uml_image` returns an inline image (MCP image content or `content_base64`) and the assistant displays/confirms it;
 - the server returns a successful diagram result rather than the client inventing one locally;
 - the final response contains `MCP_SMOKE_TEST: PASS`.
 
@@ -67,7 +69,13 @@ Use only the connected UML MCP server for diagram rendering.
 Call `generate_uml_batch` once with two Mermaid diagrams and SVG output:
 
 1. `graph TD; Client-->MCP; MCP-->Kroki; Kroki-->MCP; MCP-->Client;`
-2. `sequenceDiagram; participant A; participant B; A->>B: MCP 2026 request; B-->>A: Stateless response;`
+2. Multiline sequence diagram (do not pack statements with `;` on one line):
+
+sequenceDiagram
+  participant A
+  participant B
+  A->>B: MCP 2026 request
+  B-->>A: Stateless response
 
 Do not render them yourself. Report the number of successful batch results and finish with exactly:
 
@@ -80,4 +88,4 @@ MCP_BATCH_TEST: FAIL - <short reason>
 
 ## What this catches
 
-This manual fixture is intentionally stricter than a health check. It catches cases where `/health` works but the MCP client cannot discover tools, cannot validate inputs, cannot invoke Kroki-backed rendering, or silently answers without using the MCP server.
+This manual fixture is intentionally stricter than a health check. It catches cases where `/health` works but the MCP client cannot discover tools, cannot validate inputs, cannot invoke Kroki-backed rendering, cannot show an inline image via `generate_uml_image`, or silently answers without using the MCP server.

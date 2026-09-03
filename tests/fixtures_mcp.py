@@ -57,6 +57,7 @@ def mock_httpx_client():
 
         client_instance = mock_client.return_value
         client_instance.get.return_value = mock_response
+        client_instance.post.return_value = mock_response
 
         yield client_instance
 

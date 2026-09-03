@@ -148,10 +148,14 @@ class TestMCPModuleLevel:
 
     def test_mcp_settings_has_diagram_types(self):
         """MCP_SETTINGS.diagram_types is populated from DIAGRAM_TYPES."""
-        assert len(MCP_SETTINGS.diagram_types) > 0
+        assert len(MCP_SETTINGS.diagram_types) == 37
         assert "class" in MCP_SETTINGS.diagram_types
         assert MCP_SETTINGS.diagram_types["class"].backend == "plantuml"
         assert MCP_SETTINGS.diagram_types["mermaid"].backend == "mermaid"
+        assert "goat" in MCP_SETTINGS.diagram_types
+        assert MCP_SETTINGS.diagram_types["goat"].backend == "goat"
+        assert "umlet" in MCP_SETTINGS.diagram_types
+        assert MCP_SETTINGS.diagram_types["umlet"].backend == "umlet"
 
     def test_config_backends_and_formats_match_kroki(self):
         """Every config diagram type has backend in Kroki and formats match LANGUAGE_OUTPUT_SUPPORT."""

@@ -123,12 +123,23 @@ def _format_validation_error(exc: ValidationError) -> str:
     return "; ".join(parts)
 
 
-def _batch_concurrency(item_count: int) -> int:
+def _batch_concurrency(item_count: int, items: list[Any] | None = None) -> int:
     try:
         configured = int(os.environ.get("MCP_BATCH_CONCURRENCY", "4"))
     except ValueError:
         configured = 4
     configured = max(1, min(configured, 16))
+    # Mermaid-heavy batches often fall back to mermaid.ink (~30s each) on hosted
+    # deployments; keep concurrency low to avoid stampedes/timeouts.
+    if items:
+        mermaid_count = 0
+        for raw in items:
+            if isinstance(raw, dict):
+                dt = str(raw.get("diagram_type", "")).strip().lower()
+                if dt == "mermaid":
+                    mermaid_count += 1
+        if mermaid_count > len(items) / 2:
+            configured = min(configured, 2)
     return max(1, min(configured, item_count))
 
 
@@ -214,7 +225,7 @@ def generate_uml_batch(
             "results": [],
         }
 
-    workers = _batch_concurrency(len(items))
+    workers = _batch_concurrency(len(items), items)
     with ThreadPoolExecutor(
         max_workers=workers, thread_name_prefix="uml-batch"
     ) as pool:
@@ -318,6 +329,7 @@ def generate_uml_image(
             output_format=output_format,
             theme=theme,
             scale=scale,
+            force_fetch=True,
         )
     )
 

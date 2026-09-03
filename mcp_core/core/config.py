@@ -272,6 +272,11 @@ DIAGRAM_TYPES = {
         description="Excalidraw whiteboard-style diagrams",
         formats=LANGUAGE_OUTPUT_SUPPORT["excalidraw"],
     ),
+    "goat": DiagramType(
+        backend="goat",
+        description="GoAT ASCII art to SVG diagrams (Markdeep-style)",
+        formats=LANGUAGE_OUTPUT_SUPPORT["goat"],
+    ),
     "nomnoml": DiagramType(
         backend="nomnoml",
         description="UML-style diagrams from shorthand syntax",
@@ -306,6 +311,11 @@ DIAGRAM_TYPES = {
         backend="tikz",
         description="TikZ/PGF graphics (LaTeX)",
         formats=LANGUAGE_OUTPUT_SUPPORT["tikz"],
+    ),
+    "umlet": DiagramType(
+        backend="umlet",
+        description="UMLet UML diagrams from UXF XML source",
+        formats=LANGUAGE_OUTPUT_SUPPORT["umlet"],
     ),
     "vega": DiagramType(
         backend="vega",

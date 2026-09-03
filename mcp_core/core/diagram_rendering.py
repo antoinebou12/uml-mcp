@@ -39,6 +39,15 @@ class DiagramRenderContext:
     output_dir: str | None
     theme: str | None
     scale: float
+    # When True, fetch rendered bytes even if MCP_URL_ONLY is set (inline image tools).
+    force_fetch: bool = False
+
+
+def _url_only_mode(ctx: DiagramRenderContext) -> bool:
+    """Whether this render should skip image byte downloads."""
+    if ctx.force_fetch:
+        return False
+    return bool(MCP_SETTINGS.url_only)
 
 
 def prepare_diagram_code(code: str, backend_type: str, theme: str | None) -> str:
@@ -134,6 +143,8 @@ def _generate_diagram_plantuml_fallback(
     output_format: str,
     output_dir: str | None,
     scale: float,
+    *,
+    force_fetch: bool = False,
 ) -> dict[str, Any]:
     """Fallback to PlantUML server when Kroki fails."""
     from tools.kroki.plantuml import PlantUML
@@ -149,7 +160,7 @@ def _generate_diagram_plantuml_fallback(
         f"{plantuml_playground_path_segment(encoded)}"
     )
 
-    if MCP_SETTINGS.url_only:
+    if MCP_SETTINGS.url_only and not force_fetch:
         return {
             "code": code,
             "url": url,
@@ -203,6 +214,8 @@ def _generate_diagram_mermaid_fallback(
     code: str,
     output_format: str,
     output_dir: str | None,
+    *,
+    force_fetch: bool = False,
 ) -> dict[str, Any]:
     """Fallback to Mermaid.ink when Kroki fails."""
     from tools.kroki.mermaid import generate_mermaid_urls
@@ -215,7 +228,7 @@ def _generate_diagram_mermaid_fallback(
     url = urls.image_url
     playground = urls.edit_url
 
-    if MCP_SETTINGS.url_only:
+    if MCP_SETTINGS.url_only and not force_fetch:
         return {
             "code": code,
             "url": url,
@@ -268,7 +281,7 @@ def try_kroki_render(
 
     try:
         logger.info("Attempting Kroki for %s diagram", ctx.diagram_type)
-        if MCP_SETTINGS.url_only:
+        if _url_only_mode(ctx):
             kroki_url = client.get_url(
                 ctx.backend_type, ctx.prepared_code, ctx.output_format
             )
@@ -363,6 +376,7 @@ def run_fallback_if_needed(
                 ctx.output_format,
                 ctx.output_dir,
                 ctx.scale,
+                force_fetch=ctx.force_fetch,
             )
         except Exception as fallback_error:  # noqa: BLE001 - aggregate any fallback failure into the error dict
             logger.error(
@@ -397,6 +411,7 @@ def run_fallback_if_needed(
                 ctx.prepared_code,
                 ctx.output_format,
                 ctx.output_dir,
+                force_fetch=ctx.force_fetch,
             )
         except Exception as fallback_error:  # noqa: BLE001 - aggregate any fallback failure into the error dict
             logger.error(

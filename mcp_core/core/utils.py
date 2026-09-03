@@ -47,12 +47,13 @@ def get_kroki_client():
 
 # Optional override for tests: if set, generate_diagram calls this instead of real I/O
 _diagram_generator: (
-    Callable[[str, str, str, str | None, str | None, float], dict[str, Any]] | None
+    Callable[[str, str, str, str | None, str | None, float, bool], dict[str, Any]] | None
 ) = None
 
 
 def set_diagram_generator(
-    fn: Callable[[str, str, str, str | None, str | None, float], dict[str, Any]] | None,
+    fn: Callable[[str, str, str, str | None, str | None, float, bool], dict[str, Any]]
+    | None,
 ) -> None:
     """Set an optional diagram generator (e.g. for tests). Pass None to use default."""
     global _diagram_generator
@@ -66,6 +67,7 @@ def generate_diagram(
     output_dir: str | None = None,
     theme: str | None = None,
     scale: float = 1.0,
+    force_fetch: bool = False,
 ) -> dict[str, Any]:
     """
     Generate a diagram using Kroki first, with fallback to alternative services.
@@ -82,6 +84,8 @@ def generate_diagram(
         output_dir: Directory to save the generated image (optional). When None, no file is written (memory-only).
         theme: PlantUML theme (e.g. cerulean) - only for PlantUML backends
         scale: Scale factor for SVG (only when output_format is svg); default 1.0, min 0.1.
+        force_fetch: When True, fetch rendered bytes even if MCP_URL_ONLY is set
+            (used by generate_uml_image for inline chat images).
 
     Returns:
         Dict containing code, url, playground, local_path, optional error; when not writing to file, content_base64 is included.
@@ -92,7 +96,7 @@ def generate_diagram(
 
     if _diagram_generator is not None:
         return _diagram_generator(
-            diagram_type, code, output_format, output_dir, theme, scale
+            diagram_type, code, output_format, output_dir, theme, scale, force_fetch
         )
 
     fp12 = hashlib.sha256(code.encode("utf-8")).hexdigest()[:12]
@@ -193,5 +197,6 @@ def generate_diagram(
         output_dir=output_dir,
         theme=theme,
         scale=scale,
+        force_fetch=force_fetch,
     )
     return run_diagram_pipeline(ctx)

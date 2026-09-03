@@ -82,3 +82,57 @@ class TestUrlOnlyMode:
         with patch.dict(os.environ, {"VERCEL": "1", "MCP_URL_ONLY": "false"}):
             s = MCPSettings(diagram_types=DIAGRAM_TYPES)
             assert s.url_only is False
+
+    def test_force_fetch_fetches_bytes_when_url_only(self, _restore_url_only):
+        mock_client = MagicMock()
+        mock_client.generate_diagram.return_value = {
+            "content": b"<svg>forced</svg>",
+            "url": "https://kroki.example/mermaid/svg/xx",
+            "playground": "https://mermaid.live/edit#yy",
+        }
+
+        config.MCP_SETTINGS.url_only = True
+        ctx = DiagramRenderContext(
+            diagram_type="mermaid",
+            backend_type="mermaid",
+            prepared_code="graph TD; A-->B;",
+            output_format="png",
+            output_dir=None,
+            theme=None,
+            scale=1.0,
+            force_fetch=True,
+        )
+
+        with patch("mcp_core.core.utils.get_kroki_client", return_value=mock_client):
+            out = run_diagram_pipeline(ctx)
+
+        mock_client.generate_diagram.assert_called_once()
+        mock_client.get_url.assert_not_called()
+        assert out.get("content_base64")
+        assert out.get("source") == "kroki"
+
+    def test_generate_uml_image_force_fetch_under_url_only(self, _restore_url_only):
+        """generate_uml_image must request force_fetch even when MCP_URL_ONLY is on."""
+        from mcp_core.tools.diagram_tools import generate_uml_image
+
+        config.MCP_SETTINGS.url_only = True
+        with patch(
+            "mcp_core.core.diagram_service.generate_diagram"
+        ) as mock_generate_diagram:
+            mock_generate_diagram.return_value = {
+                "code": "graph TD; A-->B;",
+                "url": "https://kroki.io/mermaid/png/abc",
+                "playground": None,
+                "local_path": None,
+                "content_base64": "aGVsbG8=",
+                "source": "kroki",
+                "mime_type": "image/png",
+            }
+            result = generate_uml_image(
+                diagram_type="mermaid",
+                code="graph TD; A-->B;",
+                output_format="png",
+            )
+        assert result.get("content_base64") == "aGVsbG8="
+        mock_generate_diagram.assert_called_once()
+        assert mock_generate_diagram.call_args.kwargs.get("force_fetch") is True

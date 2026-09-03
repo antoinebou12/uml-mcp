@@ -94,7 +94,7 @@ def test_get_playground_url():
 
 
 def test_render_diagram_success(mock_httpx_client):
-    """Test successful diagram rendering."""
+    """Test successful diagram rendering via Kroki POST."""
     client = Kroki()
 
     # Test rendering
@@ -102,18 +102,18 @@ def test_render_diagram_success(mock_httpx_client):
 
     # Verify result and mock calls
     assert result == b"<svg>test content</svg>"
-    mock_httpx_client.get.assert_called_once()
-    url_arg = mock_httpx_client.get.call_args[0][0]
-    assert url_arg.startswith("https://kroki.io/plantuml/svg/")
+    mock_httpx_client.post.assert_called_once()
+    url_arg = mock_httpx_client.post.call_args[0][0]
+    assert url_arg == "https://kroki.io/plantuml/svg"
 
 
 def test_render_diagram_http_error(mock_httpx_client):
     """Test HTTP error handling."""
     # Setup mock to raise HTTP error
-    mock_response = mock_httpx_client.get.return_value
+    mock_response = mock_httpx_client.post.return_value
     mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
         "HTTP Error",
-        request=httpx.Request("GET", "https://kroki.io"),
+        request=httpx.Request("POST", "https://kroki.io"),
         response=mock_response,
     )
 
@@ -127,7 +127,7 @@ def test_render_diagram_http_error(mock_httpx_client):
 def test_render_diagram_connection_error(mock_httpx_client):
     """Test connection error handling."""
     # Setup mock to raise connection error
-    mock_httpx_client.get.side_effect = httpx.RequestError(
+    mock_httpx_client.post.side_effect = httpx.RequestError(
         "Connection error", request=None
     )
 
@@ -224,10 +224,10 @@ class TestKrokiHTTPError:
 
 def test_generate_diagram_http_error(mock_httpx_client):
     """generate_diagram raises KrokiHTTPError when server returns non-200."""
-    mock_response = mock_httpx_client.get.return_value
+    mock_response = mock_httpx_client.post.return_value
     mock_response.raise_for_status.side_effect = httpx.HTTPStatusError(
         "HTTP Error",
-        request=httpx.Request("GET", "https://kroki.io"),
+        request=httpx.Request("POST", "https://kroki.io"),
         response=mock_response,
     )
     client = Kroki()
@@ -237,7 +237,7 @@ def test_generate_diagram_http_error(mock_httpx_client):
 
 def test_generate_diagram_connection_error(mock_httpx_client):
     """generate_diagram raises KrokiConnectionError on connection failure."""
-    mock_httpx_client.get.side_effect = httpx.ConnectError("Connection refused")
+    mock_httpx_client.post.side_effect = httpx.ConnectError("Connection refused")
     client = Kroki()
     with pytest.raises(KrokiConnectionError):
         client.generate_diagram("plantuml", "@startuml\nclass Test\n@enduml", "svg")
@@ -289,10 +289,16 @@ def test_language_output_support_smoke():
     assert "plantuml" in LANGUAGE_OUTPUT_SUPPORT
     assert "mermaid" in LANGUAGE_OUTPUT_SUPPORT
     assert "d2" in LANGUAGE_OUTPUT_SUPPORT
+    assert "goat" in LANGUAGE_OUTPUT_SUPPORT
+    assert "umlet" in LANGUAGE_OUTPUT_SUPPORT
     assert isinstance(LANGUAGE_OUTPUT_SUPPORT["plantuml"], list)
     assert "svg" in LANGUAGE_OUTPUT_SUPPORT["plantuml"]
     assert "png" in LANGUAGE_OUTPUT_SUPPORT["mermaid"]
     assert "svg" in LANGUAGE_OUTPUT_SUPPORT["d2"]
+    assert LANGUAGE_OUTPUT_SUPPORT["goat"] == ["svg"]
+    assert "svg" in LANGUAGE_OUTPUT_SUPPORT["umlet"]
+    # Catalog stays aligned with https://kroki.io/cheatsheet.html (no diagramsnet yet).
+    assert "diagramsnet" not in LANGUAGE_OUTPUT_SUPPORT
 
 
 @pytest.mark.parametrize(
@@ -359,13 +365,13 @@ def test_diagram_templates_get_template_unknown():
     assert "documentation" in result.lower() or "template" in result.lower()
 
 
-# All Kroki types that must have template/example (umlet not in default UI select)
-_KROKI_TYPES_WITH_TEMPLATES = [k for k in LANGUAGE_OUTPUT_SUPPORT if k != "umlet"]
+# All Kroki types must have a non-default template/example entry.
+_KROKI_TYPES_WITH_TEMPLATES = list(LANGUAGE_OUTPUT_SUPPORT)
 
 
 @pytest.mark.parametrize("diagram_type", _KROKI_TYPES_WITH_TEMPLATES)
 def test_every_kroki_type_has_template(diagram_type):
-    """Every Kroki type (except umlet) has a non-default DiagramTemplates entry."""
+    """Every Kroki type has a non-default DiagramTemplates entry."""
     result = DiagramTemplates.get_template(diagram_type)
     assert isinstance(result, str)
     assert len(result) > 0
@@ -374,7 +380,7 @@ def test_every_kroki_type_has_template(diagram_type):
 
 @pytest.mark.parametrize("diagram_type", _KROKI_TYPES_WITH_TEMPLATES)
 def test_every_kroki_type_has_example(diagram_type):
-    """Every Kroki type (except umlet) has a non-default DiagramExamples entry."""
+    """Every Kroki type has a non-default DiagramExamples entry."""
     result = DiagramExamples.get_example(diagram_type)
     assert isinstance(result, str)
     assert len(result) > 0

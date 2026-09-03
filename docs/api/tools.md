@@ -8,7 +8,7 @@ tags:
 
 # MCP Tools Reference
 
-`generate_uml` renders diagrams and can save to disk. `validate_uml` checks inputs locally without calling Kroki. `list_diagram_types` returns the same metadata as the `uml://types` resource. `generate_uml_batch` renders several diagrams in one call (see [Configuration](../configuration.md) for `MCP_BATCH_MAX_ITEMS`). For diagram types and formats, use `uml://types` and `uml://formats`.
+`generate_uml` renders diagrams and can save to disk. `generate_uml_image` returns an inline MCP image content block (PNG by default) so clients such as Cursor and ChatGPT can show the diagram in chat; on hosted deployments it fetches bytes even when `MCP_URL_ONLY` is on. `validate_uml` checks inputs locally without calling Kroki. `list_diagram_types` returns the same metadata as the `uml://types` resource. `generate_uml_batch` renders several diagrams in one call (see [Configuration](../configuration.md) for `MCP_BATCH_MAX_ITEMS` and `MCP_BATCH_CONCURRENCY`). For diagram types and formats, use `uml://types` and `uml://formats`.
 
 !!! tip "Looking for the underlying Python signatures?"
 
@@ -56,6 +56,24 @@ Example (URL / base64 only):
   "args": {
     "diagram_type": "mermaid",
     "code": "graph TD; A-->B;"
+  }
+}
+```
+
+## `generate_uml_image`
+
+Renders one diagram and returns it as an inline MCP image content block so image-capable clients display the picture in chat. Prefer `output_format` `png` (most compatible); `svg` and `jpeg` are also accepted. Same diagram fields as `generate_uml`, but `output_dir` is always omitted (memory-only). On Vercel / `MCP_URL_ONLY=true`, this tool still fetches rendered bytes so `content_base64` / `ImageContent` is present.
+
+Example:
+
+```json
+{
+  "type": "tool",
+  "name": "generate_uml_image",
+  "args": {
+    "diagram_type": "mermaid",
+    "code": "graph TD; A-->B;",
+    "output_format": "png"
   }
 }
 ```

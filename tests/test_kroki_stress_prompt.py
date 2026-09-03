@@ -55,10 +55,13 @@ def test_stress_prompt_is_tool_only_and_directly_executable():
 def test_stress_prompt_embeds_full_catalog_batches():
     text = _prompt_text()
 
-    assert "PHASE 4 - TOOL-ONLY FULL 35-TYPE CATALOG SWEEP" in text
+    assert "PHASE 4 - TOOL-ONLY FULL 37-TYPE CATALOG SWEEP" in text
     assert "batch 1 = fixtures 1 through 20" in text
-    assert "batch 2 = fixtures 21 through 35" in text
+    assert "batch 2 = fixtures 21 through 37" in text
     assert "Do not silently omit a fixture." in text
+    assert "goat" in text
+    assert "umlet" in text
+    assert "generate_uml_image" in text
 
 
 def test_stress_prompt_keeps_complex_repeatability_and_negative_phases():

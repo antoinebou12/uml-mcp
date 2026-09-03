@@ -1,6 +1,6 @@
 ---
 title: Specialty diagram types
-description: Excalidraw, bytefield, wavedrom, pikchr, nomnoml, svgbob, Vega, and related Kroki-backed types.
+description: Excalidraw, bytefield, wavedrom, pikchr, nomnoml, svgbob, goat, umlet, Vega, and related Kroki-backed types.
 tags:
   - reference
   - diagrams
@@ -18,6 +18,8 @@ These `diagram_type` values are supported through Kroki (or the same pipeline as
 | `pikchr` | Pikchr diagram scripting language (Fossil-style) |
 | `nomnoml` | UML in shorthand |
 | `svgbob` | ASCII art to SVG |
+| `goat` | GoAT Markdeep-style ASCII art to SVG |
+| `umlet` | UMLet UML diagrams from UXF XML |
 | `vega` / `vegalite` | Visualization grammars |
 
 Output formats vary by type; use `validate_uml` or `uml://formats` before rendering.

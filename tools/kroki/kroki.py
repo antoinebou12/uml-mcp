@@ -27,6 +27,7 @@ LANGUAGE_OUTPUT_SUPPORT = {
     "ditaa": ["png", "svg"],
     "erd": ["png", "svg", "jpeg", "pdf"],
     "excalidraw": ["svg"],
+    "goat": ["svg"],
     "graphviz": ["png", "svg", "pdf", "jpeg"],
     "mermaid": ["svg", "png"],
     "nomnoml": ["svg"],
@@ -242,6 +243,32 @@ class Kroki:
             )
             return f"{base_playground}{encoded}"
 
+    def _fetch_diagram_bytes(
+        self, diagram_type: str, diagram_text: str, output_format: str
+    ) -> bytes:
+        """
+        Fetch rendered diagram bytes from Kroki via POST.
+
+        POST avoids GET URL-length limits on large diagram sources while still
+        letting callers advertise a shareable GET URL from ``get_url``.
+        See https://kroki.io/ (POST with plain-text body).
+        """
+        # Validate type/format first (raises ValueError for unsupported combos).
+        self.get_url(diagram_type, diagram_text, output_format)
+        endpoint = f"{self.base_url}/{diagram_type}/{output_format}"
+        try:
+            response = self.client.post(
+                endpoint,
+                content=diagram_text.encode("utf-8"),
+                headers={"Content-Type": "text/plain; charset=utf-8"},
+            )
+            response.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise KrokiHTTPError(e.response, e.response.content)
+        except httpx.RequestError as e:
+            raise KrokiConnectionError(f"Error connecting to Kroki: {e!s}")
+        return response.content
+
     def render_diagram(
         self, diagram_type: str, diagram_text: str, output_format: str = "svg"
     ) -> bytes:
@@ -260,17 +287,7 @@ class Kroki:
             KrokiHTTPError: If there was an HTTP error
             KrokiConnectionError: If there was a connection error
         """
-        url = self.get_url(diagram_type, diagram_text, output_format)
-
-        try:
-            response = self.client.get(url)
-            response.raise_for_status()
-        except httpx.HTTPStatusError as e:
-            raise KrokiHTTPError(e.response, e.response.content)
-        except httpx.RequestError as e:
-            raise KrokiConnectionError(f"Error connecting to Kroki: {e!s}")
-
-        return response.content
+        return self._fetch_diagram_bytes(diagram_type, diagram_text, output_format)
 
     def generate_diagram(
         self, diagram_type: str, diagram_text: str, output_format: str = "svg"
@@ -295,16 +312,7 @@ class Kroki:
         """
         url = self.get_url(diagram_type, diagram_text, output_format)
         playground = self.get_playground_url(diagram_type, diagram_text)
-
-        try:
-            response = self.client.get(url)
-            response.raise_for_status()
-            content = response.content
-        except httpx.HTTPStatusError as e:
-            raise KrokiHTTPError(e.response, e.response.content)
-        except httpx.RequestError as e:
-            raise KrokiConnectionError(f"Error connecting to Kroki: {e!s}")
-
+        content = self._fetch_diagram_bytes(diagram_type, diagram_text, output_format)
         return {"url": url, "content": content, "playground": playground}
 
     def deflate_and_encode(self, text: str) -> str:

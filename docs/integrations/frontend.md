@@ -38,6 +38,10 @@ and you want the diagram **visible in the message**, use the **`generate_uml_ima
 
 That tool (and `generate_uml`) returns an MCP **`image` content block** (base64 + MIME type)
 instead of just a URL, so image-capable clients render it **inline in the chat**.
+On hosted Vercel with `MCP_URL_ONLY=true`, **`generate_uml_image` still fetches bytes** so the
+image block is present; plain `generate_uml` may return URL-only.
+
+Manual ChatGPT / client smoke prompts live under [`tests/prompts/`](https://github.com/antoinebou12/uml-mcp/tree/main/tests/prompts) (for example `chatgpt_mcp_smoke_test.md`).
 
 - **PNG/JPEG** render in essentially all image-capable clients — use `output_format: "png"`
   for the widest support.

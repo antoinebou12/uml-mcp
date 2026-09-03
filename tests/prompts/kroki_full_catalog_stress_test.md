@@ -6,6 +6,7 @@ Use this prompt in a ChatGPT conversation where the UML MCP app exposes these to
 - `validate_uml`
 - `generate_uml`
 - `generate_uml_batch`
+- `generate_uml_image` (optional visual spot-check; not counted in the 28-call baseline)
 
 Endpoint used by the project:
 
@@ -25,6 +26,7 @@ Use only these connected UML MCP tools:
 - validate_uml
 - generate_uml
 - generate_uml_batch
+- generate_uml_image (optional spot-check only; do not count toward the 28-call baseline)
 
 Do NOT require or attempt to read MCP resources such as uml://types, uml://examples, uml://templates, uml://formats, or uml://capabilities.
 Do NOT stop and ask me to paste outputs.
@@ -33,22 +35,22 @@ Do NOT explain that the test is too large.
 Do NOT render diagrams locally or substitute built-in diagram rendering.
 If a tool call fails, record the failure, continue when safe, and include it in the final report.
 
-The purpose is to execute a real end-to-end UML MCP smoke/stress test in this conversation using only the four exposed tools.
+The purpose is to execute a real end-to-end UML MCP smoke/stress test in this conversation using only the four required tools (plus optional generate_uml_image).
 
 PHASE 1 - TOOL DISCOVERY AND CATALOG
 
 1. Call list_diagram_types now.
-2. Confirm the returned catalog contains these 35 expected diagram_type values:
+2. Confirm the returned catalog contains these 37 expected diagram_type values:
 
 class, sequence, activity, usecase, state, component, deployment, object,
 mermaid, d2, graphviz, erd, blockdiag, packetdiag, bpmn, c4plantuml,
 actdiag, bytefield, seqdiag, nwdiag, rackdiag, dbml, ditaa, excalidraw,
-nomnoml, pikchr, plantuml, structurizr, svgbob, symbolator, tikz, vega,
+goat, umlet, nomnoml, pikchr, plantuml, structurizr, svgbob, symbolator, tikz, vega,
 vegalite, wavedrom, wireviz.
 
 3. Record each type's backend and supported output formats from list_diagram_types.
 4. If an expected type is missing, record it but continue. The final result must be FAIL.
-5. If extra live types exist, report them as catalog drift. They are informational and do not block execution of the fixed 35-type test.
+5. If extra live types exist, report them as catalog drift. They are informational and do not block execution of the fixed 37-type test.
 
 PHASE 2 - COMPLEX MERMAID SMOKE TESTS
 
@@ -269,6 +271,8 @@ mindmap
 After validation, call generate_uml_batch exactly once for every Mermaid case that passed validation.
 Use output_format="svg" and scale=1.0.
 Record one result row per case.
+On hosted Vercel, Mermaid-heavy batches may partially time out when falling back to mermaid.ink.
+If any Mermaid batch item fails, recover with solo generate_uml for that case and mark the extra generate_uml calls as EXPLAIN in the tool-call ledger (expected baseline remains 3 unless recoveries are needed).
 
 PHASE 3 - COMPLEX PLANTUML FAMILY SMOKE TESTS
 
@@ -522,7 +526,7 @@ diagram_type=plantuml
 ** Rendering
 *** Mermaid
 *** PlantUML
-*** 35 catalog types
+*** 37 catalog types
 ** Verification
 *** validation
 *** batches
@@ -533,7 +537,7 @@ diagram_type=plantuml
 After validation, call generate_uml_batch exactly once for every PlantUML-family case that passed validation.
 Use output_format="svg" and scale=1.0.
 
-PHASE 4 - TOOL-ONLY FULL 35-TYPE CATALOG SWEEP
+PHASE 4 - TOOL-ONLY FULL 37-TYPE CATALOG SWEEP
 
 Do not read any MCP resources for this phase.
 
@@ -779,19 +783,45 @@ Table diagrams {
 24. excalidraw
 {"type":"excalidraw","version":2,"source":"kroki","elements":[{"id":"rect","type":"rectangle","x":100,"y":100,"width":200,"height":100,"angle":0,"strokeColor":"#000000","backgroundColor":"#ffffff","fillStyle":"solid","strokeWidth":1,"strokeStyle":"solid","roughness":1,"opacity":100,"groupIds":[],"frameId":null,"roundness":null,"seed":1,"version":1,"versionNonce":1,"isDeleted":false,"boundElements":[],"updated":1,"link":null,"locked":false}],"appState":{"viewBackgroundColor":"#ffffff"},"files":{}}
 
-25. nomnoml
+25. goat
+.---.     .-.       .-.
+| A +--->| 1 |<--->| B |
+'---'     '-'       '-'
+
+26. umlet
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<umlet_diagram>
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>10</x>
+      <y>10</y>
+      <w>120</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>Account
+--
+-balance: decimal
+++deposit()
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+</umlet_diagram>
+
+27. nomnoml
 [Client] -> [UML MCP]
 [UML MCP] -> [Kroki]
 [Kroki] -> [Artifact]
 
-26. pikchr
+28. pikchr
 box "Client" fit
 arrow
 box "UML MCP" fit
 arrow
 box "Kroki" fit
 
-27. plantuml
+29. plantuml
 @startuml
 actor User
 participant "UML MCP" as MCP
@@ -802,7 +832,7 @@ Kroki --> MCP: SVG
 MCP --> User: result
 @enduml
 
-28. structurizr
+30. structurizr
 workspace "UML MCP" "Tool-only smoke test" {
   model {
     user = person "User"
@@ -819,15 +849,15 @@ workspace "UML MCP" "Tool-only smoke test" {
   }
 }
 
-29. svgbob
+31. svgbob
     .--------.       .--------.
    /  Client  \---->| UML MCP |
    \__________/      \________/
 
-30. symbolator
+32. symbolator
 (symbol "RES" (pin_names (line (pin "1") (pin "2"))))
 
-31. tikz
+33. tikz
 \documentclass[border=2pt]{standalone}
 \usepackage{tikz}
 \begin{document}
@@ -840,16 +870,16 @@ workspace "UML MCP" "Tool-only smoke test" {
 \end{tikzpicture}
 \end{document}
 
-32. vega
+34. vega
 {"$schema":"https://vega.github.io/schema/vega/v5.json","width":240,"height":160,"data":[{"name":"table","values":[{"x":1,"y":2},{"x":2,"y":5},{"x":3,"y":3}]}],"scales":[{"name":"x","type":"linear","range":"width","domain":{"data":"table","field":"x"}},{"name":"y","type":"linear","range":"height","domain":{"data":"table","field":"y"}}],"marks":[{"type":"symbol","from":{"data":"table"},"encode":{"enter":{"x":{"scale":"x","field":"x"},"y":{"scale":"y","field":"y"},"size":{"value":100}}}}]}
 
-33. vegalite
-{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"engine":"Mermaid","count":7},{"engine":"PlantUML","count":9},{"engine":"Other","count":19}]},"mark":"bar","encoding":{"x":{"field":"engine","type":"nominal"},"y":{"field":"count","type":"quantitative"}}}
+35. vegalite
+{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"engine":"Mermaid","count":7},{"engine":"PlantUML","count":9},{"engine":"Other","count":21}]},"mark":"bar","encoding":{"x":{"field":"engine","type":"nominal"},"y":{"field":"count","type":"quantitative"}}}
 
-34. wavedrom
+36. wavedrom
 {"signal":[{"name":"clk","wave":"p......."},{"name":"request","wave":"01..0..."},{"name":"response","wave":"0...10.."}]}
 
-35. wireviz
+37. wireviz
 connectors:
   J1:
     type: Molex
@@ -869,7 +899,7 @@ connections:
 
 Build exactly two generate_uml_batch calls from those fixtures:
 - batch 1 = fixtures 1 through 20
-- batch 2 = fixtures 21 through 35
+- batch 2 = fixtures 21 through 37
 
 Every item must include:
 - diagram_type
@@ -940,12 +970,12 @@ Return:
 2. catalog count and missing/extra types;
 3. Mermaid results: passed/7;
 4. PlantUML-family results: passed/9;
-5. full catalog results: passed/35;
+5. full catalog results: passed/37;
 6. stateless repeatability: PASS/FAIL;
 7. negative tests: passed/4;
 8. total generate_uml calls;
 9. total generate_uml_batch calls;
-10. a table for all 35 catalog fixtures with:
+10. a table for all 37 catalog fixtures with:
    - diagram_type
    - backend
    - output_format
@@ -955,10 +985,10 @@ Return:
 
 Overall PASS requires:
 - all four MCP tools are available;
-- all expected 35 types are discovered;
+- all expected 37 types are discovered;
 - all 7 Mermaid cases render;
 - all 9 PlantUML-family cases render;
-- all 35 catalog fixtures render;
+- all 37 catalog fixtures render;
 - both stateless repeat renders succeed;
 - all four negative tests behave safely;
 - no diagram was locally fabricated;

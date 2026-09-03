@@ -9,8 +9,6 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from mcp_core.tools.schemas import GenerateUMLInput
-
 from .config import MCP_SETTINGS
 from .render_cache import build_render_cache_key, get_render_cache
 from .utils import generate_diagram
@@ -28,6 +26,8 @@ class DiagramRequest:
     output_format: str = "svg"
     theme: str | None = None
     scale: float = 1.0
+    # When True, fetch rendered bytes even if MCP_URL_ONLY is set.
+    force_fetch: bool = False
 
 
 def _error_detail(
@@ -96,7 +96,7 @@ def _validation_error_response(
     }
 
 
-def _renderer_identity() -> str:
+def _renderer_identity(*, force_fetch: bool = False) -> str:
     """Stable renderer/config identity included in cache keys."""
     return "|".join(
         (
@@ -104,6 +104,7 @@ def _renderer_identity() -> str:
             f"plantuml={MCP_SETTINGS.plantuml_server}",
             f"fallback={int(bool(MCP_SETTINGS.diagram_fallback_enabled))}",
             f"url_only={int(bool(MCP_SETTINGS.url_only))}",
+            f"force_fetch={int(bool(force_fetch))}",
             f"memory_only={int(bool(MCP_SETTINGS.memory_only))}",
         )
     )
@@ -111,6 +112,9 @@ def _renderer_identity() -> str:
 
 def generate_from_request(req: DiagramRequest) -> dict[str, Any]:
     """Validate, optionally use cache, then render a diagram."""
+    # Lazy import avoids circular import via tools.__init__ -> diagram_tools.
+    from mcp_core.tools.schemas import GenerateUMLInput
+
     try:
         validated = GenerateUMLInput(
             diagram_type=req.diagram_type,
@@ -164,7 +168,7 @@ def generate_from_request(req: DiagramRequest) -> dict[str, Any]:
             output_format=validated.output_format,
             theme=validated.theme,
             scale=validated.scale,
-            renderer_identity=_renderer_identity(),
+            renderer_identity=_renderer_identity(force_fetch=req.force_fetch),
         )
         lookup_start = time.perf_counter()
         cached = cache.get(cache_key)
@@ -184,6 +188,7 @@ def generate_from_request(req: DiagramRequest) -> dict[str, Any]:
         validated.output_dir,
         validated.theme,
         validated.scale,
+        force_fetch=req.force_fetch,
     )
     out = dict(result)
     out["diagram_type"] = dt_key

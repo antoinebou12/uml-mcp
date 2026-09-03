@@ -7,7 +7,6 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from ..tools.schemas import GenerateUMLInput
 from .config import MCP_SETTINGS
 from .diagram_rendering import prepare_diagram_code
 
@@ -58,9 +57,30 @@ def _strict_mermaid_sequence_errors(prepared_code: str) -> list[str]:
 
         if not first_content_seen:
             first_content_seen = True
-            if stripped.lower().startswith("sequencediagram"):
-                continue
-            return errors
+            if not stripped.lower().startswith("sequencediagram"):
+                return errors
+            # Semicolons are not statement separators for sequence diagrams.
+            # Packing multiple statements on one line (e.g. sequenceDiagram; A->>B: hi)
+            # is unreliable; require newline-separated statements.
+            if ";" in stripped:
+                after = stripped.split(";", 1)[1].strip()
+                if after:
+                    errors.append(
+                        "Mermaid (strict): sequenceDiagram statements must be on "
+                        "separate lines; do not pack statements with `;` on one line."
+                    )
+                    return errors
+            continue
+
+        if ";" in stripped and not stripped.startswith("%%"):
+            # Additional statements packed with ; on a later line
+            parts = [p.strip() for p in stripped.split(";") if p.strip()]
+            if len(parts) > 1:
+                errors.append(
+                    "Mermaid (strict): sequenceDiagram statements must be on "
+                    f"separate lines; line {line_number} packs multiple statements with `;`."
+                )
+                return errors
 
         if _MERMAID_SEQUENCE_DANGLING_ARROW.search(stripped):
             errors.append(
@@ -117,6 +137,11 @@ def _suggestions_for_errors(errors: list[str]) -> list[str]:
         if "target actor" in error:
             suggestions.append(
                 "Complete sequence messages with a target actor, for example `A->>B: message`."
+            )
+        if "separate lines" in error and "sequenceDiagram" in error:
+            suggestions.append(
+                "Put each sequenceDiagram statement on its own line "
+                "(participant, message, note); do not use `;` as a separator."
             )
         if "D2" in error:
             suggestions.append("Define at least one shape or connection (e.g. `a -> b`).")
@@ -200,6 +225,9 @@ def validate_uml_inputs(
     strict: bool = False,
 ) -> dict[str, Any]:
     """Validate diagram inputs locally and return actionable diagnostics."""
+    # Lazy import avoids circular import: tools.__init__ -> diagram_tools -> validation.
+    from ..tools.schemas import GenerateUMLInput
+
     try:
         validated = GenerateUMLInput(
             diagram_type=diagram_type,

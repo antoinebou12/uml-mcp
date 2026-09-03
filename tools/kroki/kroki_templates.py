@@ -361,6 +361,30 @@ Table orders {
      |            |              |""",
             # Excalidraw example (JSON)
             "excalidraw": """{"type":"excalidraw","version":2,"source":"kroki","elements":[{"id":"rect","type":"rectangle","x":100,"y":100,"width":200,"height":100,"angle":0,"strokeColor":"#000","backgroundColor":"#fff","fillStyle":"solid"},{"id":"text","type":"text","x":150,"y":130,"text":"Hello","fontSize":20}],"appState":{"viewBackgroundColor":"#fff"},"files":{}}""",
+            # GoAT example (Markdeep-style ASCII art → SVG)
+            "goat": """.---.     .-.       .-.
+| A +--->| 1 |<--->| B |
+'---'     '-'       '-'""",
+            # UMLet example (UXF XML)
+            "umlet": """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<umlet_diagram>
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>10</x>
+      <y>10</y>
+      <w>120</w>
+      <h>70</h>
+    </coordinates>
+    <panel_attributes>Account
+--
+-balance: decimal
+++deposit()
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+</umlet_diagram>""",
             # Nomnoml example
             "nomnoml": """[User] -> [API]
 [API] -> [Database]
@@ -761,6 +785,28 @@ Table posts {
 }""",
             # Excalidraw template (minimal JSON)
             "excalidraw": """{"type":"excalidraw","version":2,"source":"kroki","elements":[{"id":"r1","type":"rectangle","x":50,"y":50,"width":150,"height":80,"angle":0,"strokeColor":"#000","backgroundColor":"#fff","fillStyle":"solid"}],"appState":{"viewBackgroundColor":"#fff"},"files":{}}""",
+            # GoAT template (ASCII boxes)
+            "goat": """.-------.
+| Start +--->| End |
+'-------'     '----'""",
+            # UMLet template (single class)
+            "umlet": """<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<umlet_diagram>
+  <zoom_level>10</zoom_level>
+  <element>
+    <id>UMLClass</id>
+    <coordinates>
+      <x>10</x>
+      <y>10</y>
+      <w>100</w>
+      <h>60</h>
+    </coordinates>
+    <panel_attributes>Hello
+--
+</panel_attributes>
+    <additional_attributes/>
+  </element>
+</umlet_diagram>""",
             # Nomnoml template
             "nomnoml": """[A] -> [B]
 [B] -> [C]""",

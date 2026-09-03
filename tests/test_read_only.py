@@ -83,7 +83,9 @@ class TestReadOnlyMode:
         # Use a fake generator that captures the output_dir it receives
         captured = {}
 
-        def fake_generator(diagram_type, code, output_format, output_dir, theme, scale):
+        def fake_generator(
+            diagram_type, code, output_format, output_dir, theme, scale, force_fetch=False
+        ):
             captured["output_dir"] = output_dir
             return {
                 "code": code,
@@ -113,7 +115,7 @@ class TestReadOnlyMode:
         captured: dict = {}
 
         def fake_generator(
-            diagram_type, code, output_format, output_dir_arg, theme, scale
+            diagram_type, code, output_format, output_dir_arg, theme, scale, force_fetch=False
         ):
             captured["output_dir"] = output_dir_arg
             return {
