@@ -99,15 +99,22 @@ def test_generate_mermaid_urls_requires_input():
 
 
 def test_generate_mermaid_urls_image_format():
-    """generate_mermaid_urls respects image_format for image URL."""
+    """generate_mermaid_urls uses /svg/ or /img/?type= for raster (not /png/)."""
     urls_svg = generate_mermaid_urls(
         diagram_text="graph TD\n  A-->B", image_format="svg"
     )
     urls_png = generate_mermaid_urls(
         diagram_text="graph TD\n  A-->B", image_format="png"
     )
+    urls_jpeg = generate_mermaid_urls(
+        diagram_text="graph TD\n  A-->B", image_format="jpeg"
+    )
     assert f"{MERMAID_INK_BASE}/svg/" in urls_svg.image_url
-    assert f"{MERMAID_INK_BASE}/png/" in urls_png.image_url
+    assert f"{MERMAID_INK_BASE}/img/" in urls_png.image_url
+    assert "type=png" in urls_png.image_url
+    assert f"{MERMAID_INK_BASE}/png/" not in urls_png.image_url
+    assert f"{MERMAID_INK_BASE}/img/" in urls_jpeg.image_url
+    assert "type=jpeg" in urls_jpeg.image_url
 
 
 def test_get_image_url():

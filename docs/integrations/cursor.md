@@ -38,6 +38,14 @@ Use the canonical skill at **[`.skill/skills/uml-mcp-diagrams/SKILL.md`](https:/
 
 Claude Code users should install the **[Claude Code plugin](claude_code.md)** instead (`/uml-mcp:uml-diagrams`), which bundles the same workflow under `plugins/uml-mcp/skills/uml-diagrams/`.
 
+## Showing diagrams in chat (Cursor / Copilot / Claude)
+
+- Prefer **`generate_uml_image`** with `output_format: png` when you want a native inline image in the chat.
+- **`generate_uml`** with `output_format: png` (or `jpeg`) also fetches image bytes for MCP `ImageContent`, even on hosted `MCP_URL_ONLY`.
+- SVG responses include a markdown `![diagram](url)` in the tool text so clients can preview from the URL when bytes are omitted.
+- Agents should not link local `output/*.png` paths in markdown; use the MCP tool result / public diagram URL instead.
+
+
 ## Local stdio MCP (optional)
 
 To run the server from this clone with file output, merge **[`config/cursor_config.json`](https://github.com/antoinebou12/uml-mcp/blob/main/config/cursor_config.json)** into your MCP settings:

@@ -115,12 +115,14 @@ The `generate_uml` tool accepts any Kroki backend as `diagram_type`. Use resourc
 | ditaa         | Diagrams through ASCII art |
 | erd            | Entity-relationship diagrams |
 | excalidraw    | Excalidraw whiteboard (JSON) |
+| goat          | GoAT Markdeep-style ASCII art → SVG |
 | nomnoml       | UML-style from shorthand |
 | pikchr        | Pikchr diagram scripting |
 | structurizr   | Structurizr C4 / architecture DSL |
 | svgbob        | ASCII art to SVG |
 | symbolator    | Digital logic / schematic symbols |
 | tikz          | TikZ/PGF (LaTeX) |
+| umlet         | UMLet UML from UXF XML |
 | vega, vegalite| Vega / Vega-Lite visualization (JSON) |
 | wavedrom      | Waveform / digital timing |
 | wireviz       | Cable / wiring diagrams (YAML) |

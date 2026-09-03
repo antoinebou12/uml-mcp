@@ -118,6 +118,33 @@ class TestDiagramTools:
             force_fetch=True,
         )
 
+    @patch("mcp_core.core.diagram_service.generate_diagram")
+    def test_generate_uml_png_force_fetches(self, mock_generate_diagram):
+        """generate_uml with png sets force_fetch so chat clients get ImageContent."""
+        mock_generate_diagram.return_value = {
+            "code": "graph TD; A-->B;",
+            "url": "https://kroki.io/mermaid/png/abc",
+            "playground": None,
+            "local_path": None,
+            "content_base64": "aGVsbG8=",
+            "source": "kroki",
+            "mime_type": "image/png",
+        }
+        generate_uml(
+            diagram_type="mermaid",
+            code="graph TD; A-->B;",
+            output_format="png",
+        )
+        mock_generate_diagram.assert_called_once_with(
+            "mermaid",
+            "graph TD; A-->B;",
+            "png",
+            None,
+            None,
+            1.0,
+            force_fetch=True,
+        )
+
     def test_generate_uml_image_default_format_is_png(self):
         """generate_uml_image defaults to png (the most MCP-client-compatible format)."""
         from mcp_core.tools.tool_decorator import get_tool_registry

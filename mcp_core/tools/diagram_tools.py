@@ -242,9 +242,10 @@ def generate_uml_batch(
 @mcp_tool(
     description=(
         "Render one UML or diagram from source code. Input diagram_type, code, optional "
-        "output_format/theme/scale/output_dir; returns renderer metadata plus URL and "
-        "inline image data when appropriate. Use when you already have valid or nearly "
-        "valid diagram source; call validate_uml first for uncertain complex syntax."
+        "output_format/theme/scale/output_dir; returns renderer metadata plus a markdown "
+        "image URL for chat clients. For a native inline PNG in Cursor/Copilot/Claude chat, "
+        "prefer generate_uml_image (or set output_format to png). Call validate_uml first "
+        "for uncertain complex syntax."
     ),
     category="uml",
     example="generate_uml('mermaid', 'graph TD; A-->B;')",
@@ -274,6 +275,9 @@ def generate_uml(
         diagram_type,
         len(code),
     )
+    fmt = (output_format or "svg").strip().lower()
+    # Raster formats: fetch bytes even under MCP_URL_ONLY so chat clients get ImageContent.
+    force_fetch = fmt in {"png", "jpeg", "jpg"}
     return generate_from_request(
         DiagramRequest(
             diagram_type=diagram_type,
@@ -282,17 +286,19 @@ def generate_uml(
             output_format=output_format,
             theme=theme,
             scale=scale,
+            force_fetch=force_fetch,
         )
     )
 
 
 @mcp_tool(
     description=(
-        "Render one UML or diagram and return it as an inline image content block "
-        "(PNG by default) so image-capable MCP clients such as Cursor and Copilot show "
-        "the diagram directly in the chat. Use when you want the picture visible inline "
-        "rather than as a click-through URL. Same input fields as generate_uml; pick "
-        "output_format png (most compatible), svg, or jpeg."
+        "Render one UML or diagram and return it as an inline MCP image content block "
+        "(PNG by default) so image-capable MCP clients such as Cursor, Copilot, and Claude "
+        "show the diagram directly in the chat. Prefer this tool when the user asks to "
+        "show, display, or preview the diagram in chat. Same input fields as generate_uml; "
+        "pick output_format png (most compatible), svg, or jpeg. Fetches bytes even when "
+        "hosted MCP_URL_ONLY is enabled."
     ),
     category="uml",
     example="generate_uml_image('mermaid', 'graph TD; A-->B;', 'png')",

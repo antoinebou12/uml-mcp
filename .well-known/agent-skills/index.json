@@ -27,14 +27,14 @@
       "type": "context",
       "description": "Generate a single, correct Mermaid or PlantUML code block from a user's description. Output only the diagram script in one code block; no prose outside it.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-diagramming/SKILL.md",
-      "sha256": "3837a16a3137ef93c661550fbeef3db83d0ef9fe11df5b273bab66ef0e8a400c"
+      "sha256": "9ac3914865bbc4dbeb07026f05d87289babb7f13d2b5e1c6a22f8e73180d3147"
     },
     {
       "name": "uml-mcp-diagrams",
       "type": "context",
       "description": "> **Maintainers:** Keep tool tables and `output_dir` wording aligned with the Smithery bundle **[uml-skill/SKILL.md](https://github.com/antoinebou12/uml-skill/blob/main/SKILL.md)** (`diagramming-uml`) and the Claude Code plugin skill **`plugins/uml-mcp/skills/uml-diagrams/SKILL.md`** when you edit any of them.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "be872759dbb8d54bb4b50c0637e9ac40789832f139d054dc8e56c035dbdd9d04"
+      "sha256": "fed28e9218d10f1c59ffb2c1837992f2ec70433b4765906a6f47f101459fc354"
     }
   ]
 }

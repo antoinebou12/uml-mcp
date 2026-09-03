@@ -66,7 +66,7 @@
     },
     {
       "name": "generate_uml",
-      "description": "Render one UML or diagram from source code. Input diagram_type, code, optional output_format/theme/scale/output_dir; returns renderer metadata plus URL and inline image data when appropriate. Use when you already have valid or nearly valid diagram source; call validate_uml first for uncertain complex syntax.",
+      "description": "Render one UML or diagram from source code. Input diagram_type, code, optional output_format/theme/scale/output_dir; returns renderer metadata plus a markdown image URL for chat clients. For a native inline PNG in Cursor/Copilot/Claude chat, prefer generate_uml_image (or set output_format to png). Call validate_uml first for uncertain complex syntax.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -110,7 +110,7 @@
     },
     {
       "name": "generate_uml_image",
-      "description": "Render one UML or diagram and return it as an inline image content block (PNG by default) so image-capable MCP clients such as Cursor and Copilot show the diagram directly in the chat. Use when you want the picture visible inline rather than as a click-through URL. Same input fields as generate_uml; pick output_format png (most compatible), svg, or jpeg.",
+      "description": "Render one UML or diagram and return it as an inline MCP image content block (PNG by default) so image-capable MCP clients such as Cursor, Copilot, and Claude show the diagram directly in the chat. Prefer this tool when the user asks to show, display, or preview the diagram in chat. Same input fields as generate_uml; pick output_format png (most compatible), svg, or jpeg. Fetches bytes even when hosted MCP_URL_ONLY is enabled.",
       "inputSchema": {
         "type": "object",
         "properties": {

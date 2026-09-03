@@ -166,3 +166,22 @@ class TestClearToolRegistry:
         finally:
             _registered_tools.clear()
             _registered_tools.update(saved)
+
+
+class TestSummarizeToolResult:
+    def test_render_summary_includes_markdown_image(self):
+        from mcp_core.tools.tool_decorator import _summarize_tool_result
+
+        text = _summarize_tool_result(
+            "generate_uml",
+            {
+                "diagram_type": "mermaid",
+                "source": "mermaid_ink",
+                "output_format": "svg",
+                "render_ms": 12.5,
+                "cache_hit": False,
+                "url": "https://mermaid.ink/svg/example",
+            },
+        )
+        assert "![diagram](https://mermaid.ink/svg/example)" in text
+        assert "URL: https://mermaid.ink/svg/example" in text

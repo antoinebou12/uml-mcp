@@ -155,6 +155,8 @@ def generate_mermaid_urls(
 
     Either pass diagram_state (full state dict) or diagram_text (and optional theme).
     If both are provided, diagram_state takes precedence.
+
+    Raster formats use mermaid.ink ``/img/`` with ``?type=`` (not ``/png/``, which 404s).
     """
     if diagram_state is None:
         if diagram_text is None:
@@ -162,7 +164,16 @@ def generate_mermaid_urls(
         diagram_state = generate_diagram_state(diagram_text, theme=theme)
     serialized = serialize_state(diagram_state, serde=serde)
     code = diagram_state.get("code", "")
-    image_url = f"{MERMAID_INK_BASE}/{image_format}/{serialized}"
+    fmt = (image_format or "svg").lower().strip()
+    if fmt in {"svg"}:
+        image_url = f"{MERMAID_INK_BASE}/svg/{serialized}"
+    else:
+        # mermaid.ink serves raster via /img/?type=png|jpeg|webp (default jpeg).
+        # Paths like /png/... return 404.
+        type_param = {"jpg": "jpeg", "img": "jpeg"}.get(fmt, fmt)
+        if type_param not in {"png", "jpeg", "webp"}:
+            type_param = "png"
+        image_url = f"{MERMAID_INK_BASE}/img/{serialized}?type={type_param}"
     edit_url = f"{MERMAID_LIVE_EDIT_BASE}{serialized}"
     return MermaidUrls(image_url=image_url, edit_url=edit_url, code=code)
 

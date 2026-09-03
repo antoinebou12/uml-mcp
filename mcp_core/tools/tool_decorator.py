@@ -43,13 +43,19 @@ def _normalize_output_schema(output_schema: Any) -> dict[str, Any] | None:
 def _summarize_tool_result(tool_name: str, result: dict[str, Any]) -> str:
     """Build a compact LLM-facing summary without repeating large payload fields."""
     if tool_name in _RENDER_TOOL_NAMES:
-        return (
+        summary = (
             f"Generated {result.get('diagram_type') or 'diagram'} successfully. "
             f"Renderer: {result.get('source') or 'unknown'}. "
             f"Format: {result.get('output_format') or 'unknown'}. "
             f"Render: {result.get('render_ms') if result.get('render_ms') is not None else 'n/a'} ms. "
             f"Cache hit: {bool(result.get('cache_hit'))}."
         )
+        # Markdown image helps Cursor / Copilot / Claude show the diagram when
+        # ImageContent is missing (URL-only mode) or when the client prefers URLs.
+        url = result.get("url")
+        if isinstance(url, str) and url.startswith(("http://", "https://")):
+            summary = f"{summary}\n\n![diagram]({url})\n\nURL: {url}"
+        return summary
     if tool_name == "generate_uml_batch":
         rows = result.get("results") or []
         failures = sum(1 for row in rows if isinstance(row, dict) and row.get("error"))
@@ -89,6 +95,8 @@ def _as_mcp_tool_result(tool_name: str, result: Any) -> Any:
     ]
     mime_type = str(result.get("mime_type") or "").lower()
     image_data = result.get("content_base64")
+    # Prefer raster ImageContent for chat UIs (Cursor/Copilot/Claude); SVG blocks
+    # are still attached when present for clients that support image/svg+xml.
     if image_data and mime_type in IMAGE_CONTENT_MIMES:
         content.append(
             ImageContent(type="image", data=str(image_data), mime_type=mime_type)

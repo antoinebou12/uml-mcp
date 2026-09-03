@@ -3,7 +3,8 @@ name: uml-diagramming
 description: >-
   Produces Mermaid or PlantUML diagram code from user specifications for UML,
   architecture, and flow diagrams. Use when the user asks for diagram code or
-  output for the generate_uml MCP tool. Supports Kroki-renderable output.
+  output for the generate_uml / generate_uml_image MCP tools. Supports
+  Kroki-renderable output.
 ---
 
 # UML Diagramming
@@ -17,7 +18,7 @@ These are **not** “good vs bad diagrams”—they steer the **LLM** before dia
 | | **Positive** | **Negative** |
 |---|----------------|---------------|
 | **Role** | What the model **must** do (DSL shape, notation). | What the model **must not** do (common junk). |
-| **Good** | “Use `sequenceDiagram`.” “Participant names: Client, API, DB.” | “No ``` fences.” “No ‘Here is the diagram:’ preamble.” |
+| **Good** | “Use `sequenceDiagram`.” “One statement per line.” “Participant names: Client, API, DB.” | “No ``` fences.” “No ‘Here is the diagram:’ preamble.” “No semicolon-packed sequenceDiagram.” |
 | **Bad** | Pasting the full user story again (use **template** / **description** for that). | Repeating the positive list as negatives (“do not omit participants”)—confusing and wasteful. |
 
 Keep each side **short**; when the provider exposes a separate negative or “must not” channel, route **negative** there instead of duplicating it in the main prompt.
@@ -26,12 +27,13 @@ Keep each side **short**; when the provider exposes a separate negative or “mu
 
 - User asks for a diagram (UML, architecture, flow, process, etc.)
 - User specifies or implies Mermaid or PlantUML (or "diagram code")
-- Task is to produce diagram script for documentation, design, or for the `generate_uml` MCP tool
+- Task is to produce diagram script for documentation, design, or for the `generate_uml` / `generate_uml_image` MCP tools
 
-The `generate_uml` tool supports all Kroki diagram types via `diagram_type` (e.g. `mermaid`, `plantuml`, `d2`, `graphviz`, `blockdiag`, `bpmn`, `vegalite`, `wavedrom`, etc.). Use resource `uml://types` for the full list and `uml://templates` for starter code. For non-Mermaid/PlantUML types (D2, BlockDiag, BPMN, Bytefield, Vega, WaveDrom, etc.), see [references/DIAGRAM-TYPES.md](references/DIAGRAM-TYPES.md).
+The `generate_uml` tool supports all Kroki diagram types via `diagram_type` (e.g. `mermaid`, `plantuml`, `d2`, `graphviz`, `blockdiag`, `bpmn`, `vegalite`, `wavedrom`, `goat`, `umlet`, etc.). Use resource `uml://types` for the full list and `uml://templates` for starter code. For non-Mermaid/PlantUML types (D2, BlockDiag, BPMN, Bytefield, Vega, WaveDrom, etc.), see [references/DIAGRAM-TYPES.md](references/DIAGRAM-TYPES.md).
 
 For **user intent → Kroki `diagram_type`** (including Venn, quadrant, and timeline caveats), see the **Intent → `diagram_type` (Kroki)** section in [references/DIAGRAM-TYPES.md](references/DIAGRAM-TYPES.md).
 
+When the user wants the diagram **visible in chat**, after emitting the code block call **`generate_uml_image`** (PNG) if available; otherwise **`generate_uml`**.
 ## Output Rules
 
 - Emit **only one** code block; no explanatory text outside the block.
@@ -104,7 +106,7 @@ Use `left to right direction` for architecture-heavy diagrams when it helps. Add
 - Limit size: roughly &lt;25 nodes for Mermaid, &lt;30 for PlantUML.
 - **Naming**: Consistent, short names; qualifiers in notes if needed.
 - **Grouping**: Use subgraphs (Mermaid) or packages/frames (PlantUML): e.g. Client, API, Services, DB.
-- **Sequence**: Show key messages only; use `alt`/`opt` for branches.
+- **Sequence**: Show key messages only; use `alt`/`opt` for branches. In Mermaid, put **each** `sequenceDiagram` statement on its **own line** (do not pack with `;` — uml-mcp strict validation rejects that).
 - **Class**: Include main attributes/methods; show relationships with multiplicities where known.
 - **State**: Clear start and end; label transitions with events/guards.
 - **Activity**: One start, one end; decisions as diamonds; label yes/no paths.
@@ -117,7 +119,7 @@ Use `left to right direction` for architecture-heavy diagrams when it helps. Add
 3. Select the diagram form from the type mapping tables above.
 4. Apply direction: default TB; LR for architecture/component/deployment/network.
 5. Emit a single code block with the diagram script.
-6. If the MCP `generate_uml` tool is available, call it with the produced `diagram_type` and `code` (e.g. `diagram_type`: "mermaid", "class", "sequence", "activity", "usecase" as appropriate).
+6. If the MCP `generate_uml` tool is available, call it with the produced `diagram_type` and `code` (e.g. `diagram_type`: "mermaid", "class", "sequence", "activity", "usecase" as appropriate). Prefer **`generate_uml_image`** when the user asked to show the diagram in chat.
 
 ## Examples
 
