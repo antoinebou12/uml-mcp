@@ -103,3 +103,7 @@ local/
 tmp/
 temp/
 .cache/
+
+# Accidental local junk (Windows reserved NUL file, Codex local config)
+NUL
+.codex/
