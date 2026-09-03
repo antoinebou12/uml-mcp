@@ -50,11 +50,18 @@ def _summarize_tool_result(tool_name: str, result: dict[str, Any]) -> str:
             f"Render: {result.get('render_ms') if result.get('render_ms') is not None else 'n/a'} ms. "
             f"Cache hit: {bool(result.get('cache_hit'))}."
         )
-        # Markdown image helps Cursor / Copilot / Claude show the diagram when
-        # ImageContent is missing (URL-only mode) or when the client prefers URLs.
+        # Markdown image + links help Cursor / Copilot / Claude show and open the diagram
+        # when ImageContent is missing (URL-only mode) or when the client prefers URLs.
+        extras: list[str] = []
         url = result.get("url")
         if isinstance(url, str) and url.startswith(("http://", "https://")):
-            summary = f"{summary}\n\n![diagram]({url})\n\nURL: {url}"
+            extras.append(f"![diagram]({url})")
+            extras.append(f"URL: {url}")
+        playground = result.get("playground")
+        if isinstance(playground, str) and playground.startswith(("http://", "https://")):
+            extras.append(f"Playground: {playground}")
+        if extras:
+            summary = summary + "\n\n" + "\n\n".join(extras)
         return summary
     if tool_name == "generate_uml_batch":
         rows = result.get("results") or []

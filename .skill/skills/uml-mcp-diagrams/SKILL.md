@@ -82,7 +82,7 @@ For **assistant-facing** explanations (summaries, caveats, next steps), you may 
 | `diagram_type` | Required. Must match a key from `uml://types` (e.g. `class`, `sequence`, `mermaid`, `d2`, `goat`, `umlet`). |
 | `code` | Required. Source in the language that matches `diagram_type`. |
 | `output_dir` | Omit or `null` for **URL-first** output (no write to disk; responses may include **`content_base64`** when no directory is set and URL-only mode is off). Set only if the user wants a saved image. |
-| `output_format` | Default `svg` is usually best for URLs; use `png`/`pdf`/`jpeg`/`txt` only if valid for that type (see **`uml://formats`**). Prefer **`svg`** for Mermaid when Kroki/`mermaid.ink` PNG paths are flaky. |
+| `output_format` | Default `svg` is usually best for URLs. Use **`png`/`jpeg`** when you want MCP `ImageContent` in chat (force-fetch even under URL-only). Mermaid raster uses mermaid.ink `/img/?type=png` (not `/png/`). |
 | `theme` | PlantUML types only; omit otherwise. |
 | `scale` | SVG only; optional size multiplier. |
 
@@ -107,13 +107,26 @@ On hosted deployments with **`MCP_URL_ONLY=true`**, this tool still **force-fetc
 
 ## After generating
 
-1. If the result includes **`error`**, fix `code` or `diagram_type` / `output_format` and retry (or run **`validate_uml`** again).
-2. Present clearly:
-   - **`url`** — primary Kroki / fallback link to the rendered diagram.
-   - Inline **image** when **`generate_uml_image`** (or `content_base64`) is present — display it in chat.
-   - **`playground`** — if present, link for interactive editing.
+1. If the result includes **`error`**, fix `code` or `diagram_type` / `output_format` and retry (or run **`validate_uml`** again). Prefer **`svg`** if hosted Mermaid PNG fails until the deployment includes the `/img/?type=png` fix.
+2. Present clearly in the chat reply (always as markdown links, never bare paths):
+   - **Diagram** — show the MCP image / `![diagram](url)` from the tool text.
+   - **[URL](…)** — primary rendered diagram link (`url`).
+   - **[Playground](…)** — interactive editor when `playground` is present (Mermaid → mermaid.live; PlantUML → plantuml.com). Always include this when the tool returns it.
    - **`local_path`** — only when `output_dir` was set.
-3. Keep a short copy of the **`code`** in the reply so the user can edit and regenerate.
+3. Keep a short copy of the **`code`** in a fenced block so the user can edit and regenerate.
+
+### Reply template
+
+```markdown
+![diagram](<url>)
+
+- **URL:** <url>
+- **Playground:** <playground>
+
+\`\`\`mermaid
+<code>
+\`\`\`
+```
 
 ## Choosing a language from intent
 

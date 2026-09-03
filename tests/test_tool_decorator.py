@@ -181,7 +181,23 @@ class TestSummarizeToolResult:
                 "render_ms": 12.5,
                 "cache_hit": False,
                 "url": "https://mermaid.ink/svg/example",
+                "playground": "https://mermaid.live/edit#example",
             },
         )
         assert "![diagram](https://mermaid.ink/svg/example)" in text
         assert "URL: https://mermaid.ink/svg/example" in text
+        assert "Playground: https://mermaid.live/edit#example" in text
+
+    def test_render_summary_omits_missing_playground(self):
+        from mcp_core.tools.tool_decorator import _summarize_tool_result
+
+        text = _summarize_tool_result(
+            "generate_uml",
+            {
+                "diagram_type": "mermaid",
+                "source": "kroki",
+                "output_format": "svg",
+                "url": "https://kroki.io/mermaid/svg/x",
+            },
+        )
+        assert "Playground:" not in text

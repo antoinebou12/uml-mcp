@@ -22,7 +22,7 @@ Produce valid `diagram_type` and DSL `code`, call **generate_uml** (or **generat
 - Use **`validate_uml`** before heavy retry loops or on pasted diagram source; use **`strict: true`** for Mermaid sequences.
 - Mermaid **`sequenceDiagram`**: one statement per line — do **not** pack with `;` on a single line.
 - For **inline chat images**, call **`generate_uml_image`** with **`png`** (fetches bytes even when hosted `MCP_URL_ONLY` is on). **`generate_uml`** with `png`/`jpeg` also force-fetches; SVG replies include a markdown image URL in the tool text.
-- Return the **`url`** plus a short copy of **`code`** so the user can edit and regenerate.
+- Return the **`url`**, **`playground`** (as a markdown link when present), and a short copy of **`code`**.
 - Do **not** link local `output/*.png` paths in chat; use MCP image content or the HTTPS URL.
 
 ## Do not
@@ -31,6 +31,7 @@ Produce valid `diagram_type` and DSL `code`, call **generate_uml** (or **generat
 - Put prose inside **`code`**—only valid diagram DSL.
 - Set **`output_dir`** unless the user asked for saved files (not applicable to the default HTTP deployment).
 - Pack Mermaid sequence statements with `;` on one physical line.
+- Omit **`playground`** when the tool returned it — always surface it as **Playground:** [open editor](url).
 
 ## Before generating
 
@@ -52,7 +53,7 @@ Produce valid `diagram_type` and DSL `code`, call **generate_uml** (or **generat
 | `diagram_type` | Required; must match server-supported keys. |
 | `code` | Required; DSL only. |
 | `output_dir` | Omit for HTTP MCP (URL + base64 when not URL-only). |
-| `output_format` | Often `svg`; check **`uml://formats`** for the type. Prefer `svg` for Mermaid if PNG fallbacks fail. |
+| `output_format` | Often `svg`; use `png` for chat ImageContent. Check **`uml://formats`**. |
 | `theme` | PlantUML types only. |
 | `scale` | SVG only. |
 
@@ -66,7 +67,7 @@ Bounded concurrency (`MCP_BATCH_CONCURRENCY`, default 4). Mermaid-majority batch
 
 ## After generation
 
-Highlight **`url`**, display inline image when **`generate_uml_image`** / `content_base64` is present, then **`playground`** if present, then **`local_path`** only when `output_dir` was used. On **`error`**, fix DSL or types and retry or run **`validate_uml`**.
+Present **`![diagram](url)`**, then **URL** and **Playground** markdown links, then the fenced source. On **`error`**, fix DSL or types and retry or run **`validate_uml`**.
 
 ## Intent → type hints
 
