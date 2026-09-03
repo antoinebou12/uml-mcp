@@ -51,7 +51,7 @@ Expected catalog size for the current specification is **37** diagram types (inc
 
 ## Optional visual spot-check
 
-After Phase 4 (or anytime after a successful Mermaid/PlantUML render), you may call `generate_uml_image` once for Mermaid PNG and once for PlantUML PNG to confirm inline image content. Do not increment the baseline counters for these calls; report them as EXPLAIN.
+After Phase 4 (or anytime after a successful Mermaid/PlantUML render), you may call `generate_uml_image` once for Mermaid PNG and once for PlantUML PNG to confirm inline image content. Do not increment the baseline counters for these calls; report them as EXPLAIN. When reporting those spot-checks, include whether **URL** and **Playground** were present in the tool result.
 
 ## Strict Mermaid negative-test semantics
 

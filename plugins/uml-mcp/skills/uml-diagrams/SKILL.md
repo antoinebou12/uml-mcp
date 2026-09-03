@@ -67,7 +67,20 @@ Bounded concurrency (`MCP_BATCH_CONCURRENCY`, default 4). Mermaid-majority batch
 
 ## After generation
 
-Present **`![diagram](url)`**, then **URL** and **Playground** markdown links, then the fenced source. On **`error`**, fix DSL or types and retry or run **`validate_uml`**.
+Present this shape every time:
+
+```markdown
+![diagram](<url>)
+
+- **URL:** <url>
+- **Playground:** <playground>
+
+\`\`\`mermaid
+<code>
+\`\`\`
+```
+
+Copy `url` / `playground` only from the MCP tool result. On **`error`**, fix DSL or types and retry or run **`validate_uml`**. Smoke prompt: `tests/prompts/chatgpt_mcp_smoke_test.md`.
 
 ## Intent → type hints
 

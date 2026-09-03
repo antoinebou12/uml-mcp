@@ -21,8 +21,8 @@ Turn the user’s intent into valid `diagram_type` + source `code`, call **gener
 - **Match `diagram_type` to the language** of `code` (e.g. Mermaid body → `mermaid`; PlantUML with `@startuml` → `plantuml` or the specific Kroki PlantUML subtype if applicable).
 - **Use `validate_uml`** before an expensive retry loop or when the user pastes untrusted LLM output. Prefer **`strict: true`** for Mermaid sequence diagrams.
 - **Mermaid sequence**: put each statement on its **own line**. Do **not** pack `sequenceDiagram; participant A; A->>B: hi` on one line — strict validation rejects that; flowcharts may still use end-of-statement `;`.
-- **Return the `url` plus a short copy of `code`** so the user can edit and regenerate.
-- For **inline chat images**, call **`generate_uml_image`** (`png` default). It fetches bytes even on hosted Vercel when `MCP_URL_ONLY` is on. **`generate_uml`** with `output_format: png`/`jpeg` also force-fetches. SVG replies include a markdown `![diagram](url)` in the tool text for chat preview.
+- **Return `url`, `playground`, and a short copy of `code`** every time. Always format them as markdown links in the chat reply (see reply template). Never omit **Playground** when the tool returned it.
+- For **inline chat images**, call **`generate_uml_image`** (`png` default). It fetches bytes even on hosted Vercel when `MCP_URL_ONLY` is on. **`generate_uml`** with `output_format: png`/`jpeg` also force-fetches. Tool text includes `![diagram](url)`, **URL:**, and **Playground:** for clients that do not attach ImageContent.
 - When an LLM produces the diagram text first, prefer **fenced or raw** source that downstream tools accept; strip ``` fences from pasted input when needed, but still prefer clean DSL without prose **inside** the diagram.
 
 ## Negative patterns (avoid)
@@ -34,6 +34,8 @@ Turn the user’s intent into valid `diagram_type` + source `code`, call **gener
 - **Do not** pack Mermaid **`sequenceDiagram`** statements with `;` on a single physical line.
 - Prefer not to stampede Mermaid-heavy **`generate_uml_batch`** calls on hosted MCP (server caps concurrency when most items are Mermaid); recover failed Mermaid items with solo **`generate_uml`**.
 - **Do not** embed local filesystem paths like `output/foo.png` in chat markdown; use MCP image content or the returned HTTPS URL.
+- **Do not** invent diagram URLs or playground links — copy them from the MCP tool result only.
+
 ## Before generating
 
 1. **If `diagram_type` is unknown or ambiguous**, read **`uml://types`** (or **`uml://capabilities`**) to list valid types and supported backends.
@@ -107,11 +109,11 @@ On hosted deployments with **`MCP_URL_ONLY=true`**, this tool still **force-fetc
 
 ## After generating
 
-1. If the result includes **`error`**, fix `code` or `diagram_type` / `output_format` and retry (or run **`validate_uml`** again). Prefer **`svg`** if hosted Mermaid PNG fails until the deployment includes the `/img/?type=png` fix.
+1. If the result includes **`error`**, fix `code` or `diagram_type` / `output_format` and retry (or run **`validate_uml`** again). If Mermaid PNG fails, retry with **`svg`** (URL + playground still useful) or confirm the server uses mermaid.ink `/img/?type=png`.
 2. Present clearly in the chat reply (always as markdown links, never bare paths):
    - **Diagram** — show the MCP image / `![diagram](url)` from the tool text.
-   - **[URL](…)** — primary rendered diagram link (`url`).
-   - **[Playground](…)** — interactive editor when `playground` is present (Mermaid → mermaid.live; PlantUML → plantuml.com). Always include this when the tool returns it.
+   - **URL** — primary rendered diagram link (`url`).
+   - **Playground** — interactive editor when `playground` is present (Mermaid → mermaid.live; PlantUML → plantuml.com). **Required in the reply whenever the tool returned it.**
    - **`local_path`** — only when `output_dir` was set.
 3. Keep a short copy of the **`code`** in a fenced block so the user can edit and regenerate.
 
@@ -127,6 +129,8 @@ On hosted deployments with **`MCP_URL_ONLY=true`**, this tool still **force-fetc
 <code>
 \`\`\`
 ```
+
+Manual smoke prompts (ChatGPT / Cursor): [`tests/prompts/chatgpt_mcp_smoke_test.md`](../../../tests/prompts/chatgpt_mcp_smoke_test.md).
 
 ## Choosing a language from intent
 
@@ -150,6 +154,6 @@ When several types fit, pick the one the user named; otherwise prefer the type w
 
 **Prompts** (when the client exposes them): `uml_diagram`, `uml_diagram_with_thinking`, and type-specific prompts (`class_diagram`, `sequence_diagram`, `activity_diagram`, `usecase_diagram`, `mermaid_sequence_api`, `mermaid_gantt`, `bpmn_process_guide`, `c4_model`, `wireviz_harness`, `bpmn_executable_process`, `convert_class_to_mermaid`, `algorithm_explainer`, `paper_concept_diagram`) help structure code before `generate_uml`.
 
-Manual ChatGPT / client smoke prompts live under **`tests/prompts/`** (e.g. `chatgpt_mcp_smoke_test.md`).
+Manual ChatGPT / Cursor smoke prompts: **`tests/prompts/chatgpt_mcp_smoke_test.md`**. Full Kroki catalog stress: **`tests/prompts/kroki_full_catalog_stress_test.md`**.
 
 Always use the **MCP tool/resource APIs** exposed in the environment; do not guess unsupported `diagram_type` or `output_format` values when unsure—confirm with `uml://types` / `uml://formats`.
