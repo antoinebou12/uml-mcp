@@ -205,6 +205,12 @@ def generate_from_request(req: DiagramRequest) -> dict[str, Any]:
         )
         return out
 
+    from mcp_core.core.chat_packet import build_display_markdown
+
+    display = build_display_markdown(out)
+    if display:
+        out["display_markdown"] = display
+
     if cache_key is not None:
         cache.set(cache_key, out)
     return out

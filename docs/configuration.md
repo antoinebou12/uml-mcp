@@ -33,13 +33,14 @@ Command-line options override values in `fastmcp.json` (e.g. `fastmcp run --port
 | `MCP_READ_ONLY` | Reject `output_dir` and never write diagram files to disk | `false` |
 | `MCP_MAX_CODE_LENGTH` | Maximum diagram source length (characters) | `500000` |
 | `MCP_MAX_RENDER_SECONDS` | HTTP timeout budget for Kroki/fallback image fetch (seconds) | `30` |
+| `MCP_KROKI_MERMAID_TIMEOUT_SECONDS` | Fail-fast Kroki deadline for Mermaid before mermaid.ink fallback (capped by `MCP_MAX_RENDER_SECONDS`) | `8` |
 | `MCP_BATCH_MAX_ITEMS` | Maximum items per `generate_uml_batch` call | `20` |
 | `MCP_BATCH_CONCURRENCY` | Max parallel workers for `generate_uml_batch` (clamped 1–16). Mermaid-majority batches are further capped at 2 to reduce Mermaid.ink stampedes on hosted deployments. | `4` |
 | `MCP_RATE_LIMIT_PER_MINUTE` | Per-client IP requests per minute for `/mcp`, `/generate_diagram`, `/kroki_encode` (FastAPI only). `0` disables. | `0` |
-| `MCP_URL_ONLY` | Return Kroki/playground URLs only (no fetch of rendered bytes, no `content_base64` in serverless). On Vercel defaults to true when unset. Exception: `generate_uml_image` always fetches bytes for inline chat images. | See below |
+| `MCP_URL_ONLY` | Return Kroki/playground URLs only (no fetch of rendered bytes, no `content_base64` in serverless). On Vercel defaults to true when unset. Exceptions: `generate_uml_image` always fetches bytes; `generate_uml` with `png`/`jpeg` also force-fetches. | See below |
 | `MCP_MEMORY_ONLY` | Never write diagram files to disk | Vercel: true when unset |
 
-When **`MCP_URL_ONLY=true`**, the server avoids downloading rendered image bytes inside the process (lower latency and cost on serverless). Responses omit `content_base64` unless you disable URL-only mode. Exception: **`generate_uml_image`** always fetches bytes so MCP clients can show an inline image in chat. **`MCP_MEMORY_ONLY=true`** skips all file writes; use URL/base64-from-client fetch if needed.
+When **`MCP_URL_ONLY=true`**, the server avoids downloading rendered image bytes inside the process (lower latency and cost on serverless). Responses omit `content_base64` unless you disable URL-only mode. Exceptions: **`generate_uml_image`** always fetches bytes so MCP clients can show an inline image in chat; **`generate_uml`** with **`png`** or **`jpeg`** also force-fetches. Render results include structured **`display_markdown`** (markdown image + URL + playground). **`MCP_MEMORY_ONLY=true`** skips all file writes; use URL/base64-from-client fetch if needed.
 
 ## Health check (HTTP deployment)
 

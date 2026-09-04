@@ -137,7 +137,14 @@ On Vercel, the runtime filesystem may be read-only. If the MCP cannot write the 
 
 ### URL-only mode on Vercel (no image fetch in the function)
 
-Production deployments set **`MCP_URL_ONLY=true`** (and **`MCP_MEMORY_ONLY=true`**) in `vercel.json`. In that mode the server builds Kroki and playground links locally and does **not** download rendered diagram bytes into the serverless function and does **not** return `content_base64`. PlantUML/Mermaid fallbacks return URLs only (no HTTP GET of the image inside the function). To restore fetching and base64 when not saving to disk, set `MCP_URL_ONLY=false` in the Vercel project environment. SVG `scale` is ignored in URL-only mode because scaling requires decoded SVG bytes.
+Production deployments set **`MCP_URL_ONLY=true`**, **`MCP_MEMORY_ONLY=true`**, and **`MCP_DIAGRAM_FALLBACK=true`** in `vercel.json`. In that mode the server builds Kroki and playground links locally and does **not** download rendered diagram bytes into the serverless function for ordinary **`generate_uml`** SVG calls, and does **not** return `content_base64` for those URL-only responses. When Kroki is slow or down, Mermaid fails fast (short Kroki deadline) then uses **mermaid.ink**; PlantUML can use the PlantUML server fallback.
+
+**Exceptions (chat inline images):**
+
+- **`generate_uml_image`** always force-fetches rendered bytes (default PNG) so MCP `ImageContent` / `content_base64` is present.
+- **`generate_uml`** with `output_format` **`png`** or **`jpeg`** also force-fetches so chat clients get inline image bytes.
+
+Successful render tool text includes markdown `![diagram](url)`, **URL**, and **Playground** (also as structured `display_markdown`). To restore byte fetching for all formats when not saving to disk, set `MCP_URL_ONLY=false` in the Vercel project environment. SVG `scale` is ignored in URL-only mode because scaling requires decoded SVG bytes.
 
 ### 405 on POST /mcp (Reconnect failed)
 

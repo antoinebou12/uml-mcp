@@ -52,6 +52,7 @@ def test_vercel_uses_native_fastapi_routing_and_stateless_storage() -> None:
     assert env["FASTMCP_STATELESS_HTTP"] == "true"
     assert env["MCP_MEMORY_ONLY"] == "true"
     assert env["MCP_URL_ONLY"] == "true"
+    assert env["MCP_DIAGRAM_FALLBACK"] == "true"
     assert env["MCP_OUTPUT_DIR"] == "/tmp/diagrams"
     assert env["VERCEL_OUTPUT_DIR"] == "/tmp/diagrams"
 

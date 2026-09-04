@@ -130,9 +130,20 @@ def _handle_diagram_error(e: Exception, code: str) -> str:
             f"Diagram service returned HTTP {status}. Check KROKI_SERVER and network."
         )
     if isinstance(e, KrokiConnectionError):
+        detail = str(e).lower()
+        if "timeout" in detail or "timed out" in detail:
+            return (
+                "Diagram service timed out (retryable). Retry the request; Mermaid "
+                "diagrams fail fast from Kroki then try mermaid.ink when fallback is enabled."
+            )
         return (
-            "Cannot connect to diagram service. Check KROKI_SERVER and network "
-            "connectivity."
+            "Cannot connect to diagram service (retryable). Check KROKI_SERVER and "
+            "network connectivity."
+        )
+    if isinstance(e, (httpx.TimeoutException, TimeoutError)):
+        return (
+            "Diagram service timed out (retryable). Retry the request; Mermaid "
+            "diagrams fail fast from Kroki then try mermaid.ink when fallback is enabled."
         )
     return f"Unexpected error generating diagram: {type(e).__name__}: {e!s}"
 
@@ -279,6 +290,14 @@ def try_kroki_render(
     client = kroki_client if kroki_client is not None else get_kroki_client()
     filename_prefix = f"{ctx.diagram_type}_{datetime.datetime.now(datetime.UTC).strftime('%Y%m%d%H%M%S')}"
 
+    # Mermaid often times out on public Kroki; fail fast so mermaid.ink can run.
+    kroki_timeout: float | None = None
+    if ctx.backend_type == "mermaid":
+        kroki_timeout = min(
+            float(MCP_SETTINGS.kroki_mermaid_timeout_seconds),
+            float(MCP_SETTINGS.max_render_seconds),
+        )
+
     try:
         logger.info("Attempting Kroki for %s diagram", ctx.diagram_type)
         if _url_only_mode(ctx):
@@ -299,7 +318,10 @@ def try_kroki_render(
             return out_url_only, None
 
         result = client.generate_diagram(
-            ctx.backend_type, ctx.prepared_code, ctx.output_format
+            ctx.backend_type,
+            ctx.prepared_code,
+            ctx.output_format,
+            timeout=kroki_timeout,
         )
         content = result["content"]
         if (

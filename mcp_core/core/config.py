@@ -125,6 +125,12 @@ class MCPSettings(BaseModel):
     max_render_seconds: float = Field(
         default_factory=lambda: float(os.environ.get("MCP_MAX_RENDER_SECONDS", "30"))
     )
+    # Fail-fast Kroki deadline for Mermaid before mermaid.ink fallback (seconds).
+    kroki_mermaid_timeout_seconds: float = Field(
+        default_factory=lambda: float(
+            os.environ.get("MCP_KROKI_MERMAID_TIMEOUT_SECONDS", "8")
+        )
+    )
     batch_max_items: int = Field(
         default_factory=lambda: int(os.environ.get("MCP_BATCH_MAX_ITEMS", "20"))
     )

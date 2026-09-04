@@ -244,7 +244,9 @@ class Kroki:
             return f"{base_playground}{encoded}"
 
     def _fetch_diagram_bytes(
-        self, diagram_type: str, diagram_text: str, output_format: str
+        self, diagram_type: str, diagram_text: str, output_format: str,
+        *,
+        timeout: float | httpx.Timeout | None = None,
     ) -> bytes:
         """
         Fetch rendered diagram bytes from Kroki via POST.
@@ -257,11 +259,14 @@ class Kroki:
         self.get_url(diagram_type, diagram_text, output_format)
         endpoint = f"{self.base_url}/{diagram_type}/{output_format}"
         try:
-            response = self.client.post(
-                endpoint,
-                content=diagram_text.encode("utf-8"),
-                headers={"Content-Type": "text/plain; charset=utf-8"},
-            )
+            post_kwargs: dict[str, Any] = {
+                "content": diagram_text.encode("utf-8"),
+                "headers": {"Content-Type": "text/plain; charset=utf-8"},
+            }
+            # Only override the client default when a fail-fast timeout is requested.
+            if timeout is not None:
+                post_kwargs["timeout"] = timeout
+            response = self.client.post(endpoint, **post_kwargs)
             response.raise_for_status()
         except httpx.HTTPStatusError as e:
             raise KrokiHTTPError(e.response, e.response.content)
@@ -270,7 +275,9 @@ class Kroki:
         return response.content
 
     def render_diagram(
-        self, diagram_type: str, diagram_text: str, output_format: str = "svg"
+        self, diagram_type: str, diagram_text: str, output_format: str = "svg",
+        *,
+        timeout: float | httpx.Timeout | None = None,
     ) -> bytes:
         """
         Render a diagram and return the image data.
@@ -279,6 +286,7 @@ class Kroki:
             diagram_type: The type of diagram (plantuml, mermaid, etc.)
             diagram_text: The textual description of the diagram
             output_format: The desired output format (svg, png, etc.)
+            timeout: Optional per-request timeout override (fail-fast primary path).
 
         Returns:
             The binary content of the rendered diagram
@@ -287,10 +295,14 @@ class Kroki:
             KrokiHTTPError: If there was an HTTP error
             KrokiConnectionError: If there was a connection error
         """
-        return self._fetch_diagram_bytes(diagram_type, diagram_text, output_format)
+        return self._fetch_diagram_bytes(
+            diagram_type, diagram_text, output_format, timeout=timeout
+        )
 
     def generate_diagram(
-        self, diagram_type: str, diagram_text: str, output_format: str = "svg"
+        self, diagram_type: str, diagram_text: str, output_format: str = "svg",
+        *,
+        timeout: float | httpx.Timeout | None = None,
     ) -> dict:
         """
         Generate a diagram and return URLs and data.
@@ -299,6 +311,7 @@ class Kroki:
             diagram_type: The type of diagram (plantuml, mermaid, etc.)
             diagram_text: The textual description of the diagram
             output_format: The desired output format (svg, png, etc.)
+            timeout: Optional per-request timeout override (fail-fast primary path).
 
         Returns:
             A dictionary containing:
@@ -312,7 +325,9 @@ class Kroki:
         """
         url = self.get_url(diagram_type, diagram_text, output_format)
         playground = self.get_playground_url(diagram_type, diagram_text)
-        content = self._fetch_diagram_bytes(diagram_type, diagram_text, output_format)
+        content = self._fetch_diagram_bytes(
+            diagram_type, diagram_text, output_format, timeout=timeout
+        )
         return {"url": url, "content": content, "playground": playground}
 
     def deflate_and_encode(self, text: str) -> str:

@@ -37,8 +37,32 @@ def test_try_kroki_render_success_includes_source(sample_ctx):
     assert out["source"] == "kroki"
     assert out["url"] == "https://kroki.io/plantuml/svg/abc"
     mock_client.generate_diagram.assert_called_once_with(
-        "plantuml", sample_ctx.prepared_code, "svg"
+        "plantuml", sample_ctx.prepared_code, "svg", timeout=None
     )
+
+
+def test_try_kroki_render_mermaid_uses_fail_fast_timeout():
+    ctx = DiagramRenderContext(
+        diagram_type="mermaid",
+        backend_type="mermaid",
+        prepared_code="graph TD; A-->B;",
+        output_format="svg",
+        output_dir=None,
+        theme=None,
+        scale=1.0,
+    )
+    mock_client = MagicMock()
+    mock_client.generate_diagram.return_value = {
+        "url": "https://kroki.io/mermaid/svg/x",
+        "content": b"<svg/>",
+        "playground": None,
+    }
+    out, err = try_kroki_render(ctx, kroki_client=mock_client)
+    assert err is None
+    assert out is not None
+    kwargs = mock_client.generate_diagram.call_args
+    assert kwargs.kwargs.get("timeout") is not None
+    assert kwargs.kwargs["timeout"] <= 8.0
 
 
 def test_try_kroki_render_no_disk_when_output_dir_none(tmp_path):

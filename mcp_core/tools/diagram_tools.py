@@ -54,9 +54,8 @@ def _bounded_limit(limit: int | None) -> int | None:
 
 @mcp_tool(
     description=(
-        "Find supported diagram types and their renderer/formats. All filters are optional; "
-        "returns matching type metadata. Use this when you are unsure which diagram type "
-        "or format to choose."
+        "List supported diagram types and formats. Optional filters: query, backend, "
+        "output_format, limit."
     ),
     category="uml",
     example="list_diagram_types(query='sequence', output_format='svg')",
@@ -188,10 +187,8 @@ def _render_batch_item(
 
 @mcp_tool(
     description=(
-        "Render several independent diagrams in one call using bounded concurrency. Input "
-        "items use the same diagram_type/code/format/theme/scale fields as generate_uml; "
-        "returns ordered per-index results and keeps partial failures isolated. Use this for "
-        "multiple diagrams, not repeated repair attempts for one invalid diagram."
+        "Render several diagrams with bounded concurrency. Each item uses the same "
+        "fields as generate_uml. Partial failures stay isolated per index."
     ),
     category="uml",
     example=(
@@ -241,11 +238,8 @@ def generate_uml_batch(
 
 @mcp_tool(
     description=(
-        "Render one UML or diagram from source code. Input diagram_type, code, optional "
-        "output_format/theme/scale/output_dir; returns renderer metadata plus a markdown "
-        "image URL for chat clients. For a native inline PNG in Cursor/Copilot/Claude chat, "
-        "prefer generate_uml_image (or set output_format to png). Call validate_uml first "
-        "for uncertain complex syntax."
+        "Render one diagram. Returns url, playground, and chat markdown. "
+        "Use output_format=png for inline bytes, or call generate_uml_image."
     ),
     category="uml",
     example="generate_uml('mermaid', 'graph TD; A-->B;')",
@@ -293,16 +287,12 @@ def generate_uml(
 
 @mcp_tool(
     description=(
-        "Render one UML or diagram and return it as an inline MCP image content block "
-        "(PNG by default) so image-capable MCP clients such as Cursor, Copilot, and Claude "
-        "show the diagram directly in the chat. Prefer this tool when the user asks to "
-        "show, display, or preview the diagram in chat. Same input fields as generate_uml; "
-        "pick output_format png (most compatible), svg, or jpeg. Fetches bytes even when "
-        "hosted MCP_URL_ONLY is enabled."
+        "INLINE IMAGE: render a diagram as MCP ImageContent (PNG default) for chat. "
+        "Use when the user asks to show or display the diagram. Fetches bytes even under URL-only."
     ),
     category="uml",
     example="generate_uml_image('mermaid', 'graph TD; A-->B;', 'png')",
-    annotations={**ANNOTATIONS_DIAGRAM, "title": "Generate Diagram as Inline Image"},
+    annotations={**ANNOTATIONS_DIAGRAM, "title": "Generate Inline Diagram Image"},
     output_schema=DiagramResult,
 )
 def generate_uml_image(
@@ -342,10 +332,8 @@ def generate_uml_image(
 
 @mcp_tool(
     description=(
-        "Validate diagram type, format, size, and syntax locally without rendering. Input "
-        "diagram_type/code/output_format and optional strict=true for additional Mermaid/D2 "
-        "checks; returns structured diagnostics, suggestions, and deterministic normalization "
-        "details. Use before rendering complex or uncertain source."
+        "Validate diagram type, format, and syntax locally (no render). "
+        "Set strict=true for extra Mermaid/D2 checks."
     ),
     category="uml",
     example="validate_uml('class', '@startuml\\nclass A\\n@enduml', 'svg')",

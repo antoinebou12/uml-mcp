@@ -288,6 +288,7 @@ class DiagramResult(BaseModel):
     cache_hit: bool | None = None
     cache_lookup_ms: float | None = None
     mime_type: str | None = None
+    display_markdown: str | None = None
 
 
 class ValidationDiagnostic(BaseModel):
@@ -339,6 +340,7 @@ class BatchDiagramItem(BaseModel):
     cache_hit: bool | None = None
     cache_lookup_ms: float | None = None
     mime_type: str | None = None
+    display_markdown: str | None = None
 
 
 class BatchDiagramResult(BaseModel):

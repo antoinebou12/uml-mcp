@@ -28,6 +28,7 @@
     "MCP_OUTPUT_DIR": "/tmp/diagrams",
     "FASTMCP_STATELESS_HTTP": "true",
     "MCP_URL_ONLY": "true",
-    "MCP_MEMORY_ONLY": "true"
+    "MCP_MEMORY_ONLY": "true",
+    "MCP_DIAGRAM_FALLBACK": "true"
   }
 }

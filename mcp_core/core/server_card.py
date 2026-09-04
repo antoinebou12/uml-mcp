@@ -40,7 +40,10 @@ def build_server_card(*, strict: bool = False):
         from mcp_core.tools import (
             diagram_tools,  # noqa: F401 - load tools so registry is populated
         )
-        from mcp_core.tools.tool_decorator import get_tool_registry
+        from mcp_core.tools.tool_decorator import (
+            get_tool_registry,
+            iter_tools_in_preferred_order,
+        )
 
         tool_registry = get_tool_registry()
         resource_registry = get_resource_registry()
@@ -52,7 +55,7 @@ def build_server_card(*, strict: bool = False):
         }
 
         tools = []
-        for name, info in tool_registry.items():
+        for name, info in iter_tools_in_preferred_order(tool_registry):
             params = info.get("parameters", {})
             descriptions = param_descriptions.get(name, {})
             type_overrides = param_types_override.get(name, {})

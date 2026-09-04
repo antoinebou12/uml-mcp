@@ -185,8 +185,22 @@ class TestSummarizeToolResult:
             },
         )
         assert "![diagram](https://mermaid.ink/svg/example)" in text
-        assert "URL: https://mermaid.ink/svg/example" in text
-        assert "Playground: https://mermaid.live/edit#example" in text
+        assert "**URL:** https://mermaid.ink/svg/example" in text
+        assert "**Playground:** https://mermaid.live/edit#example" in text
+
+    def test_render_summary_uses_display_markdown_when_present(self):
+        from mcp_core.tools.tool_decorator import _summarize_tool_result
+
+        text = _summarize_tool_result(
+            "generate_uml_image",
+            {
+                "diagram_type": "mermaid",
+                "source": "kroki",
+                "output_format": "png",
+                "display_markdown": "CUSTOM_PACKET",
+            },
+        )
+        assert "CUSTOM_PACKET" in text
 
     def test_render_summary_omits_missing_playground(self):
         from mcp_core.tools.tool_decorator import _summarize_tool_result
@@ -201,3 +215,15 @@ class TestSummarizeToolResult:
             },
         )
         assert "Playground:" not in text
+
+
+class TestChatCriticalToolOrder:
+    def test_generate_uml_image_registered_before_batch(self):
+        server = MagicMock()
+        server.tool.return_value = lambda f: f
+        result = register_tools_with_server(server)
+        assert result.index("generate_uml") < result.index("generate_uml_image")
+        assert result.index("generate_uml_image") < result.index("generate_uml_batch")
+        image_desc = get_tool_registry()["generate_uml_image"]["description"]
+        assert "INLINE IMAGE" in image_desc
+        assert len(image_desc) < 280

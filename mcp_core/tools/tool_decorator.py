@@ -8,6 +8,8 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar, cast
 
+from mcp_core.core.chat_packet import build_display_markdown
+
 logger = logging.getLogger(__name__)
 
 _registered_tools: dict[str, dict[str, Any]] = {}
@@ -50,18 +52,11 @@ def _summarize_tool_result(tool_name: str, result: dict[str, Any]) -> str:
             f"Render: {result.get('render_ms') if result.get('render_ms') is not None else 'n/a'} ms. "
             f"Cache hit: {bool(result.get('cache_hit'))}."
         )
-        # Markdown image + links help Cursor / Copilot / Claude show and open the diagram
-        # when ImageContent is missing (URL-only mode) or when the client prefers URLs.
-        extras: list[str] = []
-        url = result.get("url")
-        if isinstance(url, str) and url.startswith(("http://", "https://")):
-            extras.append(f"![diagram]({url})")
-            extras.append(f"URL: {url}")
-        playground = result.get("playground")
-        if isinstance(playground, str) and playground.startswith(("http://", "https://")):
-            extras.append(f"Playground: {playground}")
-        if extras:
-            summary = summary + "\n\n" + "\n\n".join(extras)
+        display = result.get("display_markdown")
+        if not isinstance(display, str) or not display.strip():
+            display = build_display_markdown(result)
+        if display:
+            summary = f"{summary}\n\n{display}"
         return summary
     if tool_name == "generate_uml_batch":
         rows = result.get("results") or []
@@ -89,6 +84,12 @@ def _as_mcp_tool_result(tool_name: str, result: Any) -> Any:
         ) as exc:  # pragma: no cover - package is required in production
             raise RuntimeError(str(result["error"])) from exc
         raise ToolError(str(result["error"]))
+
+    if tool_name in _RENDER_TOOL_NAMES and not result.get("display_markdown"):
+        display = build_display_markdown(result)
+        if display:
+            result = dict(result)
+            result["display_markdown"] = display
 
     try:
         from fastmcp.tools import ToolResult
@@ -180,6 +181,31 @@ def mcp_tool(
     return decorator
 
 
+# Prefer chat-critical tools early so clients with tool-list limits still see them.
+TOOL_PREFERRED_ORDER = (
+    "list_diagram_types",
+    "generate_uml",
+    "generate_uml_image",
+    "validate_uml",
+    "generate_uml_batch",
+)
+
+
+def iter_tools_in_preferred_order(
+    tools: dict[str, dict[str, Any]],
+) -> list[tuple[str, dict[str, Any]]]:
+    """Sort tool registry items for registration and discovery payloads."""
+
+    def _sort_key(item: tuple[str, dict[str, Any]]) -> tuple[int, str]:
+        name = item[0]
+        try:
+            return (TOOL_PREFERRED_ORDER.index(name), name)
+        except ValueError:
+            return (len(TOOL_PREFERRED_ORDER), name)
+
+    return sorted(tools.items(), key=_sort_key)
+
+
 def register_tools_with_server(server: Any) -> list[str]:
     """Register all decorated tools with the MCP server."""
     logger.info("Registering %s tools with the MCP server", len(_registered_tools))
@@ -187,7 +213,7 @@ def register_tools_with_server(server: Any) -> list[str]:
     registered_tools: list[str] = []
     server_any = cast(Any, server)
 
-    for tool_name, tool_info in _registered_tools.items():
+    for tool_name, tool_info in iter_tools_in_preferred_order(_registered_tools):
         func = tool_info["function"]
         annotations = tool_info.get("annotations") or {}
         output_schema = _normalize_output_schema(tool_info.get("output_schema"))
@@ -268,9 +294,12 @@ def clear_tool_registry() -> None:
 
 
 __all__ = [
+    "TOOL_PREFERRED_ORDER",
+    "build_display_markdown",
     "clear_tool_registry",
     "get_tool_categories",
     "get_tool_registry",
+    "iter_tools_in_preferred_order",
     "mcp_tool",
     "register_tools_with_server",
 ]
