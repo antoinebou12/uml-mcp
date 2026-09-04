@@ -1,0 +1,15 @@
+# OpenAI Codex — local stdio MCP
+# Replace cwd / command paths for your machine. Prefer `uv` from the repo root.
+
+[mcp_servers.uml-mcp]
+command = "uv"
+args = ["run", "python", "-u", "server.py"]
+cwd = "/absolute/path/to/uml-mcp"
+enabled = true
+startup_timeout_sec = 30
+tool_timeout_sec = 120
+
+[mcp_servers.uml-mcp.env]
+KROKI_SERVER = "https://kroki.io"
+MCP_OUTPUT_DIR = "output"
+MCP_DIAGRAM_FALLBACK = "true"

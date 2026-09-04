@@ -1,0 +1,15 @@
+{
+  "servers": {
+    "uml-mcp": {
+      "type": "stdio",
+      "command": "uv",
+      "args": ["run", "python", "-u", "server.py"],
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "KROKI_SERVER": "https://kroki.io",
+        "MCP_OUTPUT_DIR": "output",
+        "MCP_DIAGRAM_FALLBACK": "true"
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "uml-mcp": {
+      "type": "http",
+      "url": "https://uml-mcp.vercel.app/mcp"
+    }
+  }
+}

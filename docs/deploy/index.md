@@ -77,6 +77,9 @@ flowchart TD
 | Client | Setup guide |
 | --- | --- |
 | Cursor | [Cursor integration](../integrations/cursor.md) |
+| VS Code / GitHub Copilot | [VS Code / Copilot](../integrations/vscode_copilot.md) |
+| OpenAI Codex | [OpenAI Codex](../integrations/openai_codex.md) |
+| Ollama / Open WebUI | [Ollama / Open WebUI](../integrations/ollama.md) |
 | Claude Desktop | [Claude Desktop integration](../integrations/claude_desktop.md) |
 | Smithery (any registered client) | [Vercel & Smithery](../integrations/vercel_smithery.md) |
 

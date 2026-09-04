@@ -1,0 +1,16 @@
+[
+  {
+    "type": "mcp",
+    "url": "https://uml-mcp.vercel.app/mcp",
+    "spec_type": "url",
+    "spec": "",
+    "path": "",
+    "auth_type": "none",
+    "key": "",
+    "info": {
+      "id": "uml-mcp",
+      "name": "UML-MCP Diagrams",
+      "description": "Generate UML, Mermaid, and 30+ diagram types via MCP (URL, playground, chat PNG)."
+    }
+  }
+]

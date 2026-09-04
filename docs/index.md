@@ -8,7 +8,7 @@ hide:
 
 # UML-MCP
 
-UML-MCP is an MCP server for diagram generation: AI assistants (Cursor, Claude Desktop, and any MCP-compatible client) can render UML, Mermaid, D2, TikZ, BPMN, C4, Graphviz, and 30+ other diagram types through [Kroki](https://kroki.io/), [PlantUML](https://plantuml.com/), [Mermaid](https://mermaid.js.org/), and [D2](https://d2lang.com/).
+UML-MCP is an MCP server for diagram generation: AI assistants (Cursor, VS Code Copilot, OpenAI Codex, Claude Desktop, Open WebUI + Ollama, and any MCP-compatible client) can render UML, Mermaid, D2, TikZ, BPMN, C4, Graphviz, and 30+ other diagram types through [Kroki](https://kroki.io/), [PlantUML](https://plantuml.com/), [Mermaid](https://mermaid.js.org/), and [D2](https://d2lang.com/).
 
 [![Run Tests](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml)
 [![Build Package](https://github.com/antoinebou12/uml-mcp/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/build.yml)
@@ -161,7 +161,7 @@ sequenceDiagram
 
 !!! tip "Need an end-to-end stack?"
 
-    Combine UML-MCP with your favourite MCP-aware editor. Cursor and Claude Desktop both work out of the box; see [Cursor](integrations/cursor.md), [Claude Desktop](integrations/claude_desktop.md), [Claude Code](integrations/claude_code.md) (plugin + marketplace), and [OI OS](integrations/oi_os.md) (intent manifest for third-party agent runtimes). Set `MCP_READ_ONLY=true` on shared stdio hosts to block file writes.
+    Combine UML-MCP with your favourite MCP-aware editor or local LLM UI. See [Cursor](integrations/cursor.md), [VS Code / GitHub Copilot](integrations/vscode_copilot.md), [OpenAI Codex](integrations/openai_codex.md), [Ollama / Open WebUI](integrations/ollama.md), [Claude Desktop](integrations/claude_desktop.md), [Claude Code](integrations/claude_code.md) (plugin + marketplace), and [OI OS](integrations/oi_os.md). Copy-paste configs live in [`config/`](https://github.com/antoinebou12/uml-mcp/blob/main/config/README.md). Set `MCP_READ_ONLY=true` on shared stdio hosts to block file writes.
 
 ---
 

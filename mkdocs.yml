@@ -120,6 +120,9 @@ nav:
       - Claude Desktop extension (.mcpb): integrations/claude_desktop_mcpb.md
       - Claude Code: integrations/claude_code.md
       - Cursor: integrations/cursor.md
+      - VS Code / GitHub Copilot: integrations/vscode_copilot.md
+      - OpenAI Codex: integrations/openai_codex.md
+      - Ollama / Open WebUI: integrations/ollama.md
       - Frontend (AG-UI): integrations/frontend.md
       - OI OS (community): integrations/oi_os.md
       - Fallback strategy: fallback-mechanism.md

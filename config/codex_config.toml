@@ -1,0 +1,9 @@
+# OpenAI Codex — hosted Streamable HTTP MCP (recommended)
+# Copy into ~/.codex/config.toml or project .codex/config.toml (trusted projects only).
+# Docs: https://developers.openai.com/codex/config-reference
+
+[mcp_servers.uml-mcp]
+url = "https://uml-mcp.vercel.app/mcp"
+enabled = true
+startup_timeout_sec = 30
+tool_timeout_sec = 120

@@ -1,0 +1,30 @@
+# Continue.dev — use with Ollama (or any Continue model provider)
+# Merge the `mcpServers` block into your Continue config (~/.continue/config.yaml).
+# Docs: https://docs.continue.dev/
+
+name: UML-MCP (Continue + Ollama)
+version: 1.0.0
+schema: v1
+
+# Example Ollama model (adjust to what you have pulled locally):
+models:
+  - name: Local Ollama
+    provider: ollama
+    model: llama3.2
+
+mcpServers:
+  - name: uml-mcp
+    type: streamable-http
+    url: https://uml-mcp.vercel.app/mcp
+
+# Local stdio alternative (uncomment and set the repo path):
+# mcpServers:
+#   - name: uml-mcp
+#     type: stdio
+#     command: uv
+#     args: ["run", "python", "-u", "server.py"]
+#     cwd: /absolute/path/to/uml-mcp
+#     env:
+#       KROKI_SERVER: https://kroki.io
+#       MCP_OUTPUT_DIR: output
+#       MCP_DIAGRAM_FALLBACK: "true"

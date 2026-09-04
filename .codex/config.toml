@@ -1,0 +1,8 @@
+# Project-scoped OpenAI Codex MCP (loads only when this directory is trusted).
+# User-level alternative: ~/.codex/config.toml — see config/codex_config.toml
+
+[mcp_servers.uml-mcp]
+url = "https://uml-mcp.vercel.app/mcp"
+enabled = true
+startup_timeout_sec = 30
+tool_timeout_sec = 120

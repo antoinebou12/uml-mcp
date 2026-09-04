@@ -59,7 +59,8 @@ docs/_build/
 
 # IDE and editors
 .idea/
-.vscode/
+.vscode/*
+!.vscode/mcp.json
 *.swp
 *.swo
 *~
@@ -104,6 +105,8 @@ tmp/
 temp/
 .cache/
 
-# Accidental local junk (Windows reserved NUL file, Codex local config)
+# Accidental local junk (Windows reserved NUL file)
 NUL
-.codex/
+# Local Codex overrides; keep committed project MCP template
+.codex/*
+!.codex/config.toml

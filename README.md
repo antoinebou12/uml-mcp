@@ -19,7 +19,7 @@
 [![Lulu MCPs](https://getlulu.dev/api/mcps/badge/uml-mcp)](https://getlulu.dev/mcps/uml-mcp)
 [![smithery badge](https://smithery.ai/badge/antoinebou12/uml)](https://smithery.ai/servers/antoinebou12/uml)
 
-Generate UML and other diagrams through the [Model Context Protocol](https://modelcontextprotocol.io/) — Cursor, Claude, Copilot, ChatGPT, and any MCP client.
+Generate UML and other diagrams through the [Model Context Protocol](https://modelcontextprotocol.io/) — Cursor, VS Code Copilot, OpenAI Codex, Claude, Open WebUI + Ollama, ChatGPT, and any MCP client.
 
 | | |
 | --- | --- |
@@ -44,7 +44,17 @@ Generate UML and other diagrams through the [Model Context Protocol](https://mod
 }
 ```
 
-Use **`/mcp`**, not the site root. Repo default: [`.cursor/mcp.json`](.cursor/mcp.json).
+Use **`/mcp`**, not the site root. Repo defaults: [`.cursor/mcp.json`](.cursor/mcp.json) · [`.vscode/mcp.json`](.vscode/mcp.json) · [`.codex/config.toml`](.codex/config.toml).
+
+| Client | Config | Guide |
+| --- | --- | --- |
+| Cursor | [`.cursor/mcp.json`](.cursor/mcp.json) | [docs/integrations/cursor.md](docs/integrations/cursor.md) |
+| VS Code / Copilot | [`.vscode/mcp.json`](.vscode/mcp.json) | [docs/integrations/vscode_copilot.md](docs/integrations/vscode_copilot.md) |
+| OpenAI Codex | [`.codex/config.toml`](.codex/config.toml) | [docs/integrations/openai_codex.md](docs/integrations/openai_codex.md) |
+| Ollama / Open WebUI | [`config/openwebui_mcp.json`](config/openwebui_mcp.json) | [docs/integrations/ollama.md](docs/integrations/ollama.md) |
+| Claude Desktop | [`config/claude_desktop_*.json`](config/) | [docs/integrations/claude_desktop.md](docs/integrations/claude_desktop.md) |
+
+All snippets: [`config/README.md`](config/README.md)
 
 <details>
 <summary><strong>Local stdio</strong></summary>
@@ -55,7 +65,7 @@ uv sync
 uv run python server.py
 ```
 
-Configs: [`config/cursor_config.json`](config/cursor_config.json) · [`config/claude_desktop_config.json`](config/claude_desktop_config.json) · [`config/README.md`](config/README.md)
+Configs: [`config/README.md`](config/README.md) (Cursor, VS Code, Codex, Claude, Open WebUI, Continue)
 
 </details>
 
