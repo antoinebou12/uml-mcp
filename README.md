@@ -21,11 +21,8 @@
 
 **UML-MCP Server** is a UML diagram generation tool based on [MCP](https://modelcontextprotocol.io/) (Model Context Protocol). Ask for a diagram in natural language, or write [PlantUML](https://plantuml.com/), [Mermaid](https://mermaid.js.org/), [D2](https://d2lang.com/), and [Kroki](https://kroki.io/) source yourself — the server renders UML and 30+ other types for Cursor, VS Code Copilot, OpenAI Codex, Claude, Open WebUI + Ollama, ChatGPT, and any MCP client.
 
-**GitHub:** [antoinebou12/uml-mcp](https://github.com/antoinebou12/uml-mcp)
-
 | | |
 | --- | --- |
-| **Clone** | `git clone https://github.com/antoinebou12/uml-mcp.git` |
 | **Live MCP** | [https://uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp) |
 | **Docs** | [antoinebou12.github.io/uml-mcp](https://antoinebou12.github.io/uml-mcp/) |
 | **Catalog** | ~37 Kroki-backed types · 5 MCP tools · URL + playground + chat PNG |
@@ -232,18 +229,10 @@ Docs locally: `uv run mkdocs serve` → http://127.0.0.1:8000
 
 Daily and monthly activity (stars, forks, merged PRs, issues): [trendshift.io/repositories/42725](https://trendshift.io/repositories/42725)
 
-## Star History
-
-[![GitHub Star History](docs/assets/star-history.svg)](https://github.com/antoinebou12/uml-mcp/stargazers)
-
-_Updated daily by GitHub Actions from GitHub's timestamped stargazer API. The refresh job prefers the optional `STAR_HISTORY_TOKEN` repository secret and safely falls back to the per-run `GITHUB_TOKEN`._
-
 ## Links
 
 | | |
 | --- | --- |
-| GitHub | [antoinebou12/uml-mcp](https://github.com/antoinebou12/uml-mcp) |
-| Live MCP | [uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp) |
 | Docs | [Site](https://antoinebou12.github.io/uml-mcp/) · [Cursor](docs/integrations/cursor.md) · [Claude Code](docs/integrations/claude_code.md) · [Frontend](docs/integrations/frontend.md) |
 | Contribute | [CONTRIBUTING.md](CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) · [SECURITY.md](SECURITY.md) |
 | License | [MIT](LICENSE) |

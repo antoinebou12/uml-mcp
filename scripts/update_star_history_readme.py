@@ -22,7 +22,8 @@ def main() -> None:
         print("README Star History section is already migrated")
         return
     if LEGACY not in text:
-        raise SystemExit("Legacy Star History block was not found; refusing a blind README edit")
+        print("No Star History section in README; leaving README unchanged")
+        return
     README.write_text(text.replace(LEGACY, REPLACEMENT), encoding="utf-8")
     print("Migrated README Star History section")
 
