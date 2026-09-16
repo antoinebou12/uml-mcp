@@ -1,4 +1,4 @@
-# UML-MCP: Diagram Generation via MCP
+# UML-MCP
 
 [![Run Tests](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml)
 [![Build Package](https://github.com/antoinebou12/uml-mcp/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/build.yml)
@@ -19,10 +19,13 @@
 [![Lulu MCPs](https://getlulu.dev/api/mcps/badge/uml-mcp)](https://getlulu.dev/mcps/uml-mcp)
 [![smithery badge](https://smithery.ai/badge/antoinebou12/uml)](https://smithery.ai/servers/antoinebou12/uml)
 
-Generate UML and other diagrams through the [Model Context Protocol](https://modelcontextprotocol.io/) — Cursor, VS Code Copilot, OpenAI Codex, Claude, Open WebUI + Ollama, ChatGPT, and any MCP client.
+**UML-MCP Server** is a UML diagram generation tool based on [MCP](https://modelcontextprotocol.io/) (Model Context Protocol). Ask for a diagram in natural language, or write [PlantUML](https://plantuml.com/), [Mermaid](https://mermaid.js.org/), [D2](https://d2lang.com/), and [Kroki](https://kroki.io/) source yourself — the server renders UML and 30+ other types for Cursor, VS Code Copilot, OpenAI Codex, Claude, Open WebUI + Ollama, ChatGPT, and any MCP client.
+
+**GitHub:** [antoinebou12/uml-mcp](https://github.com/antoinebou12/uml-mcp)
 
 | | |
 | --- | --- |
+| **Clone** | `git clone https://github.com/antoinebou12/uml-mcp.git` |
 | **Live MCP** | [https://uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp) |
 | **Docs** | [antoinebou12.github.io/uml-mcp](https://antoinebou12.github.io/uml-mcp/) |
 | **Catalog** | ~37 Kroki-backed types · 5 MCP tools · URL + playground + chat PNG |
@@ -44,7 +47,9 @@ Generate UML and other diagrams through the [Model Context Protocol](https://mod
 }
 ```
 
-Use **`/mcp`**, not the site root. Repo defaults: [`.cursor/mcp.json`](.cursor/mcp.json) · [`.vscode/mcp.json`](.vscode/mcp.json) · [`.codex/config.toml`](.codex/config.toml).
+Use **`/mcp`**, not the site root. Then ask: *“Draw a sequence diagram of a user logging in through an API gateway.”* or paste PlantUML / Mermaid / Kroki source.
+
+Repo defaults: [`.cursor/mcp.json`](.cursor/mcp.json) · [`.vscode/mcp.json`](.vscode/mcp.json) · [`.codex/config.toml`](.codex/config.toml).
 
 | Client | Config | Guide |
 | --- | --- | --- |
@@ -57,12 +62,19 @@ Use **`/mcp`**, not the site root. Repo defaults: [`.cursor/mcp.json`](.cursor/m
 All snippets: [`config/README.md`](config/README.md)
 
 <details>
-<summary><strong>Local stdio</strong></summary>
+<summary><strong>Clone from origin (local stdio)</strong></summary>
 
 ```bash
-git clone https://github.com/antoinebou12/uml-mcp.git && cd uml-mcp
+git clone https://github.com/antoinebou12/uml-mcp.git
+cd uml-mcp
 uv sync
 uv run python server.py
+```
+
+If you already have the repo and need to set origin:
+
+```bash
+git remote add origin https://github.com/antoinebou12/uml-mcp.git
 ```
 
 Configs: [`config/README.md`](config/README.md) (Cursor, VS Code, Codex, Claude, Open WebUI, Continue)
@@ -212,10 +224,26 @@ Docs locally: `uv run mkdocs serve` → http://127.0.0.1:8000
 
 </details>
 
+## Community
+
+> If this survives a real production repo, it beats a lot of polished launch demos.
+
+— [@AIDailyGems](https://x.com/AIDailyGems/status/2060894196777509037) on [antoinebou12/uml-mcp](https://github.com/antoinebou12/uml-mcp)
+
+Daily and monthly activity (stars, forks, merged PRs, issues): [trendshift.io/repositories/42725](https://trendshift.io/repositories/42725)
+
+## Star History
+
+[![GitHub Star History](docs/assets/star-history.svg)](https://github.com/antoinebou12/uml-mcp/stargazers)
+
+_Updated daily by GitHub Actions from GitHub's timestamped stargazer API. The refresh job prefers the optional `STAR_HISTORY_TOKEN` repository secret and safely falls back to the per-run `GITHUB_TOKEN`._
+
 ## Links
 
 | | |
 | --- | --- |
+| GitHub | [antoinebou12/uml-mcp](https://github.com/antoinebou12/uml-mcp) |
+| Live MCP | [uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp) |
 | Docs | [Site](https://antoinebou12.github.io/uml-mcp/) · [Cursor](docs/integrations/cursor.md) · [Claude Code](docs/integrations/claude_code.md) · [Frontend](docs/integrations/frontend.md) |
 | Contribute | [CONTRIBUTING.md](CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) · [SECURITY.md](SECURITY.md) |
 | License | [MIT](LICENSE) |
