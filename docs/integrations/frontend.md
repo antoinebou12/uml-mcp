@@ -6,7 +6,8 @@ surfaces, so you can pick the one that matches your stack:
 | Surface | What it is | Best for |
 | --- | --- | --- |
 | **MCP at `/mcp`** | Gives an LLM/agent the `generate_uml` tools | Giving an **in-app agent** diagram tools (e.g. [CopilotKit](https://github.com/copilotkit/copilotkit)) |
-| **AG-UI events at `/ag-ui/*`** | Streams `RUN_STARTED…RUN_FINISHED` events over SSE, ending with the diagram as inline base64/URL | Rendering a diagram **directly** in a frontend with no agent orchestrator |
+| **Canonical AG-UI at `/ag-ui`** | Accepts standard `RunAgentInput` and emits wire-compatible AG-UI events over SSE | Connecting `@ag-ui/client` / `HttpAgent` and AG-UI-style canvases directly |
+| **Legacy AG-UI helpers at `/ag-ui/*`** | UML-MCP-specific render request plus SSE lifecycle events | Existing direct-render integrations that already use `/ag-ui/generate` |
 
 Both run from the same FastAPI app (`app.py`) and share the same render pipeline, so no
 extra backend is required.
@@ -114,7 +115,63 @@ const svg = `data:image/svg+xml;base64,${toolResult.content_base64}`;
 
 ---
 
-## Option B — consume the AG-UI event stream directly
+## Option B — use the canonical AG-UI `HttpAgent` endpoint
+
+`POST /ag-ui` is the interoperability endpoint for AG-UI clients. It accepts the
+standard camelCase `RunAgentInput` envelope (`threadId`, `runId`, `state`, `messages`,
+`tools`, `context`, `forwardedProps`) and returns `text/event-stream`.
+
+Put diagram configuration in shared state:
+
+```json
+{
+  "threadId": "thread-1",
+  "runId": "run-1",
+  "state": {
+    "diagram": {
+      "diagramType": "mermaid",
+      "code": "graph TD; A-->B;",
+      "outputFormat": "svg"
+    }
+  },
+  "messages": [],
+  "tools": [],
+  "context": [],
+  "forwardedProps": {}
+}
+```
+
+The same request can be sent by `@ag-ui/client`:
+
+```ts
+import { HttpAgent } from "@ag-ui/client";
+
+const agent = new HttpAgent({ url: "https://uml-mcp.vercel.app/ag-ui" });
+agent.threadId = "thread-1";
+agent.state = {
+  diagram: {
+    diagramType: "mermaid",
+    code: "graph TD; A-->B;",
+    outputFormat: "svg",
+  },
+};
+await agent.runAgent();
+```
+
+The canonical stream uses AG-UI wire fields such as `threadId`, `runId`,
+`toolCallId`, `toolCallName`, `snapshot`, and `CUSTOM { name, value }`. Tool
+arguments use the standard `TOOL_CALL_START -> TOOL_CALL_ARGS -> TOOL_CALL_END`
+lifecycle, and the final tool result is a JSON string in `TOOL_CALL_RESULT.content`.
+The rendered diagram is also emitted as `CUSTOM` with `name: "uml.diagram"`.
+
+For lightweight clients that do not populate `state.diagram.code`, UML-MCP also accepts
+the latest plain-text user message as the diagram source. `state.diagram` is preferred
+because it keeps the editable document explicit and avoids treating natural-language
+chat text as diagram syntax.
+
+---
+
+## Option C — consume the UML-MCP direct-render event stream
 
 No agent, no LLM orchestrator — your frontend `POST`s a render request and reads SSE
 events, then renders the final diagram inline. This is exactly what the `/ag-ui/generate`
