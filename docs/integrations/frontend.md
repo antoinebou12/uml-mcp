@@ -12,6 +12,12 @@ surfaces, so you can pick the one that matches your stack:
 Both run from the same FastAPI app (`app.py`) and share the same render pipeline, so no
 extra backend is required.
 
+If you are building a **generative UI**, keep one distinction clear: AG-UI is the event
+stream, while OpenUI is a separate UI-generation and rendering layer. OpenUI can consume
+standard AG-UI SSE with its built-in `agUIAdapter()`. UML-MCP can stay behind the agent as
+the diagram tool while OpenUI renders the agent's generated component tree. See
+[OpenUI + UML-MCP](openui.md) for the recommended architecture and the current boundary.
+
 ## Before you start
 
 - The AG-UI routes live on the same host as the MCP endpoint:
@@ -356,6 +362,6 @@ curl -N "https://uml-mcp.vercel.app/ag-ui/events/$RUN_ID"
 
 ## Related resources
 
-- [Claude Code plugin](claude_code.md) · [Cursor](cursor.md) · [Vercel & Smithery](vercel_smithery.md)
+- [OpenUI + UML-MCP](openui.md) · [Claude Code plugin](claude_code.md) · [Cursor](cursor.md) · [Vercel & Smithery](vercel_smithery.md)
 - [MCP tools](../api/tools.md)
 - [AG-UI (the protocol)](https://ag-ui.com) · [CopilotKit](https://github.com/copilotkit/copilotkit)
