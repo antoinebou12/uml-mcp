@@ -8,7 +8,9 @@ hide:
 
 # UML-MCP
 
-UML-MCP is an MCP server for diagram generation: AI assistants (Cursor, VS Code Copilot, OpenAI Codex, Claude Desktop, Open WebUI + Ollama, and any MCP-compatible client) can render UML, Mermaid, D2, TikZ, BPMN, C4, Graphviz, and 30+ other diagram types through [Kroki](https://kroki.io/), [PlantUML](https://plantuml.com/), [Mermaid](https://mermaid.js.org/), and [D2](https://d2lang.com/).
+UML-MCP gives AI assistants a dependable diagram tool. The assistant chooses the diagram, UML-MCP validates and renders the source, and the client gets back something it can actually show: an inline image, a URL, editable source, or a playground link. It supports UML, Mermaid, D2, TikZ, BPMN, C4, Graphviz, and 30+ other diagram types through [Kroki](https://kroki.io/), [PlantUML](https://plantuml.com/), [Mermaid](https://mermaid.js.org/), and [D2](https://d2lang.com/).
+
+For product UIs, UML-MCP can stay focused on diagrams while the rest of the stack does its own job: **MCP** exposes tools to the agent, **AG-UI** streams agent events to the frontend, and **OpenUI** can turn model output into interactive components owned by your application.
 
 [![Run Tests](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml)
 [![Build Package](https://github.com/antoinebou12/uml-mcp/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/build.yml)
@@ -36,6 +38,7 @@ sequenceDiagram
 [Get started in 5 minutes :material-rocket-launch:](tutorials/getting-started.md){ .md-button .md-button--primary }
 [Browse the API reference :material-book-open-variant:](reference/index.md){ .md-button }
 [Add to Cursor / Claude :material-puzzle:](deploy/index.md){ .md-button }
+[Build an agent UI :material-view-dashboard-outline:](integrations/openui.md){ .md-button }
 
 ---
 
@@ -58,6 +61,14 @@ sequenceDiagram
     `generate_uml`, `generate_uml_image` (inline PNG/SVG for chat clients), `validate_uml`, `list_diagram_types`, and `generate_uml_batch` are MCP tools with annotations (`readOnlyHint`, `idempotentHint`, etc.) and resource URIs under `uml://`.
 
     [:octicons-arrow-right-24: Tool reference](api/tools.md)
+
+-   :material-view-dashboard-outline:{ .lg .middle } **Agent UI integration**
+
+    ---
+
+    Use canonical AG-UI when a frontend needs run, state, and tool events. For generative UI, OpenUI can consume the AG-UI stream while UML-MCP remains the diagram tool behind the agent.
+
+    [:octicons-arrow-right-24: OpenUI + UML-MCP](integrations/openui.md)
 
 -   :material-file-export:{ .lg .middle } **Multiple output formats**
 

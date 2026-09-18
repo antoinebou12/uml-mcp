@@ -266,6 +266,7 @@ except ImportError:
 # AG-UI event streaming (imported separately: failure here only disables /ag-ui routes)
 try:
     from mcp_core.core.agui import (
+        canonical_diagram_generation_events,
         diagram_generation_events,
         new_run_id,
         sse_frame,
@@ -359,6 +360,7 @@ async def root(request: Request):
             "openapi_json": "/openapi.json",
             "openapi_yaml": "/openapi.yaml",
             "mcp": "/mcp",
+            "ag_ui": "/ag-ui",
             "kroki_encode": "/kroki_encode",
             "status_page": "/status",
         },
@@ -579,6 +581,117 @@ class AguiRunResponse(BaseModel):
     status: str
 
 
+class AguiProtocolRunInput(BaseModel):
+    """Canonical AG-UI RunAgentInput accepted by POST /ag-ui.
+
+    The official AG-UI clients use camelCase on the wire. UML-MCP keeps the request
+    permissive so newer optional protocol fields can pass through without breaking older
+    server versions.
+    """
+
+    model_config = ConfigDict(populate_by_name=True, extra="allow")
+
+    thread_id: str = Field(alias="threadId", min_length=1)
+    run_id: str = Field(alias="runId", min_length=1)
+    parent_run_id: str | None = Field(default=None, alias="parentRunId")
+    state: Any = Field(default_factory=dict)
+    messages: list[dict[str, Any]] = Field(default_factory=list)
+    tools: list[dict[str, Any]] = Field(default_factory=list)
+    context: list[dict[str, Any]] = Field(default_factory=list)
+    forwarded_props: Any = Field(default_factory=dict, alias="forwardedProps")
+
+
+def _as_mapping(value: Any) -> dict[str, Any]:
+    """Return a dict for AG-UI state/forwarded props without trusting arbitrary input."""
+    return value if isinstance(value, dict) else {}
+
+
+def _pick_diagram_value(
+    nested: list[dict[str, Any]], direct: list[dict[str, Any]], *keys: str
+) -> Any:
+    """Read the first non-empty diagram value from nested or direct AG-UI state."""
+    for source in [*nested, *direct]:
+        for key in keys:
+            value = source.get(key)
+            if value is not None and value != "":
+                return value
+    return None
+
+
+def _build_protocol_diagram_request(body: AguiProtocolRunInput):
+    """Map canonical RunAgentInput state into the shared diagram render request.
+
+    Preferred shape is state.diagram. forwardedProps.diagram is also accepted for
+    hosts that keep application-specific request data outside shared state. If code is
+    omitted there, the latest plain-text user message is treated as diagram source.
+    """
+    from mcp_core.core.diagram_service import DiagramRequest
+
+    state = _as_mapping(body.state)
+    forwarded = _as_mapping(body.forwarded_props)
+    nested = [
+        _as_mapping(state.get("diagram")),
+        _as_mapping(forwarded.get("diagram")),
+    ]
+    direct = [state, forwarded]
+
+    code = _pick_diagram_value(
+        nested,
+        direct,
+        "code",
+        "diagramCode",
+        "diagram_code",
+        "source",
+    )
+    if not isinstance(code, str) or not code.strip():
+        for message in reversed(body.messages):
+            if message.get("role") != "user":
+                continue
+            content = message.get("content")
+            if isinstance(content, str) and content.strip():
+                code = content
+                break
+
+    if not isinstance(code, str) or not code.strip():
+        raise HTTPException(
+            status_code=422,
+            detail=(
+                "AG-UI run requires diagram source in state.diagram.code, "
+                "forwardedProps.diagram.code, or the latest text user message."
+            ),
+        )
+
+    diagram_type = _pick_diagram_value(
+        nested, direct, "diagramType", "diagram_type", "language"
+    )
+    if not isinstance(diagram_type, str) or not diagram_type.strip():
+        diagram_type = "mermaid"
+
+    output_format = _pick_diagram_value(
+        nested, direct, "outputFormat", "output_format"
+    )
+    if not isinstance(output_format, str) or not output_format.strip():
+        output_format = "svg"
+
+    theme = _pick_diagram_value(nested, direct, "theme")
+    if theme is not None and not isinstance(theme, str):
+        theme = str(theme)
+
+    scale = _pick_diagram_value(nested, direct, "scale")
+    try:
+        scale_value = float(scale) if scale is not None else 1.0
+    except (TypeError, ValueError):
+        scale_value = 1.0
+
+    return DiagramRequest(
+        diagram_type=diagram_type.strip(),
+        code=code.strip(),
+        output_format=output_format.strip().lower(),
+        theme=theme,
+        scale=scale_value,
+    )
+
+
 def _build_agui_diagram_request(req: AguiRunRequest):
     """Convert the AG-UI run request into the shared render pipeline request."""
     from mcp_core.core.diagram_service import DiagramRequest
@@ -637,6 +750,42 @@ async def _agui_events_stream(run_id: str):
     finally:
         _AGUI_RUN_DONE.pop(run_id, None)
         _AGUI_RUNS.pop(run_id, None)
+
+
+@app.post("/ag-ui", tags=[TAG_AGUI])
+async def agui_protocol_run(body: AguiProtocolRunInput):
+    """Run UML-MCP through the canonical AG-UI HTTP/SSE contract.
+
+    This endpoint accepts the standard camelCase RunAgentInput shape used by
+    @ag-ui/client HttpAgent and emits canonical AG-UI events. Existing
+    /ag-ui/generate and start/events routes remain available for backwards
+    compatibility with the earlier UML-MCP-specific request/event shape.
+    """
+    if not HAS_AGUI:
+        raise HTTPException(status_code=503, detail="AG-UI streaming not available")
+
+    render_req = _build_protocol_diagram_request(body)
+
+    async def event_source():
+        async for ev in canonical_diagram_generation_events(
+            render_req,
+            thread_id=body.thread_id,
+            run_id=body.run_id,
+            parent_run_id=body.parent_run_id,
+        ):
+            yield sse_frame(ev)
+
+    return StreamingResponse(
+        event_source(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no",
+            "Connection": "keep-alive",
+            "X-Run-Id": body.run_id,
+            "X-AG-UI-Compatible": "true",
+        },
+    )
 
 
 @app.post("/ag-ui/start", response_model=AguiRunResponse, tags=[TAG_AGUI])

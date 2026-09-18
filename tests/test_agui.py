@@ -191,3 +191,125 @@ async def test_diagram_generation_events_sequence(monkeypatch):
     assert events[-1]["type"] == "RUN_FINISHED"
     # RUN_ERROR is never emitted on success.
     assert "RUN_ERROR" not in {e["type"] for e in events}
+
+
+def test_agui_canonical_endpoint_emits_official_wire_shapes(monkeypatch):
+    """POST /ag-ui accepts RunAgentInput and emits @ag-ui/client-compatible events."""
+    _mock_render(monkeypatch, _success_result())
+    response = client.post(
+        "/ag-ui",
+        json={
+            "threadId": "thread-1",
+            "runId": "run-1",
+            "state": {
+                "diagram": {
+                    "diagramType": "mermaid",
+                    "code": "graph TD; A-->B;",
+                    "outputFormat": "svg",
+                }
+            },
+            "messages": [],
+            "tools": [],
+            "context": [],
+            "forwardedProps": {},
+        },
+    )
+
+    assert response.status_code == 200
+    assert "text/event-stream" in response.headers.get("content-type", "")
+    assert response.headers["x-ag-ui-compatible"] == "true"
+
+    events = _parse_events(response)
+    types = [event["type"] for event in events]
+    assert types[0] == "RUN_STARTED"
+    assert types[-1] == "RUN_FINISHED"
+    assert "TOOL_CALL_ARGS" in types
+    assert "TOOL_CALL_END" in types
+
+    started = events[0]
+    assert started["threadId"] == "thread-1"
+    assert started["runId"] == "run-1"
+    assert "thread_id" not in started
+    assert "run_id" not in started
+
+    step = next(event for event in events if event["type"] == "STEP_STARTED")
+    assert step["stepName"] == "Render diagram"
+
+    tool_start = next(
+        event for event in events if event["type"] == "TOOL_CALL_START"
+    )
+    assert tool_start["toolCallName"] == "generate_uml"
+    assert "tool_call_id" not in tool_start
+
+    tool_args = next(
+        event for event in events if event["type"] == "TOOL_CALL_ARGS"
+    )
+    args = json.loads(tool_args["delta"])
+    assert args["diagram_type"] == "mermaid"
+    assert args["output_format"] == "svg"
+
+    snapshot = next(
+        event for event in events if event["type"] == "STATE_SNAPSHOT"
+    )
+    assert snapshot["snapshot"]["code"] == "graph TD; A-->B;"
+    assert "state" not in snapshot
+
+    result = next(
+        event for event in events if event["type"] == "TOOL_CALL_RESULT"
+    )
+    assert result["role"] == "tool"
+    assert json.loads(result["content"])["url"].endswith("abc123")
+
+    custom = next(event for event in events if event["type"] == "CUSTOM")
+    assert custom["name"] == "uml.diagram"
+    assert custom["value"]["content_base64"] == _success_result()["content_base64"]
+
+    finished = events[-1]
+    assert finished["threadId"] == "thread-1"
+    assert finished["runId"] == "run-1"
+    assert finished["outcome"] == {"type": "success"}
+
+
+def test_agui_canonical_endpoint_uses_latest_user_message_as_source(monkeypatch):
+    """A plain text user message can provide diagram code for generic AG-UI clients."""
+    _mock_render(monkeypatch, _success_result())
+    response = client.post(
+        "/ag-ui",
+        json={
+            "threadId": "thread-2",
+            "runId": "run-2",
+            "state": {"diagramType": "mermaid"},
+            "messages": [
+                {"id": "m1", "role": "user", "content": "graph TD; X-->Y;"}
+            ],
+            "tools": [],
+            "context": [],
+            "forwardedProps": {},
+        },
+    )
+
+    assert response.status_code == 200
+    snapshot = next(
+        event
+        for event in _parse_events(response)
+        if event["type"] == "STATE_SNAPSHOT"
+    )
+    assert snapshot["snapshot"]["code"] == "graph TD; X-->Y;"
+
+
+def test_agui_canonical_endpoint_rejects_missing_diagram_source():
+    """Canonical runs fail fast when neither state nor messages contain source code."""
+    response = client.post(
+        "/ag-ui",
+        json={
+            "threadId": "thread-3",
+            "runId": "run-3",
+            "state": {},
+            "messages": [],
+            "tools": [],
+            "context": [],
+            "forwardedProps": {},
+        },
+    )
+    assert response.status_code == 422
+    assert "diagram source" in response.json()["detail"]
