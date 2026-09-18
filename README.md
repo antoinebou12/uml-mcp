@@ -203,7 +203,7 @@ mcp_core/tools/        -- generate_uml, generate_uml_image, validate, batch
 tools/kroki/           -- Kroki, PlantUML, Mermaid, D2
 ```
 
-**AG-UI:** `POST /ag-ui/generate` — [docs/integrations/frontend.md](docs/integrations/frontend.md)
+**AG-UI:** canonical `POST /ag-ui` for `HttpAgent`; legacy direct render at `POST /ag-ui/generate` — [frontend integration](docs/integrations/frontend.md)
 
 </details>
 
