@@ -32,6 +32,7 @@ TABS = [
     "Lint",
     "Tools",
 ]
+LOCAL = httpx.Client(trust_env=False, timeout=10)  # loopback: never via HTTP(S)_PROXY
 MCP_HEADERS = {
     "Accept": "application/json, text/event-stream",
     "Content-Type": "application/json",
@@ -85,7 +86,7 @@ def server(tmp_path_factory):
     base = f"http://127.0.0.1:{port}"
     for _ in range(60):
         try:
-            if httpx.get(f"{base}/health", timeout=1).status_code == 200:
+            if LOCAL.get(f"{base}/health", timeout=1).status_code == 200:
                 break
         except httpx.HTTPError:
             time.sleep(0.5)
@@ -171,7 +172,7 @@ def test_mcp_endpoint_over_playwright_request(browser, server):
 
 
 def test_dashboard_tabs_render_without_errors(browser, server):
-    httpx.post(
+    LOCAL.post(
         f"{server}/kroki_encode", json={"type": "mermaid", "code": "graph TD; A-->B"}
     )
     page = browser.new_page()
@@ -202,5 +203,5 @@ def test_dashboard_tabs_render_without_errors(browser, server):
 
 
 def test_prometheus_metrics_endpoint(server):
-    body = httpx.get(f"{server}/metrics").text
+    body = LOCAL.get(f"{server}/metrics").text
     assert "uml_mcp_uptime_seconds" in body
