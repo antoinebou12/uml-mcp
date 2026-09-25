@@ -12,7 +12,7 @@ import mcp_core.core.http_observability as http_obs
 from mcp_core.core.config import MCP_SETTINGS
 from mcp_core.core.http_observability import (
     RequestIdAndRateLimitMiddleware,
-    _rate_limited,
+    _rate_limit_state,
 )
 
 
@@ -24,29 +24,29 @@ def _clear_rate_buckets():
 
 
 class TestRateLimitedHelper:
-    """Tests for _rate_limited (sliding window per client IP)."""
+    """Tests for the legacy sliding window (MCP_RATE_LIMIT_PER_MINUTE)."""
 
     def test_disabled_when_limit_zero(self):
-        assert _rate_limited("1.2.3.4", 0) is False
-        assert _rate_limited("1.2.3.4", 0) is False
+        assert _rate_limit_state("1.2.3.4", 0)[0] is False
+        assert _rate_limit_state("1.2.3.4", 0)[0] is False
 
     def test_allows_up_to_limit_then_blocks(self):
-        assert _rate_limited("10.0.0.1", 2) is False
-        assert _rate_limited("10.0.0.1", 2) is False
-        assert _rate_limited("10.0.0.1", 2) is True
+        assert _rate_limit_state("10.0.0.1", 2)[0] is False
+        assert _rate_limit_state("10.0.0.1", 2)[0] is False
+        assert _rate_limit_state("10.0.0.1", 2)[0] is True
 
     def test_buckets_are_per_client_ip(self):
-        assert _rate_limited("10.0.0.2", 1) is False
-        assert _rate_limited("10.0.0.3", 1) is False
+        assert _rate_limit_state("10.0.0.2", 1)[0] is False
+        assert _rate_limit_state("10.0.0.3", 1)[0] is False
 
     def test_old_entries_expire_after_sixty_seconds(self, monkeypatch):
         """Stale timestamps are dropped so the window can accept new requests."""
         times = iter([100.0, 100.0, 161.0, 161.0])
 
         monkeypatch.setattr(http_obs.time, "monotonic", lambda: next(times))
-        assert _rate_limited("10.0.0.9", 1) is False
-        assert _rate_limited("10.0.0.9", 1) is True
-        assert _rate_limited("10.0.0.9", 1) is False
+        assert _rate_limit_state("10.0.0.9", 1)[0] is False
+        assert _rate_limit_state("10.0.0.9", 1)[0] is True
+        assert _rate_limit_state("10.0.0.9", 1)[0] is False
 
 
 def _make_app() -> Starlette:

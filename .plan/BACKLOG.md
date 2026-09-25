@@ -8,7 +8,7 @@ Priorities: **P1** next release · **P2** soon · **P3** nice to have. Size: S <
 | 2 | [Linter: mcpx rule set, score, grade, token budget](done/2026-09-lint-score-grade.md) | P1 | M | done |
 | 3 | [OpenTelemetry traces (optional)](done/2026-09-opentelemetry.md) | P1 | M | done |
 | 4 | [Playwright e2e for the admin dashboard and /mcp](done/2026-09-playwright-e2e.md) | P1 | S | done |
-| 5 | [Dead code and duplication cleanup](in-progress/P2-dead-code-cleanup.md) | P2 | M | in-progress |
+| 5 | [Dead code and duplication cleanup](done/2026-09-dead-code-cleanup.md) | P2 | M | done (first pass) |
 | 6 | [Publish the container image to GHCR](blocked/P1-ghcr-image.md) | P1 | S | blocked |
 | 7 | [Shared state for multi-replica (Redis): rate limits, audit buffer, AG-UI runs](backlog/P2-shared-state-redis.md) | P2 | L | backlog |
 | 8 | [Filter `tools/list` by the caller's permissions](backlog/P2-tools-list-filtering.md) | P2 | S | backlog |

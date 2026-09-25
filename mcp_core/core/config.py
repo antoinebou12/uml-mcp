@@ -115,11 +115,6 @@ class MCPSettings(BaseModel):
     memory_only: bool = Field(default_factory=_memory_only_default)
     url_only: bool = Field(default_factory=_url_only_default)
     diagram_fallback_enabled: bool = Field(default_factory=_diagram_fallback_default)
-    lulu_ads_enabled: bool = Field(
-        default_factory=lambda: _env_bool(
-            "LULU_ADS_ENABLED", _env_bool("VERCEL", False)
-        )
-    )
     description: str = "Generate UML and other diagrams through MCP"
     config_schema_url: str = (
         ""  # Optional URL for session config schema (improves Configuration UX score)

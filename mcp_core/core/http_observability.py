@@ -40,12 +40,6 @@ def _rate_limit_state(
     return False, remaining, 0
 
 
-def _rate_limited(client_ip: str, limit_per_minute: int) -> bool:
-    """Backward-compatible boolean helper used by existing tests/callers."""
-    limited, _, _ = _rate_limit_state(client_ip, limit_per_minute)
-    return limited
-
-
 REST_AUDIT_PREFIXES = ("/generate_diagram", "/kroki_encode", "/ag-ui")
 
 

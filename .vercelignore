@@ -38,3 +38,4 @@ requirements-dev.txt
 __pycache__/
 *.egg-info/
 *.egg
+.plan/

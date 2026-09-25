@@ -90,7 +90,7 @@ Measured:
 
 ## Non-negotiable compliance
 
-All four tools and transports present. No ads/monetization middleware currently present. Added config flag `lulu_ads_enabled` default False via `LULU_ADS_ENABLED` env var to enforce no-ad policy.
+All four tools and transports present. No ads/monetization middleware currently present. (A former unused `lulu_ads_enabled` flag was removed in 1.4.0; there is no ad code to toggle.)
 
 ## Proposed change sequence
 
