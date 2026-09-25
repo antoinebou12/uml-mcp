@@ -221,11 +221,11 @@ def register_tools_with_server(server: Any) -> list[str]:
         @wraps(func)
         def protocol_func(
             *args: Any,
-            __func: Callable[..., Any] = func,
-            __name: str = tool_name,
+            _bound_func: Callable[..., Any] = func,
+            _bound_name: str = tool_name,
             **kwargs: Any,
         ) -> Any:
-            return _as_mcp_tool_result(__name, __func(*args, **kwargs))
+            return _as_mcp_tool_result(_bound_name, _bound_func(*args, **kwargs))
 
         tool_kwargs: dict[str, Any] = {
             "name": tool_name,

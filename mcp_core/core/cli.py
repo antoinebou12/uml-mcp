@@ -7,6 +7,7 @@ import datetime
 import logging
 import os
 import sys
+from typing import Any
 
 from rich.console import Console
 from rich.logging import RichHandler
@@ -282,7 +283,7 @@ def run():
         from mcp_core.core.server import get_mcp_server, start_server
 
         if hasattr(MCP_SETTINGS, "update_from_args"):
-            updater = MCP_SETTINGS.update_from_args
+            updater: Any = MCP_SETTINGS.update_from_args
             if callable(updater):
                 updater(args)
 

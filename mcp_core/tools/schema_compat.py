@@ -17,7 +17,7 @@ except ImportError:  # pragma: no cover - production pins FastMCP 4
     Transform = object  # type: ignore[assignment,misc]
 
 
-class ExplicitRequiredSchemaTransform(Transform):  # type: ignore[misc]
+class ExplicitRequiredSchemaTransform(Transform):  # type: ignore[misc]  # ty: ignore[unsupported-base]
     """Ensure every advertised tool input schema has a ``required`` array."""
 
     async def list_tools(self, tools: Sequence[Any]) -> Sequence[Any]:
