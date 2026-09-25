@@ -9,6 +9,8 @@ from collections import defaultdict
 from typing import Any
 
 BUCKETS_MS = (5, 10, 25, 50, 100, 250, 500, 1000, 2500, 5000, 10000, 30000)
+#: Minutes of per-minute history kept for charts.
+TIMESERIES_MINUTES = 180
 #: Distinct (type, name) series kept; the rest aggregate under name="other".
 MAX_SERIES = 200
 
@@ -51,9 +53,10 @@ class Histogram:
 
 
 class Metrics:
-    def __init__(self) -> None:
+    def __init__(self, clock: Any = time.time) -> None:
         self._lock = threading.Lock()
-        self.started = time.time()
+        self._clock = clock
+        self.started = clock()
         self.reset()
 
     def reset(self) -> None:
@@ -64,6 +67,8 @@ class Metrics:
         self.denial_reasons: dict[str, int] = defaultdict(int)
         self.rate_limited: dict[str, int] = defaultdict(int)
         self.sink_errors = 0
+        # minute epoch -> [calls, errors, denied, Histogram]
+        self.minutes: dict[int, list[Any]] = {}
 
     def observe(self, record: dict[str, Any]) -> None:
         op_type = str(record.get("operation_type"))
@@ -81,6 +86,39 @@ class Metrics:
                 self.calls[key][status] += 1
             if record.get("duration_ms") is not None:
                 self.latency[key].observe(float(record["duration_ms"]))
+            self._observe_minute(record)
+
+    def _observe_minute(self, record: dict[str, Any]) -> None:
+        minute = int(self._clock() // 60)
+        bucket = self.minutes.setdefault(minute, [0, 0, 0, Histogram()])
+        bucket[0] += 1
+        if record.get("policy_decision") == "deny":
+            bucket[2] += 1
+        elif record.get("operation_status") == "error":
+            bucket[1] += 1
+        if record.get("duration_ms") is not None:
+            bucket[3].observe(float(record["duration_ms"]))
+        for old in [m for m in self.minutes if m < minute - TIMESERIES_MINUTES]:
+            del self.minutes[old]
+
+    def timeseries(self, minutes: int = 60) -> list[dict[str, Any]]:
+        """Per-minute calls/errors/denied/p95 for the last ``minutes`` (zero-filled)."""
+        now = int(self._clock() // 60)
+        minutes = max(1, min(minutes, TIMESERIES_MINUTES))
+        out = []
+        with self._lock:
+            for minute in range(now - minutes + 1, now + 1):
+                calls, errors, denied, hist = self.minutes.get(minute, [0, 0, 0, None])
+                out.append(
+                    {
+                        "minute": minute * 60,
+                        "calls": calls,
+                        "errors": errors,
+                        "denied": denied,
+                        "p95_ms": hist.percentile(0.95) if hist else None,
+                    }
+                )
+        return out
 
     def rate_limit_hit(self, scope: str) -> None:
         with self._lock:
@@ -106,7 +144,7 @@ class Metrics:
                     }
                 )
             return {
-                "uptime_seconds": round(time.time() - self.started, 1),
+                "uptime_seconds": round(self._clock() - self.started, 1),
                 "operations": ops,
                 "denial_reasons": dict(self.denial_reasons),
                 "rate_limited": dict(self.rate_limited),

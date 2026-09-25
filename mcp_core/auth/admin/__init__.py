@@ -164,9 +164,12 @@ def build_admin_router(runtime: AuthRuntime) -> APIRouter:
             generate(kind, params), media_type="text/plain", headers=_NO_STORE
         )
 
-    from ...observability.admin_api import add_ops_routes
+    from ...admin.api import add_ops_routes
+    from ...admin.guards import enterprise_guards
+    from ...admin.routes import add_admin_routes
 
     add_ops_routes(router, _require_admin)
+    add_admin_routes(router, enterprise_guards(_require_admin))
     return router
 
 

@@ -21,7 +21,7 @@ logging:
 
 audit:
   enabled: false                      # set true to keep a local JSONL trail of tool calls
-  sinks: [file]
+  sinks: [file, memory]              # JSONL on disk + the dashboard's Activity page
   file:
     path: ~/.local/state/uml-mcp/audit.jsonl
     max_bytes: 10485760

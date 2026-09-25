@@ -65,6 +65,7 @@ class ToolRateLimitedError(RuntimeError):
 class AuditLogger:
     def __init__(self, app: AppConfig, *, stdio: bool = False):
         self.app = app
+        self.stdio = stdio
         self.enabled = app.audit.enabled
         self.metrics_enabled = app.metrics.enabled
         self.memory: MemorySink | None = None

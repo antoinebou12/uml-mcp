@@ -12,12 +12,12 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, Response
 
-from .audit import get_audit_logger
-from .metrics import METRICS
-from .ratelimit import LIMITER
+from ..observability.audit import get_audit_logger
+from ..observability.metrics import METRICS
+from ..observability.ratelimit import LIMITER
 
 NO_STORE = {"Cache-Control": "no-store"}
 Guard = Callable[[Request], None]
@@ -171,24 +171,14 @@ def add_ops_routes(router: APIRouter, guard: Guard) -> None:
         return JSONResponse(_tools_payload(), headers=NO_STORE)
 
 
-def loopback_guard(request: Request) -> None:
-    """Allow only loopback socket peers (never X-Forwarded-For)."""
-    import ipaddress
-
-    peer = request.client.host if request.client else ""
-    try:
-        loopback = ipaddress.ip_address(peer).is_loopback
-    except ValueError:
-        loopback = False
-    if not loopback:
-        raise HTTPException(status_code=404, detail="Not Found")
-
-
 def build_local_admin_router() -> APIRouter:
     """Dashboard without auth, loopback only (``admin.allow_local_without_auth``)."""
     from ..auth.admin.ui import ADMIN_HTML, ADMIN_JS
+    from .guards import local_guards
+    from .routes import add_admin_routes
 
     router = APIRouter(include_in_schema=False)
+    guards = local_guards()
     headers = {
         **NO_STORE,
         "Content-Security-Policy": (
@@ -201,17 +191,17 @@ def build_local_admin_router() -> APIRouter:
     @router.get("/admin")
     @router.get("/admin/")
     async def page(request: Request) -> Response:
-        loopback_guard(request)
+        guards.read(request)
         return Response(ADMIN_HTML, media_type="text/html", headers=headers)
 
     @router.get("/admin/app.js")
     async def script(request: Request) -> Response:
-        loopback_guard(request)
+        guards.read(request)
         return Response(ADMIN_JS, media_type="text/javascript", headers=headers)
 
     @router.get("/admin/api/overview")
     async def overview(request: Request) -> JSONResponse:
-        loopback_guard(request)
+        guards.read(request)
         from ..core.config import MCP_SETTINGS
 
         return JSONResponse(
@@ -224,7 +214,8 @@ def build_local_admin_router() -> APIRouter:
             headers=NO_STORE,
         )
 
-    add_ops_routes(router, loopback_guard)
+    add_ops_routes(router, guards.read)
+    add_admin_routes(router, guards)
     return router
 
 
@@ -235,6 +226,5 @@ def metrics_response() -> Response:
 __all__ = [
     "add_ops_routes",
     "build_local_admin_router",
-    "loopback_guard",
     "metrics_response",
 ]

@@ -252,8 +252,13 @@ def display_tools_and_resources(mcp_settings):
 def run():
     """Run the CLI: parse args, setup logging, optionally list tools, then start server."""
     global console
+    from mcp_core.cli.app import TYPER_COMMANDS
     from mcp_core.core.commands import SUBCOMMANDS
 
+    if len(sys.argv) > 1 and sys.argv[1] in TYPER_COMMANDS:
+        from mcp_core.cli.app import main as typer_main
+
+        sys.exit(typer_main(sys.argv[1:]))
     if len(sys.argv) > 1 and sys.argv[1] in SUBCOMMANDS:
         from mcp_core.core.commands import main as commands_main
 

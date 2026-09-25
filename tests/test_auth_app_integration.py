@@ -149,14 +149,14 @@ def test_yaml_enables_metrics_endpoint_and_local_dashboard(tmp_path):
     code = (
         "from fastapi.testclient import TestClient\n"
         "import app\n"
-        "c = TestClient(app.app, client=('127.0.0.1', 5000))\n"
+        "c = TestClient(app.app, client=('127.0.0.1', 5000), base_url='http://127.0.0.1')\n"
         "assert c.get('/metrics').status_code == 200\n"
         "assert 'uml_mcp_' in c.get('/metrics').text\n"
         "assert c.get('/admin').status_code == 200\n"
         "assert c.get('/admin/api/overview').json()['local'] is True\n"
         "import logging\n"
         "assert logging.getLogger().level == logging.WARNING\n"
-        "r = TestClient(app.app, client=('203.0.113.9', 5000))\n"
+        "r = TestClient(app.app, client=('203.0.113.9', 5000), base_url='http://127.0.0.1')\n"
         "assert r.get('/admin/api/overview').status_code == 404\n"
         "print('ok')\n"
     )
@@ -169,7 +169,7 @@ def test_default_app_has_no_metrics_or_local_admin():
     code = (
         "from fastapi.testclient import TestClient\n"
         "import app\n"
-        "c = TestClient(app.app, client=('127.0.0.1', 5000))\n"
+        "c = TestClient(app.app, client=('127.0.0.1', 5000), base_url='http://127.0.0.1')\n"
         "assert c.get('/metrics').status_code == 404\n"
         "assert c.get('/admin/api/overview').status_code == 404\n"
         "print('ok')\n"
