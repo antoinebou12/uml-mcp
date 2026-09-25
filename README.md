@@ -19,13 +19,16 @@
 [![Lulu MCPs](https://getlulu.dev/api/mcps/badge/uml-mcp)](https://getlulu.dev/mcps/uml-mcp)
 [![smithery badge](https://smithery.ai/badge/antoinebou12/uml)](https://smithery.ai/servers/antoinebou12/uml)
 
-**UML-MCP Server** is a UML diagram generation tool based on [MCP](https://modelcontextprotocol.io/) (Model Context Protocol). Ask for a diagram in natural language, or write [PlantUML](https://plantuml.com/), [Mermaid](https://mermaid.js.org/), [D2](https://d2lang.com/), and [Kroki](https://kroki.io/) source yourself — the server renders UML and 30+ other types for Cursor, VS Code Copilot, OpenAI Codex, Claude, Open WebUI + Ollama, ChatGPT, and any MCP client.
+**UML-MCP gives an AI assistant a real diagram tool instead of asking it to fake diagrams in Markdown.** Connect it once over [MCP](https://modelcontextprotocol.io/), then ask for a class diagram, sequence diagram, architecture view, Mermaid flowchart, D2 graph, BPMN process, or another Kroki-backed format. The server validates the source, renders it, and returns a URL, playground link, or inline image.
+
+It also works as a building block for agent-facing products. Use **MCP** when an agent needs diagram tools, **AG-UI** when a frontend needs a standard event stream, and **OpenUI** when the product should turn model output into interactive, application-owned UI components. These layers complement each other; UML-MCP stays focused on diagram generation.
 
 | | |
 | --- | --- |
 | **Live MCP** | [https://uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp) |
 | **Docs** | [antoinebou12.github.io/uml-mcp](https://antoinebou12.github.io/uml-mcp/) |
 | **Catalog** | ~37 Kroki-backed types · 5 MCP tools · URL + playground + chat PNG |
+| **Agent UI** | MCP `/mcp` · canonical AG-UI `/ag-ui` · [OpenUI integration guide](docs/integrations/openui.md) |
 
 <p align="center">
   <img src="docs/assets/diagrams/client-server-chat.png" width="720" alt="UML-MCP in chat: Client/Server Mermaid sequence with URL and Playground links" />
@@ -98,6 +101,7 @@ Configs: [`config/README.md`](config/README.md) (Cursor, VS Code, Codex, Claude,
 | **Tools** | `generate_uml` · `generate_uml_image` · `validate_uml` · `list_diagram_types` · `generate_uml_batch` |
 | **Chat** | Inline PNG + markdown `![diagram](url)` + **Playground** link |
 | **Deploy** | Local · Docker · [Vercel](https://vercel.com/) · [Smithery](https://smithery.ai/) |
+| **Frontend** | Canonical AG-UI SSE for agent UIs; OpenUI can consume AG-UI and render generated components in your app |
 
 <details>
 <summary><strong>MCP tools</strong></summary>
@@ -203,7 +207,7 @@ mcp_core/tools/        -- generate_uml, generate_uml_image, validate, batch
 tools/kroki/           -- Kroki, PlantUML, Mermaid, D2
 ```
 
-**AG-UI:** `POST /ag-ui/generate` — [docs/integrations/frontend.md](docs/integrations/frontend.md)
+**Agent UI:** canonical `POST /ag-ui` for AG-UI clients; legacy direct render at `POST /ag-ui/generate`. See [frontend integration](docs/integrations/frontend.md) and [OpenUI + UML-MCP](docs/integrations/openui.md).
 
 </details>
 
@@ -233,7 +237,7 @@ Daily and monthly activity (stars, forks, merged PRs, issues): [trendshift.io/re
 
 | | |
 | --- | --- |
-| Docs | [Site](https://antoinebou12.github.io/uml-mcp/) · [Cursor](docs/integrations/cursor.md) · [Claude Code](docs/integrations/claude_code.md) · [Frontend](docs/integrations/frontend.md) |
+| Docs | [Site](https://antoinebou12.github.io/uml-mcp/) · [Cursor](docs/integrations/cursor.md) · [Claude Code](docs/integrations/claude_code.md) · [Frontend](docs/integrations/frontend.md) · [OpenUI](docs/integrations/openui.md) |
 | Contribute | [CONTRIBUTING.md](CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) · [SECURITY.md](SECURITY.md) |
 | License | [MIT](LICENSE) |
 
