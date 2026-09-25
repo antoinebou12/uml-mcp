@@ -91,7 +91,7 @@ Prefer the **hosted HTTP** path unless you need local `output_dir` writes.
 
 ## Showing diagrams in chat
 
-Same rules as other clients: use `generate_uml_image` / PNG when you want an inline image; do not paste local `output/*.png` paths into markdown. See [Cursor chat rendering](cursor.md#showing-diagrams-in-chat-cursor--copilot--claude).
+Same rules as other clients: use `generate_uml_image` / PNG when you want an inline image; do not paste local `output/*.png` paths into markdown. See [Cursor chat rendering](cursor.md#showing-diagrams-in-chat).
 
 ## Troubleshooting
 
