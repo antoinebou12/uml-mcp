@@ -1,0 +1,28 @@
+# Enterprise SSO override (Microsoft Entra ID / OAuth 2.1) for the default stack.
+#   cp .env.example .env   # fill in the MCP_AUTH_* values
+#   docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
+# Guide: docs/enterprise/README.md
+services:
+  uml-mcp:
+    environment:
+      - MCP_AUTH_MODE=${MCP_AUTH_MODE:-jwt}
+      - MCP_AUTH_RESOURCE_URL=${MCP_AUTH_RESOURCE_URL:?set MCP_AUTH_RESOURCE_URL (e.g. https://mcp.contoso.com/mcp)}
+      - MCP_AUTH_ENTRA_TENANT_ID=${MCP_AUTH_ENTRA_TENANT_ID:-}
+      - MCP_AUTH_ENTRA_CLIENT_ID=${MCP_AUTH_ENTRA_CLIENT_ID:-}
+      - MCP_AUTH_ENTRA_CLIENT_SECRET=${MCP_AUTH_ENTRA_CLIENT_SECRET:-}
+      - MCP_AUTH_PROXY_ENCRYPTION_KEYS=${MCP_AUTH_PROXY_ENCRYPTION_KEYS:-}
+      - MCP_AUTH_PREFLIGHT=${MCP_AUTH_PREFLIGHT:-warn}
+      - MCP_ADMIN_UI=${MCP_ADMIN_UI:-false}
+      # Optional uml-mcp.yaml (audit, rate limits, logging, tools allow-list):
+      #   uml-mcp config init --profile enterprise --path ./uml-mcp.yaml
+      - UML_MCP_CONFIG=${UML_MCP_CONFIG:-none}
+    # volumes:
+    #   - ./uml-mcp.yaml:/etc/uml-mcp/config.yaml:ro   # then set UML_MCP_CONFIG=/etc/uml-mcp/config.yaml
+    command:
+      - uvicorn
+      - app:app
+      - --host=0.0.0.0
+      - --port=8000
+      - --proxy-headers
+      - --forwarded-allow-ips=*
+      - --no-access-log

@@ -67,7 +67,12 @@ def test_protocol_adapter_returns_structured_content_and_image():
     result = _as_mcp_tool_result("generate_uml", payload)
 
     assert isinstance(result, ToolResult)
-    assert result.structured_content == payload
+    # The adapter enriches results with a chat-ready ``display_markdown`` block.
+    assert result.structured_content == {
+        **payload,
+        "display_markdown": result.structured_content["display_markdown"],
+    }
+    assert payload["url"] in result.structured_content["display_markdown"]
     assert isinstance(result.content[0], TextContent)
     assert any(isinstance(block, ImageContent) for block in result.content)
     image = next(block for block in result.content if isinstance(block, ImageContent))

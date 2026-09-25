@@ -74,6 +74,7 @@ To call UML-MCP from your own application, invoke the tools directly:
 import json
 import subprocess
 
+
 def generate_class_diagram(code):
     # Start the MCP server process
     process = subprocess.Popen(
@@ -81,18 +82,14 @@ def generate_class_diagram(code):
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        text=True
+        text=True,
     )
 
     # Prepare MCP request (use generate_uml with diagram_type for any diagram)
     request = {
         "type": "tool",
         "name": "generate_uml",
-        "args": {
-            "diagram_type": "class",
-            "code": code,
-            "output_dir": "./output"
-        }
+        "args": {"diagram_type": "class", "code": code, "output_dir": "./output"},
     }
 
     # Send request to MCP server
@@ -106,6 +103,7 @@ def generate_class_diagram(code):
     process.terminate()
 
     return json.loads(response["result"])
+
 
 # Example usage (PlantUML class diagram)
 diagram = generate_class_diagram("""

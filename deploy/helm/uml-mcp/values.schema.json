@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": ["image", "auth"],
+  "properties": {
+    "image": {
+      "type": "object",
+      "required": ["repository"],
+      "properties": {"repository": {"type": "string"}, "tag": {"type": "string"}}
+    },
+    "replicaCount": {"type": "integer", "minimum": 1},
+    "auth": {
+      "type": "object",
+      "properties": {
+        "mode": {"type": "string", "enum": ["none", "jwt", "entra-proxy"]},
+        "resourceUrl": {"type": "string"},
+        "preflight": {"type": "string", "enum": ["warn", "strict", "off"]},
+        "entra": {
+          "type": "object",
+          "properties": {
+            "cloud": {"type": "string", "enum": ["public", "usgov", "china"]},
+            "tokenVersions": {"type": "array", "items": {"type": "string", "enum": ["1", "2"]}}
+          }
+        },
+        "config": {"type": "object"}
+      },
+      "if": {"properties": {"mode": {"enum": ["jwt", "entra-proxy"]}}},
+      "then": {"properties": {"resourceUrl": {"type": "string", "pattern": "^https?://"}}}
+    },
+    "config": {
+      "type": "object",
+      "description": "uml-mcp.yaml sections; enterprise auth stays under .auth",
+      "additionalProperties": false,
+      "properties": {
+        "version": {"type": "integer"},
+        "server": {"type": "object"},
+        "rendering": {"type": "object"},
+        "tools": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": ["array", "null"], "items": {"type": "string"}},
+            "disabled": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "rate_limit": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "key": {"type": "string", "enum": ["ip", "principal"]},
+            "trusted_proxies": {"type": "array", "items": {"type": "string"}}
+          }
+        },
+        "logging": {
+          "type": "object",
+          "properties": {
+            "level": {"type": "string", "enum": ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]},
+            "format": {"type": "string", "enum": ["text", "json"]}
+          }
+        },
+        "audit": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "sinks": {"type": "array", "items": {"type": "string", "enum": ["file", "stream", "memory"]}},
+            "include_inputs": {"type": "string", "enum": ["none", "redacted", "full"]}
+          }
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {"enabled": {"type": "boolean"}, "endpoint": {"type": "boolean"}}
+        },
+        "otel": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "exporter": {"type": "string", "enum": ["otlp", "console"]},
+            "sample_ratio": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        },
+        "admin": {"type": "object"}
+      }
+    }
+  }
+}

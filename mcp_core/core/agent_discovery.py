@@ -259,7 +259,7 @@ Full guides and deployment notes: [{DOCUMENTATION_SITE_URL}]({DOCUMENTATION_SITE
 
 ## Version
 
-1.3.0 — status: operational.
+1.4.0 — status: operational.
 
 Use an MCP client to connect to `/mcp` or call the REST endpoints above.
 """
@@ -601,7 +601,7 @@ def homepage_html() -> str:
       </section>
     </div>
     <footer>
-      Version 1.3.0 · Browsers get HTML for <code>GET /</code>; send <code>Accept: application/json</code> for JSON.
+      Version 1.4.0 · Browsers get HTML for <code>GET /</code>; send <code>Accept: application/json</code> for JSON.
       Public deployment: <a href="{PUBLIC_DEPLOYMENT_URL}">{PUBLIC_DEPLOYMENT_URL}</a>.
     </footer>
   </div>

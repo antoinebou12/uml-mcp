@@ -748,8 +748,10 @@ def register_prompts_with_server(server: Any) -> list[str]:
 
     registered_prompt_names = []
 
+    from ..observability.audit import instrument
+
     for prompt_name, prompt_info in _registered_prompts.items():
-        func = prompt_info["function"]
+        func = instrument(prompt_info["function"], "prompt", prompt_name)
 
         # Register with server using prompt decorator
         prompt_decorator = server.prompt(prompt_name)
@@ -793,3 +795,50 @@ def get_prompt_registry() -> dict[str, dict[str, Any]]:
         Dictionary of prompt metadata
     """
     return _registered_prompts
+
+
+@mcp_prompt(
+    "architecture_report",
+    description=(
+        "Write a numbered Markdown architecture report for a repository: introduction, "
+        "inputs/outputs, then use case, sequence, class, activity, deployment, user-flow "
+        "and inventory diagrams (Mermaid / PlantUML via Kroki) with a linked table of contents."
+    ),
+    category="report",
+)
+def architecture_report_prompt(context: dict[str, Any] | None = None) -> str:
+    """Prompt for a full Markdown architecture report with rendered diagrams."""
+    context = context or {}
+    subject = (
+        context.get("subject") or context.get("repository") or "the current repository"
+    )
+    return f"""You are a software architect. Produce a **Markdown architecture report** for {subject}.
+Read the code and configuration first (entry points, packages, deployment files, CI); never invent components.
+
+Report structure (number every section and link it from the table of contents):
+
+# <Project> — architecture report
+## Table of contents  (links: [1. Introduction](#1-introduction), …)
+## 1. Introduction — purpose, scope, audience, one-paragraph summary
+## 2. Inputs and outputs — table: interface | direction (in/out) | protocol/format | example
+## 3. Use case diagram — PlantUML `usecase` (actors, system boundary, main use cases)
+## 4. Sequence diagram — Mermaid `sequenceDiagram` of the most important request path (include auth/errors)
+## 5. Class diagram — PlantUML `class` (or Mermaid `classDiagram`) of the core modules/types
+## 6. Activity diagram — PlantUML `activity` of the main processing flow (decisions, fallbacks)
+## 7. Deployment diagram — PlantUML `deployment` (or C4 `c4plantuml`): clients, runtime, containers, external services
+## 8. User flow — Mermaid `flowchart LR` from the user's first action to the result
+## 9. Inventory — Mermaid `mindmap` (or a table) of packages, endpoints, tools, configs, workflows
+## 10. Risks and next steps
+## References — numbered links [1], [2] … cited in the text
+
+For every diagram section:
+1. One sentence explaining what the diagram shows.
+2. Call **validate_uml** (strict) and fix errors, then **generate_uml** with the matching `diagram_type`
+   (`usecase`, `sequence` or `mermaid`, `class`, `activity`, `deployment`/`c4plantuml`, `mermaid`).
+3. Embed the result as `![<title>](<url from the tool>)` followed by `[Playground](<playground>)` and the
+   diagram source in a fenced block (```plantuml or ```mermaid). Never link local `output/` paths.
+4. Keep each diagram under ~25 elements; split views rather than cramming.
+
+Close with a short "Diagram index" table: number | section | type | backend | URL.
+Rendering goes through Kroki (https://kroki.io, https://github.com/yuzutech/kroki).
+"""

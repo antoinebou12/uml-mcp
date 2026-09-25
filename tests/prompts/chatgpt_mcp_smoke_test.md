@@ -91,3 +91,41 @@ MCP_BATCH_TEST: FAIL - <short reason>
 This manual fixture is intentionally stricter than a health check. It catches cases where `/health` works but the MCP client cannot discover tools, cannot validate inputs, cannot invoke Kroki-backed rendering, cannot show an inline image, omits playground/URL links, uses local file paths in markdown, or silently answers without using the MCP server.
 
 Canonical agent workflow for presenting results: [`.skill/skills/uml-mcp-diagrams/SKILL.md`](../../.skill/skills/uml-mcp-diagrams/SKILL.md).
+
+## Automated run (no chat model)
+
+`scripts/run_mcp_smoke.py` performs the same steps with a real MCP client and prints
+`MCP_SMOKE_TEST: PASS|FAIL`:
+
+```bash
+# in-process server; --offline skips the step that needs Kroki egress
+USE_REAL_FASTMCP=1 MCP_URL_ONLY=true uv run python scripts/run_mcp_smoke.py --offline
+# hosted or enterprise (Entra ID) server
+uv run python scripts/run_mcp_smoke.py --url https://mcp.contoso.com/mcp --token "$TOKEN"
+```
+
+It also checks that strict validation rejects `;`-packed Mermaid and that the
+`architecture_report` prompt is advertised.
+
+## Enterprise (SSO) smoke-test prompt
+
+Use this prompt when the server runs with `MCP_AUTH_MODE=jwt` or `entra-proxy`
+(see `docs/enterprise/README.md`):
+
+```text
+Use the connected UML MCP server, which requires sign-in (Microsoft Entra ID / OAuth 2.1).
+
+1. If the first call fails with an authentication prompt, complete the sign-in and retry. Report
+   whether the client showed a sign-in (HTTP 401 → protected resource metadata → Entra login).
+2. Call `list_diagram_types` and `validate_uml` (mermaid, strict, the Client/Server sequence above).
+3. Call `generate_uml` with the same code. If the server answers with insufficient scope (HTTP 403),
+   accept the additional-permission (mcp.write) prompt and retry once.
+4. Never print, paste or summarize the access token or any Authorization header.
+5. End with exactly one line:
+
+MCP_AUTH_SMOKE_TEST: PASS
+MCP_AUTH_SMOKE_TEST: FAIL - <short reason>
+```
+
+Pass criteria: sign-in happened only once, `validate_uml` works with the read scope,
+generation works after (at most one) step-up, and no token appears in the transcript.

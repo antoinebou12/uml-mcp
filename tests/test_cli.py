@@ -58,65 +58,39 @@ class TestParseArgs:
 
 
 class TestSetupLogging:
-    """Tests for setup_logging()."""
+    """Tests for setup_logging() (driven by the ``logging`` config section)."""
 
     @pytest.fixture(autouse=True)
-    def _restore_root_logger(self):
+    def _restore_root_logger(self, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
         root = logging.getLogger()
         original_level = root.level
         original_handlers = root.handlers[:]
         yield
+        for handler in root.handlers:
+            if handler not in original_handlers:
+                handler.close()
         root.handlers = original_handlers
         root.setLevel(original_level)
 
-    @patch("mcp_core.core.cli.logging.FileHandler")
-    @patch("mcp_core.core.cli.os.makedirs")
-    @patch("mcp_core.core.cli.os.path.exists")
-    def test_debug_sets_debug_level(
-        self, exists_mock, makedirs_mock, file_handler_mock
-    ):
-        """setup_logging(debug=True) sets root logger to DEBUG."""
-        exists_mock.return_value = False
-        mock_handler = MagicMock()
-        mock_handler.level = logging.NOTSET
-        file_handler_mock.return_value = mock_handler
-        root = logging.getLogger()
-        root.handlers.clear()
-        root.setLevel(logging.WARNING)
+    def test_debug_sets_debug_level(self):
         cli.setup_logging(debug=True)
-        assert root.level == logging.DEBUG
+        assert logging.getLogger().level == logging.DEBUG
 
-    @patch("mcp_core.core.cli.logging.FileHandler")
-    @patch("mcp_core.core.cli.os.makedirs")
-    @patch("mcp_core.core.cli.os.path.exists")
-    def test_no_debug_sets_info_level(
-        self, exists_mock, makedirs_mock, file_handler_mock
-    ):
-        """setup_logging(debug=False) sets root logger to INFO."""
-        exists_mock.return_value = False
-        mock_handler = MagicMock()
-        mock_handler.level = logging.NOTSET
-        file_handler_mock.return_value = mock_handler
-        root = logging.getLogger()
-        root.handlers.clear()
-        root.setLevel(logging.WARNING)
+    def test_no_debug_sets_info_level(self):
         cli.setup_logging(debug=False)
-        assert root.level == logging.INFO
+        assert logging.getLogger().level == logging.INFO
 
-    @patch("mcp_core.core.cli.logging.FileHandler")
-    @patch("mcp_core.core.cli.os.makedirs")
-    @patch("mcp_core.core.cli.os.path.exists")
-    def test_adds_file_handler(self, exists_mock, makedirs_mock, file_handler_mock):
-        """setup_logging creates log dir and adds a FileHandler."""
-        exists_mock.return_value = False
-        mock_handler = MagicMock()
-        mock_handler.level = logging.NOTSET
-        file_handler_mock.return_value = mock_handler
+    def test_adds_rotating_file_handler_in_logs_dir(self, tmp_path):
+        import logging.handlers
+
         cli.setup_logging(debug=False)
-        makedirs_mock.assert_called_once_with("logs")
-        file_handler_mock.assert_called_once()
-        root = logging.getLogger()
-        assert mock_handler in root.handlers
+        files = [
+            h
+            for h in logging.getLogger().handlers
+            if isinstance(h, logging.handlers.TimedRotatingFileHandler)
+        ]
+        assert files and (tmp_path / "logs").is_dir()
 
 
 class TestSafeImport:

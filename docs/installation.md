@@ -8,6 +8,10 @@ Install and run the UML-MCP server locally.
 - [uv](https://docs.astral.sh/uv/) (recommended), [Poetry](https://python-poetry.org/), or pip
 - Optional: Docker for local PlantUML or Kroki
 
+!!! tip "Just want to use it in your editor?"
+    `uv tool install uml-mcp && uml-mcp client install --client vscode` is enough. No
+    clone is needed; see [Local install](installation-local.md).
+
 ## Installation steps
 
 1. Clone the repository:
@@ -81,6 +85,17 @@ You should see a table listing **`generate_uml`** and **`validate_uml`**, plus r
 Point your MCP client at `server.py` with **absolute** paths for `args` and `cwd` (project root); optional `MCP_OUTPUT_DIR` in `env`. **[config/README.md](https://github.com/antoinebou12/uml-mcp/blob/main/config/README.md)** has example JSON; see **[Configuration](configuration.md)** for environment variables and **[Tutorials, Getting started](tutorials/getting-started.md#1-connect-a-client)** for client wiring. Step-by-step: [Cursor](integrations/cursor.md), [Claude Desktop](integrations/claude_desktop.md).
 
 ## Optional components
+
+### Enterprise SSO (Microsoft Entra ID / OAuth 2.1)
+
+Self-hosted HTTP deployments can require bearer tokens on `/mcp` with `MCP_AUTH_MODE=jwt` (or `entra-proxy`). No extra package is needed; the dependencies ship with UML-MCP. See the **[Enterprise guide](enterprise/README.md)**.
+
+### Configuration file
+
+`uml-mcp config init --profile local|docker|enterprise` writes a commented
+[`uml-mcp.yaml`](configuration/uml-mcp-yaml.md). It covers tools, rate limits,
+logging and rotation, the audit trail and metrics; environment variables still
+override it.
 
 ### Local diagram servers
 

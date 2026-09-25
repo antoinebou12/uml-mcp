@@ -78,7 +78,10 @@ def test_validate_uml_strict_mermaid_rejects_semicolon_packed_sequence():
     )
     assert out["valid"] is False
     assert any("separate lines" in e.lower() for e in out["errors"])
-    assert any("`;`" in s or "semicolon" in s.lower() or "separate" in s.lower() for s in out["suggestions"])
+    assert any(
+        "`;`" in s or "semicolon" in s.lower() or "separate" in s.lower()
+        for s in out["suggestions"]
+    )
 
 
 def test_validate_uml_strict_mermaid_accepts_complete_sequence_message():

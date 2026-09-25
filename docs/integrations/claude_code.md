@@ -65,10 +65,14 @@ The default plugin ships HTTP MCP pointing at the public deployment. To use anot
 1. Edit **`plugins/uml-mcp/.mcp.json`** in your clone and reinstall or update the plugin from that clone, or
 2. Keep using [manual MCP configuration](../configuration.md) in Claude Code settings instead of the plugin.
 
-The plugin **`version`** in **`plugins/uml-mcp/.claude-plugin/plugin.json`** and [`.claude-plugin/marketplace.json`](https://github.com/antoinebou12/uml-mcp/blob/main/.claude-plugin/marketplace.json) should match the Python package version in **`pyproject.toml`** (currently **1.3.0**). Bump both when releasing, then reinstall or update the plugin from your clone so Claude Code refreshes its cache.
+The plugin **`version`** in **`plugins/uml-mcp/.claude-plugin/plugin.json`** and [`.claude-plugin/marketplace.json`](https://github.com/antoinebou12/uml-mcp/blob/main/.claude-plugin/marketplace.json) should match the Python package version in **`pyproject.toml`** (currently **1.4.0**). Bump both when releasing, then reinstall or update the plugin from your clone so Claude Code refreshes its cache.
 
 ## Related resources
 
 - [Claude Desktop](claude_desktop.md) (MCP via app settings, not the plugin system)
 - [Configuration](../configuration.md)
 - [Getting started](../tutorials/getting-started.md)
+
+## Enterprise (SSO) servers
+
+Self-hosted UML-MCP servers protected by Microsoft Entra ID need `MCP_AUTH_MODE=entra-proxy` for this client (dynamic client registration and PKCE S256). See [Enterprise clients](../enterprise/clients.md).

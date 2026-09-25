@@ -144,4 +144,4 @@ def test_mermaid_urls_frozen():
     """MermaidUrls is immutable."""
     urls = generate_mermaid_urls(diagram_text="x")
     with pytest.raises(AttributeError):
-        urls.code = "y"
+        setattr(urls, "code", "y")  # noqa: B010 - frozen dataclass check

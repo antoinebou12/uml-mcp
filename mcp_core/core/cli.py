@@ -7,6 +7,7 @@ import datetime
 import logging
 import os
 import sys
+from typing import Any
 
 from rich.console import Console
 from rich.logging import RichHandler
@@ -38,43 +39,51 @@ def parse_args():
     parser.add_argument(
         "--list-tools", action="store_true", help="List available tools and exit"
     )
+    parser.add_argument(
+        "--config",
+        help="Path to uml-mcp.yaml (default: UML_MCP_CONFIG, ./uml-mcp.yaml, "
+        "~/.config/uml-mcp/config.yaml, /etc/uml-mcp/config.yaml)",
+    )
+    parser.epilog = (
+        "Management: uml-mcp config {init,show,validate,path} | uml-mcp lint | "
+        "uml-mcp client install --client vscode|cursor|claude-desktop|claude-code"
+    )
     return parser.parse_args()
 
 
-def setup_logging(debug=False):
-    """Configure logging based on arguments."""
-    level = logging.DEBUG if debug else logging.INFO
+def setup_logging(debug=False, transport="stdio"):
+    """Configure logging from ``uml-mcp.yaml`` (``logging`` section) or defaults.
 
-    log_dir = "logs"
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
+    Default (no ``logging.file``): daily file in ``logs/`` plus Rich on stderr,
+    exactly as before. Console output always goes to stderr so stdio stays clean.
+    """
+    from mcp_core.core.settings_file import RotationConfig, get_app_config
+    from mcp_core.observability.audit import configure_audit
+    from mcp_core.observability.logging_setup import configure_logging
 
-    date_str = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d")
-    log_file = os.path.join(log_dir, f"uml_mcp_server_{date_str}.log")
-
-    file_handler = logging.FileHandler(log_file)
-    file_handler.setLevel(level)
-    file_handler.setFormatter(
-        logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-    )
-
-    # Always log to stderr, even when the display console targets stdout.
-    console_handler = RichHandler(rich_tracebacks=True, console=Console(stderr=True))
-    console_handler.setLevel(level)
-
-    logging.basicConfig(
-        level=level,
-        format="%(message)s",
-        datefmt="[%X]",
-        handlers=[console_handler],
-        force=True,
-    )
-
-    logger = logging.getLogger()
-    logger.setLevel(level)
-    logger.addHandler(file_handler)
-
-    return logging.getLogger(__name__)
+    app = get_app_config()
+    cfg = app.logging
+    if cfg.file is None:
+        date_str = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d")
+        cfg = cfg.model_copy(
+            update={
+                "file": RotationConfig(
+                    path=os.path.join("logs", f"uml_mcp_server_{date_str}.log"),
+                    max_bytes=0,
+                    backup_count=14,
+                )
+            }
+        )
+    console_handler: logging.Handler
+    if cfg.format == "json":
+        console_handler = logging.StreamHandler(sys.stderr)
+    else:
+        console_handler = RichHandler(
+            rich_tracebacks=True, console=Console(stderr=True)
+        )
+    configure_logging(cfg, console_handler=console_handler, debug=debug)
+    configure_audit(app, stdio=transport == "stdio")
+    return logging.getLogger("mcp_server")
 
 
 def safe_import(module_name, display_name=None):
@@ -243,7 +252,19 @@ def display_tools_and_resources(mcp_settings):
 def run():
     """Run the CLI: parse args, setup logging, optionally list tools, then start server."""
     global console
+    from mcp_core.core.commands import SUBCOMMANDS
+
+    if len(sys.argv) > 1 and sys.argv[1] in SUBCOMMANDS:
+        from mcp_core.core.commands import main as commands_main
+
+        sys.exit(commands_main(sys.argv[1:]))
     args = parse_args()
+    config_arg = getattr(args, "config", None)
+    if isinstance(config_arg, str) and config_arg:
+        os.environ["UML_MCP_CONFIG"] = config_arg
+        from mcp_core.core.settings_file import reset_config_cache
+
+        reset_config_cache()
 
     # Use stdout for human-facing output when not using stdio transport
     # or when just listing tools, so output remains pipeable.
@@ -253,7 +274,7 @@ def run():
     else:
         console = Console(stderr=True)
 
-    logger = setup_logging(args.debug)
+    logger = setup_logging(args.debug, args.transport)
 
     logger.info("Starting UML-MCP Server with transport: %s", args.transport)
 
@@ -282,7 +303,7 @@ def run():
         from mcp_core.core.server import get_mcp_server, start_server
 
         if hasattr(MCP_SETTINGS, "update_from_args"):
-            updater = MCP_SETTINGS.update_from_args
+            updater: Any = MCP_SETTINGS.update_from_args
             if callable(updater):
                 updater(args)
 

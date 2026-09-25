@@ -1,0 +1,81 @@
+# Enterprise auth requests for UML-MCP + Microsoft Entra ID.
+# Works with VS Code "REST Client" and JetBrains HTTP Client. Copy values into an
+# http-client.env.json / .env; never commit real secrets or tokens.
+# Docs: docs/enterprise/README.md
+
+@baseUrl = https://mcp.contoso.com
+@mcpUrl = {{baseUrl}}/mcp
+@tenantId = 11111111-2222-3333-4444-555555555555
+@apiClientId = aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+@daemonClientId = <app-only-client-id>
+@daemonClientSecret = <app-only-client-secret>
+@login = https://login.microsoftonline.com
+
+### 1. Protected resource metadata (RFC 9728) — public, 200
+GET {{baseUrl}}/.well-known/oauth-protected-resource/mcp
+Accept: application/json
+
+### 2. No token → 401 + WWW-Authenticate: Bearer resource_metadata="…", scope="…"
+POST {{mcpUrl}}
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{"jsonrpc":"2.0","id":1,"method":"tools/list"}
+
+### 3. Entra OpenID Connect discovery (v2) — note: no code_challenge_methods_supported
+GET {{login}}/{{tenantId}}/v2.0/.well-known/openid-configuration
+
+### 4. App-only token (client credentials, OAuth 2.0) — needs app role MCP.Write.All
+# @name appToken
+POST {{login}}/{{tenantId}}/oauth2/v2.0/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=client_credentials
+&client_id={{daemonClientId}}
+&client_secret={{daemonClientSecret}}
+&scope=api://{{apiClientId}}/.default
+
+### 5. Call MCP with the app-only token → 200
+POST {{mcpUrl}}
+Authorization: Bearer {{appToken.response.body.access_token}}
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{"jsonrpc":"2.0","id":2,"method":"tools/list"}
+
+### 6. Generate (needs write) → 200 with MCP.Write.All, 403 insufficient_scope with read only
+POST {{mcpUrl}}
+Authorization: Bearer {{appToken.response.body.access_token}}
+Content-Type: application/json
+Accept: application/json, text/event-stream
+
+{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"generate_uml","arguments":{"diagram_type":"mermaid","code":"graph TD; A-->B","output_format":"svg"}}}
+
+### 7. Token in the query string is refused → 400 invalid_request
+POST {{mcpUrl}}?access_token=not-allowed
+Content-Type: application/json
+
+{"jsonrpc":"2.0","id":4,"method":"ping"}
+
+### 8. Token for another service (Microsoft Graph audience) → 401 invalid_audience
+# Get one with: az account get-access-token --resource-type ms-graph --query accessToken -o tsv
+POST {{mcpUrl}}
+Authorization: Bearer <graph-token>
+Content-Type: application/json
+
+{"jsonrpc":"2.0","id":5,"method":"ping"}
+
+### 9. entra-proxy mode: authorization server metadata (RFC 8414) — S256 only
+GET {{baseUrl}}/.well-known/oauth-authorization-server
+
+### 10. entra-proxy mode: dynamic client registration (RFC 7591) → 201
+POST {{baseUrl}}/oauth/register
+Content-Type: application/json
+
+{"client_name":"REST client test","redirect_uris":["http://127.0.0.1:8765/callback"],"token_endpoint_auth_method":"none","grant_types":["authorization_code","refresh_token"],"response_types":["code"]}
+
+### 11. entra-proxy mode: PKCE plain is refused (redirect with error=invalid_request)
+GET {{baseUrl}}/oauth/authorize?response_type=code&client_id=<client_id>&redirect_uri=http://127.0.0.1:8765/callback&code_challenge=abc&code_challenge_method=plain&state=x
+
+### 12. Unknown path → 404 (never an auth challenge)
+GET {{baseUrl}}/mcpx

@@ -6,6 +6,9 @@ Ensures deterministic test environment (e.g. mock FastMCP when TESTING=1).
 
 import os
 
+# Never pick up a developer's uml-mcp.yaml during tests.
+os.environ.setdefault("UML_MCP_CONFIG", "none")
+
 # Force mock FastMCP for default test run unless integration tests requested.
 # fastmcp_wrapper decides mock vs real at import time; set before any mcp_core import.
 if not os.environ.get("USE_REAL_FASTMCP", "").strip():
@@ -14,7 +17,7 @@ if not os.environ.get("USE_REAL_FASTMCP", "").strip():
 
 import pytest
 
-pytest_plugins = ["tests.fixtures_mcp"]
+pytest_plugins = ["tests.fixtures_mcp", "tests.fixtures_auth"]
 
 
 @pytest.fixture(autouse=True)

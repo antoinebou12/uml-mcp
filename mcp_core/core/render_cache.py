@@ -128,10 +128,7 @@ class InMemoryRenderCache:
                 size_bytes=size,
             )
             self._bytes += size
-            while (
-                len(self._entries) > self.max_entries
-                or self._bytes > self.max_bytes
-            ):
+            while len(self._entries) > self.max_entries or self._bytes > self.max_bytes:
                 oldest_key = next(iter(self._entries))
                 self._remove(oldest_key)
 

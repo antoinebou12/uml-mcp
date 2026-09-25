@@ -100,3 +100,7 @@ UML-MCP does not bundle Sequential Thinking. For multi-step planning before **ge
 - [Claude Code plugin](claude_code.md)
 - [UML Diagram Examples](../examples.md)
 - [Supported Diagram Types](../diagrams/uml.md)
+
+## Enterprise (SSO) servers
+
+Self-hosted UML-MCP servers protected by Microsoft Entra ID need `MCP_AUTH_MODE=entra-proxy` for this client (dynamic client registration and PKCE S256). See [Enterprise clients](../enterprise/clients.md).

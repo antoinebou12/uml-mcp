@@ -32,6 +32,7 @@ from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("my-server")
 
+
 @mcp.tool()
 async def get_forecast(latitude: float, longitude: float) -> str:
     """Get weather forecast for a location.
@@ -42,18 +43,22 @@ async def get_forecast(latitude: float, longitude: float) -> str:
     # ... fetch and return string
     return result
 
+
 @mcp.resource("config://{key}")
 def get_config(key: str) -> str:
     """Get config value by key."""
     return config_store.get(key, "")
+
 
 @mcp.prompt()
 def plan_task(goal: str, steps: int = 5) -> str:
     """Generate a step-by-step plan. Args: goal, steps (default 5)."""
     return f"Plan for: {goal} in {steps} steps."
 
+
 def main():
     mcp.run(transport="stdio")
+
 
 if __name__ == "__main__":
     main()

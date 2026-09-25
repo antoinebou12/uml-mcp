@@ -1,0 +1,61 @@
+# uml-mcp.yaml — enterprise profile (Kubernetes/Helm + Microsoft Entra ID).
+# Secrets never go here: use env vars / *_FILE (Kubernetes Secrets).
+# Guide: docs/enterprise/enterprise-guide.md
+version: 1
+
+server:
+  allowed_hosts: [mcp.contoso.com]
+  stateless_http: true
+
+rendering:
+  kroki_server: https://kroki.internal.contoso.com
+  memory_only: true
+  url_only: true
+
+tools:
+  enabled: [list_diagram_types, validate_uml, generate_uml, generate_uml_image]   # least privilege
+
+rate_limit:
+  enabled: true
+  key: principal                      # per signed-in user (falls back to IP)
+  trusted_proxies: [10.0.0.0/8]       # ingress CIDR: X-Forwarded-For trusted only from here
+  default: {requests_per_minute: 120, burst: 30}
+  routes:
+    /oauth/token: {requests_per_minute: 30}
+    /admin/api: {requests_per_minute: 60}
+  tools:
+    generate_uml_image: {requests_per_minute: 30}
+
+logging:
+  level: INFO
+  format: json
+
+audit:
+  enabled: true
+  sinks: [stream, memory]             # stdout -> Azure Monitor / Splunk / Elastic
+  include_inputs: redacted
+  include_http: true
+
+metrics:
+  enabled: true
+  endpoint: true                      # /metrics (admin role required when auth is on)
+
+otel:
+  enabled: false                      # true + pip install "uml-mcp[otel]" -> OTLP traces
+  endpoint: http://otel-collector.observability:4318
+  sample_ratio: 0.2
+
+admin:
+  allow_local_without_auth: false
+
+auth:
+  mode: jwt                           # or entra-proxy for Claude Code / Cursor
+  resource_url: https://mcp.contoso.com/mcp
+  entra:
+    tenant_id: 11111111-2222-3333-4444-555555555555
+    client_id: aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+    token_versions: ["2"]
+  allowed_client_ids:
+    - aebc6443-996d-45c2-90f0-388ff96faa56   # VS Code
+    - 04f0c124-f2bc-4f59-8241-bf6df9866bbd   # Visual Studio
+  admin_ui: true

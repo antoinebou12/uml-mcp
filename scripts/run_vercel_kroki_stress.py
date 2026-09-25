@@ -19,7 +19,7 @@ TIMEOUT = httpx.Timeout(connect=10.0, read=180.0, write=30.0, pool=10.0)
 FIXTURES_1_20: list[dict[str, str]] = [
     {
         "diagram_type": "class",
-        "code": "@startuml\nclass Account\nclass Customer\nCustomer \"1\" --> \"*\" Account : owns\n@enduml",
+        "code": '@startuml\nclass Account\nclass Customer\nCustomer "1" --> "*" Account : owns\n@enduml',
     },
     {
         "diagram_type": "sequence",
@@ -113,7 +113,7 @@ FIXTURES_1_20: list[dict[str, str]] = [
     },
     {
         "diagram_type": "bytefield",
-        "code": "(defattrs :bg-green {:fill \"#a0ffa0\"})\n(draw-column-headers)\n(draw-box 0x11 :bg-green)\n(draw-box 0x872349ae [{:span 4} :bg-green])\n(draw-box 0x10)\n(draw-box 0x4702 [{:span 2}])",
+        "code": '(defattrs :bg-green {:fill "#a0ffa0"})\n(draw-column-headers)\n(draw-box 0x11 :bg-green)\n(draw-box 0x872349ae [{:span 4} :bg-green])\n(draw-box 0x10)\n(draw-box 0x4702 [{:span 2}])',
     },
     {
         "diagram_type": "seqdiag",
@@ -402,9 +402,7 @@ def main() -> int:
         print("initialized session", mcp.headers.get("mcp-session-id", "")[:16])
 
         # Phase 4 batch 1
-        items1 = [
-            {**f, "output_format": "svg", "scale": 1.0} for f in FIXTURES_1_20
-        ]
+        items1 = [{**f, "output_format": "svg", "scale": 1.0} for f in FIXTURES_1_20]
         rpc1 = mcp.call("generate_uml_batch", {"items": items1})
         rows1 = _extract_batch_rows(rpc1)
         ok1 = sum(1 for r in rows1 if _item_ok(r))
@@ -415,12 +413,10 @@ def main() -> int:
             err = ""
             if isinstance(r, dict):
                 err = str(r.get("error") or r.get("message") or "")[:100]
-            print(f"  {i+1:02d} {typ:12s} {status} {err}")
+            print(f"  {i + 1:02d} {typ:12s} {status} {err}")
 
         # Phase 4 batch 2
-        items2 = [
-            {**f, "output_format": "svg", "scale": 1.0} for f in FIXTURES_21_37
-        ]
+        items2 = [{**f, "output_format": "svg", "scale": 1.0} for f in FIXTURES_21_37]
         rpc2 = mcp.call("generate_uml_batch", {"items": items2})
         rows2 = _extract_batch_rows(rpc2)
         ok2 = sum(1 for r in rows2 if _item_ok(r))
@@ -431,7 +427,7 @@ def main() -> int:
             err = ""
             if isinstance(r, dict):
                 err = str(r.get("error") or r.get("message") or "")[:100]
-            print(f"  {i+21:02d} {typ:12s} {status} {err}")
+            print(f"  {i + 21:02d} {typ:12s} {status} {err}")
 
         # Phase 5
         a1 = mcp.call(
@@ -479,7 +475,7 @@ def main() -> int:
         n1t = _tool_result_text(n1).lower()
         n1_pass = ("valid: false" in n1t) or ("invalid" in n1t) or ("error" in n1t)
         # stricter: reject if clearly valid true
-        if "valid\": true" in n1t or "valid: true" in n1t or "diagram is valid" in n1t:
+        if 'valid": true' in n1t or "valid: true" in n1t or "diagram is valid" in n1t:
             n1_pass = False
         print("NEG1", "PASS" if n1_pass else "FAIL", _tool_result_text(n1)[:180])
 
@@ -521,7 +517,7 @@ def main() -> int:
         )
         n4rows = _extract_batch_rows(n4)
         print("NEG4 rows", len(n4rows), json.dumps(n4rows)[:300])
-        n4_pass = len(n4rows) >= 1  # partial success expected
+        # partial success expected: len(n4rows) >= 1
         # health
         mcp.call("list_diagram_types", {})
         print("NEG4 health list_diagram_types OK")

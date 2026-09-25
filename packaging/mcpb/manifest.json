@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "uml-mcp",
   "display_name": "UML Diagram Generator",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Generate UML and other diagrams through MCP",
   "long_description": "UML-MCP renders UML, Mermaid, D2, Graphviz, BPMN, C4, TikZ and the rest of the Kroki catalog from plain diagram source. It runs locally over stdio and returns a shareable render URL, inline image data, or a saved file when you configure an output directory.",
   "author": {

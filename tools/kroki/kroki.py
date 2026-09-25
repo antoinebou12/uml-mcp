@@ -244,7 +244,10 @@ class Kroki:
             return f"{base_playground}{encoded}"
 
     def _fetch_diagram_bytes(
-        self, diagram_type: str, diagram_text: str, output_format: str,
+        self,
+        diagram_type: str,
+        diagram_text: str,
+        output_format: str,
         *,
         timeout: float | httpx.Timeout | None = None,
     ) -> bytes:
@@ -275,7 +278,10 @@ class Kroki:
         return response.content
 
     def render_diagram(
-        self, diagram_type: str, diagram_text: str, output_format: str = "svg",
+        self,
+        diagram_type: str,
+        diagram_text: str,
+        output_format: str = "svg",
         *,
         timeout: float | httpx.Timeout | None = None,
     ) -> bytes:
@@ -300,7 +306,10 @@ class Kroki:
         )
 
     def generate_diagram(
-        self, diagram_type: str, diagram_text: str, output_format: str = "svg",
+        self,
+        diagram_type: str,
+        diagram_text: str,
+        output_format: str = "svg",
         *,
         timeout: float | httpx.Timeout | None = None,
     ) -> dict:

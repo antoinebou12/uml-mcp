@@ -61,6 +61,16 @@ Repo defaults: [`.cursor/mcp.json`](.cursor/mcp.json) · [`.vscode/mcp.json`](.v
 
 All snippets: [`config/README.md`](config/README.md)
 
+**Local only (one user, stdio):**
+
+| Step | Command |
+| --- | --- |
+| Install | `uv tool install uml-mcp` (or `pipx install uml-mcp`) |
+| Config (optional) | `uml-mcp config init --profile local` → `~/.config/uml-mcp/config.yaml` |
+| Register | `uml-mcp client install --client vscode\|cursor\|claude-desktop\|claude-code` (merges, backs up, `--dry-run`) |
+
+Guide: [docs/installation-local.md](docs/installation-local.md)
+
 <details>
 <summary><strong>Clone from origin (local stdio)</strong></summary>
 
@@ -100,7 +110,11 @@ Configs: [`config/README.md`](config/README.md) (Cursor, VS Code, Codex, Claude,
 | **Diagrams** | ~37 types via [Kroki](https://kroki.io/) (UML, Mermaid, D2, TikZ, BPMN, C4, GoAT, UMLet, …) |
 | **Tools** | `generate_uml` · `generate_uml_image` · `validate_uml` · `list_diagram_types` · `generate_uml_batch` |
 | **Chat** | Inline PNG + markdown `![diagram](url)` + **Playground** link |
-| **Deploy** | Local · Docker · [Vercel](https://vercel.com/) · [Smithery](https://smithery.ai/) |
+| **Deploy** | Local · Docker · Kubernetes ([Helm](deploy/helm/uml-mcp)) · [Vercel](https://vercel.com/) · [Smithery](https://smithery.ai/) |
+| **Enterprise** | Optional SSO: Microsoft Entra ID / OAuth 2.1 bearer tokens, RFC 9728 metadata, clear 401/403 ([docs/enterprise](docs/enterprise/README.md) · [guide](docs/enterprise/enterprise-guide.md)) |
+| **Config file** | One [`uml-mcp.yaml`](docs/configuration/uml-mcp-yaml.md) (defaults < file < env) · `uml-mcp config init\|show\|validate` · profiles `local` / `docker` / `enterprise` |
+| **Audit & observability** | MXCP-style audit of every tool/resource/prompt call (JSONL rotation, stdout → SIEM) · JSON logs · metrics + Prometheus `/metrics` · rate limits per IP/user/route/tool ([operations](docs/enterprise/operations.md)) |
+| **Quality** | `uml-mcp lint --strict` checks descriptions, annotations, schemas and risky config ([rules](docs/developers/linting.md)) |
 | **Frontend** | Canonical AG-UI SSE for agent UIs; OpenUI can consume AG-UI and render generated components in your app |
 
 <details>
@@ -172,6 +186,8 @@ docker run -i uml-mcp python server.py --transport stdio
 
 [docs/deploy/docker.md](docs/deploy/docker.md)
 
+**Kubernetes + SSO**: `helm upgrade --install uml-mcp deploy/helm/uml-mcp --set auth.mode=jwt …` (Entra ID or any OIDC provider). Guide: [docs/enterprise](docs/enterprise/README.md).
+
 </details>
 
 <details>
@@ -187,8 +203,9 @@ docker run -i uml-mcp python server.py --transport stdio
 | `MCP_BATCH_MAX_ITEMS` | `20` |
 | `MCP_BATCH_CONCURRENCY` | `4` |
 | `MCP_RATE_LIMIT_PER_MINUTE` | `0` |
+| `UML_MCP_CONFIG` | discovered `uml-mcp.yaml` (`none` disables) |
 
-Full list: [docs/configuration.md](docs/configuration.md)
+Full list: [docs/configuration.md](docs/configuration.md) · single file: [docs/configuration/uml-mcp-yaml.md](docs/configuration/uml-mcp-yaml.md)
 
 </details>
 
@@ -225,6 +242,22 @@ Docs locally: `uv run mkdocs serve` → http://127.0.0.1:8000
 
 </details>
 
+<details>
+<summary><strong>Enterprise SSO: OAuth 2.1 · OpenID Connect · Microsoft Entra ID</strong></summary>
+
+Optional and off by default (`MCP_AUTH_MODE=none`; the public Vercel endpoint stays open).
+
+| Topic | Summary |
+| --- | --- |
+| Modes | `jwt`: validate Entra / OIDC access tokens (resource server) · `entra-proxy`: adds RFC 8414 + RFC 7591 facade with S256-only PKCE for DCR clients |
+| OAuth 2.1 | Authorization Code + PKCE S256; header-only bearer tokens; 401 → `WWW-Authenticate: Bearer resource_metadata, scope`; 403 `insufficient_scope` step-up |
+| OpenID Connect | Discovery + JWKS for signing keys; ID tokens are rejected, access tokens only |
+| Entra ID | v2 tokens (`requestedAccessTokenVersion: 2`), `mcp.read` / `mcp.write` / `.default`, app roles, VS Code + Visual Studio pre-authorized ([setup](docs/enterprise/entra-id.md)) |
+| MSAL | Client side only (VS Code, Visual Studio, Azure CLI, daemons); examples in [OAuth/OIDC/MSAL](docs/enterprise/oauth-oidc.md) |
+| Try it | [`tests/http/entra-auth.http`](tests/http/entra-auth.http) · `python -m mcp_core.auth generate az-script` · [checklist](docs/enterprise/checklist.md) |
+
+</details>
+
 ## Community
 
 > If this survives a real production repo, it beats a lot of polished launch demos.
@@ -237,7 +270,7 @@ Daily and monthly activity (stars, forks, merged PRs, issues): [trendshift.io/re
 
 | | |
 | --- | --- |
-| Docs | [Site](https://antoinebou12.github.io/uml-mcp/) · [Cursor](docs/integrations/cursor.md) · [Claude Code](docs/integrations/claude_code.md) · [Frontend](docs/integrations/frontend.md) · [OpenUI](docs/integrations/openui.md) |
+| Docs | [Site](https://antoinebou12.github.io/uml-mcp/) · [Cursor](docs/integrations/cursor.md) · [Claude Code](docs/integrations/claude_code.md) · [Frontend](docs/integrations/frontend.md) · [Enterprise SSO](docs/enterprise/README.md) · [OpenUI](docs/integrations/openui.md) |
 | Contribute | [CONTRIBUTING.md](CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) · [SECURITY.md](SECURITY.md) |
 | License | [MIT](LICENSE) |
 

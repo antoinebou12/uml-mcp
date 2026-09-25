@@ -1,0 +1,23 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "uml-mcp.fullname" . }}
+  labels:
+    {{- include "uml-mcp.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "uml-mcp.selectorLabels" . | nindent 6 }}
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              {{- toYaml (default (dict "kubernetes.io/metadata.name" "ingress-nginx") .Values.networkPolicy.ingressNamespaceSelector) | nindent 14 }}
+      ports:
+        - port: 8000
+  egress:
+    - ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
+    - ports: [{port: 443, protocol: TCP}]   # Entra ID / JWKS / Kroki over HTTPS
+{{- end }}

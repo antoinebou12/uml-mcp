@@ -235,28 +235,20 @@ def test_agui_canonical_endpoint_emits_official_wire_shapes(monkeypatch):
     step = next(event for event in events if event["type"] == "STEP_STARTED")
     assert step["stepName"] == "Render diagram"
 
-    tool_start = next(
-        event for event in events if event["type"] == "TOOL_CALL_START"
-    )
+    tool_start = next(event for event in events if event["type"] == "TOOL_CALL_START")
     assert tool_start["toolCallName"] == "generate_uml"
     assert "tool_call_id" not in tool_start
 
-    tool_args = next(
-        event for event in events if event["type"] == "TOOL_CALL_ARGS"
-    )
+    tool_args = next(event for event in events if event["type"] == "TOOL_CALL_ARGS")
     args = json.loads(tool_args["delta"])
     assert args["diagram_type"] == "mermaid"
     assert args["output_format"] == "svg"
 
-    snapshot = next(
-        event for event in events if event["type"] == "STATE_SNAPSHOT"
-    )
+    snapshot = next(event for event in events if event["type"] == "STATE_SNAPSHOT")
     assert snapshot["snapshot"]["code"] == "graph TD; A-->B;"
     assert "state" not in snapshot
 
-    result = next(
-        event for event in events if event["type"] == "TOOL_CALL_RESULT"
-    )
+    result = next(event for event in events if event["type"] == "TOOL_CALL_RESULT")
     assert result["role"] == "tool"
     assert json.loads(result["content"])["url"].endswith("abc123")
 
@@ -279,9 +271,7 @@ def test_agui_canonical_endpoint_uses_latest_user_message_as_source(monkeypatch)
             "threadId": "thread-2",
             "runId": "run-2",
             "state": {"diagramType": "mermaid"},
-            "messages": [
-                {"id": "m1", "role": "user", "content": "graph TD; X-->Y;"}
-            ],
+            "messages": [{"id": "m1", "role": "user", "content": "graph TD; X-->Y;"}],
             "tools": [],
             "context": [],
             "forwardedProps": {},
@@ -290,9 +280,7 @@ def test_agui_canonical_endpoint_uses_latest_user_message_as_source(monkeypatch)
 
     assert response.status_code == 200
     snapshot = next(
-        event
-        for event in _parse_events(response)
-        if event["type"] == "STATE_SNAPSHOT"
+        event for event in _parse_events(response) if event["type"] == "STATE_SNAPSHOT"
     )
     assert snapshot["snapshot"]["code"] == "graph TD; X-->Y;"
 

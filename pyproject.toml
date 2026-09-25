@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "uml-mcp"
-version = "1.3.0"
+version = "1.4.0"
 description = "UML diagram generation server with MCP interface"
 readme = "README.md"
 license = "MIT"
@@ -31,6 +31,16 @@ dependencies = [
     "pillow>=12.0.0,<13",
     "fastmcp-slim[server]==4.0.10",
     "mcp>=2.0.0,<3.0.0",
+    "pyjwt[crypto]>=2.10.0,<3",
+    "cryptography>=44.0.0,<51",
+    "pyyaml>=6.0.2,<7",
+]
+
+[project.optional-dependencies]
+# OpenTelemetry traces (`otel:` in uml-mcp.yaml): pip install "uml-mcp[otel]"
+otel = [
+    "opentelemetry-sdk>=1.30.0,<2",
+    "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
 ]
 
 [project.urls]
@@ -107,4 +117,10 @@ dev = [
     "mkdocs-minify-plugin>=0.8.0",
     "mkdocs-glightbox>=0.4.0",
     "mkdocstrings[python]>=0.30.0",
+    "opentelemetry-sdk>=1.30.0,<2",
+    "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
+]
+# Browser e2e (tests/test_e2e_playwright.py); skipped when no browser is available.
+e2e = [
+    "playwright>=1.55.0,<2",
 ]

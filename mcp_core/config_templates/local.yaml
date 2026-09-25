@@ -1,0 +1,32 @@
+# uml-mcp.yaml — local, single-user profile (stdio clients: VS Code, Cursor, Claude).
+# Precedence: defaults < this file < environment variables.
+# Docs: https://antoinebou12.github.io/uml-mcp/configuration/uml-mcp-yaml/
+version: 1
+
+rendering:
+  kroki_server: https://kroki.io
+  output_dir: ~/uml-mcp/output        # where diagrams are saved when output_dir is requested
+  diagram_fallback: true              # PlantUML server / mermaid.ink when Kroki fails
+
+tools:
+  disabled: []                        # e.g. [generate_uml_batch]
+
+logging:
+  level: INFO
+  format: text                        # text | json
+  file:
+    path: ~/.local/state/uml-mcp/server.log
+    max_bytes: 5242880                # 5 MiB, keep 5 files
+    backup_count: 5
+
+audit:
+  enabled: false                      # set true to keep a local JSONL trail of tool calls
+  sinks: [file]
+  file:
+    path: ~/.local/state/uml-mcp/audit.jsonl
+    max_bytes: 10485760
+    backup_count: 5
+  include_inputs: redacted            # none | redacted | full
+
+auth:
+  mode: none                          # local stdio never needs OAuth

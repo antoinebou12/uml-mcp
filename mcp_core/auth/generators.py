@@ -1,0 +1,237 @@
+"""Pure generators for admins: Entra app registration, Helm values, client configs.
+
+Usable before the server can authenticate anyone (``python -m mcp_core.auth
+generate ...``) and reused by the read-only admin console.
+"""
+
+from __future__ import annotations
+
+import json
+import uuid
+from dataclasses import dataclass, field
+from typing import Any
+from urllib.parse import urlsplit
+
+from .entra import AZURE_CLI_CLIENT_ID, VISUAL_STUDIO_CLIENT_ID, VSCODE_CLIENT_ID
+
+KINDS = (
+    "entra-manifest",
+    "az-script",
+    "helm-values",
+    "vscode",
+    "visual-studio",
+    "cursor",
+    "claude-code",
+)
+
+# Stable IDs so re-running the generator produces identical manifests.
+_NS = uuid.UUID("7d8c1a2e-3b4f-4c5d-9e6f-0a1b2c3d4e5f")
+
+
+def _sid(name: str) -> str:
+    return str(uuid.uuid5(_NS, name))
+
+
+@dataclass
+class GeneratorParams:
+    resource_url: str = "https://mcp.contoso.com/mcp"
+    tenant_id: str = "<tenant-id>"
+    client_id: str = "<api-client-id>"
+    mode: str = "jwt"
+    app_name: str = "UML-MCP"
+    preauthorize_azure_cli: bool = False
+    extra_preauthorized: list[str] = field(default_factory=list)
+
+    @property
+    def origin(self) -> str:
+        p = urlsplit(self.resource_url)
+        return f"{p.scheme}://{p.netloc}"
+
+    @property
+    def app_id_uri(self) -> str:
+        return f"api://{self.client_id}"
+
+
+SCOPES = {
+    "mcp.read": (
+        "Read UML-MCP catalog, resources and validate diagrams",
+        "Allows the app to list diagram types and validate diagrams as you.",
+    ),
+    "mcp.write": (
+        "Generate diagrams with UML-MCP",
+        "Allows the app to render and generate diagrams as you.",
+    ),
+}
+ROLES = {
+    "MCP.Reader": (["User"], "UML-MCP reader", "Read-only access for users/groups."),
+    "MCP.Writer": (["User"], "UML-MCP writer", "Generate diagrams (users/groups)."),
+    "MCP.Admin": (["User"], "UML-MCP administrator", "Read-only admin console."),
+    "MCP.Read.All": (["Application"], "UML-MCP read (app)", "App-only read access."),
+    "MCP.Write.All": (["Application"], "UML-MCP write (app)", "App-only write access."),
+}
+
+
+def entra_app_manifest(p: GeneratorParams) -> dict[str, Any]:
+    """Microsoft Graph ``application`` body (PATCH after creation)."""
+    scope_ids = {name: _sid(f"scope:{name}") for name in SCOPES}
+    preauth = [VSCODE_CLIENT_ID, VISUAL_STUDIO_CLIENT_ID, *p.extra_preauthorized]
+    if p.preauthorize_azure_cli:
+        preauth.append(AZURE_CLI_CLIENT_ID)
+    manifest: dict[str, Any] = {
+        "displayName": p.app_name,
+        "signInAudience": "AzureADMyOrg",
+        "identifierUris": [p.app_id_uri],
+        "api": {
+            "requestedAccessTokenVersion": 2,
+            "oauth2PermissionScopes": [
+                {
+                    "id": scope_ids[name],
+                    "value": name,
+                    "type": "User",
+                    "isEnabled": True,
+                    "adminConsentDisplayName": title,
+                    "adminConsentDescription": desc,
+                    "userConsentDisplayName": title,
+                    "userConsentDescription": desc,
+                }
+                for name, (title, desc) in SCOPES.items()
+            ],
+            "preAuthorizedApplications": [
+                {"appId": app, "delegatedPermissionIds": list(scope_ids.values())}
+                for app in dict.fromkeys(preauth)
+            ],
+        },
+        "appRoles": [
+            {
+                "id": _sid(f"role:{value}"),
+                "value": value,
+                "allowedMemberTypes": members,
+                "displayName": title,
+                "description": desc,
+                "isEnabled": True,
+            }
+            for value, (members, title, desc) in ROLES.items()
+        ],
+        "optionalClaims": {
+            "accessToken": [
+                {"name": "idtyp", "essential": False, "additionalProperties": []}
+            ]
+        },
+    }
+    if p.mode == "entra-proxy":
+        manifest["web"] = {"redirectUris": [f"{p.origin}/oauth/callback"]}
+    return manifest
+
+
+def az_script(p: GeneratorParams) -> str:
+    manifest = entra_app_manifest(p)
+    first = {
+        "identifierUris": ["api://$APP_ID"],
+        "api": {
+            k: v for k, v in manifest["api"].items() if k != "preAuthorizedApplications"
+        },
+        "appRoles": manifest["appRoles"],
+        "optionalClaims": manifest["optionalClaims"],
+    }
+    # Graph replaces the whole ``api`` complex value on PATCH: resend the scopes.
+    second = {"api": manifest["api"]}
+    proxy = ""
+    if p.mode == "entra-proxy":
+        proxy = f"""
+# 3) entra-proxy: web redirect + credential (prefer a certificate or workload identity)
+az ad app update --id "$APP_ID" --web-redirect-uris "{p.origin}/oauth/callback"
+# az ad app credential reset --id "$APP_ID" --append --display-name uml-mcp-proxy
+"""
+    return f"""#!/usr/bin/env bash
+# Register the {p.app_name} API in Microsoft Entra ID (az CLI >= 2.60, Graph v1.0).
+# Generated by: python -m mcp_core.auth generate az-script
+set -euo pipefail
+
+APP_ID=$(az ad app create --display-name "{p.app_name}" --sign-in-audience AzureADMyOrg \\
+  --query appId -o tsv)
+OBJECT_ID=$(az ad app show --id "$APP_ID" --query id -o tsv)
+az ad sp create --id "$APP_ID" >/dev/null
+URI="https://graph.microsoft.com/v1.0/applications/$OBJECT_ID"
+BODY=$(mktemp)
+trap 'rm -f "$BODY"' EXIT
+
+# 1) App ID URI, v2 access tokens, scopes, app roles, idtyp claim
+cat >"$BODY" <<JSON
+{json.dumps(first, indent=2)}
+JSON
+az rest --method PATCH --uri "$URI" --headers Content-Type=application/json --body @"$BODY"
+
+# 2) Pre-authorize VS Code / Visual Studio (scopes must already exist)
+cat >"$BODY" <<JSON
+{json.dumps(second, indent=2)}
+JSON
+az rest --method PATCH --uri "$URI" --headers Content-Type=application/json --body @"$BODY"
+{proxy}
+# Only assigned users/groups (MCP.Reader / MCP.Writer / MCP.Admin) can get tokens
+az ad sp update --id "$APP_ID" --set appRoleAssignmentRequired=true
+
+echo "MCP_AUTH_ENTRA_CLIENT_ID=$APP_ID"
+echo "MCP_AUTH_ENTRA_TENANT_ID=$(az account show --query tenantId -o tsv)"
+"""
+
+
+def helm_values(p: GeneratorParams) -> str:
+    host = urlsplit(p.resource_url).hostname or "mcp.contoso.com"
+    return f"""image:
+  repository: <registry>/uml-mcp
+ingress:
+  enabled: true
+  hosts: [{host}]
+  tls:
+    - secretName: uml-mcp-tls
+      hosts: [{host}]
+auth:
+  mode: {p.mode}
+  resourceUrl: {p.resource_url}
+  entra:
+    tenantId: {p.tenant_id}
+    clientId: {p.client_id}
+  existingSecret: uml-mcp-auth   # keys: proxy-encryption-keys, entra-client-secret
+admin:
+  enabled: false
+"""
+
+
+def client_config(kind: str, p: GeneratorParams) -> dict[str, Any] | str:
+    url = p.resource_url
+    if kind == "vscode":
+        return {"servers": {"uml-mcp": {"type": "http", "url": url}}}
+    if kind == "visual-studio":
+        return {"servers": {"uml-mcp": {"type": "http", "url": url}}}
+    if kind == "cursor":
+        return {"mcpServers": {"uml-mcp": {"url": url}}}
+    if kind == "claude-code":
+        if p.mode == "entra-proxy":
+            return f"claude mcp add --transport http uml-mcp {url}"
+        return (
+            "claude mcp add --transport http --client-id <public-client-id> "
+            f"--callback-port 8765 uml-mcp {url}"
+        )
+    raise ValueError(f"unknown client kind {kind!r}")
+
+
+def generate(kind: str, p: GeneratorParams) -> str:
+    if kind == "entra-manifest":
+        return json.dumps(entra_app_manifest(p), indent=2)
+    if kind == "az-script":
+        return az_script(p)
+    if kind == "helm-values":
+        return helm_values(p)
+    out = client_config(kind, p)
+    return out if isinstance(out, str) else json.dumps(out, indent=2)
+
+
+__all__ = [
+    "KINDS",
+    "GeneratorParams",
+    "az_script",
+    "client_config",
+    "entra_app_manifest",
+    "generate",
+    "helm_values",
+]

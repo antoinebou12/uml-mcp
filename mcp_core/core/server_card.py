@@ -138,7 +138,7 @@ def build_server_card(*, strict: bool = False):
             raise
         log.warning("Could not build server card: %s", e)
         return {
-            "serverInfo": {"name": "UML Diagram Generator", "version": "1.3.0"},
+            "serverInfo": {"name": "UML Diagram Generator", "version": "1.4.0"},
             "tools": [],
             "resources": [],
             "prompts": [],

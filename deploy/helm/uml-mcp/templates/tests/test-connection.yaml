@@ -1,0 +1,24 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: "{{ include "uml-mcp.fullname" . }}-test"
+  labels:
+    {{- include "uml-mcp.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": test
+spec:
+  restartPolicy: Never
+  containers:
+    - name: check
+      image: curlimages/curl:8.10.1
+      command: ["sh", "-c"]
+      args:
+        - |
+          set -e
+          base=http://{{ include "uml-mcp.fullname" . }}:{{ .Values.service.port }}
+          curl -fsS "$base/health"
+          {{- if ne .Values.auth.mode "none" }}
+          code=$(curl -s -o /dev/null -w '%{http_code}' -X POST "$base/mcp")
+          test "$code" = "401"
+          curl -fsS "$base/.well-known/oauth-protected-resource/mcp" | grep -q authorization_servers
+          {{- end }}

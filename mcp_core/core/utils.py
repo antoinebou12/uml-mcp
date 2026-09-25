@@ -47,7 +47,8 @@ def get_kroki_client():
 
 # Optional override for tests: if set, generate_diagram calls this instead of real I/O
 _diagram_generator: (
-    Callable[[str, str, str, str | None, str | None, float, bool], dict[str, Any]] | None
+    Callable[[str, str, str, str | None, str | None, float, bool], dict[str, Any]]
+    | None
 ) = None
 
 

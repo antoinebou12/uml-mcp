@@ -10,6 +10,8 @@ site/
 
 # Additional exclusions to reduce bundle size
 config/
+deploy/
+docker-compose.enterprise.yml
 Dockerfile
 docker-compose.yml
 .editorconfig
@@ -20,6 +22,7 @@ htmlcov/
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 SECURITY.md
+SOUL.md
 FALLBACK_IMPLEMENTATION.md
 
 # Dev / build / tooling (buildCommand: python -m mcp_core.build_static_server_card)
@@ -35,3 +38,4 @@ requirements-dev.txt
 __pycache__/
 *.egg-info/
 *.egg
+.plan/

@@ -217,8 +217,10 @@ def register_resources_with_server(server: Any) -> list[str]:
 
     registered_resource_uris = []
 
+    from ..observability.audit import instrument
+
     for uri, resource_info in _registered_resources.items():
-        func = resource_info["function"]
+        func = instrument(resource_info["function"], "resource", uri)
 
         # Register with server using resource decorator
         resource_decorator = server.resource(uri)

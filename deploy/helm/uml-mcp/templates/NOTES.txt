@@ -1,0 +1,11 @@
+UML-MCP {{ .Chart.AppVersion }} deployed. MCP endpoint: {{ if .Values.auth.resourceUrl }}{{ .Values.auth.resourceUrl }}{{ else }}http(s)://<host>/mcp{{ end }}
+
+Auth mode: {{ .Values.auth.mode }}
+{{- if ne .Values.auth.mode "none" }}
+  Protected resource metadata: {{ .Values.auth.resourceUrl | replace "/mcp" "" }}/.well-known/oauth-protected-resource/mcp
+  Check: curl -i -X POST {{ .Values.auth.resourceUrl }}   -> expect 401 + WWW-Authenticate resource_metadata
+  Logs show "auth preflight" results; an invalid config makes the pod fail to start (fail closed).
+{{- else }}
+  WARNING: /mcp is unauthenticated. Set auth.mode=jwt (or entra-proxy) for enterprise SSO.
+{{- end }}
+Docs: https://github.com/antoinebou12/uml-mcp/tree/main/docs/enterprise

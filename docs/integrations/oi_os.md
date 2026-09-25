@@ -36,7 +36,7 @@ the runtime at `oi-manifest.json` for intent routing.
 ```json
 {
   "server_name": "uml_mcp",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "intents": [
     { "keyword": "generate uml", "tool_name": "generate_uml", "priority": 10 }
   ],

@@ -1,0 +1,11 @@
+image:
+  repository: example.azurecr.io/uml-mcp
+auth:
+  mode: entra-proxy
+  resourceUrl: https://mcp.contoso.com/mcp
+  entra:
+    tenantId: 11111111-2222-3333-4444-555555555555
+    clientId: aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+  existingSecret: uml-mcp-auth
+workloadIdentity:
+  enabled: true

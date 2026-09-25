@@ -1,0 +1,32 @@
+image:
+  repository: example.azurecr.io/uml-mcp
+ingress:
+  enabled: true
+  className: nginx
+  hosts: [mcp.contoso.com]
+  tls: [{secretName: uml-mcp-tls, hosts: [mcp.contoso.com]}]
+auth:
+  mode: jwt
+  resourceUrl: https://mcp.contoso.com/mcp
+  entra:
+    tenantId: 11111111-2222-3333-4444-555555555555
+    clientId: aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+  config:
+    allowed_client_ids: [aebc6443-996d-45c2-90f0-388ff96faa56, 04f0c124-f2bc-4f59-8241-bf6df9866bbd]
+admin:
+  enabled: true
+networkPolicy:
+  enabled: true
+autoscaling:
+  enabled: true
+config:
+  tools:
+    disabled: [generate_uml_batch]
+  rate_limit:
+    enabled: true
+    key: principal
+    trusted_proxies: [10.0.0.0/8]
+    default: {requests_per_minute: 120, burst: 30}
+  logging: {level: INFO, format: json}
+  audit: {enabled: true, sinks: [stream, memory]}
+  metrics: {enabled: true, endpoint: true}

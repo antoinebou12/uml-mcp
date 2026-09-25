@@ -1,0 +1,13 @@
+{{- if .Values.config }}
+{{- if hasKey .Values.config "auth" }}{{ fail "put enterprise auth under .Values.auth, not config.auth" }}{{ end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "uml-mcp.fullname" . }}-config
+  labels:
+    {{- include "uml-mcp.labels" . | nindent 4 }}
+data:
+  uml-mcp.yaml: |
+    # Rendered from .Values.config (see docs/configuration/uml-mcp-yaml.md)
+    {{- toYaml .Values.config | nindent 4 }}
+{{- end }}

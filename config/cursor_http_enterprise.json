@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "uml-mcp": {
+      "url": "https://mcp.contoso.com/mcp"
+    }
+  }
+}

@@ -9,6 +9,11 @@ from pydantic import BaseModel, Field
 
 from tools.kroki.kroki import LANGUAGE_OUTPUT_SUPPORT
 
+from .settings_file import get_config
+
+# Fill MCP_* env vars from uml-mcp.yaml (env vars already set always win).
+get_config()
+
 
 def _env_bool(name: str, default: bool = False) -> bool:
     v = os.environ.get(name, "")
@@ -105,16 +110,11 @@ class MCPSettings(BaseModel):
 
     server_name: str = "uml_mcp"  # MCP naming: {service}_mcp (protocol)
     display_name: str = "UML Diagram Generator"  # Human-readable for UI
-    version: str = "1.3.0"
+    version: str = "1.4.0"
     read_only: bool = Field(default_factory=lambda: _env_bool("MCP_READ_ONLY", False))
     memory_only: bool = Field(default_factory=_memory_only_default)
     url_only: bool = Field(default_factory=_url_only_default)
     diagram_fallback_enabled: bool = Field(default_factory=_diagram_fallback_default)
-    lulu_ads_enabled: bool = Field(
-        default_factory=lambda: _env_bool(
-            "LULU_ADS_ENABLED", _env_bool("VERCEL", False)
-        )
-    )
     description: str = "Generate UML and other diagrams through MCP"
     config_schema_url: str = (
         ""  # Optional URL for session config schema (improves Configuration UX score)

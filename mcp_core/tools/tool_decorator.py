@@ -26,6 +26,39 @@ _RENDER_TOOL_NAMES = frozenset({"generate_uml", "generate_uml_image"})
 F = TypeVar("F", bound=Callable[..., Any])
 
 
+_SCHEMA_MAPS = ("properties", "$defs", "definitions", "patternProperties")
+
+
+def compact_schema(schema: Any) -> Any:
+    """Lossless token diet for Pydantic JSON Schema sent in ``tools/list``.
+
+    Drops auto-generated ``title`` keys and ``"default": null``, and folds
+    ``anyOf: [{type: X}, {type: "null"}]`` into ``type: [X, "null"]``. Every
+    client pays these tokens on connect (see ``uml-mcp lint`` token estimate).
+    """
+    if isinstance(schema, list):
+        return [compact_schema(s) for s in schema]
+    if not isinstance(schema, dict):
+        return schema
+    out: dict[str, Any] = {}
+    for key, value in schema.items():
+        if key == "title" and isinstance(value, str):
+            continue
+        if key == "default" and value is None:
+            continue
+        if key in _SCHEMA_MAPS and isinstance(value, dict):
+            out[key] = {k: compact_schema(v) for k, v in value.items()}
+        else:
+            out[key] = compact_schema(value)
+    any_of = out.get("anyOf")
+    if isinstance(any_of, list) and len(any_of) == 2 and {"type": "null"} in any_of:
+        other = next(s for s in any_of if s != {"type": "null"})
+        if set(other) == {"type"} and isinstance(other["type"], str):
+            del out["anyOf"]
+            out["type"] = [other["type"], "null"]
+    return out
+
+
 def _normalize_output_schema(output_schema: Any) -> dict[str, Any] | None:
     """Convert a Pydantic model class or mapping to FastMCP's JSON Schema shape."""
     if output_schema is None:
@@ -36,7 +69,7 @@ def _normalize_output_schema(output_schema: Any) -> dict[str, Any] | None:
     if callable(model_json_schema):
         schema = model_json_schema()
         if isinstance(schema, dict):
-            return schema
+            return compact_schema(schema)
     raise TypeError(
         "output_schema must be a JSON Schema dict or a Pydantic model class with model_json_schema()"
     )
@@ -213,19 +246,26 @@ def register_tools_with_server(server: Any) -> list[str]:
     registered_tools: list[str] = []
     server_any = cast(Any, server)
 
+    from ..core.settings_file import get_app_config
+    from ..observability.audit import instrument
+
+    app_config = get_app_config()
     for tool_name, tool_info in iter_tools_in_preferred_order(_registered_tools):
-        func = tool_info["function"]
+        if not app_config.tool_enabled(tool_name):
+            logger.info("Tool '%s' disabled by configuration (tools.*)", tool_name)
+            continue
+        func = instrument(tool_info["function"], "tool", tool_name)
         annotations = tool_info.get("annotations") or {}
         output_schema = _normalize_output_schema(tool_info.get("output_schema"))
 
         @wraps(func)
         def protocol_func(
             *args: Any,
-            __func: Callable[..., Any] = func,
-            __name: str = tool_name,
+            _bound_func: Callable[..., Any] = func,
+            _bound_name: str = tool_name,
             **kwargs: Any,
         ) -> Any:
-            return _as_mcp_tool_result(__name, __func(*args, **kwargs))
+            return _as_mcp_tool_result(_bound_name, _bound_func(*args, **kwargs))
 
         tool_kwargs: dict[str, Any] = {
             "name": tool_name,

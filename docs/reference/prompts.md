@@ -92,6 +92,24 @@ flowchart TD
     Q2 -->|Convert class -> mermaid| Convp[convert_class_to_mermaid]
 ```
 
+## `architecture_report`
+
+Produces a numbered Markdown architecture report of a repository, with a linked table of contents and these sections:
+
+1. Introduction
+2. Inputs and outputs
+3. Use case
+4. Sequence
+5. Class
+6. Activity
+7. Deployment
+8. User flow
+9. Inventory
+10. Risks
+11. References
+
+Every diagram is validated, rendered through [Kroki](https://github.com/yuzutech/kroki) (Mermaid or PlantUML) and embedded with its URL, its Playground link and its source. Pass `{"subject": "my-repo"}` as context.
+
 !!! tip "Prompt + tool together"
 
     All prompts end by instructing the model to call `generate_uml` with the right `diagram_type`. Combined with the `uml://workflow` resource, you get plan → code → render in a single MCP turn.
