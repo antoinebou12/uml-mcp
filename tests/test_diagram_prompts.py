@@ -320,3 +320,18 @@ class TestRecipeTemplateShapes:
         """get_template returns the safe fallback string for unknown keys."""
         out = DiagramTemplates.get_template("definitely_not_a_recipe")
         assert "No specific template" in out
+
+
+def test_architecture_report_prompt_covers_all_views():
+    from mcp_core.prompts.diagram_prompts import (
+        architecture_report_prompt,
+        get_prompt_registry,
+    )
+
+    text = architecture_report_prompt({"subject": "uml-mcp"})
+    for word in ("Use case", "Sequence", "Class", "Activity", "Deployment",
+                 "User flow", "Inventory", "Table of contents", "References",
+                 "validate_uml", "generate_uml", "kroki"):
+        assert word.lower() in text.lower(), word
+    assert "uml-mcp" in text
+    assert "architecture_report" in get_prompt_registry()
