@@ -47,3 +47,24 @@ mcp-tester conformance http://127.0.0.1:8765/mcp   # 18/20: GET SSE 405 (statele
 uv run uml-mcp lint http://127.0.0.1:8765/mcp --min-grade A
 ```
 
+## Real journeys (agent use and computer use)
+
+`tests/test_real_journeys.py` runs the real `app.py` with real FastMCP. It points
+`KROKI_SERVER` at a local **fake Kroki**, so rendering goes over real HTTP without
+internet access.
+
+| Test | What it proves |
+| --- | --- |
+| `test_agent_uses_the_server_end_to_end` | An MCP client behaves like an agent. It reads the `initialize` instructions, checks the catalog, resources and prompts, then validates, self-corrects and renders. It also covers the inline image, a batch and recovering from a renderer error. It checks every call against the audit trail, and that diagram code is never stored raw. |
+| `test_mcp_over_raw_http_like_any_client` | Plain JSON-RPC over HTTP: no redirect, instructions in `initialize`, malformed bodies rejected, lenient `Accept` handling |
+| `test_getting_started_journey_and_accessibility[light/dark]` | Chromium takes a first-run user through the Setup wizard, then sees the agent's calls in Activity and 100/100 on Quality. It runs an **axe-core WCAG 2 AA** scan of every console page (no serious or critical violations). |
+| `test_keyboard_only_navigation` | The console works without a mouse |
+
+```bash
+uv sync --all-groups
+uv run pytest tests/test_real_journeys.py -v
+```
+
+In CI the test job installs Chromium (and Helm), so these and the chart tests run
+instead of being skipped.
+
