@@ -72,3 +72,7 @@ The plugin **`version`** in **`plugins/uml-mcp/.claude-plugin/plugin.json`** and
 - [Claude Desktop](claude_desktop.md) (MCP via app settings, not the plugin system)
 - [Configuration](../configuration.md)
 - [Getting started](../tutorials/getting-started.md)
+
+## Enterprise (SSO) servers
+
+Self-hosted UML-MCP servers protected by Microsoft Entra ID need `MCP_AUTH_MODE=entra-proxy` for this client (dynamic client registration and PKCE S256). See [Enterprise clients](../enterprise/clients.md).

@@ -34,6 +34,10 @@ No local Python install is required for the hosted endpoint. The MCP route is **
 
 Copy-paste template: [`config/vscode_mcp.json`](https://github.com/antoinebou12/uml-mcp/blob/main/config/vscode_mcp.json).
 
+### Enterprise (SSO) servers
+
+For a self-hosted UML-MCP protected by Microsoft Entra ID, point `url` at your server (for example `https://mcp.contoso.com/mcp`). VS Code handles the 401 → sign-in flow automatically. See [Enterprise clients](../enterprise/clients.md).
+
 ### User-wide config
 
 Command Palette → **MCP: Open User Configuration** and merge the same `servers.uml-mcp` entry. User config applies across workspaces and can sync via Settings Sync.

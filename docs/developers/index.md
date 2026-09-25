@@ -75,6 +75,8 @@ mcp_core/
   prompts/             diagram generation prompts
   resources/           uml:// resource handlers
   server/              FastMCP wrapper
+  auth/                optional enterprise SSO (see Enterprise → Architecture)
+deploy/                Helm chart and Entra ID templates
 tools/kroki/           Kroki, PlantUML, Mermaid, D2, TikZ clients
 tests/                 pytest suite
 docs/                  this MkDocs site

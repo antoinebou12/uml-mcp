@@ -39,6 +39,7 @@ Command-line options override values in `fastmcp.json` (e.g. `fastmcp run --port
 | `MCP_RATE_LIMIT_PER_MINUTE` | Per-client IP requests per minute for `/mcp`, `/generate_diagram`, `/kroki_encode` (FastAPI only). `0` disables. | `0` |
 | `MCP_URL_ONLY` | Return Kroki/playground URLs only (no fetch of rendered bytes, no `content_base64` in serverless). On Vercel defaults to true when unset. Exceptions: `generate_uml_image` always fetches bytes; `generate_uml` with `png`/`jpeg` also force-fetches. | See below |
 | `MCP_MEMORY_ONLY` | Never write diagram files to disk | Vercel: true when unset |
+| `MCP_AUTH_MODE` | Optional enterprise SSO for HTTP: `none`, `jwt`, `entra-proxy`. See [Enterprise configuration](enterprise/configuration.md) | `none` |
 
 When **`MCP_URL_ONLY=true`**, the server avoids downloading rendered image bytes inside the process (lower latency and cost on serverless). Responses omit `content_base64` unless you disable URL-only mode. Exceptions: **`generate_uml_image`** always fetches bytes so MCP clients can show an inline image in chat; **`generate_uml`** with **`png`** or **`jpeg`** also force-fetches. Render results include structured **`display_markdown`** (markdown image + URL + playground). **`MCP_MEMORY_ONLY=true`** skips all file writes; use URL/base64-from-client fetch if needed.
 

@@ -97,7 +97,8 @@ Configs: [`config/README.md`](config/README.md) (Cursor, VS Code, Codex, Claude,
 | **Diagrams** | ~37 types via [Kroki](https://kroki.io/) (UML, Mermaid, D2, TikZ, BPMN, C4, GoAT, UMLet, …) |
 | **Tools** | `generate_uml` · `generate_uml_image` · `validate_uml` · `list_diagram_types` · `generate_uml_batch` |
 | **Chat** | Inline PNG + markdown `![diagram](url)` + **Playground** link |
-| **Deploy** | Local · Docker · [Vercel](https://vercel.com/) · [Smithery](https://smithery.ai/) |
+| **Deploy** | Local · Docker · Kubernetes ([Helm](deploy/helm/uml-mcp)) · [Vercel](https://vercel.com/) · [Smithery](https://smithery.ai/) |
+| **Enterprise** | Optional SSO: Microsoft Entra ID / OAuth 2.1 bearer tokens, RFC 9728 metadata, clear 401/403 ([docs/enterprise](docs/enterprise/README.md)) |
 
 <details>
 <summary><strong>MCP tools</strong></summary>
@@ -168,6 +169,8 @@ docker run -i uml-mcp python server.py --transport stdio
 
 [docs/deploy/docker.md](docs/deploy/docker.md)
 
+**Kubernetes + SSO**: `helm upgrade --install uml-mcp deploy/helm/uml-mcp --set auth.mode=jwt …` (Entra ID or any OIDC provider). Guide: [docs/enterprise](docs/enterprise/README.md).
+
 </details>
 
 <details>
@@ -233,7 +236,7 @@ Daily and monthly activity (stars, forks, merged PRs, issues): [trendshift.io/re
 
 | | |
 | --- | --- |
-| Docs | [Site](https://antoinebou12.github.io/uml-mcp/) · [Cursor](docs/integrations/cursor.md) · [Claude Code](docs/integrations/claude_code.md) · [Frontend](docs/integrations/frontend.md) |
+| Docs | [Site](https://antoinebou12.github.io/uml-mcp/) · [Cursor](docs/integrations/cursor.md) · [Claude Code](docs/integrations/claude_code.md) · [Frontend](docs/integrations/frontend.md) · [Enterprise SSO](docs/enterprise/README.md) |
 | Contribute | [CONTRIBUTING.md](CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) · [SECURITY.md](SECURITY.md) |
 | License | [MIT](LICENSE) |
 

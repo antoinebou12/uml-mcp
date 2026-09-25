@@ -82,6 +82,10 @@ Point your MCP client at `server.py` with **absolute** paths for `args` and `cwd
 
 ## Optional components
 
+### Enterprise SSO (Microsoft Entra ID / OAuth 2.1)
+
+Self-hosted HTTP deployments can require bearer tokens on `/mcp` with `MCP_AUTH_MODE=jwt` (or `entra-proxy`). No extra package is needed; the dependencies ship with UML-MCP. See the **[Enterprise guide](enterprise/README.md)**.
+
 ### Local diagram servers
 
 For better performance or offline use:

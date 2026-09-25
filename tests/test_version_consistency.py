@@ -1,10 +1,12 @@
 """Test that version is consistent across package metadata."""
+
 from pathlib import Path
 
 
 def test_version_consistency():
     # Load pyproject
     import tomllib
+
     pyproject_path = Path(__file__).parents[1] / "pyproject.toml"
     with open(pyproject_path, "rb") as f:
         pyproject = tomllib.load(f)
@@ -12,6 +14,7 @@ def test_version_consistency():
 
     # Check MCPSettings default
     from mcp_core.core.config import MCPSettings
+
     # Create a fresh settings instance to avoid env overrides affecting version
     s = MCPSettings()
     assert s.version == version, f"Config version {s.version} != pyproject {version}"
@@ -32,7 +35,9 @@ def test_version_consistency_across_manifests():
     version = tomllib.loads((root / "pyproject.toml").read_text())["project"]["version"]
     chart = yaml.safe_load((root / "deploy/helm/uml-mcp/Chart.yaml").read_text())
     assert chart["appVersion"] == version
-    plugin = json.loads((root / "plugins/uml-mcp/.claude-plugin/plugin.json").read_text())
+    plugin = json.loads(
+        (root / "plugins/uml-mcp/.claude-plugin/plugin.json").read_text()
+    )
     assert plugin["version"] == version
     assert f'version: "{version}"' in (root / "smithery.yaml").read_text() or (
         f"version: {version}" in (root / "smithery.yaml").read_text()

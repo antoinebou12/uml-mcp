@@ -41,6 +41,14 @@ UML-MCP runs in four shapes. Pick the one that fits your environment, then jump 
 
     [:octicons-arrow-right-24: Configuration](../configuration.md)
 
+-   :material-shield-lock-outline:{ .lg .middle } **Kubernetes + enterprise SSO**
+
+    ---
+
+    Helm chart with optional Microsoft Entra ID / OAuth 2.1 protection of `/mcp` (RFC 9728 metadata, 401/403 step-up).
+
+    [:octicons-arrow-right-24: Enterprise guide](../enterprise/README.md)
+
 </div>
 
 ## Decision tree
@@ -54,23 +62,26 @@ flowchart TD
     Q3 -- yes --> Stdio[Local stdio: server.py via Cursor / Claude]
     Q3 -- no  --> Docker[Docker compose with output volume]
     Q2 -- no  --> Q4{Bring own infra?}
-    Q4 -- yes --> Custom[uvicorn / fastmcp run + reverse proxy]
+    Q4 -- yes --> Q5{Need SSO / Entra ID?}
+    Q5 -- yes --> Helm[Helm chart + MCP_AUTH_MODE=jwt or entra-proxy]
+    Q5 -- no  --> Custom[uvicorn / fastmcp run + reverse proxy]
     Q4 -- no  --> Vercel[Hosted Vercel HTTP MCP at /mcp]
 ```
 
 ## Per-deployment specifics
 
-| Concern | Hosted (Vercel) | Local stdio | Docker | Custom HTTP |
-| --- | --- | --- | --- | --- |
-| Transport | HTTP `/mcp` | stdio | HTTP `/mcp` | HTTP `/mcp` |
-| File writes (`output_dir`) | No (read-only) | Yes | Yes (volume mount) | Yes |
-| Local Kroki / PlantUML | No | Optional | Bundled | Optional |
-| Auth / OAuth | Vercel Deployment Protection or open | None | None | Your choice |
-| Best for | Public + Smithery distribution | IDE work, debugging | Air-gapped, shared infra | Behind your reverse proxy |
+| Concern | Hosted (Vercel) | Local stdio | Docker | Kubernetes (Helm) | Custom HTTP |
+| --- | --- | --- | --- | --- | --- |
+| Transport | HTTP `/mcp` | stdio | HTTP `/mcp` | HTTP `/mcp` | HTTP `/mcp` |
+| File writes (`output_dir`) | No (read-only) | Yes | Yes (volume mount) | emptyDir | Yes |
+| Local Kroki / PlantUML | No | Optional | Bundled | External | Optional |
+| Auth / OAuth | Open (enterprise auth refused on Vercel) | None | Optional SSO (`docker-compose.enterprise.yml`) | Optional SSO (`auth.mode`) | Optional SSO via `uvicorn app:app` |
+| Best for | Public + Smithery distribution | IDE work, debugging | Air-gapped, shared infra | Enterprise, Entra ID | Behind your reverse proxy |
 
 !!! note "MCP route"
 
     All HTTP deployments serve MCP at **`/mcp`**, never the domain root. Health endpoint is `/health` on the FastAPI app.
+    Enterprise auth lives in the FastAPI app: `fastmcp run` and `server.py --transport http` bypass it and are not auth-capable.
 
 ## Connecting clients
 

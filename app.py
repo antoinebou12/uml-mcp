@@ -24,6 +24,7 @@ from fastapi.responses import (
 )
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from mcp_core.auth import auth_requested
 from mcp_core.core.agent_discovery import (
     approximate_markdown_token_count,
     build_robots_txt,
@@ -71,7 +72,6 @@ except Exception as e:
 # try/except: an invalid configuration must fail the import (fail closed) instead of
 # silently serving an unauthenticated /mcp. With the default MCP_AUTH_MODE=none nothing
 # below imports the auth submodules and the app is unchanged.
-from mcp_core.auth import auth_requested
 
 _auth_runtime = None
 if auth_requested():

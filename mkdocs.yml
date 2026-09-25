@@ -126,6 +126,16 @@ nav:
       - Frontend (AG-UI): integrations/frontend.md
       - OI OS (community): integrations/oi_os.md
       - Fallback strategy: fallback-mechanism.md
+  - Enterprise:
+      - enterprise/README.md
+      - Architecture: enterprise/architecture.md
+      - Microsoft Entra ID: enterprise/entra-id.md
+      - Configuration: enterprise/configuration.md
+      - Clients: enterprise/clients.md
+      - Kubernetes (Helm): enterprise/kubernetes.md
+      - Admin console: enterprise/admin-ui.md
+      - Security model: enterprise/security.md
+      - Troubleshooting: enterprise/troubleshooting.md
   - Developers:
       - developers/index.md
       - Testing: testing.md

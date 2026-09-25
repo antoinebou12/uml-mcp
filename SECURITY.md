@@ -6,16 +6,16 @@ We take security seriously. Please report vulnerabilities as described below; do
 
 | Version | Supported          |
 | ------- | ------------------ |
-| 1.2.x   | :white_check_mark: |
-| 1.1.x   | :white_check_mark: |
-| 1.0.x   | :x:                |
+| 1.4.x   | :white_check_mark: |
+| 1.3.x   | :white_check_mark: |
+| < 1.3   | :x:                |
 
 ## Reporting a Vulnerability
 
 If you discover a security vulnerability in this project, please follow these steps to report it:
 
 1. **Do not disclose the vulnerability publicly** until it has been addressed by the maintainers.
-2. **Report via GitHub:** Open a [Security Advisory](https://github.com/yourusername/uml-mcp/security/advisories/new) (preferred), or email the maintainers if you cannot use GitHub. Include:
+2. **Report via GitHub:** Open a [Security Advisory](https://github.com/antoinebou12/uml-mcp/security/advisories/new) (preferred), or email the maintainers if you cannot use GitHub. Include:
    - The steps to reproduce the issue
    - The potential impact of the vulnerability
    - Any potential solutions or workarounds you're aware of
@@ -33,6 +33,10 @@ When using this UML-MCP server in your environment, please follow these security
 - Do not expose the MCP server directly to untrusted networks
 - Use API keys or other authentication mechanisms when integrating with other services
 - Validate all input coming from external sources
+
+### Enterprise authentication
+- For self-hosted HTTP deployments, enable `MCP_AUTH_MODE=jwt` or `entra-proxy` (Microsoft Entra ID / OAuth 2.1). See [docs/enterprise](docs/enterprise/README.md) and the [security model](docs/enterprise/security.md).
+- Never forward client tokens to other services, and never put tokens in URLs.
 
 ### Server Environment
 - Keep all dependencies up to date

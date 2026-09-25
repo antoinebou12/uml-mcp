@@ -108,6 +108,18 @@ The Docker image reads the same variables as the local server. The most useful f
 
 Full table: [Configuration](../configuration.md).
 
+## Enterprise SSO (optional)
+
+Protect `/mcp` with Microsoft Entra ID or any OIDC provider using the override file:
+
+```bash
+cp .env.example .env   # set MCP_AUTH_MODE, MCP_AUTH_RESOURCE_URL, MCP_AUTH_ENTRA_*
+docker compose -f docker-compose.yml -f docker-compose.enterprise.yml up -d
+curl -i -X POST http://localhost:8000/mcp   # 401 + WWW-Authenticate resource_metadata
+```
+
+Details: [Enterprise guide](../enterprise/README.md).
+
 ## Compose snippet: bring your own backends
 
 ```yaml
