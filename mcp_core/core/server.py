@@ -13,6 +13,9 @@ import os
 from typing import Any
 from urllib.parse import urlsplit
 
+from ..auth import auth_requested
+from .env import parse_env_list
+
 # Default HTTP deployments to stateless transport semantics. This removes
 # Mcp-Session-Id affinity for legacy clients too, which is important for Vercel,
 # Cloud Run, multi-worker Uvicorn, and other horizontally scaled deployments.
@@ -25,17 +28,7 @@ _mcp_server = None
 
 def _parse_env_list(value: str) -> list[str]:
     """Accept either a JSON array or a comma-separated allowlist."""
-    raw = value.strip()
-    if not raw:
-        return []
-    if raw.startswith("["):
-        try:
-            decoded = json.loads(raw)
-        except json.JSONDecodeError:
-            decoded = None
-        if isinstance(decoded, list):
-            return [str(item).strip() for item in decoded if str(item).strip()]
-    return [item.strip() for item in raw.split(",") if item.strip()]
+    return parse_env_list(value)
 
 
 def _host_from_urlish(value: str) -> str:
@@ -72,6 +65,12 @@ def _configure_fastmcp_http_security() -> None:
     hosts = _parse_env_list(os.environ.get("MCP_ALLOWED_HOSTS", ""))
     origins = _parse_env_list(os.environ.get("MCP_ALLOWED_ORIGINS", ""))
 
+    # Enterprise auth: the canonical resource host must pass FastMCP's Host guard
+    # (avoids HTTP 421 behind an ingress / reverse proxy).
+    auth_host = _host_from_urlish(os.environ.get("MCP_AUTH_RESOURCE_URL", ""))
+    if auth_host and auth_host not in hosts:
+        hosts.append(auth_host)
+
     if os.environ.get("VERCEL") == "1":
         for host in _vercel_allowed_hosts():
             if host not in hosts:
@@ -96,6 +95,18 @@ def _configure_fastmcp_http_security() -> None:
 _configure_fastmcp_http_security()
 
 
+def _guard_enterprise_auth_platform() -> None:
+    """Refuse enterprise auth on Vercel: static PRM files would shadow live metadata."""
+    if os.environ.get("VERCEL") == "1" and auth_requested():
+        raise RuntimeError(
+            "MCP_AUTH_MODE is not supported on Vercel (public/.well-known is static and "
+            "would advertise no authorization server). Deploy with Docker or Helm."
+        )
+
+
+_guard_enterprise_auth_platform()
+
+
 def get_mcp_cache_policy() -> dict[str, Any]:
     """Return FastMCP 4 server-wide SEP-2549 cache policy.
 
@@ -103,6 +114,9 @@ def get_mcp_cache_policy() -> dict[str, Any]:
     catalog and documentation resources are deployment metadata rather than
     authorization-specific data.
     """
+    if auth_requested():
+        # Authenticated responses must never be stored by shared caches.
+        return {"cache_ttl": 300, "cache_scope": "private"}
     return {"cache_ttl": 300, "cache_scope": "public"}
 
 
@@ -161,6 +175,13 @@ def start_server(transport="stdio", host=None, port=None):
     if transport == "stdio":
         server.run()
     elif transport == "http":
+        if auth_requested():
+            # FastMCP's own HTTP server bypasses app.py (and therefore the auth
+            # middleware). Never serve an unauthenticated /mcp when auth is configured.
+            raise SystemExit(
+                "MCP_AUTH_MODE requires the ASGI app: run `uvicorn app:app` "
+                "(the Docker image and Helm chart already do)."
+            )
         if not host or not port:
             raise ValueError("Host and port must be specified for HTTP transport")
         if hasattr(server, "run_http"):

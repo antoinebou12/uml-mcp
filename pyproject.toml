@@ -31,6 +31,8 @@ dependencies = [
     "pillow>=12.0.0,<13",
     "fastmcp-slim[server]==4.0.0",
     "mcp>=2.0.0,<3.0.0",
+    "pyjwt[crypto]>=2.10.0,<3",
+    "cryptography>=44.0.0,<51",
 ]
 
 [project.urls]

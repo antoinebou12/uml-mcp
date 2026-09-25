@@ -67,6 +67,31 @@ try:
 except Exception as e:
     logger.warning("MCP HTTP not available: %s", e, exc_info=True)
 
+# Optional enterprise auth (MCP_AUTH_MODE=jwt|entra-proxy). Deliberately outside any
+# try/except: an invalid configuration must fail the import (fail closed) instead of
+# silently serving an unauthenticated /mcp. With the default MCP_AUTH_MODE=none nothing
+# below imports the auth submodules and the app is unchanged.
+from mcp_core.auth import auth_requested
+
+_auth_runtime = None
+if auth_requested():
+    from mcp_core.auth.integration import build_auth_runtime
+
+    _auth_runtime = build_auth_runtime()
+
+_app_lifespan = _mcp_http_app.lifespan if _mcp_http_app else None
+if _auth_runtime is not None:
+    from mcp_core.auth.integration import compose_lifespan
+
+    _app_lifespan = compose_lifespan(_app_lifespan, _auth_runtime)
+
+try:
+    from mcp_core.core.config import MCP_SETTINGS as _SETTINGS_FOR_VERSION
+
+    _APP_VERSION = _SETTINGS_FOR_VERSION.version
+except Exception:  # noqa: BLE001 - keep the app importable without optional modules
+    _APP_VERSION = "1.4.0"
+
 # OpenAPI tag groups for Swagger UI / ReDoc
 TAG_REST = "rest"
 TAG_WELL_KNOWN = "well-known"
@@ -104,13 +129,13 @@ app = FastAPI(
         "API for generating UML and other diagrams; MCP at /mcp (Streamable HTTP — use an MCP client). "
         "[Swagger UI](/docs) · [ReDoc](/redoc) · [OpenAPI JSON](/openapi.json)"
     ),
-    version="1.3.0",
+    version=_APP_VERSION,
     docs_url=None,
     redoc_url=None,
     swagger_ui_oauth2_redirect_url=None,
     openapi_url="/openapi.json",
     openapi_tags=_OPENAPI_TAGS,
-    lifespan=_mcp_http_app.lifespan if _mcp_http_app else None,
+    lifespan=_app_lifespan,
 )
 
 _FAVICON_SVG = Path(__file__).resolve().parent / "favicon.svg"
@@ -231,12 +256,22 @@ if _allowed_origins_env:
 else:
     allow_origins = []
 
+_cors_kwargs: dict[str, Any] = {}
+if _auth_runtime is not None:
+    from mcp_core.auth.integration import cors_expose_headers, install_auth
+
+    # Added before CORS => innermost: Origin check and rate limits run first, and
+    # 401/403 responses still carry CORS headers.
+    install_auth(app, _auth_runtime)
+    _cors_kwargs["expose_headers"] = cors_expose_headers()
+
 app.add_middleware(
     cast(Any, CORSMiddleware),
     allow_origins=allow_origins,
     allow_credentials=bool(allow_origins),
     allow_methods=["*"],
     allow_headers=["*"],
+    **_cors_kwargs,
 )
 # Origin validation for MCP Streamable HTTP
 app.add_middleware(cast(Any, _MCPOriginValidationMiddleware))
@@ -352,7 +387,7 @@ async def root(request: Request):
     return JSONResponse(
         content={
             "message": "Welcome to the UML-MCP API",
-            "version": "1.3.0",
+            "version": _APP_VERSION,
             "status": "operational",
             "docs": "/docs",
             "redoc": "/redoc",
@@ -382,7 +417,14 @@ async def sitemap_xml(request: Request):
 
 def _health_payload() -> dict[str, Any]:
     """Shared body for ``/health`` and ``/status``."""
-    return {"status": "healthy", "modules_available": HAS_MODULES}
+    payload: dict[str, Any] = {"status": "healthy", "modules_available": HAS_MODULES}
+    if _auth_runtime is not None:
+        # Liveness never depends on the IdP; detailed checks live in the admin console.
+        payload["auth"] = {
+            "mode": _auth_runtime.settings.mode,
+            "preflight": _auth_runtime.preflight.status,
+        }
+    return payload
 
 
 @app.get("/health", tags=[TAG_REST])
@@ -545,6 +587,14 @@ async def kroki_encode_endpoint(request: KrokiEncodeRequest):
 # The run store is intentionally per-process; ``POST /ag-ui/generate`` avoids it.
 _AGUI_RUNS: dict[str, list[dict[str, Any]]] = {}
 _AGUI_RUN_DONE: dict[str, asyncio.Event] = {}
+# Owner of each run when enterprise auth is on (principal key); another principal
+# asking for the run gets 404 (not 403) so run ids are not an existence oracle.
+_AGUI_RUN_OWNER: dict[str, str] = {}
+
+
+def _principal_key(request: Request) -> str | None:
+    principal = getattr(request.state, "auth_principal", None)
+    return getattr(principal, "key", None)
 
 
 class AguiRunRequest(BaseModel):
@@ -637,6 +687,7 @@ async def _agui_events_stream(run_id: str):
     finally:
         _AGUI_RUN_DONE.pop(run_id, None)
         _AGUI_RUNS.pop(run_id, None)
+        _AGUI_RUN_OWNER.pop(run_id, None)
 
 
 @app.post("/ag-ui/start", response_model=AguiRunResponse, tags=[TAG_AGUI])
@@ -655,6 +706,9 @@ async def agui_start(request: Request, body: AguiRunRequest):
         )
     _AGUI_RUNS[run_id] = []
     _AGUI_RUN_DONE[run_id] = asyncio.Event()
+    owner = _principal_key(request)
+    if owner is not None:
+        _AGUI_RUN_OWNER[run_id] = owner
     asyncio.create_task(_agui_worker(run_id, body))
     base = str(request.base_url).rstrip("/")
     return AguiRunResponse(
@@ -666,9 +720,12 @@ async def agui_start(request: Request, body: AguiRunRequest):
 
 
 @app.get("/ag-ui/events/{run_id}", tags=[TAG_AGUI])
-async def agui_events(run_id: str):
+async def agui_events(run_id: str, request: Request):
     """Stream the AG-UI events for a started run as Server-Sent Events."""
     if run_id not in _AGUI_RUNS:
+        raise HTTPException(status_code=404, detail="Unknown run_id")
+    owner = _AGUI_RUN_OWNER.get(run_id)
+    if owner is not None and owner != _principal_key(request):
         raise HTTPException(status_code=404, detail="Unknown run_id")
     return StreamingResponse(
         _agui_events_stream(run_id),
@@ -756,7 +813,7 @@ def _build_server_card():
     except Exception as e:  # noqa: BLE001 - best-effort card build; fall back to a static card
         logger.warning("Could not build dynamic server card: %s", e)
         return {
-            "serverInfo": {"name": "UML Diagram Generator", "version": "1.3.0"},
+            "serverInfo": {"name": "UML Diagram Generator", "version": _APP_VERSION},
             "tools": [],
             "resources": [],
             "prompts": [],

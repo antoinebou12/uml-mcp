@@ -14,7 +14,7 @@ if not os.environ.get("USE_REAL_FASTMCP", "").strip():
 
 import pytest
 
-pytest_plugins = ["tests.fixtures_mcp"]
+pytest_plugins = ["tests.fixtures_mcp", "tests.fixtures_auth"]
 
 
 @pytest.fixture(autouse=True)
