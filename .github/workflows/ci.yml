@@ -86,9 +86,19 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-groups
 
+      # Tools some tests need; without them those tests skip (e.g. under `act`,
+      # where get.helm.sh and the Playwright CDN may be unreachable).
+      - name: Install Helm (chart render tests)
+        if: ${{ !env.ACT }}
+        uses: azure/setup-helm@v5.0.1
+
+      - name: Install Chromium (Playwright e2e tests)
+        if: ${{ !env.ACT }}
+        run: uv run playwright install --with-deps chromium
+
       - name: Run tests
         run: |
-          uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html --cov-fail-under=82
+          uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html --cov-fail-under=82 -rs
 
       - name: Build documentation
         run: uv run mkdocs build --strict
@@ -122,6 +132,7 @@ jobs:
           PY
 
       - name: Upload coverage reports
+        if: ${{ !env.ACT }}  # act has no compatible artifact server
         uses: actions/upload-artifact@v7
         with:
           name: coverage-report-${{ matrix.python-version }}
