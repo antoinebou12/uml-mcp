@@ -120,3 +120,7 @@ dev = [
     "opentelemetry-sdk>=1.30.0,<2",
     "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
 ]
+# Browser e2e (tests/test_e2e_playwright.py); skipped when no browser is available.
+e2e = [
+    "playwright>=1.55.0,<2",
+]
