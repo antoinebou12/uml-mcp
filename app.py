@@ -286,6 +286,26 @@ try:
 except Exception as e:  # noqa: BLE001
     logger.warning("RequestIdAndRateLimitMiddleware not loaded: %s", e)
 
+
+class _MCPExactPathMiddleware:
+    """Serve ``/mcp`` directly instead of Starlette's 307 to ``/mcp/``.
+
+    Many MCP clients (and conformance testers) do not re-POST a JSON-RPC body
+    after a redirect, so ``initialize`` would fail. Pure ASGI: SSE is untouched.
+    """
+
+    def __init__(self, app: Any) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
+        if scope.get("type") == "http" and scope.get("path") == "/mcp":
+            scope = {**scope, "path": "/mcp/", "raw_path": b"/mcp/"}
+        await self.app(scope, receive, send)
+
+
+if _mcp_http_app is not None:
+    app.add_middleware(cast(Any, _MCPExactPathMiddleware))
+
 # Import local modules
 try:
     from mcp_core.core.config import MCP_SETTINGS

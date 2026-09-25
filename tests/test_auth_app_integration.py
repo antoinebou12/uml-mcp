@@ -176,3 +176,24 @@ def test_default_app_has_no_metrics_or_local_admin():
     )
     proc = run_app({"UML_MCP_CONFIG": "none"}, code)
     assert proc.returncode == 0, proc.stderr
+
+
+def test_post_exact_mcp_path_is_not_redirected():
+    """POST /mcp must reach FastMCP directly (clients don't re-POST after a 307)."""
+    code = (
+        "from fastapi.testclient import TestClient\n"
+        "import app\n"
+        "body = {'jsonrpc': '2.0', 'id': 1, 'method': 'initialize', 'params': {\n"
+        "  'protocolVersion': '2025-11-25', 'capabilities': {},\n"
+        "  'clientInfo': {'name': 't', 'version': '1'}}}\n"
+        "h = {'Accept': 'application/json, text/event-stream'}\n"
+        "with TestClient(app.app) as c:\n"
+        "    r = c.post('/mcp', json=body, headers=h, follow_redirects=False)\n"
+        "assert r.status_code == 200, (r.status_code, r.text[:200])\n"
+        "assert 'serverInfo' in r.text and '1.4' in r.text\n"
+        "print('ok')\n"
+    )
+    proc = run_app(
+        {"USE_REAL_FASTMCP": "1", "MOCK_FASTMCP": "", "UML_MCP_CONFIG": "none"}, code
+    )
+    assert proc.returncode == 0, proc.stderr[-2000:]
