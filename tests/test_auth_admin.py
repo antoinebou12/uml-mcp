@@ -30,7 +30,7 @@ def test_admin_requires_role(settings_factory, mock_idp, rsa_key):
         page.status_code == 200
         and "script-src 'self'" in page.headers["content-security-policy"]
     )
-    assert c.get("/admin/app.js").status_code == 200
+    assert c.get("/admin/favicon.svg").status_code == 200
     assert c.get("/admin/api/overview").status_code == 401
     user = mint(entra_v2_claims(), rsa_key)
     r = c.get("/admin/api/overview", headers={"Authorization": f"Bearer {user}"})

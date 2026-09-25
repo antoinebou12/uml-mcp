@@ -153,6 +153,23 @@ def attach_ring() -> RingBufferHandler:
     return RING
 
 
+def ensure_console_logging() -> RingBufferHandler:
+    """For hosts that never configured logging (``uvicorn app:app``, the console).
+
+    Captures INFO+ in the admin Logs ring while stderr keeps printing only
+    WARNING+ (what Python's last-resort handler did before), so nothing changes
+    for operators reading the terminal.
+    """
+    root = logging.getLogger()
+    if not _CONFIGURED and not any(h is not RING for h in root.handlers):
+        stderr = logging.StreamHandler()
+        stderr.setLevel(logging.WARNING)
+        root.addHandler(stderr)
+        if root.level > logging.INFO or root.level == logging.NOTSET:
+            root.setLevel(logging.INFO)
+    return attach_ring()
+
+
 __all__ = [
     "RING",
     "JsonFormatter",
@@ -160,6 +177,7 @@ __all__ = [
     "attach_ring",
     "build_formatter",
     "configure_logging",
+    "ensure_console_logging",
     "is_configured",
     "scrub",
 ]

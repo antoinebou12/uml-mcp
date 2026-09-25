@@ -174,6 +174,48 @@ def env_locked() -> dict[str, str]:
     }
 
 
+def _effective_env_sections() -> dict[str, dict[str, Any]]:
+    """Effective values of the env-backed ``server``/``rendering`` sections."""
+    from ..core.config import MCP_SETTINGS
+
+    def env_bool(name: str) -> bool | None:
+        raw = os.environ.get(name)
+        return (
+            None if raw is None else raw.strip().lower() in ("1", "true", "yes", "on")
+        )
+
+    def env_list(name: str) -> list[str] | None:
+        from ..core.env import parse_env_list
+
+        return parse_env_list(os.environ.get(name)) or None
+
+    batch_conc = os.environ.get("MCP_BATCH_CONCURRENCY")
+    return {
+        "rendering": {
+            "kroki_server": MCP_SETTINGS.kroki_server,
+            "plantuml_server": MCP_SETTINGS.plantuml_server,
+            "use_local_kroki": bool(env_bool("USE_LOCAL_KROKI")),
+            "use_local_plantuml": bool(env_bool("USE_LOCAL_PLANTUML")),
+            "url_only": MCP_SETTINGS.url_only,
+            "memory_only": MCP_SETTINGS.memory_only,
+            "read_only": MCP_SETTINGS.read_only,
+            "diagram_fallback": MCP_SETTINGS.diagram_fallback_enabled,
+            "output_dir": MCP_SETTINGS.output_dir,
+            "max_code_length": MCP_SETTINGS.max_code_length,
+            "max_render_seconds": MCP_SETTINGS.max_render_seconds,
+            "batch_max_items": MCP_SETTINGS.batch_max_items,
+            "batch_concurrency": int(batch_conc)
+            if batch_conc and batch_conc.isdigit()
+            else 4,
+        },
+        "server": {
+            "allowed_hosts": env_list("MCP_ALLOWED_HOSTS"),
+            "allowed_origins": env_list("MCP_ALLOWED_ORIGINS"),
+            "stateless_http": env_bool("FASTMCP_STATELESS_HTTP"),
+        },
+    }
+
+
 def current() -> dict[str, Any]:
     loaded = get_config()
     path = target_path()
@@ -184,7 +226,10 @@ def current() -> dict[str, Any]:
         "writable": writable(path),
         "data": {k: v for k, v in data.items() if k != "auth"},
         "has_auth_section": "auth" in data,
-        "effective": loaded.app.model_dump(mode="json", exclude={"auth"}),
+        "effective": {
+            **loaded.app.model_dump(mode="json", exclude={"auth"}),
+            **_effective_env_sections(),
+        },
         "env_locked": env_locked(),
         "setup": data.get("setup"),
         "setup_complete": bool((data.get("setup") or {}).get("completed_at")),

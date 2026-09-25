@@ -25,8 +25,10 @@ def build_console_app() -> Any:
         RequestIdAndRateLimitMiddleware,
     )
     from ..core.server import get_mcp_server
+    from ..observability.logging_setup import ensure_console_logging
     from .api import build_local_admin_router
 
+    ensure_console_logging()
     mcp_app = get_mcp_server().http_app(path="/")
     app = FastAPI(
         title="UML-MCP console",

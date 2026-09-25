@@ -7,6 +7,8 @@ __pycache__/
 build/
 develop-eggs/
 dist/
+!mcp_core/admin_ui/dist/
+!mcp_core/admin_ui/dist/**
 downloads/
 eggs/
 .eggs/

@@ -1044,6 +1044,8 @@ if _app_config is not None:
         _logging_setup.configure_logging(
             _app_config.logging, console_handler=logging.StreamHandler(sys.stderr)
         )
+    elif not _logging_setup.is_configured():
+        _logging_setup.ensure_console_logging()  # feeds the admin console Logs page
 
 if (
     _app_config is not None

@@ -90,7 +90,7 @@ rate_limit:
   tools:                         # per MCP tool, enforced inside the tool call
     generate_uml_batch: {requests_per_minute: 10}
   auth_failures_per_minute: 30   # 401s per IP before 429 (key: principal)
-  exempt_paths: [/health, /status, /.well-known/, /favicon]
+  exempt_paths: [/health, /status, /.well-known/, /favicon, /admin/assets/]
 ```
 
 - **Algorithm:** a token bucket. It refills at `requests_per_minute`, and its capacity is `burst` (default: the same value).

@@ -125,7 +125,7 @@ def test_local_dashboard_loopback_only():
         _local_app(), client=("127.0.0.1", 5000), base_url="http://127.0.0.1"
     )
     assert local.get("/admin").status_code == 200
-    assert local.get("/admin/app.js").status_code == 200
+    assert local.get("/admin/favicon.svg").status_code == 200
     ov = local.get("/admin/api/overview").json()
     assert ov["local"] is True and ov["mode"] == "none"
     assert local.get("/admin/api/tools").status_code == 200

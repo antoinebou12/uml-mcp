@@ -187,7 +187,13 @@ class RateLimitConfig(_Model):
     )
     exempt_paths: list[str] = _f(
         description="Never limited (health checks, discovery).",
-        default_factory=lambda: ["/health", "/status", "/.well-known/", "/favicon"],
+        default_factory=lambda: [
+            "/health",
+            "/status",
+            "/.well-known/",
+            "/favicon",
+            "/admin/assets/",
+        ],
     )
 
 
