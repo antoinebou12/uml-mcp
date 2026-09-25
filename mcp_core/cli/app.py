@@ -247,6 +247,57 @@ def admin(
     run_console(host=host, port=port, open_browser=open_browser, page=page)
 
 
+plugins_app = typer.Typer(
+    help="List, enable and disable plugins.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+app.add_typer(plugins_app, name="plugins")
+
+
+@plugins_app.command("list")
+def plugins_list() -> None:
+    """Installed plugins and whether uml-mcp.yaml enables them."""
+    from ..core.settings_file import get_app_config
+    from ..plugins.loader import discover
+
+    found = discover()
+    enabled = set(get_app_config().plugins.enabled)
+    if not found and not enabled:
+        typer.echo(
+            "No plugins installed. See docs/plugins/index.md to add renderers/tools."
+        )
+        return
+    for p in found:
+        state = "enabled" if p.enabled else "available"
+        dist = f"{p.distribution} {p.version}" if p.distribution else p.target
+        typer.echo(f"{p.name:20} {p.group:9} {state:9} {dist}")
+    for name in sorted(enabled - {p.name for p in found}):
+        typer.echo(f"{name:20} {'?':9} {'MISSING':9} enabled but not installed")
+
+
+def _toggle(name: str, enabled: bool) -> None:
+    from ..admin.settings_service import set_plugin_enabled
+
+    result = set_plugin_enabled(name, enabled, actor="cli")
+    typer.echo(
+        f"{'Enabled' if enabled else 'Disabled'} {name} in {result['saved']}. "
+        "Restart the server to apply."
+    )
+
+
+@plugins_app.command("enable")
+def plugins_enable(name: str) -> None:
+    """Add a plugin to plugins.enabled."""
+    _toggle(name, True)
+
+
+@plugins_app.command("disable")
+def plugins_disable(name: str) -> None:
+    """Remove a plugin from plugins.enabled."""
+    _toggle(name, False)
+
+
 def main(argv: list[str]) -> int:
     try:
         app(args=argv, prog_name="uml-mcp", standalone_mode=False)

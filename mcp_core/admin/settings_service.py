@@ -335,6 +335,22 @@ def reset(
     return save(data, actor=actor)
 
 
+def set_plugin_enabled(
+    name: str, enabled: bool, *, actor: str | None = None
+) -> dict[str, Any]:
+    """Add/remove a plugin in ``plugins.enabled`` (takes effect after a restart)."""
+    loaded = get_config()
+    data = {k: v for k, v in copy.deepcopy(loaded.data).items() if k not in META_KEYS}
+    data.pop("auth", None)
+    plugins = dict(data.get("plugins") or {})
+    names = [n for n in plugins.get("enabled") or [] if n != name]
+    if enabled:
+        names.append(name)
+    plugins["enabled"] = names
+    data["plugins"] = plugins
+    return save(data, actor=actor)
+
+
 __all__ = [
     "SECTIONS",
     "ReadOnlyConfigError",
@@ -343,6 +359,7 @@ __all__ = [
     "reset",
     "save",
     "schema",
+    "set_plugin_enabled",
     "target_path",
     "validate",
 ]

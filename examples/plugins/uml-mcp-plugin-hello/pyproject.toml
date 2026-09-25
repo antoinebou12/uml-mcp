@@ -1,0 +1,18 @@
+[project]
+name = "uml-mcp-plugin-hello"
+version = "0.1.0"
+description = "Example UML-MCP plugin: one MCP tool and one diagram renderer."
+requires-python = ">=3.12"
+dependencies = ["uml-mcp>=1.4.0"]
+
+# UML-MCP discovers plugins through these entry points and loads them only
+# when they are listed in `plugins.enabled` of uml-mcp.yaml.
+[project.entry-points."uml_mcp.tools"]
+hello = "uml_mcp_plugin_hello:register"
+
+[project.entry-points."uml_mcp.renderers"]
+ascii = "uml_mcp_plugin_hello:AsciiRenderer"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

@@ -206,6 +206,30 @@ def add_admin_routes(router: APIRouter, guards: Guards) -> None:
 
         return JSONResponse({"points": METRICS.timeseries(minutes)}, headers=NO_STORE)
 
+    @router.get("/admin/api/plugins")
+    async def plugins_list(request: Request) -> JSONResponse:
+        guards.read(request)
+        from ..plugins import loader
+
+        loaded = {(s.name, s.group): s for s in loader.STATUS}
+        items = [
+            (loaded.get((s.name, s.group)) or s).as_dict() for s in loader.discover()
+        ]
+        items += [s.as_dict() for s in loader.STATUS if s.error == "not installed"]
+        return JSONResponse({"plugins": items}, headers=NO_STORE)
+
+    @router.post("/admin/api/plugins/{name}")
+    async def plugins_toggle(request: Request, name: str) -> JSONResponse:
+        guards.write(request)
+        body = await _json_body(request)
+        try:
+            result = svc.set_plugin_enabled(
+                name, bool(body.get("enabled")), actor=_actor(request)
+            )
+        except Exception as exc:  # noqa: BLE001
+            return _config_error(exc)
+        return JSONResponse(result, headers=NO_STORE)
+
     @router.post("/admin/api/clients/{client}")
     async def client_install(request: Request, client: str) -> JSONResponse:
         """Register the local stdio server in an MCP client (local console only)."""
