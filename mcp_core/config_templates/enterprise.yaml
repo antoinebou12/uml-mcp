@@ -40,6 +40,11 @@ metrics:
   enabled: true
   endpoint: true                      # /metrics (admin role required when auth is on)
 
+otel:
+  enabled: false                      # true + pip install "uml-mcp[otel]" -> OTLP traces
+  endpoint: http://otel-collector.observability:4318
+  sample_ratio: 0.2
+
 admin:
   allow_local_without_auth: false
 

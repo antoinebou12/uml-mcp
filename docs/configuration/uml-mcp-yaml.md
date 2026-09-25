@@ -25,7 +25,7 @@ Profiles are commented templates shipped in the package:
 | --- | --- | --- |
 | `local` | One user, stdio clients (VS Code, Cursor, Claude) | Output dir in `~/uml-mcp/output`, rotating log in `~/.local/state/uml-mcp/`, optional JSONL audit |
 | `docker` | Single host HTTP (`docker compose`) | Local Kroki, memory-only, per-IP rate limit, JSON logs, audit to stdout |
-| `enterprise` | Kubernetes/Helm + Entra ID | Tool allow-list, per-user rate limit, trusted proxies, JSON logs, audit + `/metrics`, `auth.mode: jwt` |
+| `enterprise` | Kubernetes/Helm + Entra ID | Tool allow-list, per-user rate limit, trusted proxies, JSON logs, audit + `/metrics`, optional OpenTelemetry, `auth.mode: jwt` |
 
 ## Discovery and precedence
 
@@ -143,6 +143,32 @@ metrics:
   enabled: true      # in-process counters + latency histograms (admin dashboard)
   endpoint: true     # expose GET /metrics (Prometheus text); MCP.Admin role when auth is on
 ```
+
+### `otel` — OpenTelemetry traces
+
+```yaml
+otel:
+  enabled: true
+  service_name: uml-mcp
+  exporter: otlp                  # otlp (HTTP/protobuf) | console
+  endpoint: http://otel-collector:4318   # default: OTEL_EXPORTER_OTLP_ENDPOINT
+  sample_ratio: 1.0               # parent-based: callers' sampling decisions win
+  include_user: false             # add enduser.id (PII) to spans
+  resource_attributes: {deployment.environment: prod}
+```
+
+Install the extra first: `pip install "uml-mcp[otel]"` (`uml-mcp lint` reports
+CFG010 when it is missing).
+
+- **HTTP spans:** one server span per HTTP request, named `METHOD /first/two`
+  segments so span names stay bounded. It joins the caller's trace through W3C
+  `traceparent`.
+- **Operation spans:** one span per tool, resource and prompt call. It carries the
+  audit attributes: `mcp.operation.*`, `mcp.operation_status`, `mcp.policy_decision`,
+  `mcp.session_id`, `mcp.request_id` and duration.
+- **Never recorded:** inputs and tokens.
+- **Existing OTel setup:** the tracer is private, so a host application's global
+  OpenTelemetry configuration is left alone.
 
 ### `admin`
 

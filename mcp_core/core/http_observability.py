@@ -170,7 +170,24 @@ class RequestIdAndRateLimitMiddleware(BaseHTTPMiddleware):
                 path,
             )
             start = time.perf_counter()
-            response = await call_next(request)
+            from ..observability import otel
+            from ..observability.metrics import _series_name
+
+            with otel.span(
+                _series_name("http", f"{request.method} {path}"),
+                {
+                    "http.request.method": request.method,
+                    "url.path": path,
+                    "mcp.request_id": request_id,
+                },
+                carrier=dict(request.headers),
+                kind="server",
+            ) as http_span:
+                response = await call_next(request)
+                if http_span is not None:
+                    http_span.set_attribute(
+                        "http.response.status_code", response.status_code
+                    )
             if throttle_failures and response.status_code == 401:
                 LIMITER.check(AUTH_FAILURE_SCOPE, ip_key, fail_limit)
             if app_cfg.audit.include_http and path.startswith(REST_AUDIT_PREFIXES):

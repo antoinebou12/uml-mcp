@@ -115,6 +115,14 @@ With auth enabled, `/metrics` requires the **`MCP.Admin`** app role. Give the
 scraper a client-credentials token, or scrape inside the cluster with auth off
 behind a `NetworkPolicy`. Metrics are per replica, so let Prometheus aggregate.
 
+## OpenTelemetry
+
+Set `otel.enabled: true` to send traces to any OTLP collector: Azure Monitor
+(via the OpenTelemetry Collector), Grafana Tempo, Jaeger, Datadog or Honeycomb.
+You get one server span per HTTP request and one child span per MCP operation.
+They carry the audit attributes (never inputs or tokens) and join the caller's
+trace through `traceparent`. Configuration: [otel](../configuration/uml-mcp-yaml.md#otel-opentelemetry-traces).
+
 ## Rate limits
 
 See [rate_limit](../configuration/uml-mcp-yaml.md#rate_limit):

@@ -184,6 +184,19 @@ def lint_config(
                     "error", "CFG008", "rate_limit.tools", f"unknown tool '{name}'"
                 )
             )
+    if app.otel.enabled:
+        from ..observability.otel import otel_available
+
+        if not otel_available():
+            issues.append(
+                LintIssue(
+                    "error",
+                    "CFG010",
+                    "otel.enabled",
+                    "OpenTelemetry is enabled but uml-mcp[otel] is not installed",
+                    'pip install "uml-mcp[otel]"',
+                )
+            )
     for name in app.tools.disabled:
         issues.append(
             LintIssue("info", "CFG009", f"tool:{name}", "disabled by configuration")

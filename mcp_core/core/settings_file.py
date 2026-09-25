@@ -54,6 +54,7 @@ SECTIONS = (
     "logging",
     "audit",
     "metrics",
+    "otel",
     "admin",
     "auth",
 )
@@ -106,6 +107,20 @@ class MetricsConfig(_Model):
     endpoint: bool = False  # expose /metrics (Prometheus text)
 
 
+class OtelConfig(_Model):
+    """OpenTelemetry traces (``pip install "uml-mcp[otel]"``)."""
+
+    enabled: bool = False
+    service_name: str = "uml-mcp"
+    exporter: Literal["otlp", "console"] = "otlp"
+    endpoint: str | None = (
+        None  # default: OTEL_EXPORTER_OTLP_ENDPOINT or localhost:4318
+    )
+    sample_ratio: float = Field(default=1.0, ge=0.0, le=1.0)
+    include_user: bool = False  # add enduser.id (PII) to spans
+    resource_attributes: dict[str, str] = Field(default_factory=dict)
+
+
 class LimitConfig(_Model):
     requests_per_minute: int = Field(default=120, ge=1)
     burst: int = Field(default=0, ge=0)  # 0 => same as requests_per_minute
@@ -146,6 +161,7 @@ class AppConfig(_Model):
     logging: LoggingConfig = Field(default_factory=LoggingConfig)
     audit: AuditConfig = Field(default_factory=AuditConfig)
     metrics: MetricsConfig = Field(default_factory=MetricsConfig)
+    otel: OtelConfig = Field(default_factory=OtelConfig)
     admin: AdminConfig = Field(default_factory=AdminConfig)
     auth: dict[str, Any] = Field(default_factory=dict)
 
@@ -306,6 +322,7 @@ __all__ = [
     "LoadedConfig",
     "LoggingConfig",
     "MetricsConfig",
+    "OtelConfig",
     "RateLimitConfig",
     "RotationConfig",
     "apply_to_environ",

@@ -36,6 +36,13 @@ dependencies = [
     "pyyaml>=6.0.2,<7",
 ]
 
+[project.optional-dependencies]
+# OpenTelemetry traces (`otel:` in uml-mcp.yaml): pip install "uml-mcp[otel]"
+otel = [
+    "opentelemetry-sdk>=1.30.0,<2",
+    "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
+]
+
 [project.urls]
 Repository = "https://github.com/antoinebou12/uml-mcp"
 
@@ -110,4 +117,6 @@ dev = [
     "mkdocs-minify-plugin>=0.8.0",
     "mkdocs-glightbox>=0.4.0",
     "mkdocstrings[python]>=0.30.0",
+    "opentelemetry-sdk>=1.30.0,<2",
+    "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
 ]

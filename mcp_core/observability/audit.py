@@ -20,6 +20,7 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 from ..core.settings_file import AppConfig, get_app_config
+from . import otel
 from .context import current_context
 from .metrics import METRICS
 from .ratelimit import LIMITER
@@ -87,6 +88,7 @@ class AuditLogger:
             self.version: str | None = MCP_SETTINGS.version
         except Exception:  # noqa: BLE001
             self.version = None
+        otel.configure_otel(app.otel, version=self.version or "")
 
     def record(
         self,
@@ -129,6 +131,7 @@ class AuditLogger:
         )
         if self.metrics_enabled:
             METRICS.observe(rec)
+        otel.annotate_current(rec, self.app.otel.include_user)
         if not self.enabled:
             return None
         for sink in self.sinks:
@@ -220,35 +223,40 @@ def instrument(
             ),
         )
 
+    span_name = f"{operation_type} {name}"
+    span_attrs = {"mcp.operation.type": operation_type, "mcp.operation.name": name}
+
     if inspect.iscoroutinefunction(func):
 
         @functools.wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             start = time.perf_counter()
-            try:
-                if operation_type == "tool":
-                    _check_tool_limit(name)
-                result = await func(*args, **kwargs)
-            except BaseException as exc:
-                _finish(start, kwargs, exc)
-                raise
-            _finish(start, kwargs, None, result)
-            return result
+            with otel.span(span_name, span_attrs):
+                try:
+                    if operation_type == "tool":
+                        _check_tool_limit(name)
+                    result = await func(*args, **kwargs)
+                except BaseException as exc:
+                    _finish(start, kwargs, exc)
+                    raise
+                _finish(start, kwargs, None, result)
+                return result
 
         return async_wrapper
 
     @functools.wraps(func)
     def wrapper(*args: Any, **kwargs: Any) -> Any:
         start = time.perf_counter()
-        try:
-            if operation_type == "tool":
-                _check_tool_limit(name)
-            result = func(*args, **kwargs)
-        except BaseException as exc:
-            _finish(start, kwargs, exc)
-            raise
-        _finish(start, kwargs, None, result)
-        return result
+        with otel.span(span_name, span_attrs):
+            try:
+                if operation_type == "tool":
+                    _check_tool_limit(name)
+                result = func(*args, **kwargs)
+            except BaseException as exc:
+                _finish(start, kwargs, exc)
+                raise
+            _finish(start, kwargs, None, result)
+            return result
 
     return wrapper
 

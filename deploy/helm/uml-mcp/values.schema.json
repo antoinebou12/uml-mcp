@@ -69,6 +69,14 @@
           "type": "object",
           "properties": {"enabled": {"type": "boolean"}, "endpoint": {"type": "boolean"}}
         },
+        "otel": {
+          "type": "object",
+          "properties": {
+            "enabled": {"type": "boolean"},
+            "exporter": {"type": "string", "enum": ["otlp", "console"]},
+            "sample_ratio": {"type": "number", "minimum": 0, "maximum": 1}
+          }
+        },
         "admin": {"type": "object"}
       }
     }
