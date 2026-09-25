@@ -6,8 +6,10 @@ _Last updated: 2026-09-25 (branch `claude/observability-config`, PR [#335](https
 | --- | --- |
 | Version | 1.4.0 (`pyproject.toml`, Helm `appVersion`, server cards) |
 | Python | 3.12 baseline, 3.14 in the CI matrix |
-| Tests | 701 passed, 1 skipped · coverage 91% (gate 82%) |
-| Lint | `ruff check`, `ruff format --check`, `ty check`, `uml-mcp lint --strict` all clean |
+| Tests | 717 passed, 1 skipped · coverage 91% (gate 82%) · Playwright e2e included |
+| Lint | ruff, ty clean · `uml-mcp lint`: grade A, 99/100, ~5,045 tokens (gate: A, ≤ 5,500) |
+| mcp-tester 0.8.0 | conformance 18/20 (GET SSE 405 in stateless mode and foreign-Origin CORS are by design) |
+| mcpx | cannot run here: sandbox blocks mcpplayground.tech; `uml-mcp lint` applies the same rules offline |
 | Docs | `mkdocs build --strict` clean |
 | Conformance (MCP 2026) | 43 passed / 41 failed, same as `main` (see blocked item) |
 | Local CI (`act`) | lint ✅ · test ✅ (artifact upload unsupported by act) · helm via `alpine/helm` ✅ |
