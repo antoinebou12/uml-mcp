@@ -807,7 +807,9 @@ def get_prompt_registry() -> dict[str, dict[str, Any]]:
 def architecture_report_prompt(context: dict[str, Any] | None = None) -> str:
     """Prompt for a full Markdown architecture report with rendered diagrams."""
     context = context or {}
-    subject = context.get("subject") or context.get("repository") or "the current repository"
+    subject = (
+        context.get("subject") or context.get("repository") or "the current repository"
+    )
     return f"""You are a software architect. Produce a **Markdown architecture report** for {subject}.
 Read the code and configuration first (entry points, packages, deployment files, CI); never invent components.
 

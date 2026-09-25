@@ -717,9 +717,7 @@ def _build_protocol_diagram_request(body: AguiProtocolRunInput):
     if not isinstance(diagram_type, str) or not diagram_type.strip():
         diagram_type = "mermaid"
 
-    output_format = _pick_diagram_value(
-        nested, direct, "outputFormat", "output_format"
-    )
+    output_format = _pick_diagram_value(nested, direct, "outputFormat", "output_format")
     if not isinstance(output_format, str) or not output_format.strip():
         output_format = "svg"
 

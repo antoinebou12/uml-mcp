@@ -89,14 +89,18 @@ def test_generate_uml_response_matches_declared_output_schema(monkeypatch) -> No
         "cache_hit": False,
         "mime_type": "image/svg+xml",
     }
-    monkeypatch.setattr(diagram_tools, "generate_from_request", lambda _request: expected)
+    monkeypatch.setattr(
+        diagram_tools, "generate_from_request", lambda _request: expected
+    )
 
     result = diagram_tools.generate_uml("mermaid", expected["code"])
     parsed = DiagramResult.model_validate(result)
     assert parsed.success is True
 
 
-def test_generate_uml_batch_response_matches_declared_output_schema(monkeypatch) -> None:
+def test_generate_uml_batch_response_matches_declared_output_schema(
+    monkeypatch,
+) -> None:
     def fake_generate(request):
         return {
             "code": request.code,

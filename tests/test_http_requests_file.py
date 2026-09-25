@@ -33,6 +33,10 @@ def test_variables_are_defined_and_no_secrets():
     used = {u for u in used if "." not in u}
     assert used <= defined, used - defined
     assert "eyJ" not in text  # never commit a real token
-    for expected in ("oauth-protected-resource/mcp", "client_credentials",
-                     "code_challenge_method=plain", "oauth-authorization-server"):
+    for expected in (
+        "oauth-protected-resource/mcp",
+        "client_credentials",
+        "code_challenge_method=plain",
+        "oauth-authorization-server",
+    ):
         assert expected in text
