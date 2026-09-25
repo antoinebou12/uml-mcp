@@ -1,0 +1,108 @@
+# Default values for uml-mcp.
+# No container image is published yet: build and push your own
+#   docker build -t <registry>/uml-mcp:1.4.0 . && docker push <registry>/uml-mcp:1.4.0
+image:
+  repository: ""          # REQUIRED, e.g. myregistry.azurecr.io/uml-mcp
+  tag: ""                 # defaults to .Chart.AppVersion
+  pullPolicy: IfNotPresent
+imagePullSecrets: []
+
+replicaCount: 2
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  # Entra tokens can be large; raise the header buffer on ingress-nginx:
+  #   nginx.ingress.kubernetes.io/large-client-header-buffers: "4 32k"
+  hosts: []               # e.g. [mcp.contoso.com]
+  tls: []                 # e.g. [{secretName: uml-mcp-tls, hosts: [mcp.contoso.com]}]
+
+# Enterprise authentication. mode: none | jwt | entra-proxy
+auth:
+  mode: none
+  # Canonical URL clients use (RFC 8707 resource, RFC 9728 metadata). Required unless mode=none.
+  resourceUrl: ""
+  entra:
+    tenantId: ""
+    clientId: ""
+    appIdUri: ""          # default api://<clientId>
+    cloud: public         # public | usgov | china
+    tokenVersions: ["2"]  # add "1" only if you cannot switch the app to v2 tokens
+  # Extra non-secret settings rendered into the auth.json ConfigMap (see docs/enterprise/configuration.md),
+  # e.g. {"allowed_client_ids": [...], "scope_strategy": "granular", "protect_rest": true}
+  config: {}
+  preflight: warn         # warn | strict | off
+  # Secret with keys: proxy-encryption-keys, entra-client-secret (entra-proxy only).
+  existingSecret: ""
+  # Only for quick trials; prefer existingSecret / external secret operators.
+  secret:
+    create: false
+    proxyEncryptionKeys: ""
+    entraClientSecret: ""
+
+admin:
+  enabled: false          # read-only console at /admin (MCP.Admin app role)
+
+# AKS workload identity: federated credential instead of a client secret (entra-proxy)
+workloadIdentity:
+  enabled: false
+  clientId: ""
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+
+uvicorn:
+  proxyHeaders: true
+  forwardedAllowIps: "*"  # restrict to your ingress CIDR in production
+  accessLog: false
+  h11MaxIncompleteEventSize: 65536
+
+env:
+  KROKI_SERVER: https://kroki.io
+  MCP_MEMORY_ONLY: "true"
+  MCP_URL_ONLY: "false"
+extraEnv: []
+
+resources:
+  requests: {cpu: 100m, memory: 256Mi}
+  limits: {cpu: "1", memory: 512Mi}
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  seccompProfile: {type: RuntimeDefault}
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities: {drop: [ALL]}
+
+podAnnotations: {}
+podLabels: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70
+
+pdb:
+  enabled: true
+  minAvailable: 1
+
+networkPolicy:
+  enabled: false
+  ingressNamespaceSelector: {}   # e.g. {kubernetes.io/metadata.name: ingress-nginx}

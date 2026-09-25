@@ -18,6 +18,7 @@ on:
       - ".pre-commit-config.yaml"
       - ".github/workflows/**"
       - ".cursor/mcp.json"
+      - "deploy/**"
   pull_request:
     branches: [main]
 
@@ -119,6 +120,30 @@ jobs:
           name: coverage-report-${{ matrix.python-version }}
           path: htmlcov/
           retention-days: 14
+
+  helm:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install Helm
+        uses: azure/setup-helm@v5.0.0
+
+      - name: Lint and render the chart (none / jwt / entra-proxy)
+        run: |
+          set -euo pipefail
+          chart=deploy/helm/uml-mcp
+          for values in "$chart"/ci/*-values.yaml; do
+            echo "::group::$values"
+            helm lint --strict "$chart" -f "$values"
+            helm template ci "$chart" -f "$values" > /dev/null
+            echo "::endgroup::"
+          done
+          # auth enabled without a resource URL must fail closed
+          if helm template ci "$chart" -f "$chart/ci/none-values.yaml" --set auth.mode=jwt >/dev/null 2>&1; then
+            echo "expected failure without auth.resourceUrl"; exit 1
+          fi
 
   build:
     uses: ./.github/workflows/build.yml

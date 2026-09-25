@@ -144,7 +144,9 @@ def _suggestions_for_errors(errors: list[str]) -> list[str]:
                 "(participant, message, note); do not use `;` as a separator."
             )
         if "D2" in error:
-            suggestions.append("Define at least one shape or connection (e.g. `a -> b`).")
+            suggestions.append(
+                "Define at least one shape or connection (e.g. `a -> b`)."
+            )
         if "strict" in error.lower() and "Mermaid" in error:
             suggestions.append(
                 "Use a standard Mermaid diagram header on the first line (e.g. graph TD;)."
@@ -199,9 +201,7 @@ def _build_diagnostics(
     return diagnostics
 
 
-def _normalization_changes(
-    original: str, prepared: str, backend: str
-) -> list[str]:
+def _normalization_changes(original: str, prepared: str, backend: str) -> list[str]:
     if prepared == original.strip():
         return []
     changes: list[str] = []

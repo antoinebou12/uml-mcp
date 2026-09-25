@@ -1,0 +1,122 @@
+{{- if not .Values.image.repository }}{{ fail "image.repository is required (no public image is published; build and push the Dockerfile)" }}{{ end }}
+{{- $authOn := include "uml-mcp.authEnabled" . }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "uml-mcp.fullname" . }}
+  labels:
+    {{- include "uml-mcp.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "uml-mcp.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        {{- if $authOn }}
+        checksum/auth-config: {{ include "uml-mcp.authConfig" . | sha256sum }}
+        {{- end }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "uml-mcp.selectorLabels" . | nindent 8 }}
+        {{- if .Values.workloadIdentity.enabled }}
+        azure.workload.identity/use: "true"
+        {{- end }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ include "uml-mcp.serviceAccountName" . }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: uml-mcp
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          command: ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]
+          args:
+            {{- if .Values.uvicorn.proxyHeaders }}
+            - --proxy-headers
+            - --forwarded-allow-ips={{ .Values.uvicorn.forwardedAllowIps }}
+            {{- end }}
+            {{- if not .Values.uvicorn.accessLog }}
+            - --no-access-log
+            {{- end }}
+            - --h11-max-incomplete-event-size={{ .Values.uvicorn.h11MaxIncompleteEventSize }}
+          ports:
+            - name: http
+              containerPort: 8000
+          env:
+            - {name: HOME, value: /tmp}
+            - {name: PYTHONDONTWRITEBYTECODE, value: "1"}
+            - {name: MCP_OUTPUT_DIR, value: /app/output}
+            - {name: FASTMCP_STATELESS_HTTP, value: "true"}
+            {{- with .Values.ingress.hosts }}
+            - name: MCP_ALLOWED_HOSTS
+              value: {{ join "," . | quote }}
+            {{- end }}
+            {{- range $k, $v := .Values.env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+            {{- if $authOn }}
+            - {name: MCP_AUTH_CONFIG_FILE, value: /etc/uml-mcp/auth.json}
+            - name: MCP_AUTH_PROXY_ENCRYPTION_KEYS
+              valueFrom:
+                secretKeyRef: {name: {{ include "uml-mcp.secretName" . }}, key: proxy-encryption-keys, optional: true}
+            - name: MCP_AUTH_ENTRA_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef: {name: {{ include "uml-mcp.secretName" . }}, key: entra-client-secret, optional: true}
+            {{- end }}
+            {{- with .Values.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          startupProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 5
+            failureThreshold: 24
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 20
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - {name: tmp, mountPath: /tmp}
+            - {name: output, mountPath: /app/output}
+            {{- if $authOn }}
+            - {name: auth-config, mountPath: /etc/uml-mcp, readOnly: true}
+            {{- end }}
+      volumes:
+        - {name: tmp, emptyDir: {}}
+        - {name: output, emptyDir: {}}
+        {{- if $authOn }}
+        - name: auth-config
+          configMap:
+            name: {{ include "uml-mcp.fullname" . }}-auth
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

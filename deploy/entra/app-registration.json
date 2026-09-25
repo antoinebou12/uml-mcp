@@ -1,0 +1,114 @@
+{
+  "displayName": "UML-MCP",
+  "signInAudience": "AzureADMyOrg",
+  "identifierUris": [
+    "api://<api-client-id>"
+  ],
+  "api": {
+    "requestedAccessTokenVersion": 2,
+    "oauth2PermissionScopes": [
+      {
+        "id": "8fced8ba-2fe0-5cee-ba87-2e0cdaeea995",
+        "value": "mcp.read",
+        "type": "User",
+        "isEnabled": true,
+        "adminConsentDisplayName": "Read UML-MCP catalog, resources and validate diagrams",
+        "adminConsentDescription": "Allows the app to list diagram types and validate diagrams as you.",
+        "userConsentDisplayName": "Read UML-MCP catalog, resources and validate diagrams",
+        "userConsentDescription": "Allows the app to list diagram types and validate diagrams as you."
+      },
+      {
+        "id": "aa51f366-17b1-5174-9837-8a573daa3e89",
+        "value": "mcp.write",
+        "type": "User",
+        "isEnabled": true,
+        "adminConsentDisplayName": "Generate diagrams with UML-MCP",
+        "adminConsentDescription": "Allows the app to render and generate diagrams as you.",
+        "userConsentDisplayName": "Generate diagrams with UML-MCP",
+        "userConsentDescription": "Allows the app to render and generate diagrams as you."
+      }
+    ],
+    "preAuthorizedApplications": [
+      {
+        "appId": "aebc6443-996d-45c2-90f0-388ff96faa56",
+        "delegatedPermissionIds": [
+          "8fced8ba-2fe0-5cee-ba87-2e0cdaeea995",
+          "aa51f366-17b1-5174-9837-8a573daa3e89"
+        ]
+      },
+      {
+        "appId": "04f0c124-f2bc-4f59-8241-bf6df9866bbd",
+        "delegatedPermissionIds": [
+          "8fced8ba-2fe0-5cee-ba87-2e0cdaeea995",
+          "aa51f366-17b1-5174-9837-8a573daa3e89"
+        ]
+      }
+    ]
+  },
+  "appRoles": [
+    {
+      "id": "9d51f802-1ebf-5ad3-b91f-765b74e7a8ae",
+      "value": "MCP.Reader",
+      "allowedMemberTypes": [
+        "User"
+      ],
+      "displayName": "UML-MCP reader",
+      "description": "Read-only access for users/groups.",
+      "isEnabled": true
+    },
+    {
+      "id": "da53c441-7faf-561c-b298-f4a2dab81b48",
+      "value": "MCP.Writer",
+      "allowedMemberTypes": [
+        "User"
+      ],
+      "displayName": "UML-MCP writer",
+      "description": "Generate diagrams (users/groups).",
+      "isEnabled": true
+    },
+    {
+      "id": "0764d5fe-990f-5ae6-a124-ec2806d8f27d",
+      "value": "MCP.Admin",
+      "allowedMemberTypes": [
+        "User"
+      ],
+      "displayName": "UML-MCP administrator",
+      "description": "Read-only admin console.",
+      "isEnabled": true
+    },
+    {
+      "id": "f4d0c52c-7db6-55bb-94a0-ed1985b82836",
+      "value": "MCP.Read.All",
+      "allowedMemberTypes": [
+        "Application"
+      ],
+      "displayName": "UML-MCP read (app)",
+      "description": "App-only read access.",
+      "isEnabled": true
+    },
+    {
+      "id": "ecb7e6ce-2d2e-52f9-a5cc-636bf424f510",
+      "value": "MCP.Write.All",
+      "allowedMemberTypes": [
+        "Application"
+      ],
+      "displayName": "UML-MCP write (app)",
+      "description": "App-only write access.",
+      "isEnabled": true
+    }
+  ],
+  "optionalClaims": {
+    "accessToken": [
+      {
+        "name": "idtyp",
+        "essential": false,
+        "additionalProperties": []
+      }
+    ]
+  },
+  "web": {
+    "redirectUris": [
+      "https://mcp.contoso.com/oauth/callback"
+    ]
+  }
+}

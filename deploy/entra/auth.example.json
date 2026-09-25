@@ -1,0 +1,19 @@
+{
+  "mode": "jwt",
+  "resource_url": "https://mcp.contoso.com/mcp",
+  "algorithms": ["RS256"],
+  "entra": {
+    "tenant_id": "11111111-2222-3333-4444-555555555555",
+    "client_id": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
+    "token_versions": ["2"]
+  },
+  "allowed_client_ids": [
+    "aebc6443-996d-45c2-90f0-388ff96faa56",
+    "04f0c124-f2bc-4f59-8241-bf6df9866bbd"
+  ],
+  "scope_strategy": "granular",
+  "advertise_offline_access": false,
+  "protect_rest": true,
+  "tool_permissions": {"validate_uml": "read"},
+  "admin_ui": false
+}

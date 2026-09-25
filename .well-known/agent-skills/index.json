@@ -32,9 +32,9 @@
     {
       "name": "uml-mcp-diagrams",
       "type": "context",
-      "description": "> **Maintainers:** Keep tool tables and `output_dir` wording aligned with the Smithery bundle **[uml-skill/SKILL.md](https://github.com/antoinebou12/uml-skill/blob/main/SKILL.md)** (`diagramming-uml`) and the Claude Code plugin skill **`plugins/uml-mcp/skills/uml-diagrams/SKILL.md`** when you edit any of them.",
+      "description": "> **Maintainers:** Keep tool tables and `output_dir` wording aligned with the Smithery bundle **[uml-skill/SKILL.md](https://github.com/antoinebou12/uml-skill/blob/main/SKILL.md)** (`diagramming-uml`) and the Claude Code plugin skill **`plugins/uml-mcp/skills/uml-diagrams/SKILL.md`** when you edit any of them. **`.github/skills/uml-mcp-diagrams/SKILL.md`** (GitHub Copilot) must stay a byte-identical copy of this file.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "12e5085387f5190ba0d6d34a609eef0a19cf2563b1f3cbe760e4c69f15c5cc0d"
+      "sha256": "43a4455c34059c2f97efd50820dfbfe17323d04955904a2a2277ff57e11aa22a"
     }
   ]
 }

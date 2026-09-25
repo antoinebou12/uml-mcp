@@ -38,7 +38,7 @@ class TestMCPSettingsDefaults:
         settings = MCPSettings(diagram_types={})
         assert settings.server_name == "uml_mcp"
         assert settings.display_name == "UML Diagram Generator"
-        assert settings.version == "1.3.0"
+        assert settings.version == "1.4.0"
         assert settings.description == "Generate UML and other diagrams through MCP"
 
     @patch.dict(os.environ, {}, clear=False)

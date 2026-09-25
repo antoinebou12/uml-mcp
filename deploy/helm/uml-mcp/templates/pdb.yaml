@@ -1,0 +1,13 @@
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "uml-mcp.fullname" . }}
+  labels:
+    {{- include "uml-mcp.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "uml-mcp.selectorLabels" . | nindent 6 }}
+{{- end }}

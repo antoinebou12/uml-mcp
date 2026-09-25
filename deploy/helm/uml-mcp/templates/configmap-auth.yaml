@@ -1,0 +1,12 @@
+{{- if include "uml-mcp.authEnabled" . }}
+{{- if not .Values.auth.resourceUrl }}{{ fail "auth.resourceUrl is required when auth.mode is not none" }}{{ end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "uml-mcp.fullname" . }}-auth
+  labels:
+    {{- include "uml-mcp.labels" . | nindent 4 }}
+data:
+  auth.json: |
+    {{- include "uml-mcp.authConfig" . | nindent 4 }}
+{{- end }}

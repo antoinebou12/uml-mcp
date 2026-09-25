@@ -105,7 +105,7 @@ class MCPSettings(BaseModel):
 
     server_name: str = "uml_mcp"  # MCP naming: {service}_mcp (protocol)
     display_name: str = "UML Diagram Generator"  # Human-readable for UI
-    version: str = "1.3.0"
+    version: str = "1.4.0"
     read_only: bool = Field(default_factory=lambda: _env_bool("MCP_READ_ONLY", False))
     memory_only: bool = Field(default_factory=_memory_only_default)
     url_only: bool = Field(default_factory=_url_only_default)
