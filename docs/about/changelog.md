@@ -20,6 +20,12 @@ Release notes and tagged versions live on GitHub:
 - Optional enterprise SSO for HTTP deployments: `MCP_AUTH_MODE=jwt` (Entra ID / OIDC token validation) and `entra-proxy` (RFC 8414 / 7591 facade with S256-only PKCE). Includes RFC 9728 metadata, strict 401/403/404 separation and a read-only admin console. See [Enterprise](../enterprise/README.md).
 - Helm chart (`deploy/helm/uml-mcp`), Entra app-registration templates, `docker-compose.enterprise.yml`.
 - GitHub Copilot custom agent (`.github/agents`), skill mirror and `SOUL.md`.
+- One configuration file, [`uml-mcp.yaml`](../configuration/uml-mcp-yaml.md) (defaults < file < env), plus `uml-mcp config init|show|validate|path` with `local` / `docker` / `enterprise` profiles and a Helm `config:` value.
+- MXCP-style [audit trail](../enterprise/operations.md) for every tool, resource, prompt and REST call (user, session, policy decision/reason, duration, redacted inputs), with sinks for a rotating JSONL file, stdout and the dashboard. Also configurable logging (JSON, rotation), in-process metrics and an optional Prometheus `/metrics`.
+- Configurable rate limiting: token buckets per IP or principal, route and per-tool limits, trusted proxies, failed-auth throttling and `RateLimit-*` headers.
+- `uml-mcp lint` ([rules](../developers/linting.md)), run in CI with `--strict`.
+- Local install path: `uml-mcp client install --client vscode|cursor|claude-desktop|claude-code` ([guide](../installation-local.md)).
+- Admin dashboard tabs: Activity (filters, JSONL export), Metrics, Rate limits, Configuration (sources, YAML download), Lint and Tools. A loopback-only local mode is also available.
 
 ## Versioning
 

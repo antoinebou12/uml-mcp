@@ -82,8 +82,11 @@ def build_admin_router(runtime: AuthRuntime) -> APIRouter:
     async def overview(request: Request) -> JSONResponse:
         _require_admin(request)
         scopes = runtime.policy.advertised_scopes()
+        from ...core.config import MCP_SETTINGS
+
         data: dict[str, Any] = {
             "mode": settings.mode,
+            "version": MCP_SETTINGS.version,
             "settings": settings.redacted_dict(),
             "protected_resource_metadata": build_prm(settings, scopes, for_mcp=True),
             "preflight": runtime.preflight.as_dict(),
@@ -161,6 +164,9 @@ def build_admin_router(runtime: AuthRuntime) -> APIRouter:
             generate(kind, params), media_type="text/plain", headers=_NO_STORE
         )
 
+    from ...observability.admin_api import add_ops_routes
+
+    add_ops_routes(router, _require_admin)
     return router
 
 

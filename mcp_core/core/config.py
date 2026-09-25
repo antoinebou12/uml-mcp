@@ -9,6 +9,11 @@ from pydantic import BaseModel, Field
 
 from tools.kroki.kroki import LANGUAGE_OUTPUT_SUPPORT
 
+from .settings_file import get_config
+
+# Fill MCP_* env vars from uml-mcp.yaml (env vars already set always win).
+get_config()
+
 
 def _env_bool(name: str, default: bool = False) -> bool:
     v = os.environ.get(name, "")

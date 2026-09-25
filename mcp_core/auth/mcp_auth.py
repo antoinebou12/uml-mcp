@@ -53,7 +53,7 @@ class AuthMiddleware:
         """Return (surface, fixed permission) or None when not protected."""
         if is_mcp_path(path):
             return "mcp", None
-        if is_admin_api_path(path):
+        if is_admin_api_path(path) or path == "/metrics":
             return "admin", "admin"
         perm = self.runtime.policy.required_for_rest(method, path)
         if perm is not None:
@@ -100,6 +100,7 @@ class AuthMiddleware:
                 raise self._forbidden(required, principal, tool)
         except errors.AuthError as err:
             self._audit(scope, err.status, err.reason, request_id, principal, tool)
+            _record_denial(scope, err, principal, tool)
             status, headers, payload = errors.error_response_parts(
                 err,
                 request_id=request_id,
@@ -123,7 +124,19 @@ class AuthMiddleware:
             # (and can downgrade to http:// behind a TLS-terminating ingress).
             new_scope["path"] = "/mcp/"
             new_scope["raw_path"] = b"/mcp/"
-        await self.app(new_scope, receive, send)
+        from ..observability.context import reset_context, set_context
+
+        ctx_token = set_context(
+            user_id=principal.username or principal.subject or None,
+            tenant_id=principal.tenant_id,
+            client_id=principal.client_id,
+            policy_decision="allow",
+            policy_reason=f"{required} permission ({principal.kind})",
+        )
+        try:
+            await self.app(new_scope, receive, send)
+        finally:
+            reset_context(ctx_token)
 
     # ----------------------------------------------------------------- helpers
     def _extract_token(self, scope: Scope) -> str:
@@ -220,6 +233,31 @@ class AuthMiddleware:
                 tool=tool,
             )
         )
+
+
+def _record_denial(
+    scope: Scope, err: errors.AuthError, principal: Principal | None, tool: str | None
+) -> None:
+    """Feed the MXCP-style audit trail (policy_decision=deny) and metrics."""
+    from ..observability.audit import record_operation
+    from ..observability.context import reset_context, set_context
+
+    token = set_context(
+        user_id=(principal.username or principal.subject) if principal else None,
+        tenant_id=principal.tenant_id if principal else None,
+        client_id=principal.client_id if principal else None,
+    )
+    try:
+        record_operation(
+            operation_type="tool" if tool else "http",
+            operation_name=tool or f"{scope.get('method', '')} {scope.get('path', '')}",
+            operation_status="error",
+            error=f"HTTP {err.status}",
+            policy_decision="deny",
+            policy_reason=err.reason,
+        )
+    finally:
+        reset_context(token)
 
 
 def _header(scope: Scope, name: bytes) -> str | None:

@@ -111,9 +111,11 @@ nav:
           - mcp_core.core: reference/python/core.md
           - tools.kroki: reference/python/kroki.md
       - Configuration: configuration.md
+      - uml-mcp.yaml: configuration/uml-mcp-yaml.md
   - Deploy:
       - deploy/index.md
       - Installation: installation.md
+      - Local install (single user): installation-local.md
       - Docker: deploy/docker.md
       - Vercel & Smithery: integrations/vercel_smithery.md
       - Claude Desktop: integrations/claude_desktop.md
@@ -129,6 +131,7 @@ nav:
       - Fallback strategy: fallback-mechanism.md
   - Enterprise:
       - enterprise/README.md
+      - Deployment guide: enterprise/enterprise-guide.md
       - Architecture: enterprise/architecture.md
       - OAuth 2.1, OpenID Connect & MSAL: enterprise/oauth-oidc.md
       - Readiness checklist: enterprise/checklist.md
@@ -137,11 +140,13 @@ nav:
       - Clients: enterprise/clients.md
       - Kubernetes (Helm): enterprise/kubernetes.md
       - Admin console: enterprise/admin-ui.md
+      - Operations (audit, metrics, limits): enterprise/operations.md
       - Security model: enterprise/security.md
       - Troubleshooting: enterprise/troubleshooting.md
   - Developers:
       - developers/index.md
       - Testing: testing.md
+      - Linting (uml-mcp lint): developers/linting.md
       - Architecture: refactor-architecture-plan.md
       - Contributing: developers/contributing.md
   - About:

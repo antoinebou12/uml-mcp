@@ -33,6 +33,7 @@ dependencies = [
     "mcp>=2.0.0,<3.0.0",
     "pyjwt[crypto]>=2.10.0,<3",
     "cryptography>=44.0.0,<51",
+    "pyyaml>=6.0.2,<7",
 ]
 
 [project.urls]

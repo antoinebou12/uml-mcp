@@ -392,8 +392,12 @@ def _load_json(path: str) -> dict[str, Any]:
             data = json.load(fh)
     except (OSError, json.JSONDecodeError) as exc:
         raise AuthConfigError(f"invalid MCP_AUTH_CONFIG_FILE {path!r}: {exc}") from exc
+    return _check_file_data(data, "MCP_AUTH_CONFIG_FILE")
+
+
+def _check_file_data(data: Any, where: str) -> dict[str, Any]:
     if not isinstance(data, dict):
-        raise AuthConfigError("MCP_AUTH_CONFIG_FILE must contain a JSON object")
+        raise AuthConfigError(f"{where} must contain an object/mapping")
     proxy = data.get("proxy") if isinstance(data.get("proxy"), dict) else {}
     leaked = sorted(k for k in _SECRET_JSON_KEYS if k in data or k in (proxy or {}))
     if leaked:
@@ -557,14 +561,28 @@ def _merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
     return merged
 
 
-def load_auth_settings(environ: Mapping[str, str] | None = None) -> AuthSettings:
+def load_auth_settings(
+    environ: Mapping[str, str] | None = None,
+    *,
+    file_data: Mapping[str, Any] | None = None,
+) -> AuthSettings:
     """Load and validate settings; raise :class:`AuthConfigError` on any problem."""
     env = os.environ if environ is None else environ
-    mode = auth_mode_from_env(env)
+    mode = auth_mode_from_env(environ)
     data: dict[str, Any] = {}
     path = (env.get("MCP_AUTH_CONFIG_FILE") or "").strip()
     if path:
         data = _resolve_file_keys(_load_json(path))
+    elif file_data is not None:
+        data = _resolve_file_keys(_check_file_data(dict(file_data), "auth section"))
+    elif environ is None:
+        from ..core.settings_file import get_config
+
+        section = get_config().data.get("auth") or {}
+        if section:
+            data = _resolve_file_keys(
+                _check_file_data(dict(section), "uml-mcp.yaml auth")
+            )
     data = _merge(data, _env_overrides(env))
     data["mode"] = mode
     try:

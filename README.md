@@ -61,6 +61,16 @@ Repo defaults: [`.cursor/mcp.json`](.cursor/mcp.json) · [`.vscode/mcp.json`](.v
 
 All snippets: [`config/README.md`](config/README.md)
 
+**Local only (one user, stdio):**
+
+| Step | Command |
+| --- | --- |
+| Install | `uv tool install uml-mcp` (or `pipx install uml-mcp`) |
+| Config (optional) | `uml-mcp config init --profile local` → `~/.config/uml-mcp/config.yaml` |
+| Register | `uml-mcp client install --client vscode\|cursor\|claude-desktop\|claude-code` (merges, backs up, `--dry-run`) |
+
+Guide: [docs/installation-local.md](docs/installation-local.md)
+
 <details>
 <summary><strong>Clone from origin (local stdio)</strong></summary>
 
@@ -101,7 +111,10 @@ Configs: [`config/README.md`](config/README.md) (Cursor, VS Code, Codex, Claude,
 | **Tools** | `generate_uml` · `generate_uml_image` · `validate_uml` · `list_diagram_types` · `generate_uml_batch` |
 | **Chat** | Inline PNG + markdown `![diagram](url)` + **Playground** link |
 | **Deploy** | Local · Docker · Kubernetes ([Helm](deploy/helm/uml-mcp)) · [Vercel](https://vercel.com/) · [Smithery](https://smithery.ai/) |
-| **Enterprise** | Optional SSO: Microsoft Entra ID / OAuth 2.1 bearer tokens, RFC 9728 metadata, clear 401/403 ([docs/enterprise](docs/enterprise/README.md)) |
+| **Enterprise** | Optional SSO: Microsoft Entra ID / OAuth 2.1 bearer tokens, RFC 9728 metadata, clear 401/403 ([docs/enterprise](docs/enterprise/README.md) · [guide](docs/enterprise/enterprise-guide.md)) |
+| **Config file** | One [`uml-mcp.yaml`](docs/configuration/uml-mcp-yaml.md) (defaults < file < env) · `uml-mcp config init\|show\|validate` · profiles `local` / `docker` / `enterprise` |
+| **Audit & observability** | MXCP-style audit of every tool/resource/prompt call (JSONL rotation, stdout → SIEM) · JSON logs · metrics + Prometheus `/metrics` · rate limits per IP/user/route/tool ([operations](docs/enterprise/operations.md)) |
+| **Quality** | `uml-mcp lint --strict` checks descriptions, annotations, schemas and risky config ([rules](docs/developers/linting.md)) |
 | **Frontend** | Canonical AG-UI SSE for agent UIs; OpenUI can consume AG-UI and render generated components in your app |
 
 <details>
@@ -190,8 +203,9 @@ docker run -i uml-mcp python server.py --transport stdio
 | `MCP_BATCH_MAX_ITEMS` | `20` |
 | `MCP_BATCH_CONCURRENCY` | `4` |
 | `MCP_RATE_LIMIT_PER_MINUTE` | `0` |
+| `UML_MCP_CONFIG` | discovered `uml-mcp.yaml` (`none` disables) |
 
-Full list: [docs/configuration.md](docs/configuration.md)
+Full list: [docs/configuration.md](docs/configuration.md) · single file: [docs/configuration/uml-mcp-yaml.md](docs/configuration/uml-mcp-yaml.md)
 
 </details>
 

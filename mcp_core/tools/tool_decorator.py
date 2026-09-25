@@ -213,8 +213,15 @@ def register_tools_with_server(server: Any) -> list[str]:
     registered_tools: list[str] = []
     server_any = cast(Any, server)
 
+    from ..core.settings_file import get_app_config
+    from ..observability.audit import instrument
+
+    app_config = get_app_config()
     for tool_name, tool_info in iter_tools_in_preferred_order(_registered_tools):
-        func = tool_info["function"]
+        if not app_config.tool_enabled(tool_name):
+            logger.info("Tool '%s' disabled by configuration (tools.*)", tool_name)
+            continue
+        func = instrument(tool_info["function"], "tool", tool_name)
         annotations = tool_info.get("annotations") or {}
         output_schema = _normalize_output_schema(tool_info.get("output_schema"))
 

@@ -7,6 +7,7 @@ import asyncio
 import json
 import logging
 import os
+import sys
 import time
 import warnings
 from pathlib import Path
@@ -1017,6 +1018,49 @@ async def get_openapi_yaml():
             status_code=501,
         )
 
+
+# Observability extras from uml-mcp.yaml: Prometheus /metrics and the local admin view.
+try:
+    from mcp_core.core.settings_file import get_app_config as _get_app_config
+
+    _app_config = _get_app_config()
+except Exception as e:  # noqa: BLE001
+    logger.warning("uml-mcp.yaml observability sections unavailable: %s", e)
+    _app_config = None
+
+if _app_config is not None:
+    from mcp_core.core.settings_file import get_config as _get_config
+    from mcp_core.observability import logging_setup as _logging_setup
+
+    # `uvicorn app:app` (Docker/Helm) has no CLI setup_logging: apply an explicit
+    # `logging:` section here. Without one, logging is left exactly as before.
+    if "logging" in _get_config().data and not _logging_setup.is_configured():
+        _logging_setup.configure_logging(
+            _app_config.logging, console_handler=logging.StreamHandler(sys.stderr)
+        )
+
+if (
+    _app_config is not None
+    and _app_config.metrics.enabled
+    and _app_config.metrics.endpoint
+):
+    from mcp_core.observability.admin_api import metrics_response
+
+    @app.get("/metrics", include_in_schema=False)
+    async def prometheus_metrics():
+        """Prometheus text metrics (MCP.Admin role required when auth is enabled)."""
+        return metrics_response()
+
+
+if (
+    _auth_runtime is None
+    and _app_config is not None
+    and _app_config.admin.allow_local_without_auth
+):
+    from mcp_core.observability.admin_api import build_local_admin_router
+
+    app.include_router(build_local_admin_router())
+    logger.info("Local admin dashboard enabled at /admin (loopback clients only)")
 
 # Mount MCP server at /mcp for Smithery and Streamable HTTP clients; fallback when unavailable
 if _mcp_http_app is not None:

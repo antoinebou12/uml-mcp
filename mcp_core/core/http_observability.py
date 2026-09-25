@@ -46,58 +46,150 @@ def _rate_limited(client_ip: str, limit_per_minute: int) -> bool:
     return limited
 
 
-class RequestIdAndRateLimitMiddleware(BaseHTTPMiddleware):
-    """Assign X-Request-ID and optionally rate-limit generation endpoints.
+REST_AUDIT_PREFIXES = ("/generate_diagram", "/kroki_encode", "/ag-ui")
 
-    The limiter is process-local. Horizontally scaled deployments should use a
-    distributed limiter at the platform/edge or replace this implementation.
+
+def _limit_response(request_id: str, limit: int, retry_after: int) -> JSONResponse:
+    return JSONResponse(
+        {"detail": "Rate limit exceeded. Try again later.", "error": "rate_limited"},
+        status_code=429,
+        headers={
+            "X-Request-ID": request_id,
+            "Retry-After": str(retry_after),
+            "X-RateLimit-Limit": str(limit),
+            "X-RateLimit-Remaining": "0",
+            "RateLimit-Limit": str(limit),
+            "RateLimit-Remaining": "0",
+            "RateLimit-Reset": str(retry_after),
+        },
+    )
+
+
+class RequestIdAndRateLimitMiddleware(BaseHTTPMiddleware):
+    """Assign X-Request-ID, set the audit context and apply rate limits.
+
+    Rate limits come from ``rate_limit`` in ``uml-mcp.yaml`` (token bucket,
+    per IP / principal / client id, route overrides, trusted proxies). The
+    legacy ``MCP_RATE_LIMIT_PER_MINUTE`` sliding window still applies when the
+    section is disabled. Limiters are per process; use the ingress/APIM for
+    global limits.
     """
 
     async def dispatch(self, request: Request, call_next) -> Response:
-        request_id = request.headers.get("x-request-id") or str(uuid4())
+        from ..observability.context import reset_context, set_context
+        from ..observability.metrics import METRICS
+        from ..observability.ratelimit import (
+            AUTH_FAILURE_SCOPE,
+            LIMITER,
+            client_ip,
+            rate_key,
+            route_limit,
+        )
+        from .settings_file import LimitConfig, get_app_config
+
+        request_id = (request.headers.get("x-request-id") or str(uuid4()))[:128]
         try:
             from .config import MCP_SETTINGS
 
-            limit = MCP_SETTINGS.rate_limit_per_minute
+            legacy_limit = MCP_SETTINGS.rate_limit_per_minute
         except Exception:  # noqa: BLE001
-            limit = 0
-
+            legacy_limit = 0
+        app_cfg = get_app_config()
+        rl = app_cfg.rate_limit
         path = request.url.path
-        protected = path.startswith(("/mcp", "/generate_diagram", "/kroki_encode"))
-        remaining = None
-        if limit > 0 and protected:
-            # Deliberately trust only the socket peer here. Forwarded headers require an
-            # explicitly trusted proxy configuration and are not interpreted by this app.
-            client_ip = request.client.host if request.client else "unknown"
-            limited, remaining_value, retry_after = _rate_limit_state(client_ip, limit)
-            remaining = remaining_value
-            if limited:
-                logger.warning(
-                    "rate_limit exceeded request_id=%s path=%s ip=%s",
-                    request_id,
-                    path,
-                    client_ip,
-                )
-                return JSONResponse(
-                    {"detail": "Rate limit exceeded. Try again later."},
-                    status_code=429,
-                    headers={
-                        "X-Request-ID": request_id,
-                        "Retry-After": str(retry_after),
-                        "X-RateLimit-Limit": str(limit),
-                        "X-RateLimit-Remaining": "0",
-                    },
-                )
-
-        logger.info(
-            "http_request request_id=%s method=%s path=%s",
-            request_id,
-            request.method,
-            path,
+        peer = request.client.host if request.client else "unknown"
+        ip = client_ip(peer, request.headers.get("x-forwarded-for"), rl.trusted_proxies)
+        key = rate_key(rl, ip, request.headers.get("authorization"))
+        session = request.headers.get("mcp-session-id")
+        token = set_context(
+            caller_type="http",
+            request_id=request_id,
+            session_id=session or f"req-{request_id[:12]}",
+            rate_key=key,
         )
-        response = await call_next(request)
-        response.headers["X-Request-ID"] = request_id
-        if limit > 0 and protected and remaining is not None:
-            response.headers["X-RateLimit-Limit"] = str(limit)
-            response.headers["X-RateLimit-Remaining"] = str(remaining)
-        return response
+        try:
+            headers: dict[str, str] = {}
+            ip_key = f"ip:{ip}"
+            fail_limit = LimitConfig(requests_per_minute=rl.auth_failures_per_minute)
+            throttle_failures = rl.enabled and key != ip_key
+            if throttle_failures and LIMITER.exhausted(
+                AUTH_FAILURE_SCOPE, ip_key, fail_limit
+            ):
+                METRICS.rate_limit_hit(AUTH_FAILURE_SCOPE)
+                logger.warning(
+                    "rate_limit auth failures request_id=%s path=%s", request_id, path
+                )
+                return _limit_response(request_id, fail_limit.requests_per_minute, 60)
+            if rl.enabled:
+                target = route_limit(rl, path)
+                if target is not None:
+                    scope, limit = target
+                    decision = LIMITER.check(scope, key, limit)
+                    headers = {
+                        "RateLimit-Limit": str(decision.limit),
+                        "RateLimit-Remaining": str(decision.remaining),
+                        "RateLimit-Reset": str(decision.reset_seconds),
+                        "X-RateLimit-Limit": str(decision.limit),
+                        "X-RateLimit-Remaining": str(decision.remaining),
+                    }
+                    if not decision.allowed:
+                        METRICS.rate_limit_hit(scope)
+                        logger.warning(
+                            "rate_limit exceeded request_id=%s path=%s scope=%s",
+                            request_id,
+                            path,
+                            scope,
+                        )
+                        return _limit_response(
+                            request_id, decision.limit, max(1, decision.reset_seconds)
+                        )
+            elif legacy_limit > 0 and path.startswith(
+                ("/mcp", "/generate_diagram", "/kroki_encode")
+            ):
+                limited, remaining_value, retry_after = _rate_limit_state(
+                    peer, legacy_limit
+                )
+                if limited:
+                    METRICS.rate_limit_hit("legacy")
+                    logger.warning(
+                        "rate_limit exceeded request_id=%s path=%s ip=%s",
+                        request_id,
+                        path,
+                        peer,
+                    )
+                    return _limit_response(request_id, legacy_limit, retry_after)
+                headers = {
+                    "X-RateLimit-Limit": str(legacy_limit),
+                    "X-RateLimit-Remaining": str(remaining_value),
+                }
+
+            logger.info(
+                "http_request request_id=%s method=%s path=%s",
+                request_id,
+                request.method,
+                path,
+            )
+            start = time.perf_counter()
+            response = await call_next(request)
+            if throttle_failures and response.status_code == 401:
+                LIMITER.check(AUTH_FAILURE_SCOPE, ip_key, fail_limit)
+            if app_cfg.audit.include_http and path.startswith(REST_AUDIT_PREFIXES):
+                from ..observability.audit import record_operation
+
+                record_operation(
+                    operation_type="http",
+                    operation_name=f"{request.method} {path}",
+                    duration_ms=(time.perf_counter() - start) * 1000,
+                    operation_status="success"
+                    if response.status_code < 400
+                    else "error",
+                    error=None
+                    if response.status_code < 400
+                    else f"HTTP {response.status_code}",
+                )
+            response.headers["X-Request-ID"] = request_id
+            for name, value in headers.items():
+                response.headers[name] = value
+            return response
+        finally:
+            reset_context(token)

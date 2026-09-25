@@ -135,3 +135,44 @@ def test_log_redaction_filter():
     QueryRedactionFilter().filter(rec)
     assert "abc" not in rec.getMessage() and "s1" not in rec.getMessage()
     assert "y=2" in rec.getMessage()
+
+
+def test_yaml_enables_metrics_endpoint_and_local_dashboard(tmp_path):
+    cfg = tmp_path / "uml-mcp.yaml"
+    cfg.write_text(
+        "metrics: {enabled: true, endpoint: true}\n"
+        "admin: {allow_local_without_auth: true}\n"
+        "audit: {enabled: true, sinks: [memory]}\n"
+        "logging: {level: WARNING, format: json}\n",
+        encoding="utf-8",
+    )
+    code = (
+        "from fastapi.testclient import TestClient\n"
+        "import app\n"
+        "c = TestClient(app.app, client=('127.0.0.1', 5000))\n"
+        "assert c.get('/metrics').status_code == 200\n"
+        "assert 'uml_mcp_' in c.get('/metrics').text\n"
+        "assert c.get('/admin').status_code == 200\n"
+        "assert c.get('/admin/api/overview').json()['local'] is True\n"
+        "import logging\n"
+        "assert logging.getLogger().level == logging.WARNING\n"
+        "r = TestClient(app.app, client=('203.0.113.9', 5000))\n"
+        "assert r.get('/admin/api/overview').status_code == 404\n"
+        "print('ok')\n"
+    )
+    proc = run_app({"UML_MCP_CONFIG": str(cfg)}, code)
+    assert proc.returncode == 0, proc.stderr
+    assert proc.stdout.strip().splitlines()[-1] == "ok"
+
+
+def test_default_app_has_no_metrics_or_local_admin():
+    code = (
+        "from fastapi.testclient import TestClient\n"
+        "import app\n"
+        "c = TestClient(app.app, client=('127.0.0.1', 5000))\n"
+        "assert c.get('/metrics').status_code == 404\n"
+        "assert c.get('/admin/api/overview').status_code == 404\n"
+        "print('ok')\n"
+    )
+    proc = run_app({"UML_MCP_CONFIG": "none"}, code)
+    assert proc.returncode == 0, proc.stderr

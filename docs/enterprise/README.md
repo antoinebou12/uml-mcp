@@ -63,4 +63,6 @@ The exact reason codes are listed in [troubleshooting](troubleshooting.md#reason
 - [Configuration reference](configuration.md): env vars and the JSON file
 - [Client setup](clients.md): VS Code, Copilot, Visual Studio, Claude Code, Cursor
 - [Kubernetes (Helm)](kubernetes.md) and [Docker](../deploy/docker.md#enterprise-sso-optional)
+- [Enterprise deployment guide](enterprise-guide.md): plan → Entra → `uml-mcp.yaml` → Helm → verify → operate, with the best-practice mapping
+- [Operations](operations.md): MXCP-style audit trail, log rotation, SIEM, metrics, rate limits
 - [Admin console](admin-ui.md), [Security model](security.md), [Troubleshooting](troubleshooting.md)

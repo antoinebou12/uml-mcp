@@ -1,0 +1,34 @@
+# uml-mcp.yaml — Docker / single host HTTP profile.
+# Mount: docker run -v $PWD/uml-mcp.yaml:/etc/uml-mcp/config.yaml ...
+version: 1
+
+server:
+  allowed_hosts: [localhost, 127.0.0.1]
+  stateless_http: true
+
+rendering:
+  kroki_server: http://kroki:8000
+  use_local_kroki: true
+  memory_only: true
+
+rate_limit:
+  enabled: true
+  key: ip
+  default: {requests_per_minute: 120, burst: 30}
+  tools:
+    generate_uml_batch: {requests_per_minute: 10}
+
+logging:
+  level: INFO
+  format: json                        # container log collectors prefer JSON
+
+audit:
+  enabled: true
+  sinks: [stream, memory]             # JSON on stdout for the platform + admin view
+
+metrics:
+  enabled: true
+  endpoint: false
+
+auth:
+  mode: none

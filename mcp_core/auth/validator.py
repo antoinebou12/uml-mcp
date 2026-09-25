@@ -41,6 +41,7 @@ class Principal:
     token_version: str | None
     expires_at: int | None
     permissions: frozenset[str] = field(default_factory=frozenset)
+    username: str | None = None
 
     @property
     def key(self) -> str:
@@ -322,6 +323,14 @@ class TokenValidator:
             roles=roles,
             token_version=str(claims.get("ver")) if "ver" in claims else None,
             expires_at=int(claims["exp"]) if "exp" in claims else None,
+            username=next(
+                (
+                    str(claims[c])
+                    for c in ("preferred_username", "upn", "email", "unique_name")
+                    if claims.get(c)
+                ),
+                None,
+            ),
         )
         return dataclasses.replace(
             principal, permissions=frozenset(permissions_for(principal, s))

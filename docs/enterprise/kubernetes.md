@@ -59,6 +59,7 @@ Generate a values file with
 | `auth.preflight` | `warn` | `strict` blocks startup when IdP metadata lacks PKCE S256 |
 | `workloadIdentity.enabled` | `false` | Adds the AKS workload identity annotation and label |
 | `admin.enabled` | `false` | Read-only `/admin` console |
+| `config` | `{}` | [`uml-mcp.yaml`](../configuration/uml-mcp-yaml.md) sections (tools, rate_limit, logging, audit, metrics, rendering, server) rendered into a ConfigMap and loaded through `UML_MCP_CONFIG`; values in `env` still win; `config.auth` is rejected (use `auth.*`) |
 | `uvicorn.forwardedAllowIps` | `*` | Restrict to your ingress CIDR |
 | `networkPolicy.enabled` | `false` | Allows ingress from the ingress namespace, plus DNS and HTTPS egress |
 
@@ -72,5 +73,7 @@ Entra access tokens can be large. On ingress-nginx set
   2. After the refresh-token lifetime (default 7 days), remove the old key.
 - **Config errors:** a bad `auth.json` or a missing secret makes the pod exit at startup
   (fail closed). Check `kubectl logs`.
+- **Audit, metrics, rate limits:** set them under `config:` ([Operations](operations.md)).
+  With `audit.sinks: [stream]`, the node's log agent ships one JSON line per call.
 - **Health:** `/health` never depends on the IdP, so liveness is not affected by an
   Entra outage. Protected requests return 503 until keys can be fetched.

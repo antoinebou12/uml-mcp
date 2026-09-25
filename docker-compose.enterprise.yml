@@ -13,6 +13,11 @@ services:
       - MCP_AUTH_PROXY_ENCRYPTION_KEYS=${MCP_AUTH_PROXY_ENCRYPTION_KEYS:-}
       - MCP_AUTH_PREFLIGHT=${MCP_AUTH_PREFLIGHT:-warn}
       - MCP_ADMIN_UI=${MCP_ADMIN_UI:-false}
+      # Optional uml-mcp.yaml (audit, rate limits, logging, tools allow-list):
+      #   uml-mcp config init --profile enterprise --path ./uml-mcp.yaml
+      - UML_MCP_CONFIG=${UML_MCP_CONFIG:-none}
+    # volumes:
+    #   - ./uml-mcp.yaml:/etc/uml-mcp/config.yaml:ro   # then set UML_MCP_CONFIG=/etc/uml-mcp/config.yaml
     command:
       - uvicorn
       - app:app

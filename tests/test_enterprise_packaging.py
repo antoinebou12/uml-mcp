@@ -56,6 +56,22 @@ def test_chart_renders():
         check=True,
     ).stdout
     assert "MCP_AUTH_CONFIG_FILE" in out and "auth.json" in out
+    assert "UML_MCP_CONFIG" in out and "uml-mcp.yaml" in out
+
+
+def test_chart_config_values_are_valid_uml_mcp_yaml():
+    """``.Values.config`` becomes uml-mcp.yaml verbatim: it must pass the real loader."""
+    from mcp_core.core.settings_file import parse_app_config
+
+    values = yaml.safe_load((CHART / "values.yaml").read_text())
+    assert values["config"] == {}  # opt-in
+    schema = json.loads((CHART / "values.schema.json").read_text())
+    allowed = set(schema["properties"]["config"]["properties"])
+    assert "auth" not in allowed  # auth stays under .Values.auth
+    for ci in (CHART / "ci").glob("*-values.yaml"):
+        config = yaml.safe_load(ci.read_text()).get("config") or {}
+        assert set(config) <= allowed
+        parse_app_config(config, str(ci))
 
 
 def test_entra_templates():

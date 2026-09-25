@@ -49,6 +49,11 @@ jobs:
       - name: Type check
         run: uv run ty check
 
+      - name: Lint MCP definitions and config (uml-mcp lint)
+        env:
+          UML_MCP_CONFIG: none
+        run: uv run uml-mcp lint --strict
+
       - name: Validate Cursor MCP config
         run: |
           jq -e '

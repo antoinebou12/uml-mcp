@@ -50,6 +50,21 @@ auth:
 admin:
   enabled: false          # read-only console at /admin (MCP.Admin app role)
 
+# uml-mcp.yaml sections (tools, rate_limit, logging, audit, metrics, rendering, server),
+# rendered to a ConfigMap and loaded via UML_MCP_CONFIG. `env` above still wins.
+# Auth stays under `auth:`. Reference: docs/configuration/uml-mcp-yaml.md
+config: {}
+#  tools:
+#    disabled: [generate_uml_batch]
+#  rate_limit:
+#    enabled: true
+#    key: principal
+#    trusted_proxies: [10.0.0.0/8]
+#    default: {requests_per_minute: 120, burst: 30}
+#  logging: {level: INFO, format: json}
+#  audit: {enabled: true, sinks: [stream, memory]}
+#  metrics: {enabled: true, endpoint: true}
+
 # AKS workload identity: federated credential instead of a client secret (entra-proxy)
 workloadIdentity:
   enabled: false

@@ -2,6 +2,12 @@
 
 Configure UML-MCP with environment variables and MCP client config files.
 
+!!! tip "One file instead of many env vars"
+    [`uml-mcp.yaml`](configuration/uml-mcp-yaml.md) sets the variables below from a
+    single reviewed file and adds tool allow-lists, rate-limit policies, log
+    rotation, the audit trail and metrics. Environment variables always win.
+    Start with `uml-mcp config init`.
+
 ## Running with FastMCP CLI
 
 When a `fastmcp.json` file is present in the project root, you can run the server with the [FastMCP CLI](https://gofastmcp.com/):

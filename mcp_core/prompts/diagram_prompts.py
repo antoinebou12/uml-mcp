@@ -748,8 +748,10 @@ def register_prompts_with_server(server: Any) -> list[str]:
 
     registered_prompt_names = []
 
+    from ..observability.audit import instrument
+
     for prompt_name, prompt_info in _registered_prompts.items():
-        func = prompt_info["function"]
+        func = instrument(prompt_info["function"], "prompt", prompt_name)
 
         # Register with server using prompt decorator
         prompt_decorator = server.prompt(prompt_name)
