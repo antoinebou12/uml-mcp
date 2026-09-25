@@ -18,7 +18,7 @@ textarea,input,select{font:inherit;background:var(--bg);color:var(--fg);border:1
 textarea{width:100%;min-height:5rem;font-family:ui-monospace,monospace}
 button{font:inherit;padding:.35rem .9rem;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
 pre{white-space:pre-wrap;word-break:break-word;font-size:.85rem}
-table{border-collapse:collapse;width:100%;font-size:.85rem}td,th{border-bottom:1px solid var(--line);padding:.3rem .5rem;text-align:left;vertical-align:top}
+table{border-collapse:collapse;width:100%;font-size:.85rem}td,th{border-bottom:1px solid var(--line);padding:.3rem .5rem;text-align:left;vertical-align:top;max-width:28rem;overflow-wrap:anywhere}section{overflow-x:auto}
 .ok,.success,.allow{color:var(--ok)}.failed,.error,.deny{color:var(--bad)}.warning{color:var(--warn)}.muted{color:var(--muted)}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.75rem}
 .card{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:.75rem}.card b{display:block;font-size:1.4rem}
@@ -230,7 +230,13 @@ ADMIN_JS = r"""(function () {
   });
   fetch("/.well-known/oauth-authorization-server").then(function (r) { if (r.ok) { $("sso").hidden = false; } });
   fetch("/admin/api/overview").then(function (r) { return r.ok ? r.json() : null; }).then(function (d) {
-    if (d && d.local) { local = true; $("auth").hidden = true; }
+    if (d && d.local) {
+      local = true; $("auth").hidden = true;
+      // Clients, token tester and generators need enterprise auth: hide them locally.
+      Array.prototype.forEach.call(nav.children, function (b) {
+        if (["Clients", "Token tester", "Generators"].indexOf(b.textContent) >= 0) { b.hidden = true; }
+      });
+    }
   }).catch(function () {}).then(function () { return finishSso(); }).then(function () { show("Overview"); });
 })();
 """
