@@ -52,7 +52,8 @@ jobs:
       - name: Lint MCP definitions and config (uml-mcp lint)
         env:
           UML_MCP_CONFIG: none
-        run: uv run uml-mcp lint --strict
+          USE_REAL_FASTMCP: "1"
+        run: uv run uml-mcp lint --strict --min-grade A --token-budget 5500
 
       - name: Validate Cursor MCP config
         run: |

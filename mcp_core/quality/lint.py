@@ -12,7 +12,6 @@ from dataclasses import asdict, dataclass
 from typing import Any
 
 MIN_TOOL_DESCRIPTION = 40
-MIN_DESCRIPTION = 15
 
 
 @dataclass(frozen=True)
@@ -42,17 +41,8 @@ def lint_tools(tools: dict[str, dict[str, Any]]) -> list[LintIssue]:
     for name, info in sorted(tools.items()):
         target = f"tool:{name}"
         desc = (info.get("description") or "").strip()
-        if not desc:
-            issues.append(
-                LintIssue(
-                    "error",
-                    "TOOL001",
-                    target,
-                    "tool has no description",
-                    "add description= to @mcp_tool",
-                )
-            )
-        elif len(desc) < MIN_TOOL_DESCRIPTION:
+        # Missing descriptions are reported by the wire rules (tool-no-description).
+        if desc and len(desc) < MIN_TOOL_DESCRIPTION:
             issues.append(
                 LintIssue(
                     "warning",
@@ -123,22 +113,6 @@ def lint_tools(tools: dict[str, dict[str, Any]]) -> list[LintIssue]:
                     )
         if not info.get("example"):
             issues.append(LintIssue("info", "TOOL008", target, "no usage example"))
-    return issues
-
-
-def lint_named(kind: str, items: dict[str, dict[str, Any]]) -> list[LintIssue]:
-    issues = []
-    for name, info in sorted(items.items()):
-        desc = (info.get("description") or "").strip()
-        if len(desc) < MIN_DESCRIPTION:
-            issues.append(
-                LintIssue(
-                    "warning",
-                    f"{kind.upper()[:4]}001",
-                    f"{kind}:{name}",
-                    "description missing or too short",
-                )
-            )
     return issues
 
 
@@ -233,16 +207,11 @@ def lint_config(
 def run_lint() -> list[LintIssue]:
     """Lint the live registries and the effective configuration."""
     from ..core.settings_file import get_app_config
-    from ..prompts.diagram_prompts import get_prompt_registry
-    from ..resources import diagram_resources
     from ..tools import diagram_tools  # noqa: F401 - populate the registry
     from ..tools.tool_decorator import get_tool_registry
 
     tools = get_tool_registry()
     issues = lint_tools(tools)
-    issues += lint_named("prompt", get_prompt_registry())
-    resources = getattr(diagram_resources, "_registered_resources", {})
-    issues += lint_named("resource", resources)
     auth = None
     try:
         from ..auth import auth_requested
@@ -269,7 +238,6 @@ __all__ = [
     "LintIssue",
     "exit_code",
     "lint_config",
-    "lint_named",
     "lint_tools",
     "run_lint",
 ]

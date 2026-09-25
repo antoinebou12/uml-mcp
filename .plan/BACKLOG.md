@@ -5,7 +5,7 @@ Priorities: **P1** next release · **P2** soon · **P3** nice to have. Size: S <
 | # | Item | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
 | 1 | [MCP 2026-07-28 conformance gaps (41 failing scenarios)](blocked/P1-mcp-2026-conformance.md) | P1 | L | blocked |
-| 2 | [Linter: mcpx rule set, score, grade, token budget](in-progress/P1-lint-score-grade.md) | P1 | M | in-progress |
+| 2 | [Linter: mcpx rule set, score, grade, token budget](done/2026-09-lint-score-grade.md) | P1 | M | done |
 | 3 | [OpenTelemetry traces and metrics (optional)](in-progress/P1-opentelemetry.md) | P1 | M | in-progress |
 | 4 | [Playwright e2e for the admin dashboard and /mcp](in-progress/P1-playwright-e2e.md) | P1 | S | in-progress |
 | 5 | [Dead code and duplication cleanup](in-progress/P2-dead-code-cleanup.md) | P2 | M | in-progress |

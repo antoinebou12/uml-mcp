@@ -108,12 +108,35 @@ def cmd_config(args: argparse.Namespace) -> int:
 
 
 def cmd_lint(args: argparse.Namespace) -> int:
-    from ..quality.lint import exit_code, run_lint
+    """Definition/config rules (MXCP-style) + protocol rules with score and grade."""
+    import asyncio
 
-    issues = run_lint()
+    from ..quality.lint import exit_code, run_lint
+    from ..quality.wire import GRADES, fetch_surface, lint_surface
+
+    token = os.environ.get("MCP_LINT_TOKEN") or None
+    try:
+        report = lint_surface(asyncio.run(fetch_surface(args.url, token)))
+    except Exception as exc:  # noqa: BLE001 - unreachable server
+        print(f"unreachable: {exc}", file=sys.stderr)
+        return 2
+    issues = report.issues + ([] if args.url else run_lint())
+    failures = []
+    if exit_code(issues, strict=args.strict or args.fail_on == "warnings"):
+        failures.append("errors" if exit_code(issues) else "warnings")
+    order = [g for g, _ in GRADES]
+    if args.min_grade and order.index(report.grade) > order.index(args.min_grade):
+        failures.append(f"grade {report.grade} below {args.min_grade}")
+    if args.token_budget and report.token_estimate > args.token_budget:
+        failures.append(
+            f"~{report.token_estimate} tokens over budget {args.token_budget}"
+        )
     if args.format == "json":
-        print(json.dumps([i.as_dict() for i in issues], indent=2))
-    else:
+        data = report.as_dict()
+        data["issues"] = [i.as_dict() for i in issues]
+        data["failures"] = failures
+        print(json.dumps(data, indent=2))
+    elif not args.quiet:
         for i in issues:
             fix = f"  → {i.fix}" if i.fix else ""
             print(f"{i.severity.upper():7} {i.code} {i.target}: {i.message}{fix}")
@@ -122,9 +145,16 @@ def cmd_lint(args: argparse.Namespace) -> int:
             for s in ("error", "warning", "info")
         }
         print(
+            f"Grade {report.grade} · score {report.score}/100 · ~{report.token_estimate} tokens · "
+            f"{report.counts['tools']} tools, {report.counts['resources']} resources, "
+            f"{report.counts['prompts']} prompts"
+        )
+        print(
             f"{counts['error']} error(s), {counts['warning']} warning(s), {counts['info']} info"
         )
-    return exit_code(issues, args.strict)
+        if failures:
+            print("FAIL: " + "; ".join(failures))
+    return 1 if failures else 0
 
 
 def cmd_client(args: argparse.Namespace) -> int:
@@ -161,8 +191,15 @@ def build_parser() -> argparse.ArgumentParser:
     lint = sub.add_parser(
         "lint", help="lint tool/prompt/resource definitions and config"
     )
+    lint.add_argument(
+        "url", nargs="?", help="lint a running server (default: in process)"
+    )
     lint.add_argument("--strict", action="store_true", help="fail on warnings")
+    lint.add_argument("--fail-on", choices=("errors", "warnings"), default="errors")
+    lint.add_argument("--min-grade", choices=("A", "B", "C", "D", "F"))
+    lint.add_argument("--token-budget", type=int, help="fail above N estimated tokens")
     lint.add_argument("--format", choices=("text", "json"), default="text")
+    lint.add_argument("--quiet", action="store_true", help="exit code only")
     client = sub.add_parser(
         "client", help="register the local stdio server in an MCP client"
     )
@@ -185,3 +222,6 @@ def main(argv: list[str]) -> int:
 
 
 __all__ = ["PROFILES", "SUBCOMMANDS", "build_parser", "main"]
+
+if __name__ == "__main__":  # pragma: no cover - python -m mcp_core.core.commands
+    sys.exit(main(sys.argv[1:]))

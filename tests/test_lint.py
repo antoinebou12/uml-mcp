@@ -3,18 +3,22 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 from types import SimpleNamespace
 
 from mcp_core.core import commands
 from mcp_core.core.settings_file import parse_app_config
+from mcp_core.quality import wire
 from mcp_core.quality.lint import (
     LintIssue,
     exit_code,
     lint_config,
-    lint_named,
     lint_tools,
     run_lint,
 )
+from mcp_core.quality.wire import Surface
 
 
 def codes(issues: list[LintIssue]) -> set[str]:
@@ -36,8 +40,8 @@ def documented(code: str) -> str:
 
 def test_tool_rules_fire_on_a_poor_definition():
     issues = lint_tools({"bad": {"description": "", "function": bare}})
+    assert "TOOL002" not in codes(issues)  # empty is the wire rule's job
     assert {
-        "TOOL001",
         "TOOL003",
         "TOOL004",
         "TOOL005",
@@ -64,13 +68,6 @@ def test_well_described_tool_is_clean():
         "example": "documented(code='A->B')",
     }
     assert lint_tools({"render": good}) == []
-
-
-def test_prompt_and_resource_descriptions():
-    issues = lint_named(
-        "prompt", {"p": {"description": "x"}, "q": {"description": "A" * 20}}
-    )
-    assert [(i.code, i.target) for i in issues] == [("PROM001", "prompt:p")]
 
 
 def test_config_rules():
@@ -120,8 +117,89 @@ def test_real_registry_is_strict_clean():
     assert blocking == [], blocking
 
 
-def test_lint_cli(capsys):
-    assert commands.main(["lint", "--strict"]) == 0
-    assert "0 error(s), 0 warning(s)" in capsys.readouterr().out
+GOOD_SURFACE = Surface(
+    "uml_mcp",
+    "1.4.0",
+    tools=[
+        {
+            "name": "render",
+            "description": "Render a diagram and return its URL.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {"code": {"type": "string", "description": "source"}},
+                "required": ["code"],
+            },
+        }
+    ],
+)
+
+
+def test_lint_cli(capsys, monkeypatch):
+    async def fake_fetch(url=None, token=None):
+        if url:
+            raise ConnectionError("down")
+        return GOOD_SURFACE
+
+    monkeypatch.setattr(wire, "fetch_surface", fake_fetch)
+    assert commands.main(["lint", "--strict", "--min-grade", "A"]) == 0
+    out = capsys.readouterr().out
+    assert "0 error(s), 0 warning(s)" in out and "Grade A" in out
+    assert commands.main(["lint", "--token-budget", "10"]) == 1
+    assert "over budget" in capsys.readouterr().out
+    assert commands.main(["lint", "--quiet"]) == 0
+    assert capsys.readouterr().out == ""
+    assert commands.main(["lint", "http://127.0.0.1:9/mcp"]) == 2
     assert commands.main(["lint", "--format", "json"]) == 0
-    assert isinstance(json.loads(capsys.readouterr().out), list)
+    data = json.loads(capsys.readouterr().out)
+    assert (
+        data["grade"] == "A" and data["failures"] == [] and data["token_estimate"] > 0
+    )
+    monkeypatch.setattr(wire, "fetch_surface", lambda url=None, token=None: _empty())
+    assert commands.main(["lint", "--min-grade", "B"]) == 1
+    assert "grade F below B" in capsys.readouterr().out
+
+
+async def _empty():
+    return Surface()
+
+
+def test_real_server_lint_gate():
+    """The CI gate, end to end against the real FastMCP server."""
+    env: dict[str, str] = {
+        **os.environ,
+        "USE_REAL_FASTMCP": "1",
+        "UML_MCP_CONFIG": "none",
+    }
+    env.pop("MOCK_FASTMCP", None)
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "mcp_core.core.commands",
+            "lint",
+            "--strict",
+            "--min-grade",
+            "A",
+            "--token-budget",
+            "5500",
+        ],
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=120,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stdout + proc.stderr
+    assert "Grade A" in proc.stdout
+    proc = subprocess.run(
+        [sys.executable, "-m", "mcp_core.core.commands", "lint", "--format", "json"],
+        capture_output=True,
+        text=True,
+        env=env,
+        timeout=120,
+        check=False,
+    )
+    server = json.loads(proc.stdout)["server"]
+    assert server["name"] == "uml_mcp" and server["version"].startswith(
+        "1."
+    )  # not FastMCP's

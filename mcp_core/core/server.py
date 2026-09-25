@@ -132,6 +132,7 @@ def create_mcp_server():
     logger.info("Creating MCP server: %s", MCP_SETTINGS.server_name)
     server = FastMCP(
         MCP_SETTINGS.server_name,
+        version=MCP_SETTINGS.version,  # else initialize reports FastMCP's own version
         **get_mcp_cache_policy(),
     )
 
