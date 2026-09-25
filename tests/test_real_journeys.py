@@ -98,6 +98,21 @@ class FakeKroki:
 
 
 # ---------------------------------------------------------------- real server
+@pytest.fixture(scope="module", autouse=True)
+def loopback_bypasses_proxy():
+    """The MCP client honours HTTP(S)_PROXY; loopback must never go through it."""
+    saved = {k: os.environ.get(k) for k in ("NO_PROXY", "no_proxy")}
+    for key in saved:
+        current = [v for v in (os.environ.get(key) or "").split(",") if v]
+        os.environ[key] = ",".join([*current, "127.0.0.1", "localhost"])
+    yield
+    for key, value in saved.items():
+        if value is None:
+            os.environ.pop(key, None)
+        else:
+            os.environ[key] = value
+
+
 @pytest.fixture(scope="module")
 def kroki():
     with FakeKroki() as fake:
@@ -179,13 +194,20 @@ def stack(tmp_path_factory, kroki):
 def run_agent(base: str) -> dict[str, Any]:
     """Run the agent session in its own thread (Playwright's sync API owns a loop)."""
     out: dict[str, Any] = {}
+    errors: list[BaseException] = []
 
     def target() -> None:
-        out.update(asyncio.run(_agent_session(base)))
+        try:
+            out.update(asyncio.run(_agent_session(base)))
+        except BaseException as exc:  # noqa: BLE001 - re-raised in the test thread
+            errors.append(exc)
 
     worker = threading.Thread(target=target)
     worker.start()
     worker.join(timeout=120)
+    if errors:
+        raise errors[0]
+    assert out, "agent session did not finish"
     return out
 
 
