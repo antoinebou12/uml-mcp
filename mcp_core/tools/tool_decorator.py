@@ -163,8 +163,13 @@ def mcp_tool(
     example: str | None = None,
     annotations: dict[str, Any] | None = None,
     output_schema: Any | None = None,
+    lint_ignore: dict[str, str] | None = None,
 ) -> Callable[[F], F]:
-    """Decorator for registering a function as an MCP tool."""
+    """Decorator for registering a function as an MCP tool.
+
+    ``lint_ignore`` documents deliberate exceptions to ``uml-mcp lint`` rules as
+    ``{rule: reason}``; they are reported as suppressed, never silently dropped.
+    """
 
     def decorator(func: F) -> F:
         func_name = name or getattr(func, "__name__", "tool")
@@ -203,6 +208,7 @@ def mcp_tool(
             "example": example,
             "annotations": annotations or {},
             "output_schema": output_schema,
+            "lint_ignore": dict(lint_ignore or {}),
             "return_type": (
                 sig.return_annotation
                 if sig.return_annotation is not inspect.Parameter.empty
