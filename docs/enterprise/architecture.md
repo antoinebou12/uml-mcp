@@ -26,7 +26,7 @@ flowchart LR
     PRM["/.well-known/oauth-protected-resource[/mcp]<br/>RFC 9728"]
     AS["/oauth/* + RFC 8414 metadata<br/>(entra-proxy only)"]
     MCP["FastMCP /mcp"]
-    REST["REST /generate_diagram, /kroki_encode, /ag-ui/*"]
+    REST["REST /generate_diagram, /kroki_encode, /ag-ui, /ag-ui/*"]
     ADM["/admin (read-only)"]
   end
   ENTRA[(Microsoft Entra ID)]

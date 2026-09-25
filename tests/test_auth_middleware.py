@@ -297,3 +297,4 @@ def test_policy_and_jsonrpc_parsing(settings_factory):
     with pytest.raises(AuthError):
         parse_jsonrpc_body(b"[1]")
     assert policy.required_for_rest("HEAD", "/ag-ui/events/abc") == "read"
+    assert policy.required_for_rest("POST", "/ag-ui") == "write"  # canonical AG-UI

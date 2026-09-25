@@ -51,3 +51,10 @@ flowchart LR
 !!! tip "Live discovery"
 
     `tools/list`, `resources/list`, `prompts/list` always reflect what's registered in the running server. The static pages below are kept in sync with the source files referenced in each section.
+
+## External references
+
+- [Kroki](https://github.com/yuzutech/kroki): the diagram rendering gateway behind every tool
+- [CopilotKit](https://github.com/copilotkit/copilotkit): in-app agents that can call UML-MCP ([frontend guide](../integrations/frontend.md))
+- [MSAL](https://learn.microsoft.com/en-us/entra/identity-platform/msal-overview) and [fastapi-azure-auth](https://github.com/vibber-ai/fastapi-azure-auth): Entra ID token acquisition and validation ([enterprise primer](../enterprise/oauth-oidc.md))
+- [Model Context Protocol specification](https://modelcontextprotocol.io/specification)

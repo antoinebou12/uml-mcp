@@ -57,6 +57,8 @@ The exact reason codes are listed in [troubleshooting](troubleshooting.md#reason
 ## Read more
 
 - [Architecture](architecture.md): how the pieces fit, with sequence diagrams
+- [OAuth 2.1, OpenID Connect and MSAL](oauth-oidc.md): concepts, token types, MSAL examples, the three ways around Entra's gaps
+- [Readiness checklist](checklist.md): tick every line before announcing the URL
 - [Microsoft Entra ID setup](entra-id.md): Expose an API, scopes, v2 tokens, pre-authorized clients
 - [Configuration reference](configuration.md): env vars and the JSON file
 - [Client setup](clients.md): VS Code, Copilot, Visual Studio, Claude Code, Cursor

@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import base64
+import hashlib
+import hmac
+import json
 import time
 
-import jwt
 import pytest
 
 from mcp_core.auth import errors
@@ -23,6 +26,15 @@ from tests.fixtures_auth import (
     mint,
     public_pem,
 )
+
+
+def _b64(data: bytes) -> str:
+    return base64.urlsafe_b64encode(data).rstrip(b"=").decode()
+
+
+def _compact(header, claims, sig: bytes | None) -> str:
+    head = _b64(json.dumps(header).encode()) + "." + _b64(json.dumps(claims).encode())
+    return head if sig is None else f"{head}.{_b64(sig)}"
 
 
 def make_validator(settings, mock_idp):
@@ -127,17 +139,15 @@ async def test_expired_within_leeway_is_ok(settings_factory, mock_idp, rsa_key):
 async def test_algorithm_attacks(settings_factory, mock_idp, rsa_key):
     v, _ = make_validator(settings_factory(), mock_idp)
     claims = entra_v2_claims()
-    none_token = jwt.encode(claims, key=None, algorithm="none", headers={"kid": "k1"})
+    none_token = _compact({"alg": "none", "kid": "k1"}, claims, b"")
     assert (await reason_of(v, none_token)).reason == "unsupported_algorithm"
-    # key confusion: HS256 "signed" with the RSA public key
-    hs = jwt.api_jws.PyJWS()
-    hs._algorithms["HS256"].prepare_key = lambda k: k  # allow PEM as HMAC secret
-    confused = hs.encode(
-        jwt.api_jwt._jwt_global_obj._encode_payload(claims),
-        key=public_pem(rsa_key).encode(),
-        algorithm="HS256",
-        headers={"kid": "k1"},
-    )
+    # key confusion: HS256 "signed" with the RSA public key as the HMAC secret
+    header = {"alg": "HS256", "kid": "k1", "typ": "JWT"}
+    signing_input = _compact(header, claims, None)
+    sig = hmac.new(
+        public_pem(rsa_key).encode(), signing_input.encode(), hashlib.sha256
+    ).digest()
+    confused = _compact(header, claims, sig)
     assert (await reason_of(v, confused)).reason == "unsupported_algorithm"
     jku = mint(claims, rsa_key, headers={"jku": "https://evil.example/keys"})
     assert (await reason_of(v, jku)).reason == "forbidden_header"
@@ -234,7 +244,7 @@ async def test_static_pem_and_ec(ec_key):
             "MCP_AUTH_ALGORITHMS": "ES256",
         }
     )
-    v = TokenValidator(s, StaticKeySet([s.public_key_pem]))
+    v = TokenValidator(s, StaticKeySet([s.public_key_pem or ""]))
     now = int(time.time())
     token = mint(
         {

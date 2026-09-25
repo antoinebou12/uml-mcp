@@ -228,6 +228,22 @@ Docs locally: `uv run mkdocs serve` → http://127.0.0.1:8000
 
 </details>
 
+<details>
+<summary><strong>Enterprise SSO: OAuth 2.1 · OpenID Connect · Microsoft Entra ID</strong></summary>
+
+Optional and off by default (`MCP_AUTH_MODE=none`; the public Vercel endpoint stays open).
+
+| Topic | Summary |
+| --- | --- |
+| Modes | `jwt`: validate Entra / OIDC access tokens (resource server) · `entra-proxy`: adds RFC 8414 + RFC 7591 facade with S256-only PKCE for DCR clients |
+| OAuth 2.1 | Authorization Code + PKCE S256; header-only bearer tokens; 401 → `WWW-Authenticate: Bearer resource_metadata, scope`; 403 `insufficient_scope` step-up |
+| OpenID Connect | Discovery + JWKS for signing keys; ID tokens are rejected, access tokens only |
+| Entra ID | v2 tokens (`requestedAccessTokenVersion: 2`), `mcp.read` / `mcp.write` / `.default`, app roles, VS Code + Visual Studio pre-authorized ([setup](docs/enterprise/entra-id.md)) |
+| MSAL | Client side only (VS Code, Visual Studio, Azure CLI, daemons); examples in [OAuth/OIDC/MSAL](docs/enterprise/oauth-oidc.md) |
+| Try it | [`tests/http/entra-auth.http`](tests/http/entra-auth.http) · `python -m mcp_core.auth generate az-script` · [checklist](docs/enterprise/checklist.md) |
+
+</details>
+
 ## Community
 
 > If this survives a real production repo, it beats a lot of polished launch demos.

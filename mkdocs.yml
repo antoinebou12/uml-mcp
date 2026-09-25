@@ -130,6 +130,8 @@ nav:
   - Enterprise:
       - enterprise/README.md
       - Architecture: enterprise/architecture.md
+      - OAuth 2.1, OpenID Connect & MSAL: enterprise/oauth-oidc.md
+      - Readiness checklist: enterprise/checklist.md
       - Microsoft Entra ID: enterprise/entra-id.md
       - Configuration: enterprise/configuration.md
       - Clients: enterprise/clients.md

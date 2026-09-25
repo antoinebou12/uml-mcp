@@ -21,7 +21,7 @@ overrides the previous one.
 | `MCP_AUTH_MODE` | `mode` | `none` | `none`, `jwt` or `entra-proxy` |
 | `MCP_AUTH_CONFIG_FILE` | – | – | Path to the JSON file |
 | `MCP_AUTH_RESOURCE_URL` | `resource_url` | – | **Required.** The exact URL clients use, for example `https://mcp.contoso.com/mcp`. HTTPS is required; `http://127.0.0.1`/`localhost` is allowed for development. |
-| `MCP_AUTH_PROTECT_REST` | `protect_rest` | `true` | Also protect `/generate_diagram`, `/kroki_encode` and `/ag-ui/*` |
+| `MCP_AUTH_PROTECT_REST` | `protect_rest` | `true` | Also protect `/generate_diagram`, `/kroki_encode` and `/ag-ui, /ag-ui/*` |
 | `MCP_AUTH_PREFLIGHT` | `preflight` | `warn` | Startup check of IdP metadata (PKCE S256) and JWKS: `warn`, `strict` (fail startup) or `off` |
 | `MCP_ADMIN_UI` | `admin_ui` | `false` | Read-only console at `/admin` |
 

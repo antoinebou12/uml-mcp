@@ -5,6 +5,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    # The image runs as UID 10001; the dev bind mounts below are owned by your host
+    # user, so run as root locally (override with UML_MCP_USER=10001 if you prefer).
+    user: "${UML_MCP_USER:-0}"
     ports:
       - "8000:8000"
     volumes:

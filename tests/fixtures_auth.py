@@ -14,6 +14,7 @@ import pytest
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec, rsa
 from fastapi import FastAPI, Request
+from jwt.algorithms import ECAlgorithm, RSAAlgorithm
 
 TENANT = "11111111-2222-3333-4444-555555555555"
 OTHER_TENANT = "99999999-8888-7777-6666-555555555555"
@@ -55,9 +56,9 @@ def public_pem(key) -> str:
 
 def jwk_for(key, kid: str, **extra: Any) -> dict[str, Any]:
     if isinstance(key, rsa.RSAPrivateKey):
-        data = json.loads(jwt.algorithms.RSAAlgorithm.to_jwk(key.public_key()))
+        data = json.loads(str(RSAAlgorithm.to_jwk(key.public_key())))
     else:
-        data = json.loads(jwt.algorithms.ECAlgorithm.to_jwk(key.public_key()))
+        data = json.loads(str(ECAlgorithm.to_jwk(key.public_key())))
     data.update({"kid": kid, "use": "sig"}, **extra)
     return data
 

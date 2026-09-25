@@ -47,3 +47,37 @@ def test_smoke_batch_fixtures_validate_strict():
         "A->>B: MCP 2026 request; B-->>A: Stateless response;"
     )
     assert validate_uml_inputs("mermaid", packed, "svg", strict=True)["valid"] is False
+
+
+def test_smoke_prompt_documents_enterprise_and_runner():
+    text = SMOKE_PATH.read_text(encoding="utf-8")
+    assert "MCP_AUTH_SMOKE_TEST: PASS" in text
+    assert "scripts/run_mcp_smoke.py" in text
+    assert "Never print" in text
+
+
+def test_automated_smoke_runner_passes_in_process():
+    import os
+    import subprocess
+    import sys
+
+    root = Path(__file__).resolve().parents[1]
+    env: dict[str, str] = {
+        **os.environ,
+        "USE_REAL_FASTMCP": "1",
+        "MOCK_FASTMCP": "0",
+        "TESTING": "0",
+        "MCP_URL_ONLY": "true",
+        "PYTHONPATH": str(root),
+    }
+    env.pop("MCP_AUTH_MODE", None)
+    proc = subprocess.run(
+        [sys.executable, "scripts/run_mcp_smoke.py", "--offline"],
+        cwd=root,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    assert "MCP_SMOKE_TEST: PASS" in proc.stdout, proc.stdout + proc.stderr

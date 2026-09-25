@@ -42,6 +42,7 @@ READ_METHODS: frozenset[str] = frozenset(
 REST_POLICY: dict[tuple[str, str], str] = {
     ("POST", "/generate_diagram"): "write",
     ("POST", "/kroki_encode"): "read",
+    ("POST", "/ag-ui"): "write",
     ("POST", "/ag-ui/start"): "write",
     ("POST", "/ag-ui/generate"): "write",
 }
