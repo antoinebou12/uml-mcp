@@ -10,3 +10,6 @@
 | 2026-09 | Rate limits and audit buffer are per process | Simple and fast; global limits belong in the ingress/API gateway |
 | 2026-09 | External linters (mcpx, mcp-tester) run locally, not in CI | They need network/public URLs; our own `uml-mcp lint` is the CI gate |
 | 2026-09 | Admin dashboard is read-only | Config changes go through reviewed files (GitOps) |
+| 2026-09 | Admin console in React + Vite + shadcn, built assets committed | Polished UI while `pip`/`uvx` installs stay Node-free; CI checks the build is current |
+| 2026-09 | Console writes: local = loopback + setup token + custom header; enterprise = `MCP.Admin` + opt-in `allow_write` / `allow_stop` | Easy first-run locally; enterprise stays read-only (GitOps) unless explicitly enabled |
+| 2026-09 | Plugins via entry points, explicit allow-list, no override of built-in types | Extensible without forks; trusted code only loads when named in `plugins.enabled` |

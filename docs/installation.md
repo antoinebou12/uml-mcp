@@ -1,132 +1,163 @@
+---
+title: Installation
+description: "Install UML-MCP in minutes: the one-file installer, the uml-mcp setup wizard, the web setup form, or a manual configuration. Also covers development installs and local renderers."
+---
+
 # Installation
 
-Install and run the UML-MCP server locally.
+| Path | Best for | Command |
+| --- | --- | --- |
+| **Installer** | Anyone; needs only Python 3.12+, typer and tqdm | `python scripts/install.py` |
+| **Setup wizard** | Terminal users | `uv tool install uml-mcp && uml-mcp setup` |
+| **Web setup** | A guided form in the browser | `uml-mcp setup --web` |
+| **Hosted** | No install at all | `https://uml-mcp.vercel.app/mcp` in your MCP client |
+| **Server / Kubernetes** | Teams | [Docker](deploy/docker.md) · [Helm + SSO](enterprise/enterprise-guide.md) |
 
-## System requirements
-
-- Python **3.12** (see `requires-python` in `pyproject.toml`)
-- [uv](https://docs.astral.sh/uv/) (recommended), [Poetry](https://python-poetry.org/), or pip
-- Optional: Docker for local PlantUML or Kroki
-
-!!! tip "Just want to use it in your editor?"
-    `uv tool install uml-mcp && uml-mcp client install --client vscode` is enough. No
-    clone is needed; see [Local install](installation-local.md).
-
-## Installation steps
-
-1. Clone the repository:
+## 1. Quick install
 
 ```bash
-git clone https://github.com/antoinebou12/uml-mcp.git
-cd uml-mcp
+python scripts/install.py            # or: uvx --with typer --with tqdm python scripts/install.py
 ```
 
-2. Install dependencies:
+The installer picks **uv** (`uv tool install`), then **pipx**, then **pip --user**,
+shows progress and then starts the setup wizard.
 
-**With uv (recommended):**
+| Option | Meaning |
+| --- | --- |
+| `--method uv\|pipx\|pip` | Force an installer |
+| `--version 1.4.0` | Pin a version |
+| `--extras otel` | Optional extras (`otel` = OpenTelemetry) |
+| `--web` | Run the browser setup form instead of the terminal wizard |
+| `--no-setup` | Install only |
+| `--dry-run` | Print the commands, change nothing |
+
+Prefer doing it yourself? `uv tool install uml-mcp` (or `pipx install uml-mcp`).
+
+## 2. Setup wizard (`uml-mcp setup`)
 
 ```bash
-uv sync
+uml-mcp setup
 ```
 
-**With Poetry:**
+The wizard asks for:
+
+- a **profile** (`local`, `docker` or `enterprise`)
+- which **features** to turn on (each one is explained, with whether it applies live or needs a restart)
+- a Kroki server
+- which **MCP clients** to register
+
+It then runs, with a progress bar:
+
+1. validate the configuration
+2. write `~/.config/uml-mcp/config.yaml` (mode `0600`, with a backup of any previous file)
+3. register the clients
+4. run a health check
+
+| Feature key | What it does | Applies |
+| --- | --- | --- |
+| `memory_only` | Keep diagrams in memory; return URLs/bytes, no files | restart |
+| `diagram_fallback` | Retry with PlantUML server or mermaid.ink when Kroki fails | restart |
+| `audit` | MXCP-style audit trail of every call (redacted) | live |
+| `json_logs` | One JSON object per log line | live |
+| `metrics_endpoint` | Prometheus `/metrics` | restart |
+| `otel` | OpenTelemetry traces (needs `uml-mcp[otel]`) | live |
+| `rate_limit` | Token-bucket limits per client/user, route and tool | live |
+| `local_dashboard` | Admin console on `127.0.0.1` without SSO | restart |
+
+Non-interactive, for scripts and CI:
 
 ```bash
-poetry install
+uml-mcp setup --profile docker --enable otel --disable rate_limit \
+  --kroki-server http://kroki:8000 --client cursor --path ./uml-mcp.yaml --yes
+uml-mcp setup --profile enterprise --dry-run      # print the YAML only
 ```
 
-**With pip:**
+## 3. Web setup and the console
 
 ```bash
-pip install -e .
+uml-mcp setup --web        # opens the Setup page
+uml-mcp admin              # opens the console (Overview)
 ```
 
-Alternatively, for a lockfile-derived pip install:
+This starts a local server with the MCP endpoint (`http://127.0.0.1:8765/mcp`) and
+the [admin console](admin/index.md). The terminal prints a **one-time setup token**,
+which the browser link carries in its URL fragment. The console needs the token
+to save settings, register clients or stop the server. Only loopback clients can
+reach it.
+
+The **Setup** page walks through the same steps as the wizard: profile → features →
+clients → YAML review → Save. Change anything later on the **Settings** page.
+
+## 4. Manual configuration
 
 ```bash
-uv export --frozen --no-dev --no-hashes -o requirements.txt
-pip install -r requirements.txt
+uml-mcp config init --profile local        # commented template
+uml-mcp config validate
+uml-mcp client install --client vscode     # or cursor, claude-desktop, claude-code
 ```
 
-3. For development (tests, linting, docs):
+- **Settings file:** every setting is described in the [uml-mcp.yaml reference](configuration/uml-mcp-yaml.md). Environment variables ([Configuration](configuration.md)) always win over the file.
+- **Client registration:** `client install` merges a stdio entry into the client's config, keeps a backup and supports `--dry-run`. For Claude Code it prints the `claude mcp add` command instead of writing a file.
+
+| Client | File written (user scope) |
+| --- | --- |
+| VS Code | `~/.config/Code/User/mcp.json` (macOS `~/Library/Application Support/Code/User`, Windows `%APPDATA%\Code\User`) |
+| Cursor | `~/.cursor/mcp.json` |
+| Claude Desktop | `claude_desktop_config.json` in the Claude app config folder |
+| Claude Code | none: run the printed `claude mcp add --scope user uml-mcp -- uml-mcp --transport stdio` |
+
+## 5. Extend with plugins
+
+Install a plugin package next to UML-MCP, then enable it:
 
 ```bash
-uv sync --all-groups
-# or: poetry install --with dev
-# or: pip install -r requirements-dev.txt
+uml-mcp plugins list
+uml-mcp plugins enable hello
 ```
 
-## Run the server
+See [Plugins](plugins/index.md).
 
-From the project root:
-
-```bash
-python server.py
-```
-
-Default transport is **stdio** (for MCP clients). For local HTTP:
+## Development install (from a clone)
 
 ```bash
-python server.py --transport http --host 127.0.0.1 --port 8000
-```
-
-With uv: `uv run python server.py` (same flags).
-
-## Verifying installation
-
-```bash
+git clone https://github.com/antoinebou12/uml-mcp.git && cd uml-mcp
+uv sync --all-groups              # tests, lint, docs, OTel, Playwright
+uv run python server.py           # stdio; add --transport http --port 8000 for HTTP
+uv run uvicorn app:app --port 8000   # full HTTP app (REST, AG-UI, console)
 uv run python server.py --list-tools
 ```
 
-You should see a table listing **`generate_uml`** and **`validate_uml`**, plus registered prompts/resources in logs or `--list-tools` output depending on UI settings.
+To work on the console, see [Frontend](developers/frontend.md). Poetry
+(`poetry install --with dev`) and pip (`pip install -e .`) also work.
 
-## IDE integration
+## Local diagram servers (optional)
 
-Point your MCP client at `server.py` with **absolute** paths for `args` and `cwd` (project root); optional `MCP_OUTPUT_DIR` in `env`. **[config/README.md](https://github.com/antoinebou12/uml-mcp/blob/main/config/README.md)** has example JSON; see **[Configuration](configuration.md)** for environment variables and **[Tutorials, Getting started](tutorials/getting-started.md#1-connect-a-client)** for client wiring. Step-by-step: [Cursor](integrations/cursor.md), [Claude Desktop](integrations/claude_desktop.md).
-
-## Optional components
-
-### Enterprise SSO (Microsoft Entra ID / OAuth 2.1)
-
-Self-hosted HTTP deployments can require bearer tokens on `/mcp` with `MCP_AUTH_MODE=jwt` (or `entra-proxy`). No extra package is needed; the dependencies ship with UML-MCP. See the **[Enterprise guide](enterprise/README.md)**.
-
-### Configuration file
-
-`uml-mcp config init --profile local|docker|enterprise` writes a commented
-[`uml-mcp.yaml`](configuration/uml-mcp-yaml.md). It covers tools, rate limits,
-logging and rotation, the audit trail and metrics; environment variables still
-override it.
-
-### Local diagram servers
-
-For better performance or offline use:
-
-#### PlantUML server
-
-```bash
-docker run -d -p 8080:8080 plantuml/plantuml-server
-```
-
-#### Kroki server
+For offline use or to keep diagram source inside your network:
 
 ```bash
 docker run -d -p 8000:8000 yuzutech/kroki
+docker run -d -p 8080:8080 plantuml/plantuml-server
 ```
 
-Then point UML-MCP at the local instances:
+Then set `rendering.kroki_server` / `rendering.plantuml_server`, either in the
+Settings page or `uml-mcp.yaml`, or with `KROKI_SERVER` / `PLANTUML_SERVER`.
+
+## Uninstall
 
 ```bash
-export USE_LOCAL_PLANTUML=true
-export PLANTUML_SERVER=http://localhost:8080
-export USE_LOCAL_KROKI=true
-export KROKI_SERVER=http://localhost:8000
+uv tool uninstall uml-mcp          # or: pipx uninstall uml-mcp
+rm -rf ~/.config/uml-mcp ~/.local/state/uml-mcp
 ```
 
-(On Windows, use `set` in `cmd` or `$env:VAR = "value"` in PowerShell instead of `export`.)
+Then remove the `uml-mcp` entry from your client's MCP config. A backup of the
+previous config is kept next to it.
 
 ## Troubleshooting
 
-1. Ensure Python **3.12** is installed and on your PATH
-2. Confirm dependencies installed (`uv sync` or equivalent)
-3. Verify any local servers are running
-4. Ensure write permissions if you use `output_dir` with `generate_uml`
+| Symptom | Fix |
+| --- | --- |
+| `uml-mcp: command not found` | Open a new terminal, or run `uv tool update-shell` or `pipx ensurepath` |
+| Setup page says "Enter the setup token" | Use the token printed by `uml-mcp admin`, or set `UML_MCP_ADMIN_TOKEN` |
+| Diagrams fail to render | Check `rendering.kroki_server` reachability; enable `diagram_fallback` |
+| Settings are read-only | The file is mounted read-only (e.g. Kubernetes); use **Download YAML** and apply it through your deployment |
+| `uml-mcp lint` reports CFG010 | `pip install "uml-mcp[otel]"` or turn OpenTelemetry off |

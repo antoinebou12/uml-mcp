@@ -193,7 +193,7 @@ Secrets are rejected here, just as they are in the JSON file: use env vars or
 
 | Where | How |
 | --- | --- |
-| Local | `uml-mcp config init --profile local` then `uml-mcp client install --client vscode` ([Local install](../installation-local.md)) |
+| Local | `uml-mcp config init --profile local` then `uml-mcp client install --client vscode` ([Installation](../installation.md)) |
 | Docker | `docker run -v $PWD/uml-mcp.yaml:/etc/uml-mcp/config.yaml:ro …` |
 | Compose | uncomment the volume in `docker-compose.enterprise.yml` and set `UML_MCP_CONFIG` |
 | Helm | put the sections under `config:` in your values; the chart renders a ConfigMap and sets `UML_MCP_CONFIG` ([Kubernetes](../enterprise/kubernetes.md)) |

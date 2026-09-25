@@ -115,7 +115,8 @@ nav:
   - Deploy:
       - deploy/index.md
       - Installation: installation.md
-      - Local install (single user): installation-local.md
+      - Local install (redirect): installation-local.md
+      - Admin console: admin/index.md
       - Docker: deploy/docker.md
       - Vercel & Smithery: integrations/vercel_smithery.md
       - Claude Desktop: integrations/claude_desktop.md
@@ -143,10 +144,14 @@ nav:
       - Operations (audit, metrics, limits): enterprise/operations.md
       - Security model: enterprise/security.md
       - Troubleshooting: enterprise/troubleshooting.md
+  - Plugins:
+      - plugins/index.md
+      - Author guide: plugins/authoring.md
   - Developers:
       - developers/index.md
       - Testing: testing.md
       - Linting (uml-mcp lint): developers/linting.md
+      - Frontend (admin console): developers/frontend.md
       - Architecture: refactor-architecture-plan.md
       - Contributing: developers/contributing.md
   - About:

@@ -29,6 +29,8 @@ It also works as a building block for agent-facing products. Use **MCP** when an
 | **Docs** | [antoinebou12.github.io/uml-mcp](https://antoinebou12.github.io/uml-mcp/) |
 | **Catalog** | ~37 Kroki-backed types · 5 MCP tools · URL + playground + chat PNG |
 | **Agent UI** | MCP `/mcp` · canonical AG-UI `/ag-ui` · [OpenUI integration guide](docs/integrations/openui.md) |
+| **Install** | `python scripts/install.py` · `uv tool install uml-mcp && uml-mcp setup` · [Installation](docs/installation.md) |
+| **Console** | `uml-mcp admin`: setup form, settings, live logs, charts ([tour](docs/admin/index.md)) |
 
 <p align="center">
   <img src="docs/assets/diagrams/client-server-chat.png" width="720" alt="UML-MCP in chat: Client/Server Mermaid sequence with URL and Playground links" />
@@ -61,15 +63,22 @@ Repo defaults: [`.cursor/mcp.json`](.cursor/mcp.json) · [`.vscode/mcp.json`](.v
 
 All snippets: [`config/README.md`](config/README.md)
 
-**Local only (one user, stdio):**
+**Install locally (guided):**
 
-| Step | Command |
+| Path | Command |
 | --- | --- |
-| Install | `uv tool install uml-mcp` (or `pipx install uml-mcp`) |
-| Config (optional) | `uml-mcp config init --profile local` → `~/.config/uml-mcp/config.yaml` |
-| Register | `uml-mcp client install --client vscode\|cursor\|claude-desktop\|claude-code` (merges, backs up, `--dry-run`) |
+| Installer (needs only Python + typer + tqdm) | `python scripts/install.py` |
+| Setup wizard | `uv tool install uml-mcp && uml-mcp setup` (profile, features, clients, health check) |
+| Web setup form | `uml-mcp setup --web` → setup page in the console |
+| Manual | `uml-mcp config init --profile local` · `uml-mcp client install --client vscode\|cursor\|claude-desktop\|claude-code` |
 
-Guide: [docs/installation-local.md](docs/installation-local.md)
+Guide: [docs/installation.md](docs/installation.md)
+
+<p align="center">
+  <img src="docs/assets/admin/desktop-overview.png" width="760" alt="UML-MCP admin console: overview with KPIs, traffic chart and getting-started checklist" />
+</p>
+
+<p align="center"><sub>Admin console (<code>uml-mcp admin</code>): overview · setup · settings · activity · logs · metrics · plugins, light and dark, desktop and mobile</sub></p>
 
 <details>
 <summary><strong>Clone from origin (local stdio)</strong></summary>
@@ -114,7 +123,10 @@ Configs: [`config/README.md`](config/README.md) (Cursor, VS Code, Codex, Claude,
 | **Enterprise** | Optional SSO: Microsoft Entra ID / OAuth 2.1 bearer tokens, RFC 9728 metadata, clear 401/403 ([docs/enterprise](docs/enterprise/README.md) · [guide](docs/enterprise/enterprise-guide.md)) |
 | **Config file** | One [`uml-mcp.yaml`](docs/configuration/uml-mcp-yaml.md) (defaults < file < env) · `uml-mcp config init\|show\|validate` · profiles `local` / `docker` / `enterprise` |
 | **Audit & observability** | MXCP-style audit of every tool/resource/prompt call (JSONL rotation, stdout → SIEM) · JSON logs · metrics + Prometheus `/metrics` · rate limits per IP/user/route/tool ([operations](docs/enterprise/operations.md)) |
-| **Quality** | `uml-mcp lint --strict` checks descriptions, annotations, schemas and risky config ([rules](docs/developers/linting.md)) |
+| **Quality** | `uml-mcp lint --strict --min-grade A`: mcpx-style grade, token budget, MXCP-style config checks ([rules](docs/developers/linting.md)) |
+| **Admin console** | Setup form, schema-driven settings (save, reset, live apply), activity, live logs, charts, Stop; local token or `MCP.Admin` ([tour](docs/admin/index.md)) |
+| **Plugins** | Extra MCP tools and diagram renderers from Python packages, allow-listed in `plugins.enabled` ([guide](docs/plugins/index.md) · [author](docs/plugins/authoring.md)) |
+| **Tracing** | Optional OpenTelemetry spans per request and MCP call (`uml-mcp[otel]`) |
 | **Frontend** | Canonical AG-UI SSE for agent UIs; OpenUI can consume AG-UI and render generated components in your app |
 
 <details>
