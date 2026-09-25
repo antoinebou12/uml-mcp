@@ -136,6 +136,9 @@ def create_mcp_server():
         **get_mcp_cache_policy(),
     )
 
+    from ..plugins.loader import load_plugins
+
+    load_plugins()  # before registration: plugin tools/diagram types join the catalog
     tool_names = register_diagram_tools(server)
     resource_names = register_diagram_resources(server)
     prompt_names = register_diagram_prompts(server)

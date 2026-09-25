@@ -12,12 +12,12 @@ import time
 from collections.abc import Callable
 from typing import Any
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, Response
 
-from .audit import get_audit_logger
-from .metrics import METRICS
-from .ratelimit import LIMITER
+from ..observability.audit import get_audit_logger
+from ..observability.metrics import METRICS
+from ..observability.ratelimit import LIMITER
 
 NO_STORE = {"Cache-Control": "no-store"}
 Guard = Callable[[Request], None]
@@ -165,53 +165,46 @@ def add_ops_routes(router: APIRouter, guard: Guard) -> None:
 
         return JSONResponse([i.as_dict() for i in run_lint()], headers=NO_STORE)
 
+    @router.get("/admin/api/lint/report")
+    async def lint_report(request: Request) -> JSONResponse:
+        """Grade/score/tokens (protocol rules) + definition/config rules."""
+        guard(request)
+        from ..quality.lint import run_lint
+        from ..quality.wire import fetch_surface, lint_surface
+
+        data: dict[str, Any] = {
+            "grade": None,
+            "score": None,
+            "token_estimate": None,
+            "counts": {},
+            "issues": [],
+        }
+        try:
+            data.update(lint_surface(await fetch_surface()).as_dict())
+        except Exception as exc:  # noqa: BLE001 - e.g. mocked FastMCP in tests
+            data["wire_error"] = str(exc)
+        data["issues"] = data["issues"] + [i.as_dict() for i in run_lint()]
+        return JSONResponse(data, headers=NO_STORE)
+
     @router.get("/admin/api/tools")
     async def tools(request: Request) -> JSONResponse:
         guard(request)
         return JSONResponse(_tools_payload(), headers=NO_STORE)
 
 
-def loopback_guard(request: Request) -> None:
-    """Allow only loopback socket peers (never X-Forwarded-For)."""
-    import ipaddress
-
-    peer = request.client.host if request.client else ""
-    try:
-        loopback = ipaddress.ip_address(peer).is_loopback
-    except ValueError:
-        loopback = False
-    if not loopback:
-        raise HTTPException(status_code=404, detail="Not Found")
-
-
 def build_local_admin_router() -> APIRouter:
     """Dashboard without auth, loopback only (``admin.allow_local_without_auth``)."""
-    from ..auth.admin.ui import ADMIN_HTML, ADMIN_JS
+    from ..admin_ui import add_spa_routes
+    from .guards import local_guards
+    from .routes import add_admin_routes
 
     router = APIRouter(include_in_schema=False)
-    headers = {
-        **NO_STORE,
-        "Content-Security-Policy": (
-            "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-            "connect-src 'self'; frame-ancestors 'none'; base-uri 'none'"
-        ),
-        "X-Frame-Options": "DENY",
-    }
-
-    @router.get("/admin")
-    @router.get("/admin/")
-    async def page(request: Request) -> Response:
-        loopback_guard(request)
-        return Response(ADMIN_HTML, media_type="text/html", headers=headers)
-
-    @router.get("/admin/app.js")
-    async def script(request: Request) -> Response:
-        loopback_guard(request)
-        return Response(ADMIN_JS, media_type="text/javascript", headers=headers)
+    guards = local_guards()
+    add_spa_routes(router, guards.read)
 
     @router.get("/admin/api/overview")
     async def overview(request: Request) -> JSONResponse:
-        loopback_guard(request)
+        guards.read(request)
         from ..core.config import MCP_SETTINGS
 
         return JSONResponse(
@@ -224,7 +217,8 @@ def build_local_admin_router() -> APIRouter:
             headers=NO_STORE,
         )
 
-    add_ops_routes(router, loopback_guard)
+    add_ops_routes(router, guards.read)
+    add_admin_routes(router, guards)
     return router
 
 
@@ -235,6 +229,5 @@ def metrics_response() -> Response:
 __all__ = [
     "add_ops_routes",
     "build_local_admin_router",
-    "loopback_guard",
     "metrics_response",
 ]

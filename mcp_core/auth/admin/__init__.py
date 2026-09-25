@@ -10,13 +10,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from fastapi import APIRouter, HTTPException, Request
-from fastapi.responses import HTMLResponse, JSONResponse, Response
+from fastapi.responses import JSONResponse, Response
 
 from ..entra import KNOWN_CLIENTS
 from ..errors import AuthError
 from ..generators import KINDS, GeneratorParams, generate
 from ..metadata import build_as_metadata, build_prm
-from .ui import ADMIN_HTML, ADMIN_JS
 
 if TYPE_CHECKING:  # pragma: no cover
     from ..integration import AuthRuntime
@@ -56,27 +55,9 @@ def _require_admin(request: Request) -> None:
 def build_admin_router(runtime: AuthRuntime) -> APIRouter:
     router = APIRouter(include_in_schema=False)
     settings = runtime.settings
-    csp = (
-        "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; "
-        "connect-src 'self'; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; "
-        "form-action 'self'"
-    )
-    page_headers = {
-        **_NO_STORE,
-        "Content-Security-Policy": csp,
-        "X-Frame-Options": "DENY",
-        "Referrer-Policy": "no-referrer",
-        "X-Content-Type-Options": "nosniff",
-    }
+    from ...admin_ui import add_spa_routes
 
-    @router.get("/admin", response_class=HTMLResponse)
-    @router.get("/admin/", response_class=HTMLResponse)
-    async def admin_page() -> HTMLResponse:
-        return HTMLResponse(ADMIN_HTML, headers=page_headers)
-
-    @router.get("/admin/app.js")
-    async def admin_js() -> Response:
-        return Response(ADMIN_JS, media_type="text/javascript", headers=page_headers)
+    add_spa_routes(router)  # public shell; every /admin/api call is role-checked
 
     @router.get("/admin/api/overview")
     async def overview(request: Request) -> JSONResponse:
@@ -164,9 +145,12 @@ def build_admin_router(runtime: AuthRuntime) -> APIRouter:
             generate(kind, params), media_type="text/plain", headers=_NO_STORE
         )
 
-    from ...observability.admin_api import add_ops_routes
+    from ...admin.api import add_ops_routes
+    from ...admin.guards import enterprise_guards
+    from ...admin.routes import add_admin_routes
 
     add_ops_routes(router, _require_admin)
+    add_admin_routes(router, enterprise_guards(_require_admin))
     return router
 
 

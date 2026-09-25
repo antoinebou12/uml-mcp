@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import time
 from collections import defaultdict, deque
+from typing import Any
 from uuid import uuid4
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -204,3 +205,19 @@ class RequestIdAndRateLimitMiddleware(BaseHTTPMiddleware):
             return response
         finally:
             reset_context(token)
+
+
+class MCPExactPathMiddleware:
+    """Serve ``/mcp`` directly instead of Starlette's 307 to ``/mcp/``.
+
+    Many MCP clients (and conformance testers) do not re-POST a JSON-RPC body
+    after a redirect, so ``initialize`` would fail. Pure ASGI: SSE is untouched.
+    """
+
+    def __init__(self, app: Any) -> None:
+        self.app = app
+
+    async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
+        if scope.get("type") == "http" and scope.get("path") == "/mcp":
+            scope = {**scope, "path": "/mcp/", "raw_path": b"/mcp/"}
+        await self.app(scope, receive, send)

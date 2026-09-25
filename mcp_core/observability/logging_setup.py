@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+import collections
+import datetime as _dt
 import json
 import logging
+import re
+import threading
 from typing import Any
 
 from ..core.settings_file import LoggingConfig
@@ -27,6 +31,75 @@ class JsonFormatter(logging.Formatter):
 
 
 TEXT_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+_SECRET_ASSIGN = re.compile(
+    r"(?i)((?:token|secret|password|authorization|api[_-]?key|assertion)"
+    r"[\"']?\s*[:=]\s*[\"']?)([^\s\"',&]+)"
+)
+
+
+def scrub(text: str) -> str:
+    """Remove bearer tokens and ``secret=...`` style values from a log line."""
+    return _SECRET_ASSIGN.sub(r"\1***", JWT_LIKE.sub("<redacted>", text))
+
+
+class RingBufferHandler(logging.Handler):
+    """Last N log records (redacted) for the admin console Logs page."""
+
+    def __init__(self, capacity: int = 2000) -> None:
+        super().__init__(level=logging.DEBUG)
+        self.records: collections.deque[dict[str, Any]] = collections.deque(
+            maxlen=capacity
+        )
+        self.seq = 0
+        self._cond = threading.Condition()
+
+    def emit(self, record: logging.LogRecord) -> None:
+        try:
+            message = scrub(record.getMessage())
+            if record.exc_info:
+                message += "\n" + scrub(
+                    logging.Formatter().formatException(record.exc_info)
+                )
+        except Exception:  # noqa: BLE001 - logging must never raise
+            message = "<unformattable log record>"
+        with self._cond:
+            self.seq += 1
+            self.records.append(
+                {
+                    "seq": self.seq,
+                    "timestamp": _dt.datetime.fromtimestamp(record.created, _dt.UTC)
+                    .isoformat(timespec="milliseconds")
+                    .replace("+00:00", "Z"),
+                    "level": record.levelname,
+                    "logger": record.name,
+                    "message": message,
+                }
+            )
+            self._cond.notify_all()
+
+    def query(
+        self,
+        *,
+        after: int = 0,
+        level: str | None = None,
+        q: str | None = None,
+        limit: int = 500,
+    ) -> list[dict[str, Any]]:
+        floor = logging.getLevelName(level.upper()) if level else 0
+        floor = floor if isinstance(floor, int) else 0
+        with self._cond:
+            items = [r for r in self.records if r["seq"] > after]
+        items = [
+            r
+            for r in items
+            if logging.getLevelName(r["level"]) >= floor
+            and (not q or q.lower() in (r["message"] + r["logger"]).lower())
+        ]
+        return items[-max(1, min(limit, 2000)) :]
+
+
+#: Process-wide ring (always attached by :func:`configure_logging`).
+RING = RingBufferHandler()
 
 
 _CONFIGURED = False
@@ -64,12 +137,47 @@ def configure_logging(
     for handler in handlers:
         handler.setLevel(level)
     if handlers:
-        logging.basicConfig(level=level, handlers=handlers, force=True)
+        logging.basicConfig(level=level, handlers=[*handlers, RING], force=True)
     else:
         root.setLevel(level)
+        attach_ring()
     for name, lvl in cfg.loggers.items():
         logging.getLogger(name).setLevel(lvl.upper())
     return handlers
 
 
-__all__ = ["JsonFormatter", "build_formatter", "configure_logging", "is_configured"]
+def attach_ring() -> RingBufferHandler:
+    root = logging.getLogger()
+    if RING not in root.handlers:
+        root.addHandler(RING)
+    return RING
+
+
+def ensure_console_logging() -> RingBufferHandler:
+    """For hosts that never configured logging (``uvicorn app:app``, the console).
+
+    Captures INFO+ in the admin Logs ring while stderr keeps printing only
+    WARNING+ (what Python's last-resort handler did before), so nothing changes
+    for operators reading the terminal.
+    """
+    root = logging.getLogger()
+    if not _CONFIGURED and not any(h is not RING for h in root.handlers):
+        stderr = logging.StreamHandler()
+        stderr.setLevel(logging.WARNING)
+        root.addHandler(stderr)
+        if root.level > logging.INFO or root.level == logging.NOTSET:
+            root.setLevel(logging.INFO)
+    return attach_ring()
+
+
+__all__ = [
+    "RING",
+    "JsonFormatter",
+    "RingBufferHandler",
+    "attach_ring",
+    "build_formatter",
+    "configure_logging",
+    "ensure_console_logging",
+    "is_configured",
+    "scrub",
+]

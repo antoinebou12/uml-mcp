@@ -19,6 +19,7 @@ on:
       - ".github/workflows/**"
       - ".cursor/mcp.json"
       - "deploy/**"
+      - "frontend/**"
   pull_request:
     branches: [main]
 
@@ -150,6 +151,38 @@ jobs:
           if helm template ci "$chart" -f "$chart/ci/none-values.yaml" --set auth.mode=jwt >/dev/null 2>&1; then
             echo "expected failure without auth.resourceUrl"; exit 1
           fi
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Set up Node
+        uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint, typecheck, unit tests
+        run: |
+          npm run lint
+          npm run typecheck
+          npm test
+
+      - name: Build and check committed assets are current
+        run: |
+          npm run build
+          git diff --exit-code -- ../mcp_core/admin_ui/dist || {
+            echo "::error::mcp_core/admin_ui/dist is stale: run 'cd frontend && npm run build' and commit"; exit 1; }
+          test -z "$(git status --porcelain -- ../mcp_core/admin_ui/dist)"
 
   build:
     uses: ./.github/workflows/build.yml

@@ -3,7 +3,13 @@ title: Admin console
 description: "Read-only UML-MCP admin dashboard: activity/audit, metrics, rate limits, effective configuration, lint, tools, clients, token tester and generators."
 ---
 
-# Admin console (read-only)
+# Admin console (enterprise)
+
+!!! info "Full tour"
+    The console (pages, screenshots, local mode, Stop) is documented in
+    **[Admin console](../admin/index.md)**. This page covers the enterprise specifics:
+    sign-in, the `MCP.Admin` role, and the opt-in write access
+    (`admin.allow_write`, `admin.allow_stop`).
 
 Enable it with `MCP_ADMIN_UI=true` (Helm: `admin.enabled=true`; YAML: `auth.admin_ui: true`).
 It is served at `/admin` and returns 404 when disabled.

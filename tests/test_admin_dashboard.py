@@ -8,8 +8,8 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+from mcp_core.admin.api import build_local_admin_router, metrics_response
 from mcp_core.core.settings_file import AppConfig, parse_app_config
-from mcp_core.observability.admin_api import build_local_admin_router, metrics_response
 from mcp_core.observability.audit import configure_audit, instrument
 from mcp_core.observability.metrics import METRICS
 from tests.fixtures_auth import build_auth_app, entra_v2_claims, mint
@@ -121,16 +121,22 @@ def _local_app() -> FastAPI:
 
 
 def test_local_dashboard_loopback_only():
-    local = TestClient(_local_app(), client=("127.0.0.1", 5000))
+    local = TestClient(
+        _local_app(), client=("127.0.0.1", 5000), base_url="http://127.0.0.1"
+    )
     assert local.get("/admin").status_code == 200
-    assert local.get("/admin/app.js").status_code == 200
+    assert local.get("/admin/favicon.svg").status_code == 200
     ov = local.get("/admin/api/overview").json()
     assert ov["local"] is True and ov["mode"] == "none"
     assert local.get("/admin/api/tools").status_code == 200
-    ipv6 = TestClient(_local_app(), client=("::1", 5000))
+    ipv6 = TestClient(_local_app(), client=("::1", 5000), base_url="http://127.0.0.1")
     assert ipv6.get("/admin/api/metrics").status_code == 200
-    remote = TestClient(_local_app(), client=("10.1.2.3", 5000))
+    remote = TestClient(
+        _local_app(), client=("10.1.2.3", 5000), base_url="http://127.0.0.1"
+    )
     for path in ("/admin", "/admin/api/overview", "/admin/api/audit"):
         assert remote.get(path).status_code == 404
-    named = TestClient(_local_app(), client=("testclient", 5000))
+    named = TestClient(
+        _local_app(), client=("testclient", 5000), base_url="http://127.0.0.1"
+    )
     assert named.get("/admin/api/overview").status_code == 404

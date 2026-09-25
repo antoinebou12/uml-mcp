@@ -520,11 +520,26 @@ def run_diagram_pipeline(
     ctx: DiagramRenderContext,
     kroki_client: Any = None,
 ) -> dict[str, Any]:
-    """Kroki first, then optional fallbacks; returns the standard result dict."""
+    """Plugin renderer (for plugin diagram types), else Kroki then optional fallbacks."""
     t0 = time.perf_counter()
 
     def elapsed_ms() -> float:
         return (time.perf_counter() - t0) * 1000
+
+    if ctx.backend_type.startswith("plugin:"):
+        from ..plugins.loader import render_with_plugin
+
+        out = render_with_plugin(ctx.diagram_type, ctx.prepared_code, ctx.output_format)
+        if not out.get("error"):
+            _attach_render_metadata(
+                out,
+                attempts=[{"backend": out["source"], "ok": True}],
+                fallback_used=False,
+                render_ms=elapsed_ms(),
+                cache_hit=False,
+                output_format=ctx.output_format,
+            )
+        return out
 
     success, err = try_kroki_render(ctx, kroki_client=kroki_client)
     if success is not None:

@@ -197,6 +197,31 @@ def lint_config(
                     'pip install "uml-mcp[otel]"',
                 )
             )
+    if app.plugins.enabled:
+        from ..plugins.loader import STATUS, discover
+
+        installed = {p.name for p in discover()}
+        for name in app.plugins.enabled:
+            if name not in installed:
+                issues.append(
+                    LintIssue(
+                        "error",
+                        "PLG001",
+                        f"plugin:{name}",
+                        "enabled in plugins.enabled but not installed",
+                        "pip install the plugin package or remove it",
+                    )
+                )
+        for status in STATUS:
+            if status.error and status.error != "not installed":
+                issues.append(
+                    LintIssue(
+                        "error",
+                        "PLG002",
+                        f"plugin:{status.name}",
+                        f"failed to load: {status.error}",
+                    )
+                )
     for name in app.tools.disabled:
         issues.append(
             LintIssue("info", "CFG009", f"tool:{name}", "disabled by configuration")

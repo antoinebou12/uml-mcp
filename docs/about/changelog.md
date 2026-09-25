@@ -24,8 +24,12 @@ Release notes and tagged versions live on GitHub:
 - MXCP-style [audit trail](../enterprise/operations.md) for every tool, resource, prompt and REST call (user, session, policy decision/reason, duration, redacted inputs), with sinks for a rotating JSONL file, stdout and the dashboard. Also configurable logging (JSON, rotation), in-process metrics and an optional Prometheus `/metrics`.
 - Configurable rate limiting: token buckets per IP or principal, route and per-tool limits, trusted proxies, failed-auth throttling and `RateLimit-*` headers.
 - `uml-mcp lint` ([rules](../developers/linting.md)), run in CI with `--strict`.
-- Local install path: `uml-mcp client install --client vscode|cursor|claude-desktop|claude-code` ([guide](../installation-local.md)).
+- Local install path: `uml-mcp client install --client vscode|cursor|claude-desktop|claude-code` ([guide](../installation.md)).
 - Admin dashboard tabs: Activity (filters, JSONL export), Metrics, Rate limits, Configuration (sources, YAML download), Lint and Tools. A loopback-only local mode is also available.
+- Admin console rebuilt with React/Vite/shadcn: setup form, schema-driven settings with save/reset/live apply, live logs, charts, Stop, dark/light, mobile layout ([tour](../admin/index.md)).
+- `uml-mcp setup` wizard (Typer + tqdm), `uml-mcp admin`, and `scripts/install.py` (Python + typer + tqdm only) ([installation](../installation.md)).
+- Plugins v1: extra MCP tools and diagram renderers via entry points ([plugins](../plugins/index.md)).
+- `uml-mcp lint` grades servers like `mcpx` (score, grade, token budget); optional OpenTelemetry tracing.
 
 ## Versioning
 

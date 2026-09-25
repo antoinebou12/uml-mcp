@@ -55,9 +55,14 @@ SECTIONS = (
     "audit",
     "metrics",
     "otel",
+    "plugins",
     "admin",
     "auth",
 )
+
+
+#: Top-level keys that describe the file itself (not settings).
+META_KEYS = ("version", "setup")
 
 
 class ConfigFileError(ValueError):
@@ -69,20 +74,37 @@ class _Model(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+def _f(default: Any = ..., description: str = "", **kw: Any) -> Any:
+    """``Field`` with a user-facing description (shown by the setup/settings UI)."""
+    return Field(default, description=description, **kw)
+
+
 class RotationConfig(_Model):
-    path: str
-    max_bytes: int = Field(default=10 * 1024 * 1024, ge=0)  # 0 => time based
-    backup_count: int = Field(default=10, ge=0)
-    when: Literal["S", "M", "H", "D", "midnight"] = "midnight"
-    interval: int = Field(default=1, ge=1)
-    compress: bool = False
+    path: str = _f(description="File path (`~` is expanded).")
+    max_bytes: int = _f(
+        10 * 1024 * 1024, "Rotate at this size in bytes; 0 rotates by time.", ge=0
+    )
+    backup_count: int = _f(10, "Rotated files to keep.", ge=0)
+    when: Literal["S", "M", "H", "D", "midnight"] = _f(
+        "midnight", "Time-based rotation unit (when max_bytes is 0)."
+    )
+    interval: int = _f(1, "Rotate every N units of `when`.", ge=1)
+    compress: bool = _f(False, "Gzip rotated files.")
 
 
 class LoggingConfig(_Model):
-    level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = "INFO"
-    format: Literal["text", "json"] = "text"
-    loggers: dict[str, str] = Field(default_factory=dict)
-    file: RotationConfig | None = None
+    level: Literal["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"] = _f(
+        "INFO", "Minimum level written to the console and log file."
+    )
+    format: Literal["text", "json"] = _f(
+        "text", "`json` writes one object per line for log collectors."
+    )
+    loggers: dict[str, str] = _f(
+        description="Per-logger levels, e.g. {httpx: WARNING}.", default_factory=dict
+    )
+    file: RotationConfig | None = _f(
+        None, "Rotating log file (default: daily file in logs/)."
+    )
 
 
 AuditSink = Literal["file", "stream", "memory"]
@@ -93,62 +115,147 @@ def _default_sinks() -> list[AuditSink]:
 
 
 class AuditConfig(_Model):
-    enabled: bool = False
-    sinks: list[AuditSink] = Field(default_factory=_default_sinks)
-    file: RotationConfig | None = None
-    include_inputs: Literal["none", "redacted", "full"] = "redacted"
-    max_input_chars: int = Field(default=2000, ge=0)
-    memory_size: int = Field(default=500, ge=10, le=100_000)
-    include_http: bool = True
+    enabled: bool = _f(
+        False, "Record every tool, resource and prompt call (MXCP fields)."
+    )
+    sinks: list[AuditSink] = _f(
+        description="`file` = rotating JSONL, `stream` = JSON on stdout, "
+        "`memory` = dashboard Activity page.",
+        default_factory=_default_sinks,
+    )
+    file: RotationConfig | None = _f(None, "JSONL file for the `file` sink.")
+    include_inputs: Literal["none", "redacted", "full"] = _f(
+        "redacted", "How tool arguments are stored; `redacted` hashes diagram code."
+    )
+    max_input_chars: int = _f(2000, "Truncate stored strings beyond this length.", ge=0)
+    memory_size: int = _f(500, "Records kept for the dashboard.", ge=10, le=100_000)
+    include_http: bool = _f(True, "Also audit REST and AG-UI requests.")
 
 
 class MetricsConfig(_Model):
-    enabled: bool = True
-    endpoint: bool = False  # expose /metrics (Prometheus text)
+    enabled: bool = _f(True, "Keep in-process counters and latency histograms.")
+    endpoint: bool = _f(False, "Expose GET /metrics in Prometheus text format.")
 
 
 class OtelConfig(_Model):
     """OpenTelemetry traces (``pip install "uml-mcp[otel]"``)."""
 
-    enabled: bool = False
-    service_name: str = "uml-mcp"
-    exporter: Literal["otlp", "console"] = "otlp"
-    endpoint: str | None = (
-        None  # default: OTEL_EXPORTER_OTLP_ENDPOINT or localhost:4318
+    enabled: bool = _f(False, "Send traces to an OTLP collector.")
+    service_name: str = _f("uml-mcp", "service.name resource attribute.")
+    exporter: Literal["otlp", "console"] = _f(
+        "otlp", "`console` prints spans (debugging)."
     )
-    sample_ratio: float = Field(default=1.0, ge=0.0, le=1.0)
-    include_user: bool = False  # add enduser.id (PII) to spans
-    resource_attributes: dict[str, str] = Field(default_factory=dict)
+    endpoint: str | None = _f(
+        None,
+        "OTLP/HTTP endpoint; default OTEL_EXPORTER_OTLP_ENDPOINT or localhost:4318.",
+    )
+    sample_ratio: float = _f(
+        1.0, "Fraction of new traces to sample (0-1).", ge=0.0, le=1.0
+    )
+    include_user: bool = _f(False, "Add enduser.id to spans (personal data).")
+    resource_attributes: dict[str, str] = _f(
+        description="Extra resource attributes, e.g. deployment.environment.",
+        default_factory=dict,
+    )
 
 
 class LimitConfig(_Model):
-    requests_per_minute: int = Field(default=120, ge=1)
-    burst: int = Field(default=0, ge=0)  # 0 => same as requests_per_minute
+    requests_per_minute: int = _f(120, "Sustained rate.", ge=1)
+    burst: int = _f(0, "Bucket size; 0 means the same as requests_per_minute.", ge=0)
 
 
 class RateLimitConfig(_Model):
-    enabled: bool = False
-    default: LimitConfig = Field(default_factory=LimitConfig)
-    key: Literal["ip", "principal"] = (
-        "ip"  # principal: per bearer token / signed-in user
+    enabled: bool = _f(False, "Enforce token-bucket rate limits.")
+    default: LimitConfig = _f(
+        description="Limit for every non-exempt route.", default_factory=LimitConfig
     )
-    # 401s allowed per IP per minute when key=principal (stops bogus-token key spraying)
-    auth_failures_per_minute: int = Field(default=30, ge=1)
-    trusted_proxies: list[str] = Field(default_factory=list)
-    routes: dict[str, LimitConfig] = Field(default_factory=dict)
-    tools: dict[str, LimitConfig] = Field(default_factory=dict)
-    exempt_paths: list[str] = Field(
-        default_factory=lambda: ["/health", "/status", "/.well-known/", "/favicon"]
+    key: Literal["ip", "principal"] = _f(
+        "ip", "Bucket per client IP or per signed-in user (bearer token)."
+    )
+    auth_failures_per_minute: int = _f(
+        30, "401 responses per IP per minute before 429 (key: principal).", ge=1
+    )
+    trusted_proxies: list[str] = _f(
+        description="CIDRs whose X-Forwarded-For is trusted (your ingress).",
+        default_factory=list,
+    )
+    routes: dict[str, LimitConfig] = _f(
+        description="Per-route limits; longest prefix wins.", default_factory=dict
+    )
+    tools: dict[str, LimitConfig] = _f(
+        description="Per-MCP-tool limits.", default_factory=dict
+    )
+    exempt_paths: list[str] = _f(
+        description="Never limited (health checks, discovery).",
+        default_factory=lambda: [
+            "/health",
+            "/status",
+            "/.well-known/",
+            "/favicon",
+            "/admin/assets/",
+        ],
     )
 
 
 class ToolsConfig(_Model):
-    enabled: list[str] | None = None  # None => all tools
-    disabled: list[str] = Field(default_factory=list)
+    enabled: list[str] | None = _f(None, "Allow-list of tools; empty means all tools.")
+    disabled: list[str] = _f(
+        description="Tools removed from the server.", default_factory=list
+    )
+
+
+class PluginsConfig(_Model):
+    enabled: list[str] = _f(
+        description="Installed plugins to load (explicit allow-list).",
+        default_factory=list,
+    )
+    settings: dict[str, dict[str, Any]] = _f(
+        description="Per-plugin settings by name.", default_factory=dict
+    )
 
 
 class AdminConfig(_Model):
-    allow_local_without_auth: bool = False
+    allow_local_without_auth: bool = _f(
+        False, "Serve the dashboard to loopback clients when enterprise auth is off."
+    )
+    allow_write: bool = _f(
+        False, "Enterprise: let MCP.Admin users save settings from the dashboard."
+    )
+    allow_stop: bool = _f(False, "Enterprise: let MCP.Admin users stop the server.")
+
+
+class ServerSettings(_Model):
+    """Typed view of ``server`` (the file section stays a mapping of env-backed keys)."""
+
+    allowed_hosts: list[str] | None = _f(None, "Host headers accepted by /mcp.")
+    allowed_origins: list[str] | None = _f(
+        None, "Browser origins allowed to call /mcp."
+    )
+    stateless_http: bool | None = _f(
+        None, "Stateless Streamable HTTP (recommended behind load balancers)."
+    )
+
+
+class RenderingSettings(_Model):
+    """Typed view of ``rendering``."""
+
+    kroki_server: str | None = _f(None, "Kroki URL used for rendering.")
+    plantuml_server: str | None = _f(None, "PlantUML server used as a fallback.")
+    use_local_kroki: bool | None = _f(
+        None, "Use the Kroki container from docker compose."
+    )
+    use_local_plantuml: bool | None = _f(None, "Use the PlantUML container.")
+    url_only: bool | None = _f(None, "Return URLs only, never image bytes.")
+    memory_only: bool | None = _f(None, "Never write files; keep results in memory.")
+    read_only: bool | None = _f(None, "Refuse to write output files.")
+    diagram_fallback: bool | None = _f(None, "Retry other renderers when Kroki fails.")
+    output_dir: str | None = _f(
+        None, "Where diagrams are saved when files are allowed."
+    )
+    max_code_length: int | None = _f(None, "Maximum diagram source length.", ge=1)
+    max_render_seconds: float | None = _f(None, "Render timeout in seconds.", gt=0)
+    batch_max_items: int | None = _f(None, "Maximum diagrams per batch call.", ge=1)
+    batch_concurrency: int | None = _f(None, "Parallel renders per batch.", ge=1)
 
 
 class AppConfig(_Model):
@@ -162,6 +269,7 @@ class AppConfig(_Model):
     audit: AuditConfig = Field(default_factory=AuditConfig)
     metrics: MetricsConfig = Field(default_factory=MetricsConfig)
     otel: OtelConfig = Field(default_factory=OtelConfig)
+    plugins: PluginsConfig = Field(default_factory=PluginsConfig)
     admin: AdminConfig = Field(default_factory=AdminConfig)
     auth: dict[str, Any] = Field(default_factory=dict)
 
@@ -215,7 +323,7 @@ def read_config_file(path: Path) -> dict[str, Any]:
         raise ConfigFileError(f"cannot read {path}: {exc}") from exc
     if not isinstance(data, dict):
         raise ConfigFileError(f"{path} must contain a YAML mapping")
-    unknown = sorted(set(data) - set(SECTIONS) - {"version"})
+    unknown = sorted(set(data) - set(SECTIONS) - set(META_KEYS))
     if unknown:
         raise ConfigFileError(
             f"{path}: unknown section(s) {', '.join(unknown)}; "
@@ -224,15 +332,63 @@ def read_config_file(path: Path) -> dict[str, Any]:
     return data
 
 
+class _TypedViews(BaseModel):
+    server: ServerSettings
+    rendering: RenderingSettings
+
+
 def parse_app_config(data: Mapping[str, Any], source: str = "config") -> AppConfig:
-    body = {k: v for k, v in data.items() if k != "version" and v is not None}
+    body = {k: v for k, v in data.items() if k not in META_KEYS and v is not None}
     try:
+        # Typed views catch typos in the env-backed sections (unknown keys, bad types).
+        _TypedViews.model_validate(
+            {
+                "server": body.get("server") or {},
+                "rendering": body.get("rendering") or {},
+            }
+        )
         return AppConfig.model_validate(body)
     except ValidationError as exc:
-        details = "; ".join(
-            f"{'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in exc.errors()
+        raise ConfigFileError(f"{source}: {format_errors(exc)}") from exc
+
+
+def format_errors(exc: ValidationError) -> str:
+    return "; ".join(
+        f"{'.'.join(str(p) for p in e['loc'])}: {e['msg']}" for e in exc.errors()
+    )
+
+
+# ------------------------------------------------------------------- writing
+def write_config_file(
+    path: Path, data: dict[str, Any], *, force: bool = True
+) -> Path | None:
+    """Write YAML atomically (0600) and keep a timestamped backup; return the backup."""
+    import datetime as _dt
+    import shutil
+
+    import yaml
+
+    path = path.expanduser()
+    backup = None
+    if path.exists():
+        if not force:
+            raise FileExistsError(f"{path} already exists (use --force to overwrite)")
+        backup = path.with_name(
+            path.name + f".bak-{_dt.datetime.now(_dt.UTC):%Y%m%d%H%M%S%f}"
         )
-        raise ConfigFileError(f"{source}: {details}") from exc
+        shutil.copy2(path, backup)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    header = "# uml-mcp.yaml, written by uml-mcp (setup wizard or admin console).\n"
+    body = header + yaml.safe_dump(data, sort_keys=False)
+    fd = os.open(
+        tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600
+    )  # never world-readable
+    with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        fh.write(body)
+    os.chmod(tmp, 0o600)  # also when tmp pre-existed with other bits
+    os.replace(tmp, path)
+    return backup
 
 
 # ------------------------------------------------------------------- loading
@@ -316,6 +472,7 @@ def get_app_config() -> AppConfig:
 __all__ = [
     "CONFIG_ENV",
     "ENV_MAP",
+    "META_KEYS",
     "AppConfig",
     "AuditConfig",
     "ConfigFileError",
@@ -323,8 +480,11 @@ __all__ = [
     "LoggingConfig",
     "MetricsConfig",
     "OtelConfig",
+    "PluginsConfig",
     "RateLimitConfig",
+    "RenderingSettings",
     "RotationConfig",
+    "ServerSettings",
     "apply_to_environ",
     "candidate_paths",
     "find_config_path",
@@ -334,4 +494,5 @@ __all__ = [
     "parse_app_config",
     "read_config_file",
     "reset_config_cache",
+    "write_config_file",
 ]

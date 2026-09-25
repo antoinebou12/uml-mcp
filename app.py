@@ -287,24 +287,10 @@ except Exception as e:  # noqa: BLE001
     logger.warning("RequestIdAndRateLimitMiddleware not loaded: %s", e)
 
 
-class _MCPExactPathMiddleware:
-    """Serve ``/mcp`` directly instead of Starlette's 307 to ``/mcp/``.
-
-    Many MCP clients (and conformance testers) do not re-POST a JSON-RPC body
-    after a redirect, so ``initialize`` would fail. Pure ASGI: SSE is untouched.
-    """
-
-    def __init__(self, app: Any) -> None:
-        self.app = app
-
-    async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
-        if scope.get("type") == "http" and scope.get("path") == "/mcp":
-            scope = {**scope, "path": "/mcp/", "raw_path": b"/mcp/"}
-        await self.app(scope, receive, send)
-
-
 if _mcp_http_app is not None:
-    app.add_middleware(cast(Any, _MCPExactPathMiddleware))
+    from mcp_core.core.http_observability import MCPExactPathMiddleware
+
+    app.add_middleware(cast(Any, MCPExactPathMiddleware))
 
 # Import local modules
 try:
@@ -1058,13 +1044,15 @@ if _app_config is not None:
         _logging_setup.configure_logging(
             _app_config.logging, console_handler=logging.StreamHandler(sys.stderr)
         )
+    elif not _logging_setup.is_configured():
+        _logging_setup.ensure_console_logging()  # feeds the admin console Logs page
 
 if (
     _app_config is not None
     and _app_config.metrics.enabled
     and _app_config.metrics.endpoint
 ):
-    from mcp_core.observability.admin_api import metrics_response
+    from mcp_core.admin.api import metrics_response
 
     @app.get("/metrics", include_in_schema=False)
     async def prometheus_metrics():
@@ -1077,7 +1065,7 @@ if (
     and _app_config is not None
     and _app_config.admin.allow_local_without_auth
 ):
-    from mcp_core.observability.admin_api import build_local_admin_router
+    from mcp_core.admin.api import build_local_admin_router
 
     app.include_router(build_local_admin_router())
     logger.info("Local admin dashboard enabled at /admin (loopback clients only)")
