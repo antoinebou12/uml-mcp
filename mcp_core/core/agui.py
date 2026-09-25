@@ -15,6 +15,7 @@ route and the canonical start + events URL pair.
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import time
 import uuid
@@ -30,6 +31,8 @@ RUN_STARTED = "RUN_STARTED"
 STEP_STARTED = "STEP_STARTED"
 STEP_FINISHED = "STEP_FINISHED"
 TOOL_CALL_START = "TOOL_CALL_START"
+TOOL_CALL_ARGS = "TOOL_CALL_ARGS"
+TOOL_CALL_END = "TOOL_CALL_END"
 TOOL_CALL_RESULT = "TOOL_CALL_RESULT"
 STATE_SNAPSHOT = "STATE_SNAPSHOT"
 CUSTOM = "CUSTOM"
@@ -226,6 +229,150 @@ async def diagram_generation_events(
     )
 
 
+async def canonical_diagram_generation_events(
+    req: DiagramRequest,
+    *,
+    thread_id: str,
+    run_id: str | None = None,
+    parent_run_id: str | None = None,
+) -> AsyncIterator[dict[str, Any]]:
+    """Yield wire-compatible AG-UI events for a diagram render.
+
+    ``diagram_generation_events`` predates the canonical AG-UI wire schemas and is kept
+    for backwards compatibility with the existing ``/ag-ui/generate`` routes. This
+    adapter exposes the same render lifecycle using the field names and event shapes
+    consumed by the official ``@ag-ui/client`` ``HttpAgent``.
+
+    Tool arguments are emitted as the standard
+    ``TOOL_CALL_START -> TOOL_CALL_ARGS -> TOOL_CALL_END`` sequence. Structured diagram
+    output remains available through both the tool result (JSON string) and a namespaced
+    ``CUSTOM`` event.
+    """
+    resolved_run_id = run_id or new_run_id()
+
+    async for event in diagram_generation_events(req, run_id=resolved_run_id):
+        event_type = event.get("type")
+        timestamp = event.get("timestamp")
+
+        if event_type == RUN_STARTED:
+            out: dict[str, Any] = {
+                "type": RUN_STARTED,
+                "threadId": thread_id,
+                "runId": resolved_run_id,
+                "timestamp": timestamp,
+            }
+            if parent_run_id:
+                out["parentRunId"] = parent_run_id
+            yield out
+            continue
+
+        if event_type == STEP_STARTED:
+            yield {
+                "type": STEP_STARTED,
+                "stepName": event.get("name") or event.get("step_id") or "render",
+                "timestamp": timestamp,
+            }
+            continue
+
+        if event_type == TOOL_CALL_START:
+            tool_call_id = str(event["tool_call_id"])
+            yield {
+                "type": TOOL_CALL_START,
+                "toolCallId": tool_call_id,
+                "toolCallName": str(event.get("tool") or "generate_uml"),
+                "timestamp": timestamp,
+            }
+            yield {
+                "type": TOOL_CALL_ARGS,
+                "toolCallId": tool_call_id,
+                "delta": json.dumps(
+                    event.get("args") or {}, separators=(",", ":"), default=str
+                ),
+                "timestamp": timestamp,
+            }
+            yield {
+                "type": TOOL_CALL_END,
+                "toolCallId": tool_call_id,
+                "timestamp": timestamp,
+            }
+            continue
+
+        if event_type == STATE_SNAPSHOT:
+            yield {
+                "type": STATE_SNAPSHOT,
+                "snapshot": event.get("state") or {},
+                "timestamp": timestamp,
+            }
+            continue
+
+        if event_type == TOOL_CALL_RESULT:
+            tool_call_id = str(event["tool_call_id"])
+            content = json.dumps(
+                event.get("output") or {}, separators=(",", ":"), default=str
+            )
+            yield {
+                "type": TOOL_CALL_RESULT,
+                "messageId": f"tool-result-{tool_call_id}",
+                "toolCallId": tool_call_id,
+                "content": content,
+                "role": "tool",
+                "timestamp": timestamp,
+                "metadata": {
+                    "uml-mcp": {
+                        "durationMs": event.get("duration_ms"),
+                    }
+                },
+            }
+            continue
+
+        if event_type == STEP_FINISHED:
+            yield {
+                "type": STEP_FINISHED,
+                "stepName": "Render diagram",
+                "timestamp": timestamp,
+            }
+            continue
+
+        if event_type == CUSTOM:
+            value = dict(event.get("payload") or {})
+            value["cacheHit"] = bool(event.get("cache_hit"))
+            yield {
+                "type": CUSTOM,
+                "name": "uml.diagram",
+                "value": value,
+                "timestamp": timestamp,
+            }
+            continue
+
+        if event_type == RUN_FINISHED:
+            yield {
+                "type": RUN_FINISHED,
+                "threadId": thread_id,
+                "runId": resolved_run_id,
+                "result": event.get("output"),
+                "outcome": event.get("outcome") or {"type": "success"},
+                "timestamp": timestamp,
+                "metadata": {
+                    "uml-mcp": {
+                        "durationMs": event.get("duration_ms"),
+                    }
+                },
+            }
+            continue
+
+        if event_type == RUN_ERROR:
+            error = event.get("error") or {}
+            out = {
+                "type": RUN_ERROR,
+                "message": str(error.get("message") or "Diagram render failed"),
+                "timestamp": timestamp,
+            }
+            if error.get("code"):
+                out["code"] = str(error["code"])
+            yield out
+            continue
+
+
 def sse_frame(event: dict[str, Any]) -> str:
     """Serialize an AG-UI event as a single SSE ``data:`` frame."""
     import json
@@ -241,8 +388,11 @@ __all__ = [
     "STATE_SNAPSHOT",
     "STEP_FINISHED",
     "STEP_STARTED",
+    "TOOL_CALL_ARGS",
+    "TOOL_CALL_END",
     "TOOL_CALL_RESULT",
     "TOOL_CALL_START",
+    "canonical_diagram_generation_events",
     "diagram_generation_events",
     "new_run_id",
     "sse_frame",

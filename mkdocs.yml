@@ -124,6 +124,7 @@ nav:
       - OpenAI Codex: integrations/openai_codex.md
       - Ollama / Open WebUI: integrations/ollama.md
       - Frontend (AG-UI): integrations/frontend.md
+      - OpenUI generative UI: integrations/openui.md
       - OI OS (community): integrations/oi_os.md
       - Fallback strategy: fallback-mechanism.md
   - Enterprise:
