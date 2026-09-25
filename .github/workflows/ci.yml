@@ -134,7 +134,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Helm
-        uses: azure/setup-helm@v5.0.0
+        uses: azure/setup-helm@v5.0.1
 
       - name: Lint and render the chart (none / jwt / entra-proxy)
         run: |
