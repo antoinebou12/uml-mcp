@@ -123,5 +123,6 @@ dev = [
 ]
 # Browser e2e (tests/test_e2e_playwright.py); skipped when no browser is available.
 e2e = [
+    "axe-playwright-python>=0.1.4",
     "playwright>=1.55.0,<2",
 ]

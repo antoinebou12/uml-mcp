@@ -11,7 +11,8 @@ import type { LogRecord } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const LEVEL_COLOR: Record<string, string> = {
-  DEBUG: "text-muted-foreground", INFO: "text-chart-2", WARNING: "text-warning", ERROR: "text-destructive", CRITICAL: "text-destructive",
+  // The log view is always dark: fixed high-contrast colours (>= 4.5:1 on zinc-950).
+  DEBUG: "text-zinc-400", INFO: "text-sky-400", WARNING: "text-amber-300", ERROR: "text-red-400", CRITICAL: "text-red-400",
 };
 
 export default function Logs() {
@@ -80,13 +81,21 @@ export default function Logs() {
       </div>
       {error && <ErrorState error={error} />}
       <Card className="overflow-hidden">
-        <div ref={box} className="h-[60vh] overflow-auto bg-zinc-950 p-3 font-mono text-xs leading-relaxed text-zinc-100" data-testid="log-view">
-          {records.length === 0 && <div className="text-zinc-500">Waiting for log lines…</div>}
+        <div
+          ref={box}
+          role="log"
+          aria-live="polite"
+          aria-label="Server log"
+          tabIndex={0}
+          className="h-[60vh] overflow-auto bg-zinc-950 p-3 font-mono text-xs leading-relaxed text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          data-testid="log-view"
+        >
+          {records.length === 0 && <div className="text-zinc-400">Waiting for log lines…</div>}
           {records.map((r) => (
             <div key={r.seq} className="whitespace-pre-wrap break-all animate-in fade-in-0 duration-300">
-              <span className="text-zinc-500">{r.timestamp.slice(11, 23)} </span>
+              <span className="text-zinc-400">{r.timestamp.slice(11, 23)} </span>
               <span className={cn("font-semibold", LEVEL_COLOR[r.level])}>{r.level.padEnd(7)}</span>
-              <span className="text-zinc-400"> {r.logger} </span>
+              <span className="text-zinc-300"> {r.logger} </span>
               {r.message}
             </div>
           ))}
