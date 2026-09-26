@@ -48,6 +48,9 @@ services:
     environment:
       - KROKI_BLOCKDIAG_HOST=blockdiag
       - KROKI_MERMAID_HOST=mermaid
+      # Used only when the `kroki-extra` profile runs these companions.
+      - KROKI_BPMN_HOST=bpmn
+      - KROKI_EXCALIDRAW_HOST=excalidraw
     restart: unless-stopped
 
   mermaid:
@@ -56,6 +59,21 @@ services:
 
   blockdiag:
     image: yuzutech/kroki-blockdiag
+    restart: unless-stopped
+
+  # Opt-in: `docker compose --profile kroki-extra up -d` adds the BPMN and
+  # Excalidraw renderers, so every catalog type renders locally (the real-Kroki
+  # tests use this stack: UML_MCP_TEST_KROKI_URL=http://127.0.0.1:8001).
+  bpmn:
+    image: yuzutech/kroki-bpmn
+    profiles:
+      - kroki-extra
+    restart: unless-stopped
+
+  excalidraw:
+    image: yuzutech/kroki-excalidraw
+    profiles:
+      - kroki-extra
     restart: unless-stopped
 
   # Opt-in only: `docker compose --profile plantuml up -d`.

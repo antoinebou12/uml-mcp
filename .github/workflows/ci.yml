@@ -54,7 +54,7 @@ jobs:
         env:
           UML_MCP_CONFIG: none
           USE_REAL_FASTMCP: "1"
-        run: uv run uml-mcp lint --strict --min-grade A --token-budget 5500
+        run: uv run uml-mcp lint --strict --min-grade A --min-score 100 --token-budget 5500
 
       - name: Validate Cursor MCP config
         run: |
@@ -70,6 +70,33 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.12", "3.14"]
+    # A real Kroki (plus companions) so the agent, smoke and catalog tests check
+    # actual renders, not only the in-test fake (tests/fixtures_real.py).
+    services:
+      kroki:
+        image: yuzutech/kroki
+        ports: ["8001:8000"]
+        env:
+          KROKI_MERMAID_HOST: mermaid
+          KROKI_BLOCKDIAG_HOST: blockdiag
+          KROKI_BPMN_HOST: bpmn
+          KROKI_EXCALIDRAW_HOST: excalidraw
+      # --workdir: the companions start with a relative path; act would
+      # otherwise run them from the job workspace.
+      mermaid:
+        image: yuzutech/kroki-mermaid
+        options: --workdir /usr/local/kroki
+      blockdiag:
+        image: yuzutech/kroki-blockdiag
+        options: --workdir /usr/local/kroki
+      bpmn:
+        image: yuzutech/kroki-bpmn
+        options: --workdir /usr/local/kroki
+      excalidraw:
+        image: yuzutech/kroki-excalidraw
+        options: --workdir /usr/local/kroki
+    env:
+      UML_MCP_TEST_KROKI_URL: http://127.0.0.1:8001
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -86,9 +113,23 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-groups
 
+      # Tools some tests need; without them those tests skip (e.g. under `act`,
+      # where get.helm.sh and the Playwright CDN may be unreachable).
+      - name: Install Helm (chart render tests)
+        if: ${{ !env.ACT }}
+        uses: azure/setup-helm@v5.0.1
+
+      - name: Install Chromium (Playwright e2e tests)
+        if: ${{ !env.ACT }}
+        run: uv run playwright install --with-deps chromium
+
+      # /health covers Kroki only; the companions (Chromium-based) start later.
+      - name: Wait for Kroki and its companions
+        run: uv run python scripts/wait_for_kroki.py "$UML_MCP_TEST_KROKI_URL" --timeout 240
+
       - name: Run tests
         run: |
-          uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html --cov-fail-under=82
+          uv run pytest -m "not public_kroki" --cov=mcp_core --cov=tools --cov-report=term --cov-report=html --cov-fail-under=82 -rs
 
       - name: Build documentation
         run: uv run mkdocs build --strict
@@ -122,11 +163,38 @@ jobs:
           PY
 
       - name: Upload coverage reports
+        if: ${{ !env.ACT }}  # act has no compatible artifact server
         uses: actions/upload-artifact@v7
         with:
           name: coverage-report-${{ matrix.python-version }}
           path: htmlcov/
           retention-days: 14
+
+  # The same agent / smoke / catalog tests through the public https://kroki.io.
+  # A kroki.io outage must not block merges, so this job is informational.
+  public-kroki:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: "latest"
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Real journeys through kroki.io
+        env:
+          UML_MCP_TEST_PUBLIC_KROKI: "1"
+        run: |
+          uv run pytest -m public_kroki --no-cov -rs \
+            tests/test_real_journeys.py tests/test_chatgpt_mcp_smoke_prompt.py
 
   helm:
     runs-on: ubuntu-latest

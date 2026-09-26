@@ -120,3 +120,12 @@ def test_plantuml_server_default_resolves_to_the_compose_service(
 
     assert host in services
     assert host == "plantuml-server"
+
+
+def test_extra_kroki_companions_are_opt_in(services: dict) -> None:
+    for name in ("bpmn", "excalidraw"):
+        assert services[name]["profiles"] == ["kroki-extra"]
+        assert services[name]["image"] == f"yuzutech/kroki-{name}"
+    environment = _environment(services["kroki"])
+    assert environment["KROKI_BPMN_HOST"] == "bpmn"
+    assert environment["KROKI_EXCALIDRAW_HOST"] == "excalidraw"

@@ -112,11 +112,17 @@ def cmd_lint(args: argparse.Namespace) -> int:
     import asyncio
 
     from ..quality.lint import exit_code, run_lint
-    from ..quality.wire import GRADES, fetch_surface, lint_surface
+    from ..quality.wire import GRADES, fetch_surface, lint_surface, parse_ignore
 
     token = os.environ.get("MCP_LINT_TOKEN") or None
     try:
-        report = lint_surface(asyncio.run(fetch_surface(args.url, token)))
+        surface = asyncio.run(fetch_surface(args.url, token))
+        for spec in args.ignore or []:
+            target, rule = parse_ignore(spec)
+            surface.ignores.setdefault(target, {})[rule] = (
+                "--ignore on the command line"
+            )
+        report = lint_surface(surface)
     except Exception as exc:  # noqa: BLE001 - unreachable server
         print(f"unreachable: {exc}", file=sys.stderr)
         return 2
@@ -127,6 +133,8 @@ def cmd_lint(args: argparse.Namespace) -> int:
     order = [g for g, _ in GRADES]
     if args.min_grade and order.index(report.grade) > order.index(args.min_grade):
         failures.append(f"grade {report.grade} below {args.min_grade}")
+    if args.min_score is not None and report.score < args.min_score:
+        failures.append(f"score {report.score} below {args.min_score}")
     if args.token_budget and report.token_estimate > args.token_budget:
         failures.append(
             f"~{report.token_estimate} tokens over budget {args.token_budget}"
@@ -152,6 +160,8 @@ def cmd_lint(args: argparse.Namespace) -> int:
         print(
             f"{counts['error']} error(s), {counts['warning']} warning(s), {counts['info']} info"
         )
+        for sup in report.suppressed:
+            print(f"suppressed {sup['code']} {sup['target']}: {sup['reason']}")
         if failures:
             print("FAIL: " + "; ".join(failures))
     return 1 if failures else 0
@@ -198,8 +208,15 @@ def build_parser() -> argparse.ArgumentParser:
     lint.add_argument("--fail-on", choices=("errors", "warnings"), default="errors")
     lint.add_argument("--min-grade", choices=("A", "B", "C", "D", "F"))
     lint.add_argument("--token-budget", type=int, help="fail above N estimated tokens")
+    lint.add_argument("--min-score", type=int, help="fail below this score (0-100)")
     lint.add_argument("--format", choices=("text", "json"), default="text")
     lint.add_argument("--quiet", action="store_true", help="exit code only")
+    lint.add_argument(
+        "--ignore",
+        action="append",
+        metavar="RULE[@TARGET]",
+        help="suppress a rule (reported as suppressed), e.g. tool-no-required@tool:list",
+    )
     client = sub.add_parser(
         "client", help="register the local stdio server in an MCP client"
     )

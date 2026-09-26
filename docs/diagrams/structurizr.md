@@ -23,7 +23,12 @@ workspace {
     user -> api "HTTPS"
     api -> mcp "HTTP /mcp"
   }
-  views { systemContext system { include * } }
+  views {
+    systemContext system {
+      include *
+      autolayout lr
+    }
+  }
 }
 ```
 

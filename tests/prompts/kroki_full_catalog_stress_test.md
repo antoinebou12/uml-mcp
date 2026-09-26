@@ -651,11 +651,12 @@ digraph G {
 [Person]
 *name
 height
---
+
 [Order]
 *id
 date
-Person *-- Order
+
+Person 1--* Order
 
 13. blockdiag
 blockdiag {
@@ -855,7 +856,14 @@ workspace "UML MCP" "Tool-only smoke test" {
    \__________/      \________/
 
 32. symbolator
-(symbol "RES" (pin_names (line (pin "1") (pin "2"))))
+module counter (
+  //# {{clocks|Clocking}}
+  input wire clk,
+  input wire rst,
+  //# {{data|Data}}
+  output reg [7:0] count
+);
+endmodule
 
 33. tikz
 \documentclass[border=2pt]{standalone}

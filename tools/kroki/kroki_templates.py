@@ -412,7 +412,14 @@ box "Database" fit""",
   |   World   |
    \\________/""",
             # Symbolator example (minimal netlist)
-            "symbolator": """(symbol "RES" (pin_names (line (pin "1") (pin "2"))))""",
+            "symbolator": """module counter (
+  //# {{clocks|Clocking}}
+  input wire clk,
+  input wire rst,
+  //# {{data|Data}}
+  output reg [7:0] count
+);
+endmodule""",
             # TikZ example (flowchart + graph + geometry)
             "tikz": """\\documentclass[border=2pt]{standalone}
 \\usepackage{tikz}
@@ -452,26 +459,33 @@ box "Database" fit""",
   { "name": "data", "wave": "x.345.", "data": ["head", "body", "tail"] }
 ]}""",
             # WireViz example (YAML)
-            "wireviz": """connector: J1
-  pin: 1: GND
-  pin: 2: VCC
-  pin: 3: SDA
-  pin: 4: SCL
-cable: C1
-  gauge: 28
-  length: 0.5
-  color: black
-  connector: [J1, J1]""",
+            "wireviz": """connectors:
+  J1:
+    pinlabels: [GND, VCC, SDA, SCL]
+  J2:
+    pinlabels: [GND, VCC, SDA, SCL]
+cables:
+  C1:
+    wirecount: 4
+    gauge: 0.25 mm2
+    length: 0.5
+    colors: [BK, RD, YE, GN]
+connections:
+  -
+    - J1: [1-4]
+    - C1: [1-4]
+    - J2: [1-4]""",
             # ERD example
             "erd": """[Person]
 *name
 height
 weight
---
+
 [Order]
 *id
 date
-Person *-- Order""",
+
+Person 1--* Order""",
             # BPMN example (minimal XML)
             "bpmn": """<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
@@ -676,11 +690,12 @@ System -> User: Response""",
 *name
 height
 weight
---
+
 [Order]
 *id
 date
-Person *-- Order""",
+
+Person 1--* Order""",
             # BPMN example (minimal XML)
             "bpmn": """<?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
@@ -730,8 +745,8 @@ Rel(user, system, "Uses")""",
 (defn draw-packet-header
   []
   (draw-column-headers)
-  (draw-box 0 0 8)
-  (draw-box 0 1 8)
+  (draw-box "Version" {:span 8})
+  (draw-box "Flags" {:span 8})
   (draw-gap "Payload")
   (draw-bottom))
 
@@ -822,7 +837,10 @@ box "B" fit""",
         user -> system "Uses"
     }
     views {
-        systemContext system "Context" { include * }
+        systemContext system "Context" {
+            include *
+            autolayout lr
+        }
     }
 }""",
             # Svgbob template
@@ -833,7 +851,14 @@ box "B" fit""",
     v
   +---+""",
             # Symbolator template
-            "symbolator": """(symbol "RES" (pin_names (line (pin "1") (pin "2"))))""",
+            "symbolator": """module counter (
+  //# {{clocks|Clocking}}
+  input wire clk,
+  input wire rst,
+  //# {{data|Data}}
+  output reg [7:0] count
+);
+endmodule""",
             # TikZ template (flowchart starter with positioning)
             "tikz": """\\documentclass[border=2pt]{standalone}
 \\usepackage{tikz}
@@ -859,14 +884,22 @@ box "B" fit""",
   { "name": "sig", "wave": "01.0." }
 ]}""",
             # WireViz template
-            "wireviz": """connector: P1
-  pin: 1: GND
-  pin: 2: VCC
-cable: C1
-  gauge: 24
-  length: 1
-  color: red
-  connector: [P1, P1]""",
+            "wireviz": """connectors:
+  P1:
+    pinlabels: [GND, VCC]
+  P2:
+    pinlabels: [GND, VCC]
+cables:
+  C1:
+    wirecount: 2
+    gauge: 0.5 mm2
+    length: 1
+    colors: [BK, RD]
+connections:
+  -
+    - P1: [1-2]
+    - C1: [1-2]
+    - P2: [1-2]""",
         }
 
         # Try to get a specific template, fall back to a generic one

@@ -64,7 +64,7 @@ Set `cwd` to your clone. Env reference: [Configuration](../configuration.md).
 
 ## Showing diagrams in chat
 
-Prefer **`generate_uml_image`** (`png`) when you want inline image content. Tool text also includes markdown `![diagram](url)`, **URL**, and **Playground**. Same guidance as [Cursor chat rendering](cursor.md#showing-diagrams-in-chat-cursor--copilot--claude).
+Prefer **`generate_uml_image`** (`png`) when you want inline image content. Tool text also includes markdown `![diagram](url)`, **URL**, and **Playground**. Same guidance as [Cursor chat rendering](cursor.md#showing-diagrams-in-chat).
 
 ## Test the integration
 
