@@ -84,6 +84,7 @@ uv sync --all-groups
 uv run pytest tests/test_real_journeys.py -v
 # plus a real local Kroki (all 37 types with the kroki-extra companions)
 docker compose --profile kroki-extra up -d kroki mermaid blockdiag bpmn excalidraw
+uv run python scripts/wait_for_kroki.py http://127.0.0.1:8001   # companions start later than /health
 UML_MCP_TEST_KROKI_URL=http://127.0.0.1:8001 uv run pytest -m "not public_kroki" \
   tests/test_real_journeys.py tests/test_chatgpt_mcp_smoke_prompt.py
 # plus the public kroki.io (needs internet)

@@ -81,14 +81,20 @@ jobs:
           KROKI_BLOCKDIAG_HOST: blockdiag
           KROKI_BPMN_HOST: bpmn
           KROKI_EXCALIDRAW_HOST: excalidraw
+      # --workdir: the companions start with a relative path; act would
+      # otherwise run them from the job workspace.
       mermaid:
         image: yuzutech/kroki-mermaid
+        options: --workdir /usr/local/kroki
       blockdiag:
         image: yuzutech/kroki-blockdiag
+        options: --workdir /usr/local/kroki
       bpmn:
         image: yuzutech/kroki-bpmn
+        options: --workdir /usr/local/kroki
       excalidraw:
         image: yuzutech/kroki-excalidraw
+        options: --workdir /usr/local/kroki
     env:
       UML_MCP_TEST_KROKI_URL: http://127.0.0.1:8001
     steps:
@@ -117,13 +123,9 @@ jobs:
         if: ${{ !env.ACT }}
         run: uv run playwright install --with-deps chromium
 
-      - name: Wait for Kroki
-        run: |
-          for i in $(seq 1 60); do
-            curl -fsS "$UML_MCP_TEST_KROKI_URL/health" >/dev/null && exit 0
-            sleep 2
-          done
-          echo "Kroki did not become healthy"; exit 1
+      # /health covers Kroki only; the companions (Chromium-based) start later.
+      - name: Wait for Kroki and its companions
+        run: uv run python scripts/wait_for_kroki.py "$UML_MCP_TEST_KROKI_URL" --timeout 240
 
       - name: Run tests
         run: |
