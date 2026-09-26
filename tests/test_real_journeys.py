@@ -3,7 +3,9 @@
 * **Agent use:** a real MCP client (Streamable HTTP) behaves like an LLM agent,
   using ``initialize`` instructions, the catalog, resources, prompts, validation
   with self-correction, rendering, inline images, batches and error recovery.
-  Rendering goes over real HTTP to a local **fake Kroki**, so no internet is needed.
+  It runs against every Kroki tier (see ``tests/fixtures_real.py``): the in-test
+  fake, a real local Kroki (Docker) and the public https://kroki.io, and checks
+  that what comes back is a correct diagram (SVG labels, decodable PNG).
 * **Computer use:** Chromium drives the console like a person: getting started from
   an empty configuration, the setup wizard, then seeing the agent's calls in Activity,
   Metrics and Quality, with an accessibility (axe) scan of every page.
@@ -11,204 +13,26 @@
 
 from __future__ import annotations
 
-import asyncio
 import base64
 import os
-import socket
-import subprocess
-import sys
-import threading
-import time
 from pathlib import Path
-from typing import Any, Self
+from typing import Any
 
-import httpx
 import pytest
 import yaml
 
-ROOT = Path(__file__).resolve().parents[1]
-LOCAL = httpx.Client(trust_env=False, timeout=15)
-TOKEN = "journey-token"
-PNG_1X1 = base64.b64decode(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg=="
-)
+from mcp_core.quality.render_check import check_png, check_svg
+from tests.fixtures_real import LOCAL, ROOT, TOKEN, run_in_thread
 
+pytestmark = pytest.mark.usefixtures("loopback_bypasses_proxy")
 
-def _free_port() -> int:
-    with socket.socket() as sock:
-        sock.bind(("127.0.0.1", 0))
-        return sock.getsockname()[1]
-
-
-# ------------------------------------------------------------------ fake Kroki
-class FakeKroki:
-    """Minimal Kroki: POST /{type}/{format} and GET /{type}/{format}/{encoded}."""
-
-    def __init__(self) -> None:
-        from starlette.applications import Starlette
-        from starlette.requests import Request
-        from starlette.responses import Response
-        from starlette.routing import Route
-
-        self.requests: list[tuple[str, str, str]] = []
-
-        def respond(dtype: str, fmt: str, body: str) -> Response:
-            self.requests.append((dtype, fmt, body))
-            if "SYNTAX_ERROR" in body:
-                return Response("Error 400: syntax error in diagram", status_code=400)
-            if fmt == "png":
-                return Response(PNG_1X1, media_type="image/png")
-            svg = f'<svg xmlns="http://www.w3.org/2000/svg"><text>{dtype}</text></svg>'
-            return Response(svg, media_type="image/svg+xml")
-
-        async def post(request: Request) -> Response:
-            p = request.path_params
-            return respond(p["dtype"], p["fmt"], (await request.body()).decode())
-
-        async def get(request: Request) -> Response:
-            p = request.path_params
-            return respond(p["dtype"], p["fmt"], p["encoded"])
-
-        app = Starlette(
-            routes=[
-                Route("/{dtype}/{fmt}", post, methods=["POST"]),
-                Route("/{dtype}/{fmt}/{encoded:path}", get, methods=["GET"]),
-            ]
-        )
-        import uvicorn
-
-        self.port = _free_port()
-        self.url = f"http://127.0.0.1:{self.port}"
-        self.server = uvicorn.Server(
-            uvicorn.Config(app, host="127.0.0.1", port=self.port, log_level="warning")
-        )
-        self.thread = threading.Thread(target=self.server.run, daemon=True)
-
-    def __enter__(self) -> Self:
-        self.thread.start()
-        for _ in range(100):
-            if self.server.started:
-                return self
-            time.sleep(0.05)
-        raise RuntimeError("fake Kroki did not start")
-
-    def __exit__(self, *exc: object) -> None:
-        self.server.should_exit = True
-        self.thread.join(timeout=5)
-
-
-# ---------------------------------------------------------------- real server
-@pytest.fixture(scope="module", autouse=True)
-def loopback_bypasses_proxy():
-    """The MCP client honours HTTP(S)_PROXY; loopback must never go through it."""
-    saved = {k: os.environ.get(k) for k in ("NO_PROXY", "no_proxy")}
-    for key in saved:
-        current = [v for v in (os.environ.get(key) or "").split(",") if v]
-        os.environ[key] = ",".join([*current, "127.0.0.1", "localhost"])
-    yield
-    for key, value in saved.items():
-        if value is None:
-            os.environ.pop(key, None)
-        else:
-            os.environ[key] = value
-
-
-@pytest.fixture(scope="module")
-def kroki():
-    with FakeKroki() as fake:
-        yield fake
-
-
-@pytest.fixture(scope="module")
-def stack(tmp_path_factory, kroki):
-    """app.py (real FastMCP) wired to the fake Kroki; empty config (first run)."""
-    tmp = tmp_path_factory.mktemp("journey")
-    cfg = tmp / "uml-mcp.yaml"
-    cfg.write_text(
-        "admin: {allow_local_without_auth: true}\n"
-        "audit: {enabled: true, sinks: [memory]}\n",
-        encoding="utf-8",
-    )
-    port = _free_port()
-    env = {
-        k: v
-        for k, v in os.environ.items()
-        if not k.startswith(
-            (
-                "MCP_AUTH",
-                "KROKI",
-                "HTTP_PROXY",
-                "HTTPS_PROXY",
-                "http_proxy",
-                "https_proxy",
-            )
-        )
-    }
-    env.update(
-        {
-            "UML_MCP_CONFIG": str(cfg),
-            "USE_REAL_FASTMCP": "1",
-            "MOCK_FASTMCP": "",
-            "UML_MCP_ADMIN_TOKEN": TOKEN,
-            "KROKI_SERVER": kroki.url,
-            "MCP_DIAGRAM_FALLBACK": "false",
-            "MCP_MEMORY_ONLY": "true",
-            "NO_PROXY": "127.0.0.1,localhost",
-            "HOME": str(tmp / "home"),
-            "XDG_CONFIG_HOME": str(tmp / "xdg"),
-        }
-    )
-    log = (tmp / "server.log").open("wb")
-    proc = subprocess.Popen(
-        [
-            sys.executable,
-            "-m",
-            "uvicorn",
-            "app:app",
-            "--host",
-            "127.0.0.1",
-            "--port",
-            str(port),
-        ],
-        cwd=ROOT,
-        env=env,
-        stdout=log,
-        stderr=subprocess.STDOUT,
-    )
-    base = f"http://127.0.0.1:{port}"
-    for _ in range(80):
-        try:
-            if LOCAL.get(f"{base}/health").status_code == 200:
-                break
-        except httpx.HTTPError:
-            pass
-        time.sleep(0.25)
-    else:
-        proc.kill()
-        pytest.fail("server did not start: " + (tmp / "server.log").read_text()[-3000:])
-    yield {"base": base, "cfg": cfg, "log": tmp / "server.log"}
-    proc.terminate()
-    proc.wait(timeout=10)
+SEQUENCE = "sequenceDiagram\n  Alice->>Bob: hi\n  Bob-->>Alice: ok"
+CLASSES = "@startuml\nclass Order\nclass Customer\nCustomer --> Order\n@enduml"
+BROKEN = "digraph { a -> SYNTAX_ERROR -> }"  # Kroki answers HTTP 400
 
 
 def run_agent(base: str) -> dict[str, Any]:
-    """Run the agent session in its own thread (Playwright's sync API owns a loop)."""
-    out: dict[str, Any] = {}
-    errors: list[BaseException] = []
-
-    def target() -> None:
-        try:
-            out.update(asyncio.run(_agent_session(base)))
-        except BaseException as exc:  # noqa: BLE001 - re-raised in the test thread
-            errors.append(exc)
-
-    worker = threading.Thread(target=target)
-    worker.start()
-    worker.join(timeout=120)
-    if errors:
-        raise errors[0]
-    assert out, "agent session did not finish"
-    return out
+    return run_in_thread(lambda: _agent_session(base))
 
 
 def _text(result: Any) -> str:
@@ -220,7 +44,7 @@ async def _agent_session(base: str) -> dict[str, Any]:
     from fastmcp import Client
 
     seen: dict[str, Any] = {}
-    async with Client(f"{base}/mcp") as client:
+    async with Client(f"{base}/mcp", timeout=120) as client:
         # 1. read the server's instructions and discover capabilities
         seen["instructions"] = client.instructions or ""
         tools = {t.name: t for t in await client.list_tools()}
@@ -239,9 +63,7 @@ async def _agent_session(base: str) -> dict[str, Any]:
             "validate_uml", {"diagram_type": "mermaid", "code": packed, "strict": True}
         )
         seen["first_validation"] = first.structured_content
-        fixed = (first.structured_content or {}).get("corrected_code") or (
-            "sequenceDiagram\n  Alice->>Bob: hi\n  Bob-->>Alice: ok"
-        )
+        fixed = (first.structured_content or {}).get("corrected_code") or SEQUENCE
         second = await client.call_tool(
             "validate_uml", {"diagram_type": "mermaid", "code": fixed, "strict": True}
         )
@@ -255,20 +77,20 @@ async def _agent_session(base: str) -> dict[str, Any]:
         seen["render_text"] = _text(rendered)
         # 6. inline chat image
         image = await client.call_tool(
-            "generate_uml_image",
-            {
-                "diagram_type": "class",
-                "code": "@startuml\nclass A\nclass B\nA --> B\n@enduml",
-            },
+            "generate_uml_image", {"diagram_type": "class", "code": CLASSES}
         )
         seen["image_types"] = [c.type for c in image.content]
+        seen["image_png"] = [
+            base64.b64decode(c.data) for c in image.content if c.type == "image"
+        ]
         # 7. batch
         batch = await client.call_tool(
             "generate_uml_batch",
             {
                 "items": [
-                    {"diagram_type": "mermaid", "code": "graph TD; A-->B"},
-                    {"diagram_type": "d2", "code": "a -> b"},
+                    {"diagram_type": "mermaid", "code": "graph TD; Start-->Finish"},
+                    {"diagram_type": "d2", "code": "gateway -> backend"},
+                    {"diagram_type": "class", "code": CLASSES},
                 ]
             },
         )
@@ -276,7 +98,7 @@ async def _agent_session(base: str) -> dict[str, Any]:
         # 8. recover from a renderer error
         broken = await client.call_tool(
             "generate_uml",
-            {"diagram_type": "mermaid", "code": "graph TD; SYNTAX_ERROR"},
+            {"diagram_type": "graphviz", "code": BROKEN},
             raise_on_error=False,
         )
         seen["error_is_error"] = broken.is_error
@@ -284,8 +106,14 @@ async def _agent_session(base: str) -> dict[str, Any]:
     return seen
 
 
-def test_agent_uses_the_server_end_to_end(stack, kroki):
-    seen = run_agent(stack["base"])
+def _svg(result: dict[str, Any]) -> bytes:
+    return base64.b64decode(result["content_base64"])
+
+
+def test_agent_uses_the_server_end_to_end(tier_stack):
+    """The whole agent workflow, rendered by the fake, local or public Kroki."""
+    tier = tier_stack["tier"]
+    seen = run_agent(tier_stack["base"])
     assert (
         "validate_uml" in seen["instructions"]
         and "generate_uml" in seen["instructions"]
@@ -301,27 +129,101 @@ def test_agent_uses_the_server_end_to_end(stack, kroki):
     assert seen["workflow"] and seen["prompts"]
     assert seen["first_validation"]["valid"] is False  # packed sequence is rejected
     assert seen["second_validation"]["valid"] is True  # the agent fixed it
+
+    # rendering is correct, not just "some bytes came back"
     render = seen["render"]
-    assert render["url"].startswith(kroki.url) and render["source"] == "kroki"
-    assert base64.b64decode(render["content_base64"]).startswith(b"<svg")
+    assert render["url"].startswith(tier.url) and render["source"] == "kroki"
+    assert render["playground"]  # mermaid.live link for the chat
+    check_svg(_svg(render), ("Alice", "Bob"))
     assert "![" in seen["render_text"]  # markdown image for the chat
     assert "image" in seen["image_types"]  # inline PNG for chat UIs
-    assert len(seen["batch"]["results"]) == 2
+    width, height = check_png(seen["image_png"][0])
+    assert width * height > 20 * 20
+    results = seen["batch"]["results"]
+    assert [bool(r.get("url")) and not r.get("error") for r in results] == [True] * 3
+    check_svg(_svg(results[0]), ("Start", "Finish"))
+    check_svg(_svg(results[1]), ("gateway", "backend"))
+    check_svg(_svg(results[2]), ("Order", "Customer"))
     assert seen["error_is_error"] and "syntax error" in seen["error_text"].lower()
-    rendered_types = {r[0] for r in kroki.requests}
-    assert {"mermaid", "plantuml", "d2"} <= rendered_types
+
+    if tier.fake is not None:
+        assert {"mermaid", "plantuml", "d2", "graphviz"} <= {
+            r[0] for r in tier.fake.requests
+        }
     # the operator sees exactly these calls in the audit trail
-    audit = LOCAL.get(f"{stack['base']}/admin/api/audit?limit=100").json()["records"]
-    names = [r["operation_name"] for r in audit]
+    audit = LOCAL.get(f"{tier_stack['base']}/admin/api/audit?limit=100").json()
+    names = [r["operation_name"] for r in audit["records"]]
     assert names.count("validate_uml") >= 2 and "generate_uml_batch" in names
     assert any(
         r["operation_status"] == "error"
-        for r in audit
+        for r in audit["records"]
         if r["operation_name"] == "generate_uml"
     )
-    for r in audit:  # diagram code is summarized (hash + length + preview), never raw
+    for r in audit["records"]:  # diagram code is summarized, never raw
         code = (r["input_data"] or {}).get("code")
         assert code is None or {"sha256", "chars", "preview"} <= set(code), r
+
+
+async def _render_all(base: str, sources: dict[str, tuple[str, str]]) -> dict:
+    """Render ``{name: (diagram_type, code)}`` as SVG through generate_uml_batch."""
+    from fastmcp import Client
+
+    names = list(sources)
+    out: dict[str, Any] = {}
+    async with Client(f"{base}/mcp", timeout=180) as client:
+        for start in range(0, len(names), 20):  # MCP_BATCH_MAX_ITEMS
+            chunk = names[start : start + 20]
+            items = [
+                {"diagram_type": sources[n][0], "code": sources[n][1]} for n in chunk
+            ]
+            batch = await client.call_tool("generate_uml_batch", {"items": items})
+            for name, row in zip(chunk, batch.structured_content["results"]):
+                out[name] = row
+    return out
+
+
+def _render_problems(base: str, sources: dict[str, tuple[str, str]]) -> dict:
+    rows = run_in_thread(lambda: _render_all(base, sources))
+    assert len(rows) == len(sources)
+    problems: dict[str, str] = {}
+    for name, row in rows.items():
+        if row.get("error") or not row.get("content_base64"):
+            problems[name] = str(row.get("error") or "no content")[:160]
+            continue
+        try:
+            check_svg(_svg(row))
+        except ValueError as exc:
+            problems[name] = str(exc)[:160]
+    return problems
+
+
+def test_every_example_and_template_renders(tier_stack):
+    """What uml://examples and uml://templates teach agents must actually render."""
+    from mcp_core.core.config import MCP_SETTINGS
+    from tools.kroki.kroki_templates import DiagramExamples, DiagramTemplates
+
+    sources: dict[str, tuple[str, str]] = {}
+    for dtype in MCP_SETTINGS.diagram_types:
+        sources[f"example:{dtype}"] = (dtype, DiagramExamples.get_example(dtype))
+        sources[f"template:{dtype}"] = (dtype, DiagramTemplates.get_template(dtype))
+    assert _render_problems(tier_stack["base"], sources) == {}
+
+
+def test_every_diagram_in_the_docs_renders(tier_stack):
+    """Fenced diagrams in docs/ (```mermaid, ```d2, ...) are copy-paste ready."""
+    import re
+
+    from mcp_core.core.config import MCP_SETTINGS
+
+    fence = re.compile(r"^```([a-z0-9]+)[^\n]*\n(.*?)^```", re.DOTALL | re.MULTILINE)
+    sources: dict[str, tuple[str, str]] = {}
+    for path in sorted((ROOT / "docs").rglob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        for index, (lang, body) in enumerate(fence.findall(text)):
+            if lang in MCP_SETTINGS.diagram_types:
+                sources[f"{path.relative_to(ROOT)}#{index}"] = (lang, body)
+    assert len(sources) > 20
+    assert _render_problems(tier_stack["base"], sources) == {}
 
 
 def test_mcp_over_raw_http_like_any_client(stack):

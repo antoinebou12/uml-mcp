@@ -15,3 +15,4 @@
 | 2026-09 | Plugins via entry points, explicit allow-list, no override of built-in types | Extensible without forks; trusted code only loads when named in `plugins.enabled` |
 | 2026-09 | Lint exceptions are declared in code (`lint_ignore`) with a reason, reported but not scored | 100/100 stays honest: every deviation is visible and justified, never silently dropped |
 | 2026-09 | Real journey tests use a fake Kroki and a real MCP client/browser, not mocks | Catch wiring bugs (proxy, Accept, audit history, contrast) that unit tests miss, without network access |
+| 2026-09 | Real-Kroki tiers: local Kroki as CI service containers (blocking), public kroki.io in a separate non-blocking job | Renders are verified for real on every build; a public-service outage never blocks merges |

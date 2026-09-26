@@ -30,6 +30,8 @@ Release notes and tagged versions live on GitHub:
 - `uml-mcp setup` wizard (Typer + tqdm), `uml-mcp admin`, and `scripts/install.py` (Python + typer + tqdm only) ([installation](../installation.md)).
 - Plugins v1: extra MCP tools and diagram renderers via entry points ([plugins](../plugins/index.md)).
 - `uml-mcp lint` grades servers like `mcpx` (score, grade, token budget); optional OpenTelemetry tracing.
+- `uml-mcp lint` scores 100/100 with extended MCP rules (SEP-986 names, titles, hints, output schemas, server instructions) and documented exceptions (`lint_ignore`, `--ignore`).
+- Fixed `uml://examples` / `uml://templates` sources that real Kroki rejected (erd, symbolator, wireviz, bytefield, structurizr) and the Structurizr docs example. Every example, template and docs diagram is now rendered through a real Kroki in CI ([testing](../testing.md)).
 
 ## Versioning
 

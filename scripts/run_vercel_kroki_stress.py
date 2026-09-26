@@ -1,17 +1,32 @@
-"""Tool-only Kroki catalog stress harness against the live Vercel MCP HTTP API.
+"""Tool-only Kroki catalog stress harness against an MCP HTTP endpoint.
 
-Uses FastMCP streamable HTTP (initialize + tools/call) against
-https://uml-mcp.vercel.app/mcp and prints a compact Phase 4–6 report.
+Uses streamable HTTP (initialize + tools/call) against https://uml-mcp.vercel.app/mcp
+by default, or any server with ``--url`` (e.g. one backed by a local Kroki), and
+prints a compact Phase 4–6 report (see tests/prompts/kroki_full_catalog_stress_test.md):
+
+    uv run python scripts/run_vercel_kroki_stress.py
+    uv run python scripts/run_vercel_kroki_stress.py --url http://127.0.0.1:8000/mcp \\
+        --check-content --min-catalog 37 --json report.json
+
+Exit code 1 when a negative check fails, Phase 5 fails, or fewer than
+``--min-catalog`` catalog fixtures render.
 """
 
 from __future__ import annotations
 
+import argparse
+import base64
 import json
 import re
 import sys
+from pathlib import Path
 from typing import Any
 
 import httpx
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+from mcp_core.quality.render_check import RenderCheckError, check_svg
 
 MCP_URL = "https://uml-mcp.vercel.app/mcp"
 TIMEOUT = httpx.Timeout(connect=10.0, read=180.0, write=30.0, pool=10.0)
@@ -63,7 +78,7 @@ FIXTURES_1_20: list[dict[str, str]] = [
     },
     {
         "diagram_type": "erd",
-        "code": "[Person]\n*name\nheight\n--\n[Order]\n*id\ndate\nPerson *-- Order",
+        "code": "[Person]\n*name\nheight\n\n[Order]\n*id\ndate\n\nPerson 1--* Order",
     },
     {
         "diagram_type": "blockdiag",
@@ -190,7 +205,7 @@ FIXTURES_21_37: list[dict[str, str]] = [
     },
     {
         "diagram_type": "symbolator",
-        "code": '(symbol "RES" (pin_names (line (pin "1") (pin "2"))))',
+        "code": "module counter (\n  //# {{clocks|Clocking}}\n  input wire clk,\n  input wire rst,\n  //# {{data|Data}}\n  output reg [7:0] count\n);\nendmodule",
     },
     {
         "diagram_type": "tikz",
@@ -296,7 +311,8 @@ def _tool_result_text(rpc: dict[str, Any]) -> str:
 
 
 class McpClient:
-    def __init__(self) -> None:
+    def __init__(self, url: str = MCP_URL) -> None:
+        self.url = url
         self.client = httpx.Client(timeout=TIMEOUT, follow_redirects=True)
         self.headers = {
             "Content-Type": "application/json",
@@ -328,13 +344,13 @@ class McpClient:
                 "clientInfo": {"name": "vercel-kroki-stress", "version": "1.0"},
             },
         }
-        r = self.client.post(MCP_URL, json=payload, headers=self.headers)
+        r = self.client.post(self.url, json=payload, headers=self.headers)
         r.raise_for_status()
         sid = r.headers.get("mcp-session-id")
         if sid:
             self.headers["mcp-session-id"] = sid
         self.client.post(
-            MCP_URL,
+            self.url,
             json={"jsonrpc": "2.0", "method": "notifications/initialized"},
             headers=self.headers,
         )
@@ -348,16 +364,30 @@ class McpClient:
             "method": "tools/call",
             "params": {"name": name, "arguments": arguments},
         }
-        r = self.client.post(MCP_URL, json=payload, headers=self.headers)
+        r = self.client.post(self.url, json=payload, headers=self.headers)
         r.raise_for_status()
         rpc = _parse_sse_or_json(r.text)
         return rpc
 
 
-def _item_ok(row: Any) -> bool:
+def _content_problem(row: dict[str, Any]) -> str | None:
+    """None when an SVG row's content is a well-formed ``<svg>`` document."""
+    encoded = row.get("content_base64")
+    if not encoded:
+        return "no content_base64"
+    try:
+        check_svg(base64.b64decode(encoded))
+    except (RenderCheckError, ValueError) as exc:
+        return str(exc)
+    return None
+
+
+def _item_ok(row: Any, check_content: bool = False) -> bool:
     if not isinstance(row, dict):
         return False
     if row.get("error") or row.get("ok") is False:
+        return False
+    if check_content and _content_problem(row):
         return False
     return bool(
         row.get("url")
@@ -395,8 +425,33 @@ def _extract_batch_rows(rpc: dict[str, Any]) -> list[Any]:
     return [{"raw": text, "ok": "error" not in text.lower()}]
 
 
-def main() -> int:
-    mcp = McpClient()
+def _row_error(row: Any, check_content: bool) -> str:
+    if not isinstance(row, dict):
+        return "not an object"
+    err = str(row.get("error") or row.get("message") or "")
+    if not err and check_content:
+        err = _content_problem(row) or ""
+    return err[:100]
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
+    parser.add_argument("--url", default=MCP_URL, help=f"MCP endpoint ({MCP_URL})")
+    parser.add_argument(
+        "--check-content",
+        action="store_true",
+        help="require each rendered SVG to parse and show text (needs content_base64)",
+    )
+    parser.add_argument(
+        "--min-catalog",
+        type=int,
+        default=0,
+        help="fail when fewer catalog fixtures render (0 = report only)",
+    )
+    parser.add_argument("--json", metavar="PATH", help="write a JSON report here")
+    args = parser.parse_args(argv)
+    report: dict[str, Any] = {"url": args.url, "catalog": {}, "checks": {}}
+    mcp = McpClient(args.url)
     try:
         mcp.initialize()
         print("initialized session", mcp.headers.get("mcp-session-id", "")[:16])
@@ -405,28 +460,26 @@ def main() -> int:
         items1 = [{**f, "output_format": "svg", "scale": 1.0} for f in FIXTURES_1_20]
         rpc1 = mcp.call("generate_uml_batch", {"items": items1})
         rows1 = _extract_batch_rows(rpc1)
-        ok1 = sum(1 for r in rows1 if _item_ok(r))
+        ok1 = sum(1 for r in rows1 if _item_ok(r, args.check_content))
         print(f"batch1 rows={len(rows1)} ok={ok1}")
         for i, r in enumerate(rows1):
             typ = FIXTURES_1_20[i]["diagram_type"] if i < len(FIXTURES_1_20) else "?"
-            status = "OK" if _item_ok(r) else "FAIL"
-            err = ""
-            if isinstance(r, dict):
-                err = str(r.get("error") or r.get("message") or "")[:100]
+            status = "OK" if _item_ok(r, args.check_content) else "FAIL"
+            err = _row_error(r, args.check_content)
+            report["catalog"][typ] = status if not err else f"{status}: {err}"
             print(f"  {i + 1:02d} {typ:12s} {status} {err}")
 
         # Phase 4 batch 2
         items2 = [{**f, "output_format": "svg", "scale": 1.0} for f in FIXTURES_21_37]
         rpc2 = mcp.call("generate_uml_batch", {"items": items2})
         rows2 = _extract_batch_rows(rpc2)
-        ok2 = sum(1 for r in rows2 if _item_ok(r))
+        ok2 = sum(1 for r in rows2 if _item_ok(r, args.check_content))
         print(f"batch2 rows={len(rows2)} ok={ok2}")
         for i, r in enumerate(rows2):
             typ = FIXTURES_21_37[i]["diagram_type"] if i < len(FIXTURES_21_37) else "?"
-            status = "OK" if _item_ok(r) else "FAIL"
-            err = ""
-            if isinstance(r, dict):
-                err = str(r.get("error") or r.get("message") or "")[:100]
+            status = "OK" if _item_ok(r, args.check_content) else "FAIL"
+            err = _row_error(r, args.check_content)
+            report["catalog"][typ] = status if not err else f"{status}: {err}"
             print(f"  {i + 21:02d} {typ:12s} {status} {err}")
 
         # Phase 5
@@ -452,15 +505,12 @@ def main() -> int:
         t2 = _tool_result_text(a2)
         urls = []
         for t in (t1, t2):
-            m = re.search(r"https://[^\s\"']+", t)
+            m = re.search(r"https?://[^\s\"']+", t)
             urls.append(m.group(0) if m else None)
         print("phase5 urls", urls)
-        print(
-            "phase5",
-            "PASS"
-            if ("error" not in t1.lower() and "error" not in t2.lower())
-            else "FAIL",
-        )
+        phase5 = "error" not in t1.lower() and "error" not in t2.lower()
+        report["checks"]["phase5"] = phase5 and urls[0] == urls[1]
+        print("phase5", "PASS" if report["checks"]["phase5"] else "FAIL")
 
         # Phase 6 negatives
         n1 = mcp.call(
@@ -477,6 +527,7 @@ def main() -> int:
         # stricter: reject if clearly valid true
         if 'valid": true' in n1t or "valid: true" in n1t or "diagram is valid" in n1t:
             n1_pass = False
+        report["checks"]["neg1"] = n1_pass
         print("NEG1", "PASS" if n1_pass else "FAIL", _tool_result_text(n1)[:180])
 
         n2 = mcp.call(
@@ -489,11 +540,13 @@ def main() -> int:
         )
         n2t = _tool_result_text(n2).lower()
         n2_pass = "error" in n2t or "unsupported" in n2t or "unknown" in n2t
+        report["checks"]["neg2"] = n2_pass
         print("NEG2", "PASS" if n2_pass else "FAIL", _tool_result_text(n2)[:180])
 
         n3 = mcp.call("generate_uml_batch", {"items": []})
         n3t = _tool_result_text(n3).lower()
         n3_pass = "empty" in n3t or "error" in n3t or "must not" in n3t
+        report["checks"]["neg3"] = n3_pass
         print("NEG3", "PASS" if n3_pass else "FAIL", _tool_result_text(n3)[:180])
 
         n4 = mcp.call(
@@ -517,7 +570,8 @@ def main() -> int:
         )
         n4rows = _extract_batch_rows(n4)
         print("NEG4 rows", len(n4rows), json.dumps(n4rows)[:300])
-        # partial success expected: len(n4rows) >= 1
+        # partial success expected: the good item renders, the bad one errors
+        report["checks"]["neg4"] = len(n4rows) == 2 and _item_ok(n4rows[0])
         # health
         mcp.call("list_diagram_types", {})
         print("NEG4 health list_diagram_types OK")
@@ -525,7 +579,16 @@ def main() -> int:
         print("COUNTS", json.dumps(mcp.counts))
         catalog_ok = ok1 + ok2
         print(f"CATALOG_PASSED {catalog_ok}/37")
-        return 0
+        report["catalog_passed"] = catalog_ok
+        report["counts"] = mcp.counts
+        failed = [name for name, ok in report["checks"].items() if not ok]
+        if catalog_ok < args.min_catalog:
+            failed.append(f"catalog {catalog_ok}/37 < {args.min_catalog}")
+        report["failed"] = failed
+        if args.json:
+            Path(args.json).write_text(json.dumps(report, indent=2), encoding="utf-8")
+        print("STRESS_TEST:", "PASS" if not failed else "FAIL - " + ", ".join(failed))
+        return 1 if failed else 0
     finally:
         mcp.close()
 

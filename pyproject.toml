@@ -64,6 +64,9 @@ python_functions = "test_*"
 python_classes = "Test*"
 asyncio_mode = "auto"
 addopts = "--cov=mcp_core --cov=tools --cov-report=term --cov-report=html"
+markers = [
+    "public_kroki: renders through https://kroki.io (needs network; UML_MCP_TEST_PUBLIC_KROKI=1)",
+]
 
 [tool.ruff]
 target-version = "py312"

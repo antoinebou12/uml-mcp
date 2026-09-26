@@ -70,6 +70,27 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.12", "3.14"]
+    # A real Kroki (plus companions) so the agent, smoke and catalog tests check
+    # actual renders, not only the in-test fake (tests/fixtures_real.py).
+    services:
+      kroki:
+        image: yuzutech/kroki
+        ports: ["8001:8000"]
+        env:
+          KROKI_MERMAID_HOST: mermaid
+          KROKI_BLOCKDIAG_HOST: blockdiag
+          KROKI_BPMN_HOST: bpmn
+          KROKI_EXCALIDRAW_HOST: excalidraw
+      mermaid:
+        image: yuzutech/kroki-mermaid
+      blockdiag:
+        image: yuzutech/kroki-blockdiag
+      bpmn:
+        image: yuzutech/kroki-bpmn
+      excalidraw:
+        image: yuzutech/kroki-excalidraw
+    env:
+      UML_MCP_TEST_KROKI_URL: http://127.0.0.1:8001
     steps:
       - name: Checkout code
         uses: actions/checkout@v7
@@ -96,9 +117,17 @@ jobs:
         if: ${{ !env.ACT }}
         run: uv run playwright install --with-deps chromium
 
+      - name: Wait for Kroki
+        run: |
+          for i in $(seq 1 60); do
+            curl -fsS "$UML_MCP_TEST_KROKI_URL/health" >/dev/null && exit 0
+            sleep 2
+          done
+          echo "Kroki did not become healthy"; exit 1
+
       - name: Run tests
         run: |
-          uv run pytest --cov=mcp_core --cov=tools --cov-report=term --cov-report=html --cov-fail-under=82 -rs
+          uv run pytest -m "not public_kroki" --cov=mcp_core --cov=tools --cov-report=term --cov-report=html --cov-fail-under=82 -rs
 
       - name: Build documentation
         run: uv run mkdocs build --strict
@@ -138,6 +167,32 @@ jobs:
           name: coverage-report-${{ matrix.python-version }}
           path: htmlcov/
           retention-days: 14
+
+  # The same agent / smoke / catalog tests through the public https://kroki.io.
+  # A kroki.io outage must not block merges, so this job is informational.
+  public-kroki:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.2.0
+        with:
+          version: "latest"
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Real journeys through kroki.io
+        env:
+          UML_MCP_TEST_PUBLIC_KROKI: "1"
+        run: |
+          uv run pytest -m public_kroki --no-cov -rs \
+            tests/test_real_journeys.py tests/test_chatgpt_mcp_smoke_prompt.py
 
   helm:
     runs-on: ubuntu-latest

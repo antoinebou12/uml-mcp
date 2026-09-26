@@ -10,3 +10,8 @@
   getting-started and dashboard journeys with axe WCAG A/AA scans.
 - **Fixes found by the new tests:** saving settings wiped Activity history; badge,
   tab and log contrast; unfocusable log region; loopback requests through HTTP(S)_PROXY.
+- **Real Kroki:** the agent journey, the smoke prompt (`scripts/run_mcp_smoke.py`, now with
+  batch phase, content checks, `--allow-http`, `--json`) and the 37-type stress prompt run
+  against fake, local (Docker) and public Kroki; SVG/PNG output is verified
+  (`mcp_core/quality/render_check.py`). This found and fixed eight broken
+  examples/templates and one docs example.
