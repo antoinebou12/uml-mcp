@@ -69,6 +69,8 @@ These tests check the **rendered output**, not just that bytes came back
 | `test_agent_uses_the_server_end_to_end[tier]` | An MCP client behaves like an agent. It reads the `initialize` instructions, checks the catalog, resources and prompts, then validates, self-corrects and renders. The Mermaid SVG shows `Alice` and `Bob`, the inline PNG decodes, and the Mermaid, D2 and PlantUML batch results show their labels. A Graphviz syntax error becomes an MCP tool error. It checks every call against the audit trail, and that diagram code is never stored raw. |
 | `test_every_example_and_template_renders[tier]` | Every `uml://examples` and `uml://templates` source (2 × 37 types) renders. |
 | `test_every_diagram_in_the_docs_renders[tier]` | Every fenced diagram in `docs/` (for example `mermaid` or `d2` blocks) renders. |
+| `test_admin_playground_matches_mcp[tier]` | The same diagrams rendered through MCP `generate_uml`, the server's `/admin` playground API and the standalone `uml-mcp admin` console give the same URL and labels; both consoles see a healthy Kroki |
+| `test_kroki_page_playground_journey[tier-desktop/dark/mobile]` | Chromium opens **Kroki**, sees every companion ok, renders a Mermaid diagram in the playground (a real image with a mermaid.live link), gets a readable error for broken source, with no horizontal scroll and a clean axe scan. With `UML_MCP_SCREENSHOTS` on a real tier it saves the docs screenshots |
 | `test_mcp_over_raw_http_like_any_client` | Plain JSON-RPC over HTTP: no redirect, instructions in `initialize`, malformed bodies rejected, lenient `Accept` handling |
 | `test_getting_started_journey_and_accessibility[light/dark]` | Chromium takes a first-run user through the Setup wizard, then sees the agent's calls in Activity and 100/100 on Quality. It runs an **axe-core WCAG 2 AA** scan of every console page (no serious or critical violations). |
 | `test_keyboard_only_navigation` | The console works without a mouse |
@@ -83,12 +85,21 @@ uv sync --all-groups
 # fake tier only
 uv run pytest tests/test_real_journeys.py -v
 # plus a real local Kroki (all 37 types with the kroki-extra companions)
-docker compose --profile kroki-extra up -d kroki mermaid blockdiag bpmn excalidraw
+uml-mcp kroki up            # or: docker compose --profile kroki-extra up -d kroki mermaid blockdiag bpmn excalidraw
 uv run python scripts/wait_for_kroki.py http://127.0.0.1:8001   # companions start later than /health
-UML_MCP_TEST_KROKI_URL=http://127.0.0.1:8001 uv run pytest -m "not public_kroki" \
+UML_MCP_TEST_KROKI_URL=http://127.0.0.1:8001 uv run pytest -m "not public_kroki and not docker" \
   tests/test_real_journeys.py tests/test_chatgpt_mcp_smoke_prompt.py
 # plus the public kroki.io (needs internet)
 UML_MCP_TEST_PUBLIC_KROKI=1 uv run pytest -m public_kroki --no-cov tests/test_real_journeys.py
+```
+
+`tests/test_admin_kroki.py` covers the Kroki admin API, the CLI and the Docker stack
+without Docker. With Docker available, `-m docker` also starts a real stack with
+`uml-mcp kroki up` (Compose project `uml-mcp-kroki-test`, port 8011) and renders all 37
+types through the admin render API:
+
+```bash
+uv run pytest -m docker tests/test_admin_kroki.py
 ```
 
 In CI, the test job runs Kroki and its companions as service containers. It also installs

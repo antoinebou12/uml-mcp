@@ -527,6 +527,7 @@ def test_kroki_page_playground_journey(browser, tier_stack, viewport, scheme):
         SHOTS.mkdir(parents=True, exist_ok=True)
         name = "mobile-kroki-playground" if width < 600 else "desktop-kroki-playground"
         suffix = "-dark" if scheme == "dark" else ""
+        page.evaluate("window.scrollTo(0, 0)")  # keep the sticky top bar on top
         page.wait_for_timeout(400)
         page.screenshot(path=str(SHOTS / f"{name}{suffix}.png"), full_page=True)
     # a broken diagram is explained, not shown

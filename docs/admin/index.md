@@ -16,6 +16,9 @@ uml-mcp setup --web           # same, starting on the Setup page
 
 On a deployed server the console lives at `https://<host>/admin`.
 
+New here? Start with [Install the admin console](install.md), then follow the
+task-by-task [user guide](user-guide.md). This page is the reference tour.
+
 ![Overview](../assets/admin/desktop-overview.png)
 
 ## Access and safety
@@ -97,6 +100,20 @@ Admin console):
 - These numbers are per process. Scrape [`/metrics`](../enterprise/operations.md#metrics)
   for fleet-wide views.
 
+### Kroki
+
+![Kroki page: health, local Docker stack and playground](../assets/admin/desktop-kroki-playground.png)
+
+- **Kroki server:** the configured URL, reachability and version, plus each companion
+  renderer (mermaid, blockdiag, bpmn, excalidraw) checked with a real render.
+- **Local Kroki (Docker):** local mode only. **Start all & use** runs Kroki with every
+  companion on `127.0.0.1` and switches rendering to it live; **Stop** removes it. Same as
+  `uml-mcp kroki up --use` / `down` ([install guide](install.md#4-run-kroki-with-every-companion-docker)).
+  Enterprise mode shows health only.
+- **Playground:** pick any of the 37 types (its example loads), edit, **Render**
+  (Ctrl/⌘+Enter). Rendering uses the `generate_uml` pipeline. You get a preview, links to
+  the Kroki URL and the language's playground, and a download.
+
 ### Tools & plugins
 
 ![Tools and plugins](../assets/admin/desktop-tools.png)
@@ -136,6 +153,7 @@ the pod is restarted by its Deployment. Use `admin.allow_stop` only if that's wh
 
 ![Mobile setup](../assets/admin/mobile-setup.png){ width="280" }
 ![Mobile overview](../assets/admin/mobile-overview.png){ width="280" }
+![Mobile Kroki playground](../assets/admin/mobile-kroki-playground.png){ width="280" }
 
 - **Layout:** below 768 px the side menu becomes a slide-out sheet, and tables and cards stack.
 - **Tested:** every page is checked at 390 × 844 in the Playwright suite
