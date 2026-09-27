@@ -92,8 +92,16 @@ class FakeKroki:
                 body = p["encoded"]
             return respond(p["dtype"], p["fmt"], body)
 
+        async def health(request: Request) -> Response:
+            from starlette.responses import JSONResponse
+
+            return JSONResponse(
+                {"status": "pass", "version": {"kroki": {"number": "fake"}}}
+            )
+
         app = Starlette(
             routes=[
+                Route("/health", health, methods=["GET"]),
                 Route("/{dtype}/{fmt}", post, methods=["POST"]),
                 Route("/{dtype}/{fmt}/{encoded:path}", get, methods=["GET"]),
             ]
@@ -157,9 +165,13 @@ def loopback_bypasses_proxy() -> Iterator[None]:
 
 @contextmanager
 def start_stack(
-    tmp: Path, kroki_url: str, *, keep_proxy: bool = False
+    tmp: Path, kroki_url: str, *, keep_proxy: bool = False, console: bool = False
 ) -> Iterator[dict[str, Any]]:
-    """Run app.py (real FastMCP) against ``kroki_url`` with an empty config."""
+    """Run app.py (real FastMCP) against ``kroki_url`` with an empty config.
+
+    ``console=True`` runs the standalone ``uml-mcp admin`` console instead of
+    app.py (same admin API, own process), to compare the two surfaces.
+    """
     cfg = tmp / "uml-mcp.yaml"
     cfg.write_text(
         "admin: {allow_local_without_auth: true}\n"
@@ -188,8 +200,13 @@ def start_stack(
     log_path = tmp / "server.log"
     with log_path.open("wb") as log:
         proc = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "app:app"]
-            + ["--host", "127.0.0.1", "--port", str(port)],
+            (
+                [sys.executable, "-c", "from mcp_core.core.server import main; main()"]
+                + ["admin", "--no-open", "--port", str(port)]
+                if console
+                else [sys.executable, "-m", "uvicorn", "app:app"]
+                + ["--host", "127.0.0.1", "--port", str(port)]
+            ),
             cwd=ROOT,
             env=env,
             stdout=log,

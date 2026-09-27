@@ -21,6 +21,7 @@ const Tools = React.lazy(() => import("@/pages/Tools"));
 const Clients = React.lazy(() => import("@/pages/Clients"));
 const Security = React.lazy(() => import("@/pages/Security"));
 const Lint = React.lazy(() => import("@/pages/Lint"));
+const Kroki = React.lazy(() => import("@/pages/Kroki"));
 
 function Stopped() {
   return (
@@ -82,6 +83,7 @@ function Shell() {
                   <Route path="/clients" element={<Clients />} />
                   <Route path="/security" element={<Security />} />
                   <Route path="/lint" element={<Lint />} />
+                  <Route path="/kroki" element={<Kroki />} />
                   <Route path="*" element={<Navigate to="/overview" replace />} />
                 </Routes>
               </React.Suspense>

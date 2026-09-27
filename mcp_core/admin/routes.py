@@ -57,6 +57,10 @@ def schedule_stop(delay: float = 0.5) -> None:
 
 
 def add_admin_routes(router: APIRouter, guards: Guards) -> None:
+    from .kroki_routes import add_kroki_routes
+
+    add_kroki_routes(router, guards)
+
     @router.get("/admin/api/settings/schema")
     async def settings_schema(request: Request) -> JSONResponse:
         guards.read(request)

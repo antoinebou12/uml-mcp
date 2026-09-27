@@ -79,7 +79,7 @@ function StopDialog() {
   return (
     <>
       <Tooltip content="Stop the UML-MCP server">
-        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setOpen(true)} data-testid="stop-button">
+        <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setOpen(true)} data-testid="stop-button" aria-label="Stop the server">
           <Power />
           <span className="hidden sm:inline">Stop</span>
         </Button>

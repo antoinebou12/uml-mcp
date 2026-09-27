@@ -22,7 +22,7 @@ import pytest
 import yaml
 
 from mcp_core.quality.render_check import check_png, check_svg
-from tests.fixtures_real import LOCAL, ROOT, TOKEN, run_in_thread
+from tests.fixtures_real import LOCAL, ROOT, TOKEN, run_in_thread, start_stack
 
 pytestmark = pytest.mark.usefixtures("loopback_bypasses_proxy")
 
@@ -226,6 +226,68 @@ def test_every_diagram_in_the_docs_renders(tier_stack):
     assert _render_problems(tier_stack["base"], sources) == {}
 
 
+# ------------------------------------------------ admin playground vs MCP
+PARITY = {
+    "mermaid": (SEQUENCE, ("Alice", "Bob")),
+    "d2": ("gateway -> backend", ("gateway", "backend")),
+    "class": (CLASSES, ("Order", "Customer")),
+}
+
+
+@pytest.fixture(scope="module")
+def console_stack(tmp_path_factory, kroki_tier):
+    """The standalone ``uml-mcp admin`` console, on the same Kroki tier."""
+    tmp = tmp_path_factory.mktemp(f"console-{kroki_tier.name}")
+    with start_stack(
+        tmp, kroki_tier.url, keep_proxy=kroki_tier.name == "public", console=True
+    ) as running:
+        yield running
+
+
+def _admin_render(base: str, dtype: str, code: str, fmt: str = "svg") -> dict:
+    res = LOCAL.post(
+        f"{base}/admin/api/kroki/render",
+        json={"diagram_type": dtype, "code": code, "output_format": fmt},
+        headers={"X-UML-MCP-Admin": "1"},
+    )
+    assert res.status_code == 200, res.text
+    return res.json()
+
+
+async def _mcp_renders(base: str) -> dict[str, Any]:
+    from fastmcp import Client
+
+    out: dict[str, Any] = {}
+    async with Client(f"{base}/mcp", timeout=120) as client:
+        for dtype, (code, _) in PARITY.items():
+            result = await client.call_tool(
+                "generate_uml",
+                {"diagram_type": dtype, "code": code, "output_format": "svg"},
+            )
+            out[dtype] = result.structured_content
+    return out
+
+
+def test_admin_playground_matches_mcp(tier_stack, console_stack):
+    """Same diagram through MCP, the server's /admin and `uml-mcp admin`."""
+    tier = tier_stack["tier"]
+    mcp = run_in_thread(lambda: _mcp_renders(tier_stack["base"]))
+    for surface in (tier_stack, console_stack):
+        status = LOCAL.get(f"{surface['base']}/admin/api/kroki").json()
+        assert status["kroki"]["url"] == tier.url and status["kroki"]["reachable"]
+        assert all(c["ok"] for c in status["kroki"]["companions"].values()), status
+        assert status["docker"] is not None  # local console: Docker card
+    for dtype, (code, labels) in PARITY.items():
+        expected = check_svg(_svg(mcp[dtype]), labels)
+        for surface in (tier_stack, console_stack):
+            out = _admin_render(surface["base"], dtype, code)
+            assert not out.get("error"), out
+            assert out["url"] == mcp[dtype]["url"]
+            assert check_svg(_svg(out), labels) == expected
+    png = _admin_render(console_stack["base"], "class", CLASSES, "png")
+    assert check_png(base64.b64decode(png["content_base64"]))[0] > 20
+
+
 def test_mcp_over_raw_http_like_any_client(stack):
     """Protocol-level checks a non-Python client relies on."""
     headers = {
@@ -377,6 +439,7 @@ def test_getting_started_journey_and_accessibility(browser, stack, scheme):
         "limits",
         "tools",
         "clients",
+        "kroki",
         "lint",
     ):
         page.goto(f"{base}/admin/#/{route}")
@@ -402,4 +465,75 @@ def test_keyboard_only_navigation(browser, stack):
             break
     page.keyboard.press("Enter")
     _title(page, "Settings")
+    ctx.close()
+
+
+SHOTS = (
+    Path(os.environ["UML_MCP_SCREENSHOTS"])
+    if os.environ.get("UML_MCP_SCREENSHOTS")
+    else None
+)
+
+
+def _show_local_stack(tier_stack) -> None:
+    """Let the console's Docker card see a `uml-mcp kroki up` stack serving this tier."""
+    from urllib.parse import urlparse
+
+    from mcp_core.kroki import stack as kroki_stack
+
+    port = urlparse(tier_stack["tier"].url).port
+    path = tier_stack["cfg"].parent / "xdg" / "uml-mcp" / "kroki" / "compose.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(kroki_stack.compose_yaml(port or 8001), encoding="utf-8")
+
+
+@pytest.mark.parametrize(
+    ("viewport", "scheme"),
+    [((1280, 900), "light"), ((1280, 900), "dark"), ((390, 844), "light")],
+    ids=["desktop", "desktop-dark", "mobile"],
+)
+def test_kroki_page_playground_journey(browser, tier_stack, viewport, scheme):
+    """A person checks Kroki's health, then renders a diagram in the playground."""
+    tier = tier_stack["tier"]
+    if tier.name == "local":
+        _show_local_stack(tier_stack)
+    width, height = viewport
+    ctx = browser.new_context(
+        viewport={"width": width, "height": height}, color_scheme=scheme
+    )
+    page = ctx.new_page()
+    errors: list[str] = []
+    page.on("pageerror", lambda e: errors.append(str(e)))
+    page.goto(f"{tier_stack['base']}/admin/#/kroki?token={TOKEN}")
+    _title(page, "Kroki")
+    for name in ("mermaid", "blockdiag", "bpmn", "excalidraw"):
+        badge = page.locator(f"[data-testid=kroki-companion-{name}]")
+        badge.wait_for()
+        assert badge.inner_text().startswith("ok"), badge.inner_text()
+    assert tier.url in page.inner_text("[data-testid=kroki-status]")
+
+    page.select_option("[data-testid=kroki-type]", "mermaid")
+    page.fill("[data-testid=kroki-code]", SEQUENCE)
+    page.click("[data-testid=kroki-render]")
+    preview = page.wait_for_selector("[data-testid=kroki-preview]", timeout=60000)
+    page.wait_for_function(
+        "el => el.complete && el.naturalWidth > 50", arg=preview, timeout=30000
+    )
+    link = page.get_attribute("[data-testid=kroki-playground]", "href") or ""
+    assert link.startswith("https://mermaid.live/")
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth + 1")
+    assert _axe(page) == []
+    if SHOTS and tier.real:  # docs screenshots show a real Kroki render
+        SHOTS.mkdir(parents=True, exist_ok=True)
+        name = "mobile-kroki-playground" if width < 600 else "desktop-kroki-playground"
+        suffix = "-dark" if scheme == "dark" else ""
+        page.wait_for_timeout(400)
+        page.screenshot(path=str(SHOTS / f"{name}{suffix}.png"), full_page=True)
+    # a broken diagram is explained, not shown
+    page.select_option("[data-testid=kroki-type]", "graphviz")
+    page.fill("[data-testid=kroki-code]", BROKEN)
+    page.click("[data-testid=kroki-render]")
+    page.wait_for_selector("[data-testid=kroki-error]")
+    assert "syntax error" in page.inner_text("[data-testid=kroki-error]").lower()
+    assert errors == []
     ctx.close()

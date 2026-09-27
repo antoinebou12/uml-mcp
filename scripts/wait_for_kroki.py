@@ -1,7 +1,8 @@
 """Wait until a Kroki server and its companion renderers can render.
 
 ``/health`` only covers Kroki itself; Mermaid, BPMN, Excalidraw and blockdiag run in
-companion containers that start later. This renders one real example per companion:
+companion containers that start later. This renders one real example per companion
+(``mcp_core.kroki.health``; the same check as ``uml-mcp kroki status``):
 
     uv run python scripts/wait_for_kroki.py http://127.0.0.1:8001 --timeout 180
 """
@@ -10,33 +11,11 @@ from __future__ import annotations
 
 import argparse
 import sys
-import time
 from pathlib import Path
-
-import httpx
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from tools.kroki.kroki_templates import DiagramExamples
-
-COMPANIONS = ("mermaid", "blockdiag", "bpmn", "excalidraw")
-
-
-def pending(client: httpx.Client, url: str, types: tuple[str, ...]) -> dict[str, str]:
-    """Types that cannot render yet, with the reason."""
-    waiting: dict[str, str] = {}
-    for dtype in types:
-        try:
-            response = client.post(
-                f"{url}/{dtype}/svg",
-                content=DiagramExamples.get_example(dtype).encode(),
-                headers={"Content-Type": "text/plain"},
-            )
-            if response.status_code != 200 or not response.content:
-                waiting[dtype] = f"HTTP {response.status_code} {response.text[:80]}"
-        except httpx.HTTPError as exc:
-            waiting[dtype] = f"{type(exc).__name__}: {exc}"
-    return waiting
+from mcp_core.kroki.health import COMPANIONS, ready, wait_until_ready
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -49,20 +28,19 @@ def main(argv: list[str] | None = None) -> int:
         help="comma-separated diagram types to render (default: the companions)",
     )
     args = parser.parse_args(argv)
-    url = args.url.rstrip("/")
     types = tuple(t for t in args.types.split(",") if t)
-    deadline = time.monotonic() + args.timeout
-    with httpx.Client(trust_env=False, timeout=30) as client:
-        while True:
-            waiting = pending(client, url, types)
-            if not waiting:
-                print(f"Kroki at {url} renders {', '.join(types)}")
-                return 0
-            if time.monotonic() > deadline:
-                for dtype, reason in waiting.items():
-                    print(f"not ready: {dtype}: {reason}", file=sys.stderr)
-                return 1
-            time.sleep(3)
+    report = wait_until_ready(args.url, args.timeout, types, trust_env=False)
+    if ready(report):
+        print(
+            f"Kroki {report['version'] or ''} at {report['url']} renders {', '.join(types)}"
+        )
+        return 0
+    if report["error"]:
+        print(f"not ready: {report['error']}", file=sys.stderr)
+    for dtype, check in report["companions"].items():
+        if not check["ok"]:
+            print(f"not ready: {dtype}: {check['detail']}", file=sys.stderr)
+    return 1
 
 
 if __name__ == "__main__":
