@@ -157,9 +157,13 @@ def configure_audit(
 ) -> AuditLogger:
     global _LOGGER
     with _LOCK:
+        previous = _LOGGER.memory if _LOGGER is not None else None
         if _LOGGER is not None:
             _LOGGER.close()
         _LOGGER = AuditLogger(app or get_app_config(), stdio=stdio)
+        if previous is not None and _LOGGER.memory is not None:
+            # Reconfiguring (e.g. saving settings) must not wipe the Activity history.
+            _LOGGER.memory.records.extend(previous.records)
         return _LOGGER
 
 

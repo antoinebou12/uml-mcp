@@ -38,7 +38,7 @@ Use the canonical skill at **[`.skill/skills/uml-mcp-diagrams/SKILL.md`](https:/
 
 Claude Code users should install the **[Claude Code plugin](claude_code.md)** instead (`/uml-mcp:uml-diagrams`), which bundles the same workflow under `plugins/uml-mcp/skills/uml-diagrams/`.
 
-## Showing diagrams in chat (Cursor / Copilot / Claude)
+## Showing diagrams in chat (Cursor / Copilot / Claude) { #showing-diagrams-in-chat }
 
 - Prefer **`generate_uml_image`** with `output_format: png` when you want a native inline image in the chat.
 - **`generate_uml`** with `output_format: png` (or `jpeg`) also fetches image bytes for MCP `ImageContent`, even on hosted `MCP_URL_ONLY`.

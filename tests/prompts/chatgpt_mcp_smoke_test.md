@@ -94,18 +94,28 @@ Canonical agent workflow for presenting results: [`.skill/skills/uml-mcp-diagram
 
 ## Automated run (no chat model)
 
-`scripts/run_mcp_smoke.py` performs the same steps with a real MCP client and prints
-`MCP_SMOKE_TEST: PASS|FAIL`:
+`scripts/run_mcp_smoke.py` runs the same steps, and the batch prompt, with a real MCP
+client. It prints `MCP_SMOKE_TEST: PASS|FAIL` and `MCP_BATCH_TEST: PASS|FAIL`, and
+exits with 0 only when both pass.
+
+It checks the rendered output, not just the links:
+
+- The SVG must parse and show `Client`, `Server`, `request` and `response`.
+- The inline image must be a decodable PNG with a real size.
+- Each batch SVG must show its labels.
 
 ```bash
-# in-process server; --offline skips the step that needs Kroki egress
+# in-process server; --offline skips the steps that need Kroki
 USE_REAL_FASTMCP=1 MCP_URL_ONLY=true uv run python scripts/run_mcp_smoke.py --offline
+# a server backed by a local Kroki (docker compose up -d); diagram URLs are http://
+uv run python scripts/run_mcp_smoke.py --url http://127.0.0.1:8000/mcp --allow-http --json smoke.json
 # hosted or enterprise (Entra ID) server
 uv run python scripts/run_mcp_smoke.py --url https://mcp.contoso.com/mcp --token "$TOKEN"
 ```
 
-It also checks that strict validation rejects `;`-packed Mermaid and that the
-`architecture_report` prompt is advertised.
+It also checks that strict validation rejects `;`-packed Mermaid, and that the
+`architecture_report` prompt is advertised. `tests/test_chatgpt_mcp_smoke_prompt.py`
+runs it against the fake, local and public Kroki tiers (see `docs/testing.md`).
 
 ## Enterprise (SSO) smoke-test prompt
 

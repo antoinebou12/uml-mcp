@@ -11,6 +11,7 @@ import {
   ScrollText,
   Settings,
   ShieldCheck,
+  Shapes,
   type LucideIcon,
 } from "lucide-react";
 
@@ -32,6 +33,7 @@ export const NAV: NavItem[] = [
   { to: "/logs", label: "Logs", icon: ScrollText, group: "Observe" },
   { to: "/metrics", label: "Metrics", icon: ChartLine, group: "Observe" },
   { to: "/limits", label: "Rate limits", icon: Gauge, group: "Observe" },
+  { to: "/kroki", label: "Kroki", icon: Shapes, group: "Extend" },
   { to: "/tools", label: "Tools & plugins", icon: Puzzle, group: "Extend" },
   { to: "/lint", label: "Quality", icon: BadgeCheck, group: "Extend" },
 ];

@@ -116,7 +116,10 @@ nav:
       - deploy/index.md
       - Installation: installation.md
       - Local install (redirect): installation-local.md
-      - Admin console: admin/index.md
+      - Admin console:
+          - admin/index.md
+          - Install: admin/install.md
+          - User guide: admin/user-guide.md
       - Docker: deploy/docker.md
       - Vercel & Smithery: integrations/vercel_smithery.md
       - Claude Desktop: integrations/claude_desktop.md

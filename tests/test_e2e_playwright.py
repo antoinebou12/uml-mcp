@@ -71,6 +71,8 @@ def _start(tmp: Path, cfg_text: str) -> tuple[str, subprocess.Popen]:
             "UML_MCP_ADMIN_TOKEN": TOKEN,
         }
     )
+    if os.environ.get("UML_MCP_TEST_KROKI_URL"):  # a real local Kroki (CI service)
+        env["KROKI_SERVER"] = os.environ["UML_MCP_TEST_KROKI_URL"]
     log = (tmp / "server.log").open("wb")  # a file, not a pipe: never blocks the server
     proc = subprocess.Popen(
         [
@@ -202,6 +204,7 @@ PAGES = {
     "logs": "Logs",
     "metrics": "Metrics",
     "limits": "Rate limits",
+    "kroki": "Kroki",
     "tools": "Tools & plugins",
     "lint": "Quality",
 }

@@ -120,6 +120,18 @@ def get_mcp_cache_policy() -> dict[str, Any]:
     return {"cache_ttl": 300, "cache_scope": "public"}
 
 
+#: Sent in ``initialize`` so agents know the workflow without reading every tool.
+SERVER_INSTRUCTIONS = (
+    "UML-MCP renders diagrams (UML via PlantUML, Mermaid, D2, Graphviz, C4, BPMN and "
+    "~30 more Kroki formats). Workflow: 1) list_diagram_types (or read uml://types) "
+    "when unsure of the type; 2) validate_uml to catch syntax errors cheaply; "
+    "3) generate_uml for a URL/playground link or generate_uml_image for an inline "
+    "chat image; generate_uml_batch for several diagrams. Show the returned markdown "
+    "image and link to the user. Prompts (e.g. class_diagram, sequence_diagram) and "
+    "uml://workflow give templates and best practices."
+)
+
+
 def create_mcp_server():
     """Create and configure the server with all tools, resources, and prompts."""
     from ..prompts.diagram_prompts import register_diagram_prompts
@@ -133,6 +145,7 @@ def create_mcp_server():
     server = FastMCP(
         MCP_SETTINGS.server_name,
         version=MCP_SETTINGS.version,  # else initialize reports FastMCP's own version
+        instructions=SERVER_INSTRUCTIONS,
         **get_mcp_cache_policy(),
     )
 

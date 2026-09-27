@@ -12,14 +12,15 @@ deployment. The rules are inspired by [MXCP's linter](https://mxcp.dev/quality/l
 
 ```bash
 uv run uml-mcp lint                                   # in process; exit 1 on errors
-uv run uml-mcp lint --strict --min-grade A --token-budget 5500   # the CI gate
+uv run uml-mcp lint --strict --min-grade A --min-score 100 --token-budget 5500   # the CI gate
 uv run uml-mcp lint https://mcp.contoso.com/mcp       # any running server (MCP_LINT_TOKEN for auth)
 uv run uml-mcp lint --format json | jq .grade
 uv run uml-mcp lint --quiet && echo passed
 ```
 
 Exit codes follow `mcpx`: `0` passed, `1` failed (errors, `--fail-on warnings`/`--strict`,
-grade below `--min-grade`, or over `--token-budget`), `2` server unreachable.
+grade below `--min-grade`, score below `--min-score`, or over `--token-budget`),
+`2` server unreachable.
 
 It runs two layers:
 
@@ -51,6 +52,39 @@ admin dashboard's **Lint** tab and at `GET /admin/api/lint`.
 | `prompt-no-description` / `prompt-arg-no-description` | error / warning | Prompt metadata |
 | `server-empty` / `server-duplicate-tools` | error | Server exposes something; tool names unique |
 | `server-no-name` / `server-no-version` | warning | `initialize` returns name and version |
+
+## Extended protocol rules
+
+These come from the MCP specification (SEP-986 tool names, tool annotations,
+structured output) and FastMCP practice (server instructions). They score the same way.
+
+| Rule | Severity | Check |
+| --- | --- | --- |
+| `tool-name-invalid` | warning | 1–128 chars of `A-Z a-z 0-9 _ - .` (SEP-986, via the MCP SDK validator) |
+| `tool-no-title` | info | `title` or `annotations.title` for display |
+| `tool-missing-hints` | warning | `readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint` declared |
+| `tool-no-output-schema` / `output-schema-not-object` | info / error | Structured results, and `outputSchema` of type object |
+| `tool-schema-open` | info | `additionalProperties: false`, so argument typos fail fast |
+| `tool-too-large` | warning | One tool definition under ~1,500 tokens |
+| `server-no-instructions` | warning | `initialize` returns `instructions` that tell agents the workflow |
+| `server-duplicate-prompts` / `server-duplicate-resources` | error | Unique prompt names and resource URIs |
+
+## Documented exceptions
+
+Some findings are deliberate. For example, `list_diagram_types` has only optional
+filters, because calling it with no arguments is the useful first call. Record the
+exception, with a reason, where the tool is defined:
+
+```python
+@mcp_tool(..., lint_ignore={"tool-no-required": "Every parameter is an optional filter; ..."})
+```
+
+- **Reporting:** suppressed findings are printed and shown in the console's Quality page
+  under "Documented exceptions". They don't count toward the score.
+- **Other servers:** when linting a server you don't control, use `--ignore RULE[@TARGET]`,
+  for example `--ignore tool-no-required@tool:search`.
+- **External grading:** the hosted mcpx grader doesn't know about exceptions, so it may
+  score such a tool one point lower.
 
 ## Definition and config rules
 

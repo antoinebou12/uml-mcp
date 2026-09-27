@@ -1,4 +1,4 @@
-"""Guided management CLI (Typer + tqdm): ``uml-mcp setup | admin | plugins``.
+"""Guided management CLI (Typer + tqdm): ``uml-mcp setup | admin | plugins | kroki``.
 
 ``config``, ``lint`` and ``client`` keep their argparse implementation in
 :mod:`mcp_core.core.commands`; ``uml-mcp`` dispatches here for the commands
@@ -20,7 +20,7 @@ from tqdm import tqdm
 from ..core.features import FEATURES, PROFILES, build_config, default_features
 from ..core.settings_file import write_config_file
 
-TYPER_COMMANDS = ("setup", "admin", "plugins")
+TYPER_COMMANDS = ("setup", "admin", "plugins", "kroki")
 CLIENTS = ("vscode", "cursor", "claude-desktop", "claude-code")
 
 app = typer.Typer(
@@ -298,9 +298,113 @@ def plugins_disable(name: str) -> None:
     _toggle(name, False)
 
 
+kroki_app = typer.Typer(
+    help="Run a local Kroki (with every companion) in Docker and check it.",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+app.add_typer(kroki_app, name="kroki")
+
+
+def _print_health(report: dict[str, Any]) -> bool:
+    from ..kroki.health import ready
+
+    state = "reachable" if report["reachable"] else f"unreachable ({report['error']})"
+    typer.echo(f"Kroki {report['version'] or ''} at {report['url']}: {state}")
+    for dtype, check in report["companions"].items():
+        typer.echo(f"  {'ok ' if check['ok'] else 'ERR'} {dtype:11} {check['detail']}")
+    return ready(report)
+
+
+def _use(url: str) -> None:
+    from fastapi import HTTPException
+
+    from ..admin.kroki_routes import use_kroki
+
+    try:
+        result = use_kroki(url, actor="cli")
+    except HTTPException as exc:
+        typer.echo(f"Not saved: {exc.detail}", err=True)
+        raise typer.Exit(1) from exc
+    typer.echo(f"rendering.kroki_server = {url} saved in {result['saved']}.")
+
+
+@kroki_app.command("up")
+def kroki_up(
+    port: Annotated[int, typer.Option(help="host port (loopback only)")] = 8001,
+    use: Annotated[
+        bool, typer.Option("--use", help="save it as rendering.kroki_server")
+    ] = False,
+    timeout: Annotated[
+        float, typer.Option(help="seconds to wait for companions")
+    ] = 300,
+) -> None:
+    """Start Kroki + mermaid, blockdiag, bpmn and excalidraw (pulls images once)."""
+    from ..kroki import health, stack
+
+    typer.echo(f"Starting Kroki with all companions ({stack.compose_path()})...")
+    try:
+        result = stack.up(port)
+    except stack.StackError as exc:
+        typer.echo(f"Could not start Kroki: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    report = health.wait_until_ready(result["url"], timeout, trust_env=False)
+    ok = _print_health(report)
+    if use:
+        _use(result["url"])
+    if not ok:
+        raise typer.Exit(1)
+
+
+@kroki_app.command("down")
+def kroki_down() -> None:
+    """Stop and remove the local Kroki containers."""
+    from ..kroki import stack
+
+    try:
+        result = stack.down()
+    except stack.StackError as exc:
+        typer.echo(f"Could not stop Kroki: {exc}", err=True)
+        raise typer.Exit(1) from exc
+    typer.echo("Stopped." if result["stopped"] else result["detail"])
+
+
+@kroki_app.command("status")
+def kroki_status(
+    url: Annotated[
+        str | None, typer.Option(help="Kroki URL (default: the configured one)")
+    ] = None,
+) -> None:
+    """Check the configured (or given) Kroki and every companion renderer."""
+    from ..core.config import MCP_SETTINGS
+    from ..kroki import health, stack
+
+    info = stack.status()
+    typer.echo(f"Docker: {info['detail']}")
+    for c in info["containers"]:
+        typer.echo(f"  {c['service']:11} {c['state']:9} {c['status'] or ''}")
+    if not _print_health(health.probe(url or MCP_SETTINGS.kroki_server)):
+        raise typer.Exit(1)
+
+
+@kroki_app.command("logs")
+def kroki_logs(tail: Annotated[int, typer.Option()] = 100) -> None:
+    """Recent logs of the local Kroki containers."""
+    from ..kroki import stack
+
+    try:
+        typer.echo(stack.logs(tail))
+    except stack.StackError as exc:
+        typer.echo(str(exc), err=True)
+        raise typer.Exit(1) from exc
+
+
 def main(argv: list[str]) -> int:
     try:
-        app(args=argv, prog_name="uml-mcp", standalone_mode=False)
+        # standalone_mode=False returns typer.Exit codes instead of raising them
+        code = app(args=argv, prog_name="uml-mcp", standalone_mode=False)
+        if isinstance(code, int):
+            return code
     except typer.Exit as exc:
         return int(exc.exit_code or 0)
     except typer.Abort:

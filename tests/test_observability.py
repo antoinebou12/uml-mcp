@@ -199,6 +199,16 @@ def test_error_result_dict_is_audited_as_error(memory_audit):
     assert METRICS.snapshot()["operations"][-1]["error"] == 1
 
 
+def test_reconfiguring_keeps_activity_history(memory_audit):
+    instrument(lambda: "ok", "tool", "generate_uml")()
+    kept = parse_app_config(
+        {"audit": {"enabled": True, "sinks": ["memory"], "memory_size": 50}}
+    )
+    logger = configure_audit(kept)
+    assert logger.memory is not None
+    assert [r["operation_name"] for r in logger.memory.records] == ["generate_uml"]
+
+
 def test_broken_sink_never_breaks_calls(memory_audit):
     class Broken:
         def write(self, record):

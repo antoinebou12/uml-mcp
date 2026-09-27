@@ -120,15 +120,25 @@ def test_real_registry_is_strict_clean():
 GOOD_SURFACE = Surface(
     "uml_mcp",
     "1.4.0",
+    instructions="Call render with diagram source.",
     tools=[
         {
             "name": "render",
+            "title": "Render",
             "description": "Render a diagram and return its URL.",
+            "annotations": {
+                "readOnlyHint": True,
+                "destructiveHint": False,
+                "idempotentHint": True,
+                "openWorldHint": True,
+            },
             "inputSchema": {
                 "type": "object",
+                "additionalProperties": False,
                 "properties": {"code": {"type": "string", "description": "source"}},
                 "required": ["code"],
             },
+            "outputSchema": {"type": "object"},
         }
     ],
 )
@@ -148,6 +158,8 @@ def test_lint_cli(capsys, monkeypatch):
     assert "over budget" in capsys.readouterr().out
     assert commands.main(["lint", "--quiet"]) == 0
     assert capsys.readouterr().out == ""
+    assert commands.main(["lint", "--ignore", "tool-no-title", "--strict"]) == 0
+    capsys.readouterr()
     assert commands.main(["lint", "http://127.0.0.1:9/mcp"]) == 2
     assert commands.main(["lint", "--format", "json"]) == 0
     data = json.loads(capsys.readouterr().out)
@@ -190,7 +202,8 @@ def test_real_server_lint_gate():
         check=False,
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
-    assert "Grade A" in proc.stdout
+    assert "Grade A · score 100/100" in proc.stdout
+    assert "suppressed tool-no-required tool:list_diagram_types" in proc.stdout
     proc = subprocess.run(
         [sys.executable, "-m", "mcp_core.core.commands", "lint", "--format", "json"],
         capture_output=True,

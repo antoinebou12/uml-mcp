@@ -81,7 +81,7 @@ export default function Tools() {
                   />
                 </CardHeader>
                 <CardContent className="text-sm">
-                  {p.error && <div className="text-destructive">{p.error}</div>}
+                  {p.error && <div className="text-destructive-text">{p.error}</div>}
                   {p.tools.length > 0 && <div>Tools: {p.tools.join(", ")}</div>}
                   {p.diagram_types.length > 0 && <div>Diagram types: {p.diagram_types.join(", ")}</div>}
                 </CardContent>

@@ -44,7 +44,7 @@ Command Palette → **MCP: Open User Configuration** and merge the same `servers
 
 ## Showing diagrams in chat
 
-Prefer **`generate_uml_image`** with `output_format: png` for a native inline image. See the shared chat notes in [Cursor integration](cursor.md#showing-diagrams-in-chat-cursor--copilot--claude).
+Prefer **`generate_uml_image`** with `output_format: png` for a native inline image. See the shared chat notes in [Cursor integration](cursor.md#showing-diagrams-in-chat).
 
 ## Local stdio MCP (optional)
 

@@ -45,6 +45,13 @@ def get_kroki_client():
     return _kroki_client
 
 
+def use_kroki_server(url: str) -> None:
+    """Point rendering at ``url`` now (the next render builds a new client)."""
+    global _kroki_client
+    MCP_SETTINGS.kroki_server = url.rstrip("/")
+    _kroki_client = None
+
+
 # Optional override for tests: if set, generate_diagram calls this instead of real I/O
 _diagram_generator: (
     Callable[[str, str, str, str | None, str | None, float, bool], dict[str, Any]]

@@ -61,6 +61,10 @@ def _bounded_limit(limit: int | None) -> int | None:
     example="list_diagram_types(query='sequence', output_format='svg')",
     annotations={**ANNOTATIONS_LIST, "title": "List Diagram Types"},
     output_schema=DiagramTypesOutput,
+    lint_ignore={
+        "tool-no-required": "Every parameter is an optional filter; calling it with "
+        "no arguments lists the whole catalog, which is the common first call.",
+    },
 )
 def list_diagram_types(
     query: str | None = None,

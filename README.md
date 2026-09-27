@@ -30,7 +30,7 @@ It also works as a building block for agent-facing products. Use **MCP** when an
 | **Catalog** | ~37 Kroki-backed types · 5 MCP tools · URL + playground + chat PNG |
 | **Agent UI** | MCP `/mcp` · canonical AG-UI `/ag-ui` · [OpenUI integration guide](docs/integrations/openui.md) |
 | **Install** | `python scripts/install.py` · `uv tool install uml-mcp && uml-mcp setup` · [Installation](docs/installation.md) |
-| **Console** | `uml-mcp admin`: setup form, settings, live logs, charts ([tour](docs/admin/index.md)) |
+| **Console** | `uml-mcp admin`: setup form, settings, live logs, charts, Kroki playground ([install](docs/admin/install.md) · [user guide](docs/admin/user-guide.md) · [tour](docs/admin/index.md)) |
 
 <p align="center">
   <img src="docs/assets/diagrams/client-server-chat.png" width="720" alt="UML-MCP in chat: Client/Server Mermaid sequence with URL and Playground links" />
@@ -124,7 +124,8 @@ Configs: [`config/README.md`](config/README.md) (Cursor, VS Code, Codex, Claude,
 | **Config file** | One [`uml-mcp.yaml`](docs/configuration/uml-mcp-yaml.md) (defaults < file < env) · `uml-mcp config init\|show\|validate` · profiles `local` / `docker` / `enterprise` |
 | **Audit & observability** | MXCP-style audit of every tool/resource/prompt call (JSONL rotation, stdout → SIEM) · JSON logs · metrics + Prometheus `/metrics` · rate limits per IP/user/route/tool ([operations](docs/enterprise/operations.md)) |
 | **Quality** | `uml-mcp lint --strict --min-grade A`: mcpx-style grade, token budget, MXCP-style config checks ([rules](docs/developers/linting.md)) |
-| **Admin console** | Setup form, schema-driven settings (save, reset, live apply), activity, live logs, charts, Stop; local token or `MCP.Admin` ([tour](docs/admin/index.md)) |
+| **Admin console** | Setup form, schema-driven settings (save, reset, live apply), activity, live logs, charts, Kroki playground and Docker stack, Stop; local token or `MCP.Admin` ([tour](docs/admin/index.md)) |
+| **Local Kroki** | `uml-mcp kroki up --use`: Kroki + mermaid, blockdiag, bpmn, excalidraw in Docker on `127.0.0.1` ([guide](docs/admin/install.md#4-run-kroki-with-every-companion-docker)) |
 | **Plugins** | Extra MCP tools and diagram renderers from Python packages, allow-listed in `plugins.enabled` ([guide](docs/plugins/index.md) · [author](docs/plugins/authoring.md)) |
 | **Tracing** | Optional OpenTelemetry spans per request and MCP call (`uml-mcp[otel]`) |
 | **Frontend** | Canonical AG-UI SSE for agent UIs; OpenUI can consume AG-UI and render generated components in your app |

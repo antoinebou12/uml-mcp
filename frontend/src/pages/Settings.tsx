@@ -109,7 +109,7 @@ export default function Settings() {
           This file is read-only here (for example a Kubernetes ConfigMap). Download the YAML and apply it through your deployment.
         </div>
       )}
-      {dirty && <div className="text-xs text-warning animate-in fade-in-0">You have unsaved changes.</div>}
+      {dirty && <div className="text-xs text-warning-text animate-in fade-in-0">You have unsaved changes.</div>}
       <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
         <nav aria-label="Settings sections" className="flex gap-1 overflow-x-auto lg:flex-col">
           {schema.data.sections.map((s) => {

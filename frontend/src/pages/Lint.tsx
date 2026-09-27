@@ -12,6 +12,7 @@ interface Report {
   token_estimate: number | null;
   counts: Record<string, number>;
   issues: LintIssue[];
+  suppressed?: Array<LintIssue & { reason: string }>;
   wire_error?: string;
 }
 
@@ -30,6 +31,16 @@ export default function Lint() {
         <StatCard label="Connect-time tokens" value={r.token_estimate !== null ? `~${r.token_estimate}` : "–"} icon={BadgeCheck} hint="tools/list + resources + prompts" />
       </div>
       {r.wire_error && <div className="text-sm text-muted-foreground">Protocol checks unavailable: {r.wire_error}</div>}
+      {(r.suppressed?.length ?? 0) > 0 && (
+        <Card className="p-4 text-sm">
+          <div className="mb-2 font-medium">Documented exceptions ({r.suppressed!.length})</div>
+          <ul className="flex flex-col gap-1.5 text-muted-foreground">
+            {r.suppressed!.map((s, n) => (
+              <li key={n}><span className="font-mono text-xs text-foreground">{s.code}</span> on <span className="font-mono text-xs">{s.target}</span>: {s.reason}</li>
+            ))}
+          </ul>
+        </Card>
+      )}
       {r.issues.length === 0 ? <Empty title="No issues. Nice." /> : (
         <Card>
           <Table>

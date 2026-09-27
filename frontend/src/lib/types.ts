@@ -154,3 +154,56 @@ export interface LintIssue {
   message: string;
   fix: string;
 }
+
+export interface KrokiCheck {
+  ok: boolean;
+  detail: string;
+}
+
+export interface KrokiHealth {
+  url: string;
+  reachable: boolean;
+  version: string | null;
+  error: string | null;
+  companions: Record<string, KrokiCheck>;
+}
+
+export interface KrokiContainer {
+  service: string;
+  state: string;
+  status: string | null;
+  image: string | null;
+}
+
+export interface KrokiDocker {
+  docker: boolean;
+  detail: string;
+  compose_file: string;
+  url: string | null;
+  containers: KrokiContainer[];
+  command: string;
+}
+
+export interface KrokiStatus {
+  kroki: KrokiHealth;
+  mode: "local" | "enterprise";
+  docker: KrokiDocker | null;
+}
+
+export interface KrokiType {
+  name: string;
+  backend: string;
+  description: string;
+  formats: string[];
+  example: string;
+}
+
+export interface RenderResult {
+  content_base64?: string;
+  mime_type?: string;
+  url?: string;
+  playground?: string;
+  error?: string;
+  render_ms?: number;
+  source?: string;
+}

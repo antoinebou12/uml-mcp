@@ -35,9 +35,9 @@ export function StatCard({ label, value, hint, icon: Icon, tone }: {
 }) {
   const toneClass = {
     default: "text-muted-foreground",
-    success: "text-success",
-    warning: "text-warning",
-    destructive: "text-destructive",
+    success: "text-success-text",
+    warning: "text-warning-text",
+    destructive: "text-destructive-text",
   }[tone ?? "default"];
   return (
     <Card className="group">
