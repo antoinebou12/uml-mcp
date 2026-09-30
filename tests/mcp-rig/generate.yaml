@@ -1,0 +1,249 @@
+# generate_uml, generate_uml_image and generate_uml_batch.
+#
+# Hermetic by design:
+#   - MCP_URL_ONLY=true makes SVG renders return Kroki/playground URLs without
+#     fetching bytes.
+#   - KROKI_SERVER points at an unroutable host, so the URL assertions also prove the
+#     configured server is honoured, and any accidental network fetch would fail loudly
+#     instead of passing through the real service.
+#   - Only PlantUML (`class`, `sequence`) is rendered: its URL is computed locally.
+#     Mermaid and raster formats (png/jpeg) need a live renderer, so they are only
+#     exercised through their validation errors.
+#   - The server keeps an in-process render cache, so cases never assert `cache_hit`.
+server:
+  command: uv
+  args: [run, --frozen, python, server.py]
+  cwd: ../..
+  env:
+    MCP_URL_ONLY: "true"
+    MCP_MEMORY_ONLY: "true"
+    KROKI_SERVER: http://kroki.invalid
+
+tags: [generate]
+
+tests:
+  # --- generate_uml: success -------------------------------------------------------
+  - name: renders PlantUML to a Kroki URL
+    tags: [smoke]
+    call: generate_uml
+    args:
+      diagram_type: class
+      code: "@startuml\nclass A\n@enduml"
+    expect:
+      matches: "^Generated class successfully"
+      json_path:
+        success: true
+        diagram_type: class
+        output_format: svg
+        source: kroki
+        mime_type: image/svg+xml
+        local_path: null
+        fallback_used: false
+      schema:
+        type: object
+        required: [url, playground, display_markdown]
+        properties:
+          url:
+            type: string
+            pattern: '^http://kroki\.invalid/plantuml/svg/[A-Za-z0-9_-]+=*$'
+          playground:
+            type: string
+            pattern: '^https://www\.plantuml\.com/'
+          display_markdown:
+            type: string
+            pattern: '^!\[diagram\]\(http://kroki\.invalid/plantuml/svg/'
+
+  - name: renders bare PlantUML without start and end markers
+    call: generate_uml
+    args:
+      diagram_type: class
+      code: "class A"
+    expect:
+      json_path:
+        success: true
+
+  # --- generate_uml: input validation ----------------------------------------------
+  - name: unsupported diagram type is rejected
+    tags: [errors]
+    call: generate_uml
+    args:
+      diagram_type: not-a-diagram
+      code: anything
+    expect:
+      is_error: true
+      contains: Unsupported diagram type
+
+  - name: blank code is rejected
+    tags: [errors]
+    call: generate_uml
+    args:
+      diagram_type: class
+      code: "   "
+    expect:
+      is_error: true
+      contains: "code:"
+
+  - name: unknown output format is rejected
+    tags: [errors]
+    call: generate_uml
+    args:
+      diagram_type: class
+      code: class A
+      output_format: bogus
+    expect:
+      is_error: true
+      contains: "output_format must be one of"
+
+  - name: format unsupported by the diagram type is rejected
+    tags: [errors]
+    call: generate_uml
+    args:
+      diagram_type: mermaid
+      code: "graph TD; A-->B;"
+      output_format: pdf
+    expect:
+      is_error: true
+      contains: "not supported for diagram type 'mermaid'"
+
+  - name: scale below the minimum is rejected
+    tags: [errors]
+    call: generate_uml
+    args:
+      diagram_type: class
+      code: class A
+      scale: 0.05
+    expect:
+      is_error: true
+      contains: scale
+
+  - name: unexpected arguments are rejected
+    tags: [errors]
+    call: generate_uml
+    args:
+      diagram_type: class
+      code: class A
+      bogus: 1
+    expect:
+      is_error: true
+      contains: bogus
+
+  - name: file output is refused in memory-only mode
+    tags: [errors, security]
+    call: generate_uml
+    args:
+      diagram_type: class
+      code: class A
+      output_dir: output/mcp-rig-should-not-exist
+    expect:
+      is_error: true
+      contains: memory-only
+
+  - name: missing required arguments are rejected
+    tags: [errors]
+    call: generate_uml
+    expect:
+      is_error: true
+      contains: [diagram_type, code]
+
+  # --- generate_uml_image ----------------------------------------------------------
+  - name: inline image tool rejects an unsupported diagram type
+    tags: [errors]
+    call: generate_uml_image
+    args:
+      diagram_type: not-a-diagram
+      code: anything
+    expect:
+      is_error: true
+      contains: Unsupported diagram type
+
+  - name: inline image tool rejects missing arguments
+    tags: [errors]
+    call: generate_uml_image
+    expect:
+      is_error: true
+      contains: [diagram_type, code]
+
+  # --- generate_uml_batch ----------------------------------------------------------
+  - name: batch keeps results in submission order
+    tags: [batch]
+    call: generate_uml_batch
+    args:
+      items:
+        - diagram_type: class
+          code: "@startuml\nclass A\n@enduml"
+        - diagram_type: sequence
+          code: "@startuml\nAlice -> Bob: hi\n@enduml"
+    expect:
+      contains: "Processed 2 diagrams; 0 failed"
+      json_path:
+        results.0.index: 0
+        results.0.diagram_type: class
+        results.0.success: true
+        results.1.index: 1
+        results.1.diagram_type: sequence
+        results.1.success: true
+
+  - name: batch isolates a failing item
+    tags: [batch]
+    call: generate_uml_batch
+    args:
+      items:
+        - diagram_type: class
+          code: "@startuml\nclass A\n@enduml"
+        - diagram_type: not-a-diagram
+          code: anything
+    expect:
+      contains: "1 failed"
+      json_path:
+        results.0.success: true
+        results.1.index: 1
+        results.1.success: false
+      schema:
+        type: object
+        properties:
+          results:
+            type: array
+            prefixItems:
+              - {}
+              - type: object
+                required: [error]
+                properties:
+                  error: {type: string, pattern: Unsupported diagram type}
+
+  - name: batch reports an item that is missing its code
+    tags: [batch]
+    call: generate_uml_batch
+    args:
+      items:
+        - diagram_type: class
+    expect:
+      json_path:
+        results.0.index: 0
+        results.0.success: false
+      schema:
+        type: object
+        properties:
+          results:
+            type: array
+            prefixItems:
+              - type: object
+                required: [error]
+                properties:
+                  error: {type: string, pattern: code}
+
+  - name: empty batch is rejected
+    tags: [batch, errors]
+    call: generate_uml_batch
+    args: {items: []}
+    expect:
+      is_error: true
+      contains: items must not be empty
+
+  - name: batch item that is not an object is rejected
+    tags: [batch, errors]
+    call: generate_uml_batch
+    args:
+      items: [not-an-object]
+    expect:
+      is_error: true
+      contains: items.0

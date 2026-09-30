@@ -73,6 +73,17 @@ With coverage:
 uv run pytest --cov=mcp_core --cov=tools --cov-report=term-missing
 ```
 
+Black-box tests of the stdio server (real transport, YAML suites, no network) run with
+[MCP Rig](https://github.com/gorkemgul/mcp-rig):
+
+```bash
+make mcp-rig
+# or: uvx mcp-rig@0.1.0 run tests/mcp-rig/
+```
+
+See [`tests/mcp-rig/README.md`](tests/mcp-rig/README.md) for the suites, tags and how to
+update snapshots.
+
 ### Linting and formatting
 
 - **Lint:** `uv run ruff check .` (use `--fix` for auto-fixes).

@@ -1,4 +1,4 @@
-.PHONY: help install install-dev clean test lint typecheck coverage ci docs docs-serve docker-build docker-run docker-test docker-stop
+.PHONY: help install install-dev clean test mcp-rig lint typecheck coverage ci docs docs-serve docker-build docker-run docker-test docker-stop
 
 # Default target
 help:
@@ -9,6 +9,7 @@ help:
 	@echo "  make install-dev    Install development dependencies"
 	@echo "  make clean          Clean temporary files and caches"
 	@echo "  make test           Run tests"
+	@echo "  make mcp-rig        Run MCP Rig black-box suites (tests/mcp-rig/)"
 	@echo "  make lint           Run linting checks (ruff + pre-commit)"
 	@echo "  make typecheck      Run type checker (ty)"
 	@echo "  make coverage       Run tests with coverage report"
@@ -39,6 +40,14 @@ clean:
 # Testing and linting
 test:
 	uv run pytest -xvs tests/
+
+# Black-box MCP tests (see tests/mcp-rig/README.md). Run as an isolated tool so the
+# server keeps the mcp version pinned in uv.lock.
+MCP_RIG_VERSION ?= 0.1.0
+mcp-rig:
+	mkdir -p output
+	uvx mcp-rig@$(MCP_RIG_VERSION) check "uv run --frozen python server.py" --strict --probe-invalid-args
+	uvx mcp-rig@$(MCP_RIG_VERSION) run tests/mcp-rig/ --junit output/mcp-rig-junit.xml
 
 lint:
 	uv run pre-commit run --all-files

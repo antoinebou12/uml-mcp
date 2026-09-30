@@ -1,0 +1,88 @@
+# list_diagram_types: catalog contents, filters and limit clamping.
+#
+# Hermetic: URL-only + memory-only mode with an unroutable Kroki host, so nothing in
+# this suite can reach the network.
+server:
+  command: uv
+  args: [run, --frozen, python, server.py]
+  cwd: ../..
+  env:
+    MCP_URL_ONLY: "true"
+    MCP_MEMORY_ONLY: "true"
+    KROKI_SERVER: http://kroki.invalid
+
+tags: [discovery]
+
+tests:
+  - name: catalog exposes the core diagram types
+    tags: [smoke]
+    call: list_diagram_types
+    expect:
+      contains: supported diagram type
+      schema:
+        type: object
+        minProperties: 30
+        required: [class, sequence, activity, usecase, state, component, mermaid, d2, graphviz]
+        additionalProperties:
+          type: object
+          required: [backend, description, formats]
+          properties:
+            backend: {type: string, minLength: 1}
+            description: {type: string, minLength: 1}
+            formats:
+              type: array
+              minItems: 1
+              items: {type: string}
+
+  - name: backend filter narrows to a single renderer
+    call: list_diagram_types
+    args: {backend: mermaid}
+    expect:
+      json_path:
+        mermaid.backend: mermaid
+      schema:
+        type: object
+        required: [mermaid]
+        maxProperties: 1
+
+  - name: query and output_format filters combine
+    call: list_diagram_types
+    args: {query: sequence, output_format: svg}
+    expect:
+      schema:
+        type: object
+        required: [sequence, seqdiag]
+        not: {required: [class]}
+
+  - name: filters with no match return an empty catalog
+    call: list_diagram_types
+    args: {backend: mermaid, output_format: pdf}
+    expect:
+      contains: "Returned 0"
+      schema: {type: object, maxProperties: 0}
+
+  - name: unknown query returns an empty catalog
+    call: list_diagram_types
+    args: {query: zzz-no-such-diagram-type}
+    expect:
+      contains: "Returned 0"
+      schema: {type: object, maxProperties: 0}
+
+  - name: limit caps the number of results
+    call: list_diagram_types
+    args: {limit: 2}
+    expect:
+      schema: {type: object, minProperties: 2, maxProperties: 2}
+
+  - name: limit below one is clamped to one
+    call: list_diagram_types
+    args: {limit: 0}
+    expect:
+      schema: {type: object, minProperties: 1, maxProperties: 1}
+
+  - name: non-integer limit is rejected
+    call: list_diagram_types
+    args: {limit: not-a-number}
+    expect:
+      is_error: true
+      contains: limit

@@ -1,0 +1,184 @@
+# validate_uml: local, no-render validation. Findings are returned as a normal result
+# with valid=false (not as a tool error), so every case here expects is_error: false
+# unless the call itself is malformed.
+#
+# Snapshot cases (expect.snapshot) pin the full diagnostics payload. After an
+# intentional change, refresh with `--update-snapshots` and review the
+# validate.snap.yaml diff. Only cases whose whole payload is unambiguously correct are
+# snapshotted; the others assert individual fields with json_path.
+server:
+  command: uv
+  args: [run, --frozen, python, server.py]
+  cwd: ../..
+  env:
+    MCP_URL_ONLY: "true"
+    MCP_MEMORY_ONLY: "true"
+    KROKI_SERVER: http://kroki.invalid
+
+tags: [validate]
+
+tests:
+  - name: well-formed PlantUML is accepted unchanged
+    tags: [smoke]
+    call: validate_uml
+    args:
+      diagram_type: class
+      code: "@startuml\nclass A\n@enduml"
+    expect:
+      contains: Diagram is valid
+      json_path:
+        valid: true
+        backend: plantuml
+        normalized: false
+        errors: []
+        corrected_code: null
+
+  - name: bare PlantUML is wrapped in start and end markers
+    call: validate_uml
+    args:
+      diagram_type: class
+      code: "class A"
+    expect:
+      snapshot: true
+      json_path:
+        valid: true
+        normalized: true
+        corrected_code: "@startuml\nclass A\n@enduml"
+        changes.0: added @startuml wrapper
+        changes.1: added @enduml wrapper
+
+  - name: missing @enduml is repaired
+    call: validate_uml
+    args:
+      diagram_type: class
+      code: "@startuml\nclass A\n"
+    expect:
+      json_path:
+        valid: true
+        changes.0: added @enduml wrapper
+
+  - name: unsupported diagram type is a finding, not a tool error
+    call: validate_uml
+    args:
+      diagram_type: not-a-diagram
+      code: anything
+    expect:
+      snapshot: true
+      contains: Diagram is invalid
+      json_path:
+        valid: false
+        backend: null
+        diagnostics.0.code: UNSUPPORTED_DIAGRAM_TYPE
+
+  - name: format the diagram type cannot produce is reported
+    call: validate_uml
+    args:
+      diagram_type: mermaid
+      code: "graph TD; A-->B;"
+      output_format: pdf
+    expect:
+      json_path:
+        valid: false
+        diagnostics.0.code: UNSUPPORTED_OUTPUT_FORMAT
+
+  - name: blank code is reported
+    call: validate_uml
+    args:
+      diagram_type: class
+      code: "   "
+    expect:
+      json_path:
+        valid: false
+        diagnostics.0.severity: error
+
+  - name: too-short Mermaid is rejected even without strict mode
+    call: validate_uml
+    args:
+      diagram_type: mermaid
+      code: ab
+    expect:
+      json_path:
+        valid: false
+        diagnostics.0.code: SOURCE_TOO_SHORT
+
+  - name: lenient mode accepts Mermaid without a header
+    tags: [strict]
+    call: validate_uml
+    args:
+      diagram_type: mermaid
+      code: A-->B
+    expect:
+      json_path:
+        valid: true
+        strict: false
+
+  - name: strict mode requires a Mermaid diagram keyword
+    tags: [strict]
+    call: validate_uml
+    args:
+      diagram_type: mermaid
+      code: A-->B
+      strict: true
+    expect:
+      snapshot: true
+      json_path:
+        valid: false
+        strict: true
+        diagnostics.0.code: MERMAID_MISSING_HEADER
+
+  - name: strict mode accepts a well-formed Mermaid graph
+    tags: [strict]
+    call: validate_uml
+    args:
+      diagram_type: mermaid
+      code: "graph TD; A-->B;"
+      strict: true
+    expect:
+      json_path:
+        valid: true
+        errors: []
+
+  - name: strict mode flags a Mermaid message with no target
+    tags: [strict]
+    call: validate_uml
+    args:
+      diagram_type: mermaid
+      code: "sequenceDiagram\nA->>"
+      strict: true
+    expect:
+      json_path:
+        valid: false
+        diagnostics.0.code: MERMAID_DANGLING_ARROW
+
+  - name: strict mode rejects packed sequenceDiagram statements
+    tags: [strict]
+    call: validate_uml
+    args:
+      diagram_type: mermaid
+      code: "sequenceDiagram; A->>B: hi"
+      strict: true
+    expect:
+      json_path:
+        valid: false
+        strict: true
+
+  - name: strict mode flags an unclosed D2 quote with its line
+    tags: [strict]
+    call: validate_uml
+    args:
+      diagram_type: d2
+      code: 'a -> "b'
+      strict: true
+    expect:
+      json_path:
+        valid: false
+        diagnostics.0.code: D2_UNCLOSED_QUOTE
+        diagnostics.0.line: 1
+
+  - name: missing code argument is a tool error
+    call: validate_uml
+    args:
+      diagram_type: class
+    expect:
+      is_error: true
+      contains: code

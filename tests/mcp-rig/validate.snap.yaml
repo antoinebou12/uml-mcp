@@ -1,0 +1,81 @@
+version: 1
+snapshots:
+  bare PlantUML is wrapped in start and end markers:
+    is_error: false
+    kind: structured
+    value:
+      backend: plantuml
+      changes:
+      - added @startuml wrapper
+      - added @enduml wrapper
+      corrected_code: '@startuml
+
+        class A
+
+        @enduml'
+      diagnostics: []
+      diagram_type: class
+      errors: []
+      normalized: true
+      prepared_code: '@startuml
+
+        class A
+
+        @enduml'
+      strict: false
+      suggestions: []
+      valid: true
+      warnings: []
+  unsupported diagram type is a finding, not a tool error:
+    is_error: false
+    kind: structured
+    value:
+      backend: null
+      changes: []
+      corrected_code: null
+      diagnostics:
+      - code: UNSUPPORTED_DIAGRAM_TYPE
+        column: null
+        line: null
+        message: 'diagram_type: Value error, Unsupported diagram type: not-a-diagram.
+          Use uml://types resource for valid types.'
+        severity: error
+        suggestion: null
+      diagram_type: not-a-diagram
+      errors:
+      - 'diagram_type: Value error, Unsupported diagram type: not-a-diagram. Use uml://types
+        resource for valid types.'
+      normalized: false
+      prepared_code: null
+      strict: false
+      suggestions: []
+      valid: false
+      warnings: []
+  strict mode requires a Mermaid diagram keyword:
+    is_error: false
+    kind: structured
+    value:
+      backend: mermaid
+      changes: []
+      corrected_code: null
+      diagnostics:
+      - code: MERMAID_MISSING_HEADER
+        column: null
+        line: null
+        message: 'Mermaid (strict): start with a diagram keyword such as `graph TD`,
+          `flowchart LR`, or `sequenceDiagram`.'
+        severity: error
+        suggestion: Start with a diagram keyword such as `graph TD`, `flowchart LR`,
+          or `sequenceDiagram`.
+      diagram_type: mermaid
+      errors:
+      - 'Mermaid (strict): start with a diagram keyword such as `graph TD`, `flowchart
+        LR`, or `sequenceDiagram`.'
+      normalized: false
+      prepared_code: A-->B
+      strict: true
+      suggestions:
+      - Start with a diagram keyword such as `graph TD`, `flowchart LR`, or `sequenceDiagram`.
+      - Use a standard Mermaid diagram header on the first line (e.g. graph TD;).
+      valid: false
+      warnings: []
