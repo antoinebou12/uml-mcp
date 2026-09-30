@@ -1,0 +1,75 @@
+name: MCP Rig
+
+# Black-box tests of the stdio server: protocol checks, tool lint, and the YAML suites
+# in tests/mcp-rig/. Hermetic (no network): see tests/mcp-rig/README.md.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "mcp_core/**"
+      - "tools/**"
+      - "server.py"
+      - "tests/mcp-rig/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/mcp-rig.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "mcp_core/**"
+      - "tools/**"
+      - "server.py"
+      - "tests/mcp-rig/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/mcp-rig.yml"
+
+env:
+  MCP_RIG_VERSION: "0.1.0"
+
+jobs:
+  mcp-rig:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.12", "3.14"]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v10.0.1
+        with:
+          version: "latest"
+          python-version: ${{ matrix.python-version }}
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      # MCP Rig runs as an isolated tool (it needs mcp>=2.2; uv.lock pins the server's
+      # own mcp), so the server is tested with exactly the versions it ships with.
+      - name: Protocol checks and tool lint
+        run: |
+          uvx "mcp-rig@${MCP_RIG_VERSION}" check "uv run --frozen python server.py" \
+            --strict --probe-invalid-args
+
+      - name: Run MCP Rig suites
+        run: |
+          mkdir -p output
+          uvx "mcp-rig@${MCP_RIG_VERSION}" run tests/mcp-rig/ \
+            --junit output/mcp-rig-junit.xml
+
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: mcp-rig-junit-${{ matrix.python-version }}
+          path: output/mcp-rig-junit.xml
+          if-no-files-found: ignore
+          retention-days: 14

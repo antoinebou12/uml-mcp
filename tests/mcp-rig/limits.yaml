@@ -1,0 +1,70 @@
+# Operator-tunable limits, exercised with deliberately small values:
+#   MCP_MAX_CODE_LENGTH  - maximum diagram source length (characters)
+#   MCP_BATCH_MAX_ITEMS  - maximum items per generate_uml_batch call
+#
+# Same hermetic setup as generate.yaml.
+server:
+  command: uv
+  args: [run, --frozen, python, server.py]
+  cwd: ../..
+  env:
+    MCP_URL_ONLY: "true"
+    MCP_MEMORY_ONLY: "true"
+    KROKI_SERVER: http://kroki.invalid
+    MCP_MAX_CODE_LENGTH: "40"
+    MCP_BATCH_MAX_ITEMS: "2"
+
+tags: [limits]
+
+tests:
+  # "class " (6 chars) + 34 x = exactly 40 characters.
+  - name: source at the length limit is accepted
+    call: validate_uml
+    args:
+      diagram_type: class
+      code: "class xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    expect:
+      json_path:
+        valid: true
+
+  # 41 characters.
+  - name: source over the length limit is a validation finding
+    call: validate_uml
+    args:
+      diagram_type: class
+      code: "class xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    expect:
+      json_path:
+        valid: false
+        diagnostics.0.code: SOURCE_TOO_LARGE
+
+  - name: source over the length limit is rejected when generating
+    call: generate_uml
+    args:
+      diagram_type: class
+      code: "class xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    expect:
+      is_error: true
+      contains: exceeds maximum length of 40
+
+  - name: batch within the item limit renders every item
+    call: generate_uml_batch
+    args:
+      items:
+        - {diagram_type: class, code: "class A"}
+        - {diagram_type: class, code: "class B"}
+    expect:
+      json_path:
+        results.0.success: true
+        results.1.success: true
+
+  - name: batch over the item limit is rejected
+    call: generate_uml_batch
+    args:
+      items:
+        - {diagram_type: class, code: "class A"}
+        - {diagram_type: class, code: "class B"}
+        - {diagram_type: class, code: "class C"}
+    expect:
+      is_error: true
+      contains: At most 2 items allowed
