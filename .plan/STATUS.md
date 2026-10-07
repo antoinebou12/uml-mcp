@@ -18,4 +18,7 @@ _Last updated: 2026-09-25 (branch `claude/lint-100-real-tests`)_
 ## Known issues
 
 - kroki.io is unreachable from the sandbox proxy (403), so the `public` Kroki tier skips there; a local Kroki in Docker (`docker compose --profile kroki-extra up -d`) covers every type.
-- `actions/upload-artifact@v7` can't run under `act` (no compatible artifact server); the step is skipped with `!env.ACT`.
+- `actions/upload-artifact@v7` can't run under `act` (no compatible artifact server); the step is skipped with `!env.ACT` in `ci.yml` and `build.yml`.
+- `act` on Windows (Docker Desktop): use `-P ubuntu-latest=catthehacker/ubuntu:act-latest --env UV_PROJECT_ENVIRONMENT=/tmp/uv-venv` from a normal clone (a `git worktree` has no usable `.git` in the container). Copy mode drops the exec bit and the `.git` directory, so pick the flags per job:
+  - `-j test` needs `--bind`; without it `mkdocs build --strict` aborts on the git-revision-date plugin warning (787 passed, docs, server card and FastAPI smoke test all pass with `--bind`).
+  - `-j lint` must run **without** `--bind`: Docker Desktop reports every bind-mounted file as executable (ruff `EXE002` on ~170 files), while copy mode reports 7 false `EXE001` shebang errors (git has them `100755`). Everything else in `lint` passes; use WSL or Linux for a fully clean run.
