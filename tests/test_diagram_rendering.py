@@ -157,6 +157,36 @@ def test_run_diagram_pipeline_mermaid_fallback_after_kroki_fails(tmp_path):
     assert out.get("fallback_used") is True
 
 
+def test_mermaid_fallback_uses_the_configured_ink_server(tmp_path, monkeypatch):
+    """A self-hosted mermaid.ink (MERMAID_INK_SERVER) serves the fallback image URL."""
+    import httpx
+
+    from mcp_core.core.config import MCP_SETTINGS
+
+    monkeypatch.setattr(MCP_SETTINGS, "mermaid_ink_server", "http://mermaid-ink:3000")
+    mock_client = MagicMock()
+    mock_client.generate_diagram.side_effect = KrokiConnectionError("down")
+    mock_response = MagicMock()
+    mock_response.content = b"<svg>m</svg>"
+    mock_response.raise_for_status = MagicMock()
+
+    with patch.object(httpx, "get", return_value=mock_response) as fetch:
+        out = run_diagram_pipeline(
+            _ctx(
+                diagram_type="mermaid",
+                backend_type="mermaid",
+                prepared_code="graph TD; A-->B;",
+                output_dir=str(tmp_path),
+            ),
+            kroki_client=mock_client,
+        )
+
+    assert out["source"] == "mermaid_ink"
+    assert out["url"].startswith("http://mermaid-ink:3000/svg/")
+    assert fetch.call_args.args[0].startswith("http://mermaid-ink:3000/svg/")
+    assert out["playground"].startswith("https://mermaid.live/")
+
+
 def test_run_fallback_if_needed_no_fallback_aggregates_message():
     kroki_err = KrokiConnectionError("primary down")
     out = run_fallback_if_needed(

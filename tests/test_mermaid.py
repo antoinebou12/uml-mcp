@@ -145,3 +145,24 @@ def test_mermaid_urls_frozen():
     urls = generate_mermaid_urls(diagram_text="x")
     with pytest.raises(AttributeError):
         setattr(urls, "code", "y")  # noqa: B010 - frozen dataclass check
+
+
+def test_generate_mermaid_urls_self_hosted_ink_base():
+    """ink_base points image URLs at a self-hosted mermaid.ink; editor stays public."""
+    svg = generate_mermaid_urls(
+        diagram_text="graph TD\n  A-->B", ink_base="http://mermaid-ink:3000/"
+    )
+    png = generate_mermaid_urls(
+        diagram_text="graph TD\n  A-->B",
+        image_format="png",
+        ink_base="http://mermaid-ink:3000",
+    )
+    assert svg.image_url.startswith("http://mermaid-ink:3000/svg/pako:")
+    assert png.image_url.startswith("http://mermaid-ink:3000/img/pako:")
+    assert png.image_url.endswith("?type=png")
+    assert svg.edit_url.startswith(MERMAID_LIVE_EDIT_BASE)
+
+
+def test_generate_mermaid_urls_empty_ink_base_uses_public():
+    urls = generate_mermaid_urls(diagram_text="graph TD\n  A-->B", ink_base="")
+    assert urls.image_url.startswith(MERMAID_INK_BASE + "/svg/")

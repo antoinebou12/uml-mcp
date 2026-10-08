@@ -21,6 +21,10 @@ services:
       - FASTMCP_STATELESS_HTTP=true
       - USE_LOCAL_PLANTUML=${USE_LOCAL_PLANTUML:-false}
       - PLANTUML_SERVER=${PLANTUML_SERVER:-http://plantuml-server:8080}
+      - USE_LOCAL_MERMAID_INK=${USE_LOCAL_MERMAID_INK:-false}
+      # Empty means public mermaid.ink; USE_LOCAL_MERMAID_INK=true switches to
+      # the `mermaid-ink` profile service at http://mermaid-ink:3000.
+      - MERMAID_INK_SERVER=${MERMAID_INK_SERVER:-}
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8000/health"]
       interval: 30s
@@ -34,9 +38,13 @@ services:
         condition: service_started
       mermaid:
         condition: service_started
-      # Only present under `--profile plantuml`; a plain `docker compose up`
+      # Only present under `--profile plantuml` / `--profile mermaid-ink`
+      # (or `--profile fallback` for both); a plain `docker compose up`
       # starts the same three services it always has.
       plantuml-server:
+        condition: service_started
+        required: false
+      mermaid-ink:
         condition: service_started
         required: false
     restart: unless-stopped
@@ -83,10 +91,37 @@ services:
     image: plantuml/plantuml-server:jetty-v1.2026.6
     profiles:
       - plantuml
+      - fallback
     ports:
       - "8002:8080"
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+
+  # Opt-in only: `docker compose --profile mermaid-ink up -d`.
+  # Self-hosted mermaid.ink, the Mermaid *fallback* renderer. Set
+  # MCP_DIAGRAM_FALLBACK=true and USE_LOCAL_MERMAID_INK=true to use it.
+  mermaid-ink:
+    image: ghcr.io/jihchi/mermaid.ink:v16.0.0
+    profiles:
+      - mermaid-ink
+      - fallback
+    ports:
+      - "8003:3000"
+    # Headless Chromium needs syscalls Docker's default seccomp profile blocks;
+    # this is upstream's documented alternative to --cap-add=SYS_ADMIN.
+    security_opt:
+      - seccomp=unconfined
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/').then(r=>process.exit(r.ok?0:1),()=>process.exit(1))"
       interval: 30s
       timeout: 5s
       retries: 3

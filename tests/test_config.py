@@ -3,6 +3,8 @@ Unit tests for MCP server configuration.
 """
 
 import os
+import subprocess
+import sys
 from pathlib import Path
 from unittest.mock import patch
 
@@ -169,3 +171,56 @@ class TestMCPModuleLevel:
             assert config.formats == expected, (
                 f"diagram_type {name} formats {config.formats} != {expected}"
             )
+
+
+def _mermaid_ink_server_with_env(**env: str) -> str:
+    """Import config in a fresh interpreter (servers resolve at import time)."""
+    base = {
+        k: v
+        for k, v in os.environ.items()
+        if k not in ("MERMAID_INK_SERVER", "USE_LOCAL_MERMAID_INK")
+    }
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "from mcp_core.core.config import MCP_SETTINGS; "
+            + "print(MCP_SETTINGS.mermaid_ink_server)",
+        ],
+        cwd=Path(__file__).resolve().parents[1],
+        env={**base, **env},
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.strip().splitlines()[-1]
+
+
+class TestMermaidInkServer:
+    """MERMAID_INK_SERVER / USE_LOCAL_MERMAID_INK resolution."""
+
+    def test_defaults_to_public_mermaid_ink(self):
+        assert _mermaid_ink_server_with_env() == "https://mermaid.ink"
+
+    def test_empty_value_means_public(self):
+        """docker-compose passes `${MERMAID_INK_SERVER:-}` through as empty."""
+        assert _mermaid_ink_server_with_env(MERMAID_INK_SERVER="") == (
+            "https://mermaid.ink"
+        )
+
+    def test_use_local_defaults_to_compose_service(self):
+        assert (
+            _mermaid_ink_server_with_env(
+                USE_LOCAL_MERMAID_INK="true", MERMAID_INK_SERVER=""
+            )
+            == "http://mermaid-ink:3000"
+        )
+
+    def test_explicit_server_wins(self):
+        assert (
+            _mermaid_ink_server_with_env(
+                USE_LOCAL_MERMAID_INK="true",
+                MERMAID_INK_SERVER="http://ink.internal:3000",
+            )
+            == "http://ink.internal:3000"
+        )

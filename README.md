@@ -194,6 +194,8 @@ Smoke prompts: [`tests/prompts/chatgpt_mcp_smoke_test.md`](tests/prompts/chatgpt
 docker compose up -d
 docker build -t uml-mcp . && docker run -p 8000:8000 uml-mcp
 docker run -i uml-mcp python server.py --transport stdio
+# self-hosted PlantUML + mermaid.ink fallbacks next to local Kroki
+MCP_DIAGRAM_FALLBACK=true USE_LOCAL_PLANTUML=true USE_LOCAL_MERMAID_INK=true docker compose --profile fallback up -d
 ```
 
 [docs/deploy/docker.md](docs/deploy/docker.md)
@@ -209,6 +211,7 @@ docker run -i uml-mcp python server.py --transport stdio
 | --- | --- |
 | `KROKI_SERVER` | `https://kroki.io` |
 | `PLANTUML_SERVER` | `http://plantuml-server:8080` |
+| `MERMAID_INK_SERVER` | `https://mermaid.ink` |
 | `MCP_OUTPUT_DIR` | `./output` |
 | `MCP_READ_ONLY` | `false` |
 | `MCP_URL_ONLY` | see [docs/configuration.md](docs/configuration.md) |

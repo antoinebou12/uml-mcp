@@ -102,6 +102,7 @@ def _renderer_identity(*, force_fetch: bool = False) -> str:
         (
             f"kroki={MCP_SETTINGS.kroki_server}",
             f"plantuml={MCP_SETTINGS.plantuml_server}",
+            f"mermaid_ink={MCP_SETTINGS.mermaid_ink_server}",
             f"fallback={int(bool(MCP_SETTINGS.diagram_fallback_enabled))}",
             f"url_only={int(bool(MCP_SETTINGS.url_only))}",
             f"force_fetch={int(bool(force_fetch))}",

@@ -150,6 +150,7 @@ def generate_mermaid_urls(
     theme: str = "default",
     serde: str = "pako",
     image_format: str = "svg",
+    ink_base: str | None = None,
 ) -> MermaidUrls:
     """Generate image and editor URLs for a Mermaid diagram.
 
@@ -157,7 +158,10 @@ def generate_mermaid_urls(
     If both are provided, diagram_state takes precedence.
 
     Raster formats use mermaid.ink ``/img/`` with ``?type=`` (not ``/png/``, which 404s).
+    ``ink_base`` points image URLs at a self-hosted mermaid.ink (defaults to the
+    public instance); the editor URL always stays on the public mermaid.live.
     """
+    base = (ink_base or MERMAID_INK_BASE).rstrip("/")
     if diagram_state is None:
         if diagram_text is None:
             raise ValueError("Provide either diagram_state or diagram_text")
@@ -166,14 +170,14 @@ def generate_mermaid_urls(
     code = diagram_state.get("code", "")
     fmt = (image_format or "svg").lower().strip()
     if fmt in {"svg"}:
-        image_url = f"{MERMAID_INK_BASE}/svg/{serialized}"
+        image_url = f"{base}/svg/{serialized}"
     else:
         # mermaid.ink serves raster via /img/?type=png|jpeg|webp (default jpeg).
         # Paths like /png/... return 404.
         type_param = {"jpg": "jpeg", "img": "jpeg"}.get(fmt, fmt)
         if type_param not in {"png", "jpeg", "webp"}:
             type_param = "png"
-        image_url = f"{MERMAID_INK_BASE}/img/{serialized}?type={type_param}"
+        image_url = f"{base}/img/{serialized}?type={type_param}"
     edit_url = f"{MERMAID_LIVE_EDIT_BASE}{serialized}"
     return MermaidUrls(image_url=image_url, edit_url=edit_url, code=code)
 

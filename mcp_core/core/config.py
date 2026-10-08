@@ -146,6 +146,10 @@ class MCPSettings(BaseModel):
         "PLANTUML_SERVER", "http://plantuml-server:8080"
     )
     kroki_server: str = os.environ.get("KROKI_SERVER", "https://kroki.io")
+    # Empty MERMAID_INK_SERVER (e.g. compose `${MERMAID_INK_SERVER:-}`) means public.
+    mermaid_ink_server: str = (
+        os.environ.get("MERMAID_INK_SERVER") or "https://mermaid.ink"
+    )
 
     @property
     def output_path(self) -> Path:
@@ -355,9 +359,18 @@ _use_local_plantuml = os.environ.get("USE_LOCAL_PLANTUML", "false").lower() in (
     "1",
     "yes",
 )
+_use_local_mermaid_ink = os.environ.get("USE_LOCAL_MERMAID_INK", "false").lower() in (
+    "true",
+    "1",
+    "yes",
+)
 if _use_local_kroki:
     MCP_SETTINGS.kroki_server = os.environ.get("KROKI_SERVER", "http://kroki:8000")
 if _use_local_plantuml:
     MCP_SETTINGS.plantuml_server = os.environ.get(
         "PLANTUML_SERVER", "http://plantuml-server:8080"
+    )
+if _use_local_mermaid_ink:
+    MCP_SETTINGS.mermaid_ink_server = (
+        os.environ.get("MERMAID_INK_SERVER") or "http://mermaid-ink:3000"
     )
