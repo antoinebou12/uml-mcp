@@ -123,11 +123,27 @@ function StopDialog() {
   );
 }
 
+/** Hosted (`password`) mode: the session lives in an HttpOnly cookie, so signing out is a
+ * plain same-origin form POST that the server answers by clearing it. */
+function SignOutForm() {
+  return (
+    <form method="post" action="/admin/logout" data-testid="signout-form">
+      <Tooltip content="Sign out of the admin console">
+        <Button type="submit" variant="ghost" size="icon" aria-label="Sign out" data-testid="signout-button">
+          <LogOut />
+        </Button>
+      </Tooltip>
+    </form>
+  );
+}
+
 export function TopBar() {
   const { overview, mode, stopped } = useSession();
   const [menu, setMenu] = React.useState(false);
   const [signIn, setSignIn] = React.useState(false);
   const hasToken = Boolean(getToken());
+  // The hosted console is read-only: no token to paste, and Stop is always refused (403).
+  const hosted = mode === "password";
   return (
     <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-5">
       <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu" data-testid="menu-button" onClick={() => setMenu(true)}>
@@ -162,7 +178,9 @@ export function TopBar() {
         )}
       </div>
       <div className="ml-auto flex items-center gap-1">
-        {hasToken ? (
+        {hosted ? (
+          <SignOutForm />
+        ) : hasToken ? (
           <Tooltip content="Forget the token for this tab">
             <Button variant="ghost" size="icon" aria-label="Sign out" onClick={() => { setToken(null); location.reload(); }}>
               <LogOut />
@@ -175,9 +193,9 @@ export function TopBar() {
           </Button>
         )}
         <ThemeToggle />
-        {!stopped && <StopDialog />}
+        {!stopped && !hosted && <StopDialog />}
       </div>
-      <SignInDialog open={signIn} onOpenChange={setSignIn} />
+      {!hosted && <SignInDialog open={signIn} onOpenChange={setSignIn} />}
     </header>
   );
 }

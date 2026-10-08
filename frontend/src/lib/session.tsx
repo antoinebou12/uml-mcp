@@ -4,7 +4,8 @@ import type { Overview } from "./types";
 
 interface Session {
   overview?: Overview;
-  mode: "local" | "enterprise" | "unknown";
+  /** `password` = hosted, read-only console behind an email + password sign-in. */
+  mode: "local" | "enterprise" | "password" | "unknown";
   authError?: ApiError;
   signedIn: boolean;
   stopped: boolean;
@@ -36,7 +37,13 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
       .catch((e) => setAuthError(e instanceof ApiError ? e : new ApiError(0, String(e), null)));
   }, [tick]);
 
-  const mode = overview ? (overview.local ? "local" : "enterprise") : "unknown";
+  const mode: Session["mode"] = !overview
+    ? "unknown"
+    : overview.mode === "password"
+      ? "password"
+      : overview.local
+        ? "local"
+        : "enterprise";
   const value: Session = {
     overview,
     mode,

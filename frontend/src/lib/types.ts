@@ -113,7 +113,7 @@ export interface SettingsState {
   setup: Record<string, unknown> | null;
   setup_complete: boolean;
   features: string[];
-  mode: "local" | "enterprise";
+  mode: "local" | "enterprise" | "password";
   has_auth_section: boolean;
 }
 
@@ -186,7 +186,7 @@ export interface KrokiDocker {
 
 export interface KrokiStatus {
   kroki: KrokiHealth;
-  mode: "local" | "enterprise";
+  mode: "local" | "enterprise" | "password";
   docker: KrokiDocker | null;
 }
 
