@@ -6,7 +6,7 @@
       "type": "context",
       "description": "Create and extend MCP servers in Python with FastMCP and the official MCP Python SDK. Based on [MCP Build a server](https://modelcontextprotocol.io/docs/develop/build-server) and [MCP Best Practices](https://mcp-best-practice.github.io/mcp-best-practice/best-practice/).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/mcp-python/SKILL.md",
-      "sha256": "ca90bceff7093cb7ee1dcbff144c723cb9115270345ea89efa36b553871f3cf3"
+      "sha256": "fc8b682b80c31fbee8ffe5cfe3f51b893ef369bd6aeadbc6db4b00346028ec77"
     },
     {
       "name": "modern-python",
@@ -35,6 +35,13 @@
       "description": "> **Maintainers:** Keep tool tables and `output_dir` wording aligned with the Smithery bundle **[uml-skill/SKILL.md](https://github.com/antoinebou12/uml-skill/blob/main/SKILL.md)** (`diagramming-uml`) and the Claude Code plugin skill **`plugins/uml-mcp/skills/uml-diagrams/SKILL.md`** when you edit any of them. **`.github/skills/uml-mcp-diagrams/SKILL.md`** (GitHub Copilot) must stay a byte-identical copy of this file.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
       "sha256": "43a4455c34059c2f97efd50820dfbfe17323d04955904a2a2277ff57e11aa22a"
+    },
+    {
+      "name": "uml-mcp-navigation",
+      "type": "context",
+      "description": "1. Read `AGENTS.md` (preferences, facts) and `SOUL.md` (principles).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-navigation/SKILL.md",
+      "sha256": "a3fdce44c332b04ef252124d1be7e36e296f188561087dbfc8b373275901a02a"
     }
   ]
 }

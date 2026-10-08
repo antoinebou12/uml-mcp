@@ -1,0 +1,6 @@
+# The discovery files are rebuilt on Linux by Vercel, and the agent-skills index
+# stores the sha256 of SKILL.md exactly as GitHub raw serves it. Keep LF in every
+# checkout (e.g. Windows with core.autocrlf=true) so those bytes and digests match.
+.well-known/** text eol=lf
+public/.well-known/** text eol=lf
+.skill/skills/**/SKILL.md text eol=lf

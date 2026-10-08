@@ -28,7 +28,9 @@ _DEFAULT_PUBLIC_BASE = "https://uml-mcp.vercel.app"
 
 
 def _dump_json(obj: Any, path: str) -> None:
-    with open(path, "w", encoding="utf-8") as f:
+    # newline="\n": the committed copies must be byte-identical whichever OS built them
+    # (Vercel builds on Linux; a Windows run would otherwise write CRLF).
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(obj, f, indent=2)
         f.write("\n")
 
@@ -81,7 +83,7 @@ def main() -> None:
             dest = os.path.join(dest_dir, "config-schema.json")
             with open(schema_src, encoding="utf-8") as f:
                 schema_content = f.read()
-            with open(dest, "w", encoding="utf-8") as g:
+            with open(dest, "w", encoding="utf-8", newline="\n") as g:
                 g.write(schema_content.rstrip("\n") + "\n")
             print(f"Wrote {dest}")
 

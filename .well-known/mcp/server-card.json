@@ -287,6 +287,10 @@
     {
       "name": "paper_concept_diagram",
       "description": "Visualize a concept from an academic paper (ML architecture, method comparison, concept/citation graph). Encodes citations in node labels and adds clickable links to arXiv/DOI in Mermaid, PlantUML, D2, and Graphviz. Recommends SVG output."
+    },
+    {
+      "name": "architecture_report",
+      "description": "Write a numbered Markdown architecture report for a repository: introduction, inputs/outputs, then use case, sequence, class, activity, deployment, user-flow and inventory diagrams (Mermaid / PlantUML via Kroki) with a linked table of contents."
     }
   ],
   "configSchemaUrl": "config-schema.json"
