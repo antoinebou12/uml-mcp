@@ -6,7 +6,10 @@ fetched with FastMCP's ``get_context()`` instead. FastMCP runs sync tools in an 
 worker thread, and ``anyio.from_thread.run`` hops back to the event loop to send.
 
 Everything here is a silent no-op outside an MCP request (REST routes, tests, the
-mock server) and for clients that did not ask for progress, and it never raises: a
+mock server) and, crucially, for clients that did not opt in by sending a
+``progressToken`` or a log level: on streamable HTTP any notification turns the
+response into an event stream, and simple hand-rolled clients that read only the
+first event would then mistake a log line for the tool result. It never raises: a
 lost notification must not fail a render.
 """
 
@@ -30,9 +33,27 @@ def _request_context() -> Any | None:
         return None
 
 
+_LOG_LEVEL_META_KEY = "io.modelcontextprotocol/logLevel"
+
+
+def _client_opted_in(ctx: Any) -> bool:
+    """True when the request asked for updates: a progress token or a log level.
+
+    Request ``_meta`` is a dict keyed by wire names (``progressToken``); FastMCP's own
+    internal copy uses ``progress_token``, so accept both.
+    """
+    meta = getattr(getattr(ctx, "request_context", None), "meta", None)
+    if not hasattr(meta, "get"):
+        return False
+    return any(
+        meta.get(key) is not None
+        for key in ("progressToken", "progress_token", _LOG_LEVEL_META_KEY)
+    )
+
+
 def _send(method: str, *args: Any) -> None:
     ctx = _request_context()
-    if ctx is None:
+    if ctx is None or not _client_opted_in(ctx):
         return
     try:
         from anyio import from_thread

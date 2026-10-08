@@ -163,3 +163,81 @@ def test_real_fastmcp_client_receives_progress_and_logs(kroki):
     levels = [lvl for lvl, _msg in report["logs"]]
     assert levels.count("warning") == 1 and levels.count("info") == 2
     assert report["plain_rows"] == 1
+
+
+# Regression for scripts/run_vercel_kroki_stress.py: hand-rolled HTTP clients send no
+# progressToken and parse the FIRST event of the response. Notifications sent to them
+# turned that first event into a log line, so every batch row came back empty.
+_HTTP = """
+import json, logging
+logging.disable(logging.CRITICAL)
+from fastapi.testclient import TestClient
+from app import app
+
+ITEMS = [
+    {"diagram_type": "mermaid", "code": "graph TD; A-->B;"},
+    {"diagram_type": "mermaid", "code": "graph TD; C-->D;"},
+]
+
+def call(meta):
+    params = {"name": "generate_uml_batch", "arguments": {"items": ITEMS}}
+    if meta is not None:
+        params["_meta"] = meta
+    return {"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": params}
+
+def events(response):
+    if "event-stream" not in response.headers.get("content-type", ""):
+        return [response.json()]
+    return [
+        json.loads(line[5:].strip())
+        for line in response.text.splitlines()
+        if line.startswith("data:") and line[5:].strip()
+    ]
+
+report = {}
+with TestClient(app) as client:
+    headers = {"Accept": "application/json, text/event-stream"}
+    for label, meta in (("plain", None), ("opted_in", {"progressToken": "t1"})):
+        evs = events(client.post("/mcp", json=call(meta), headers=headers))
+        report[label] = [e.get("method", "result" if "result" in e else "?") for e in evs]
+print("HTTP_JSON " + json.dumps(report))
+"""
+
+
+def test_http_clients_without_a_token_get_only_the_result():
+    env = os.environ.copy()
+    env.update(
+        {
+            "USE_REAL_FASTMCP": "1",
+            "MOCK_FASTMCP": "0",
+            "TESTING": "0",
+            "DEVELOPMENT": "0",
+            "UML_MCP_CONFIG": "none",
+            "FASTMCP_STATELESS_HTTP": "true",
+            "MCP_URL_ONLY": "true",
+            "MCP_MEMORY_ONLY": "true",
+        }
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", _HTTP],
+        cwd=os.getcwd(),
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
+        check=False,
+    )
+    assert completed.returncode == 0, (
+        f"stdout:\n{completed.stdout}\nstderr:\n{completed.stderr}"
+    )
+    line = next(
+        ln for ln in completed.stdout.splitlines() if ln.startswith("HTTP_JSON ")
+    )
+    report = json.loads(line.removeprefix("HTTP_JSON "))
+
+    # No token: one event, and it is the tool result (what the stress script reads).
+    assert report["plain"] == ["result"]
+    # Token sent: updates stream first and the result is the last event.
+    assert report["opted_in"][0] == "notifications/progress"
+    assert report["opted_in"][-1] == "result"
+    assert "notifications/message" in report["opted_in"]

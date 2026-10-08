@@ -93,10 +93,12 @@ Returns `{ "results": [ { "index": 0, ... }, ... ] }` where each entry matches `
 
 **Progress and logs.** Renders run concurrently and can be slow (a Mermaid batch that falls back to mermaid.ink takes about 30 s per item), so the tool reports as it goes:
 
-- `notifications/progress`: `0/N` when it starts, then `k/N` as each item finishes. The server only sends these when the client asked for progress by including a `progressToken` in the request (`progress_handler` in the FastMCP client).
-- `notifications/message`: one log per finished item, `info` for a rendered diagram (type, renderer, milliseconds) and `warning` for a failed one (the item's error). Clients filter these with their log level.
+- `notifications/progress`: `0/N` when it starts, then `k/N` as each item finishes.
+- `notifications/message`: one log per finished item, `info` for a rendered diagram (type, renderer, milliseconds) and `warning` for a failed one (the item's error).
 
-`results` stay in input order whatever order the renders finish in. Both notification kinds are best effort: clients that do not ask for them, and REST callers, see no change.
+Both are **opt-in**: the server sends them only when the request carries a `progressToken` (`progress_handler` in the FastMCP client). A client that sends no token, including one that merely registered a log handler, receives exactly the response it always did, so simple clients that read only the first event of a streamable HTTP response are unaffected. REST callers see no change either.
+
+`results` stay in input order whatever order the renders finish in. Notifications are best effort and never fail a render.
 
 ## `validate_uml`
 
