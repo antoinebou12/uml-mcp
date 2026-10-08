@@ -46,6 +46,15 @@ def _write_discovery_artifacts(repo_root: str, public_base: str) -> None:
     catalog = build_api_catalog(public_base)
     oauth = build_oauth_protected_resource(public_base)
     skills_index = build_agent_skills_index(repo_root)
+    if not skills_index["skills"]:
+        # Fail the build rather than overwrite the committed index with an empty one
+        # (this is what happened when .vercelignore excluded .skill/).
+        print(
+            "No skills found under .skill/skills (excluded from the upload, e.g. by "
+            ".vercelignore?); refusing to publish an empty agent-skills index.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
     roots = [
         os.path.join(repo_root, ".well-known"),

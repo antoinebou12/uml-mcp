@@ -129,8 +129,29 @@ def test_committed_discovery_artifacts_are_current():
 def test_agent_skills_digests_match_published_files(root: Path):
     """Each sha256 must be the digest of the exact bytes GitHub raw serves."""
     index = json.loads((root / "agent-skills" / "index.json").read_text("utf-8"))
+    assert index["skills"], f"empty agent-skills index in {root}"
     for skill in index["skills"]:
         assert skill["url"].startswith(RAW_PREFIX), skill["url"]
         path = REPO_ROOT / skill["url"].removeprefix(RAW_PREFIX)
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
         assert skill["sha256"] == digest, f"{skill['name']}: stale digest in {root}"
+
+
+def test_write_discovery_artifacts_refuses_empty_skills_index(tmp_path: Path):
+    """No .skill/ (e.g. excluded from a Vercel upload) must fail, not publish []."""
+    with pytest.raises(SystemExit) as excinfo:
+        _write_discovery_artifacts(str(tmp_path), "https://example.com")
+
+    assert excinfo.value.code == 1
+    assert not (tmp_path / ".well-known" / "agent-skills" / "index.json").exists()
+    assert not (tmp_path / "public" / ".well-known").exists()
+
+
+def test_vercelignore_keeps_skills_for_the_build_step():
+    """The buildCommand reads .skill/skills; ignoring it empties the live index."""
+    ignored = {
+        line.strip().rstrip("/")
+        for line in (REPO_ROOT / ".vercelignore").read_text("utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    }
+    assert ".skill" not in ignored, ".vercelignore must not exclude .skill/"

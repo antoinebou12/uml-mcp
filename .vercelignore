@@ -4,7 +4,8 @@ examples/
 docs/
 tests/
 .github/
-.skill/
+# .skill/ is NOT ignored: the buildCommand hashes .skill/skills/*/SKILL.md into
+# .well-known/agent-skills/index.json (excluding it publishes an empty index).
 site/
 *.pdf
 
