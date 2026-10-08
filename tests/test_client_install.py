@@ -49,16 +49,23 @@ def test_merge_keeps_other_servers():
     assert "mcpServers" in merge_config({}, "claude-desktop", {})
 
 
+def _posix(path) -> str:
+    """Path text with '/' separators, so the assertions hold on Windows too."""
+    return str(path).replace("\\", "/")
+
+
 def test_paths(tmp_path, monkeypatch):
     monkeypatch.setattr(client_install.platform, "system", lambda: "Linux")
     assert config_path("cursor", "user", tmp_path) == tmp_path / ".cursor/mcp.json"
-    assert str(config_path("vscode", "workspace")) == ".vscode/mcp.json"
-    assert str(config_path("vscode", "user", tmp_path)).endswith("Code/User/mcp.json")
-    assert str(config_path("claude-desktop", "user", tmp_path)).endswith(
+    assert _posix(config_path("vscode", "workspace")) == ".vscode/mcp.json"
+    assert _posix(config_path("vscode", "user", tmp_path)).endswith(
+        "Code/User/mcp.json"
+    )
+    assert _posix(config_path("claude-desktop", "user", tmp_path)).endswith(
         "claude_desktop_config.json"
     )
     monkeypatch.setattr(client_install.platform, "system", lambda: "Darwin")
-    assert "Library" in str(config_path("claude-desktop", "user", tmp_path))
+    assert "Library" in _posix(config_path("claude-desktop", "user", tmp_path))
     assert config_path("claude-code", "user", tmp_path) is None
 
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 import os
 import stat
+import sys
 
 import pytest
 import yaml
@@ -109,7 +110,8 @@ def test_save_writes_file_applies_live_and_reports_restart(local, cfg):
     assert "audit" in out["applied_live"]
     saved = yaml.safe_load(cfg.read_text())
     assert saved["audit"]["enabled"] is True and saved["setup"] == {"profile": "local"}
-    assert stat.S_IMODE(cfg.stat().st_mode) == 0o600
+    if sys.platform != "win32":  # NTFS has no POSIX permission bits
+        assert stat.S_IMODE(cfg.stat().st_mode) == 0o600
     # audit is live: the save itself is on the Activity trail
     memory = get_audit_logger().memory
     assert memory is not None

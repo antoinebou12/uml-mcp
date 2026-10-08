@@ -6,6 +6,7 @@ import asyncio
 import io
 import json
 import logging
+import sys
 
 import pytest
 
@@ -188,7 +189,8 @@ def test_compressed_rotation_keeps_backup_count(tmp_path):
     ]
     with gzip.open(tmp_path / "audit.jsonl.1.gz", "rt") as fh:
         assert json.loads(fh.readline())["operation_type"] == "tool"
-    assert oct(path.stat().st_mode & 0o777) == "0o600"
+    if sys.platform != "win32":  # NTFS has no POSIX permission bits
+        assert oct(path.stat().st_mode & 0o777) == "0o600"
 
 
 def test_error_result_dict_is_audited_as_error(memory_audit):
