@@ -91,6 +91,13 @@ Parameters:
 
 Returns `{ "results": [ { "index": 0, ... }, ... ] }` where each entry matches `generate_uml` output or includes `error` for that index. Empty `items` or exceeding `MCP_BATCH_MAX_ITEMS` yields an `error` at the top level.
 
+**Progress and logs.** Renders run concurrently and can be slow (a Mermaid batch that falls back to mermaid.ink takes about 30 s per item), so the tool reports as it goes:
+
+- `notifications/progress`: `0/N` when it starts, then `k/N` as each item finishes. The server only sends these when the client asked for progress by including a `progressToken` in the request (`progress_handler` in the FastMCP client).
+- `notifications/message`: one log per finished item, `info` for a rendered diagram (type, renderer, milliseconds) and `warning` for a failed one (the item's error). Clients filter these with their log level.
+
+`results` stay in input order whatever order the renders finish in. Both notification kinds are best effort: clients that do not ask for them, and REST callers, see no change.
+
 ## `validate_uml`
 
 Validates `diagram_type`, `code`, and `output_format` locally (no network). Use before `generate_uml` to catch unsupported types or formats.

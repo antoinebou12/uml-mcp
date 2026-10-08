@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any
 
 from pydantic import ValidationError
@@ -13,6 +13,7 @@ from ..core.config import MCP_SETTINGS
 from ..core.diagram_catalog import get_diagram_types_dict
 from ..core.diagram_service import DiagramRequest, generate_from_request
 from ..core.diagram_validation import validate_uml_inputs
+from . import notifications
 from .schemas import (
     BatchDiagramResult,
     DiagramResult,
@@ -226,18 +227,41 @@ def generate_uml_batch(
             "results": [],
         }
 
-    workers = _batch_concurrency(len(items), items)
+    total = len(items)
+    workers = _batch_concurrency(total, items)
+    notifications.report_progress(
+        0, total, f"Rendering {total} diagram(s), up to {workers} at a time"
+    )
+    # Rows are stored by index so output ordering stays deterministic, even though the
+    # independent renders finish (and are reported as progress) in completion order.
+    results: list[dict[str, Any]] = [{} for _ in items]
     with ThreadPoolExecutor(
         max_workers=workers, thread_name_prefix="uml-batch"
     ) as pool:
-        futures = [
-            pool.submit(_render_batch_item, index, raw, output_dir)
+        futures = {
+            pool.submit(_render_batch_item, index, raw, output_dir): index
             for index, raw in enumerate(items)
-        ]
-        # Futures are consumed in submission order so output ordering is deterministic,
-        # even though the independent renders execute concurrently.
-        results = [future.result() for future in futures]
+        }
+        for done, future in enumerate(as_completed(futures), start=1):
+            index = futures[future]
+            row = future.result()
+            results[index] = row
+            _notify_batch_item(index, total, row)
+            notifications.report_progress(done, total, f"{done}/{total} rendered")
     return {"results": results}
+
+
+def _notify_batch_item(index: int, total: int, row: dict[str, Any]) -> None:
+    """Log one finished batch item; failures are warnings, successes are info."""
+    label = f"[{index + 1}/{total}]"
+    if row.get("error") or row.get("success") is False:
+        notifications.log("warning", f"{label} failed: {row.get('error')}")
+        return
+    notifications.log(
+        "info",
+        f"{label} {row.get('diagram_type')} rendered via {row.get('source')} "
+        f"in {row.get('render_ms')} ms",
+    )
 
 
 @mcp_tool(
