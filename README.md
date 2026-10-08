@@ -216,6 +216,9 @@ docker run -i uml-mcp python server.py --transport stdio
 | `MCP_BATCH_CONCURRENCY` | `4` |
 | `MCP_RATE_LIMIT_PER_MINUTE` | `0` |
 | `UML_MCP_CONFIG` | discovered `uml-mcp.yaml` (`none` disables) |
+| `ADMIN_EMAIL` | unset (hosted `/admin` login off), see [docs/admin/hosted-vercel.md](docs/admin/hosted-vercel.md) |
+| `ADMIN_PASSWORD_HASH` / `ADMIN_PASSWORD` | unset; the hash is preferred |
+| `ADMIN_SESSION_SECRET` | unset; at least 32 characters, required for the login |
 
 Full list: [docs/configuration.md](docs/configuration.md) · single file: [docs/configuration/uml-mcp-yaml.md](docs/configuration/uml-mcp-yaml.md)
 

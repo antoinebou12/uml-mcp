@@ -63,6 +63,15 @@ jobs:
           curl -i --max-time 15 "${VERCEL_URL}/health" || true
           exit 1
 
+      - name: Smoke admin email + password login
+        # Credentials only via env (never argv). The script skips itself when the
+        # secrets are not configured and only warns while /admin is still 404 (the
+        # Vercel variables may not be set yet); add --require-enabled to enforce it.
+        env:
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+        run: python scripts/smoke_admin_login.py --url "${VERCEL_URL}"
+
       - name: Validate MCP server card
         run: |
           curl -fsS --max-time 20 "${VERCEL_URL}/.well-known/mcp/server-card.json" \

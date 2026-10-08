@@ -27,6 +27,7 @@ task-by-task [user guide](user-guide.md). This page is the reference tour.
 | --- | --- | --- |
 | **Local** (enterprise auth off) | Loopback clients whose `Host` is `localhost`/`127.0.0.1` (a DNS-rebinding defence); others get 404 | Also the one-time **setup token**. `uml-mcp admin` prints it, or set `UML_MCP_ADMIN_TOKEN`. Every change also sends an `X-UML-MCP-Admin` header, so other websites can't forge it. |
 | **Enterprise** (`MCP_AUTH_MODE` on) | Users with the Entra app role **`MCP.Admin`** | Also opt in with `admin.allow_write: true` (settings) and `admin.allow_stop: true` (Stop). Both are off by default, so the console stays read-only (GitOps). |
+| **Password** (`ADMIN_EMAIL` + a password + `ADMIN_SESSION_SECRET`, auth off) | The one signed-in account, via an email + password page. See [Hosted login (Vercel)](hosted-vercel.md) | Never. Saving settings and Stop always return 403, so the hosted console is read-only. |
 
 How the local mode is set up:
 

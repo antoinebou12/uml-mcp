@@ -1060,15 +1060,21 @@ if (
         return metrics_response()
 
 
-if (
-    _auth_runtime is None
-    and _app_config is not None
-    and _app_config.admin.allow_local_without_auth
-):
-    from mcp_core.admin.api import build_local_admin_router
+if _auth_runtime is None:
+    from mcp_core.admin import password_auth as _admin_password_auth
 
-    app.include_router(build_local_admin_router())
-    logger.info("Local admin dashboard enabled at /admin (loopback clients only)")
+    if _admin_password_auth.enabled():
+        # Hosted (Vercel) mode: read-only console behind email + password. Takes
+        # precedence over the loopback-only local mode, which never fits a public host.
+        from mcp_core.admin.api import build_password_admin_router
+
+        app.include_router(build_password_admin_router())
+        logger.info("Admin console enabled at /admin (email + password sign-in)")
+    elif _app_config is not None and _app_config.admin.allow_local_without_auth:
+        from mcp_core.admin.api import build_local_admin_router
+
+        app.include_router(build_local_admin_router())
+        logger.info("Local admin dashboard enabled at /admin (loopback clients only)")
 
 # Mount MCP server at /mcp for Smithery and Streamable HTTP clients; fallback when unavailable
 if _mcp_http_app is not None:
