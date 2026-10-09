@@ -200,7 +200,7 @@ MCP_DIAGRAM_FALLBACK=true USE_LOCAL_PLANTUML=true USE_LOCAL_MERMAID_INK=true doc
 
 [docs/deploy/docker.md](docs/deploy/docker.md)
 
-**Kubernetes + SSO**: `helm upgrade --install uml-mcp deploy/helm/uml-mcp --set auth.mode=jwt …` (Entra ID or any OIDC provider). Guide: [docs/enterprise](docs/enterprise/README.md).
+**Kubernetes + SSO**: `helm upgrade --install uml-mcp deploy/helm/uml-mcp --set auth.mode=jwt …` (Entra ID or any OIDC provider); add `--set kroki.enabled=true --set plantuml.enabled=true --set mermaidInk.enabled=true` to run the renderers in-cluster. Guide: [docs/enterprise](docs/enterprise/README.md).
 
 </details>
 

@@ -1,0 +1,107 @@
+{{- if .Values.kroki.enabled }}
+{{- $c := dict "ctx" . "component" "kroki" }}
+{{- $name := include "uml-mcp.rendererName" $c }}
+{{- $companions := .Values.kroki.companions }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "uml-mcp.labels" . | nindent 4 }}
+    {{- include "uml-mcp.rendererSelectorLabels" $c | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "uml-mcp.rendererSelectorLabels" $c | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "uml-mcp.rendererSelectorLabels" $c | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      automountServiceAccountToken: false
+      containers:
+        - name: kroki
+          image: "{{ .Values.kroki.image.repository }}:{{ .Values.kroki.image.tag }}"
+          imagePullPolicy: {{ .Values.kroki.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - {name: http, containerPort: 8000, protocol: TCP}
+          env:
+            {{- if $companions.mermaid.enabled }}
+            - {name: KROKI_MERMAID_HOST, value: "127.0.0.1"}
+            - {name: KROKI_MERMAID_PORT, value: "8002"}
+            {{- end }}
+            {{- if $companions.blockdiag.enabled }}
+            - {name: KROKI_BLOCKDIAG_HOST, value: "127.0.0.1"}
+            - {name: KROKI_BLOCKDIAG_PORT, value: "8001"}
+            {{- end }}
+          livenessProbe:
+            httpGet: {path: /health, port: http}
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet: {path: /health, port: http}
+            periodSeconds: 10
+          {{- with .Values.kroki.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- if $companions.mermaid.enabled }}
+        - name: mermaid
+          image: "{{ $companions.mermaid.image.repository }}:{{ $companions.mermaid.image.tag }}"
+          imagePullPolicy: {{ $companions.mermaid.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - {name: mermaid, containerPort: 8002, protocol: TCP}
+          {{- with $companions.mermaid.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- if $companions.blockdiag.enabled }}
+        - name: blockdiag
+          image: "{{ $companions.blockdiag.image.repository }}:{{ $companions.blockdiag.image.tag }}"
+          imagePullPolicy: {{ $companions.blockdiag.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+          ports:
+            - {name: blockdiag, containerPort: 8001, protocol: TCP}
+          {{- with $companions.blockdiag.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }}
+      {{- with .Values.kroki.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.kroki.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.kroki.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "uml-mcp.labels" . | nindent 4 }}
+    {{- include "uml-mcp.rendererSelectorLabels" $c | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - {port: {{ .Values.kroki.service.port }}, targetPort: http, protocol: TCP, name: http}
+  selector:
+    {{- include "uml-mcp.rendererSelectorLabels" $c | nindent 4 }}
+{{- end }}

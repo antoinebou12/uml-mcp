@@ -1,0 +1,11 @@
+image:
+  repository: example.azurecr.io/uml-mcp
+# Every in-cluster renderer plus the NetworkPolicy that must let the server reach them.
+kroki:
+  enabled: true
+plantuml:
+  enabled: true
+mermaidInk:
+  enabled: true
+networkPolicy:
+  enabled: true

@@ -102,6 +102,9 @@ MCP_DIAGRAM_FALLBACK=true USE_LOCAL_PLANTUML=true USE_LOCAL_MERMAID_INK=true \
     server-side, so `content_base64` / saved files work; the links themselves resolve only
     inside the stack (or via the published host ports).
 
+On Kubernetes, the [Helm chart](../enterprise/kubernetes.md#in-cluster-renderers-optional) can
+run the same renderers in-cluster.
+
 ## API + MCP only (public Kroki)
 
 If you don't need a local Kroki and want a single small image:

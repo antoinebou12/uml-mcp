@@ -9,6 +9,39 @@
       "properties": {"repository": {"type": "string"}, "tag": {"type": "string"}}
     },
     "replicaCount": {"type": "integer", "minimum": 1},
+    "kroki": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "service": {"type": "object", "properties": {"port": {"type": "integer", "minimum": 1, "maximum": 65535}}},
+        "companions": {
+          "type": "object",
+          "properties": {
+            "mermaid": {"type": "object", "properties": {"enabled": {"type": "boolean"}}},
+            "blockdiag": {"type": "object", "properties": {"enabled": {"type": "boolean"}}}
+          }
+        }
+      }
+    },
+    "plantuml": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "externalUrl": {"type": "string", "pattern": "^(https?://.+)?$"},
+        "service": {"type": "object", "properties": {"port": {"type": "integer", "minimum": 1, "maximum": 65535}}}
+      }
+    },
+    "mermaidInk": {
+      "type": "object",
+      "properties": {
+        "enabled": {"type": "boolean"},
+        "externalUrl": {"type": "string", "pattern": "^(https?://.+)?$"},
+        "service": {"type": "object", "properties": {"port": {"type": "integer", "minimum": 1, "maximum": 65535}}},
+        "securityContext": {"type": "object"},
+        "env": {"type": "object"}
+      }
+    },
+    "diagramFallback": {"type": ["boolean", "null"]},
     "auth": {
       "type": "object",
       "properties": {

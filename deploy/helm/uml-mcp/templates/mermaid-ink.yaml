@@ -1,0 +1,89 @@
+{{- if .Values.mermaidInk.enabled }}
+{{- $c := dict "ctx" . "component" "mermaid-ink" }}
+{{- $name := include "uml-mcp.rendererName" $c }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "uml-mcp.labels" . | nindent 4 }}
+    {{- include "uml-mcp.rendererSelectorLabels" $c | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "uml-mcp.rendererSelectorLabels" $c | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "uml-mcp.rendererSelectorLabels" $c | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      automountServiceAccountToken: false
+      containers:
+        - name: mermaid-ink
+          image: "{{ .Values.mermaidInk.image.repository }}:{{ .Values.mermaidInk.image.tag }}"
+          imagePullPolicy: {{ .Values.mermaidInk.image.pullPolicy }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            {{- with .Values.mermaidInk.securityContext }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          ports:
+            - {name: http, containerPort: 3000, protocol: TCP}
+          {{- with .Values.mermaidInk.env }}
+          env:
+            {{- range $k, $v := . }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          {{- end }}
+          livenessProbe:
+            httpGet: {path: /, port: http}
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+          readinessProbe:
+            httpGet: {path: /, port: http}
+            periodSeconds: 10
+            timeoutSeconds: 5
+          {{- with .Values.mermaidInk.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          # Chromium uses /dev/shm heavily; the 64Mi container default is too small.
+          volumeMounts:
+            - {name: dshm, mountPath: /dev/shm}
+      volumes:
+        - name: dshm
+          emptyDir: {medium: Memory, sizeLimit: 256Mi}
+      {{- with .Values.mermaidInk.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mermaidInk.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.mermaidInk.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "uml-mcp.labels" . | nindent 4 }}
+    {{- include "uml-mcp.rendererSelectorLabels" $c | nindent 4 }}
+spec:
+  type: ClusterIP
+  ports:
+    - {port: {{ .Values.mermaidInk.service.port }}, targetPort: http, protocol: TCP, name: http}
+  selector:
+    {{- include "uml-mcp.rendererSelectorLabels" $c | nindent 4 }}
+{{- end }}
