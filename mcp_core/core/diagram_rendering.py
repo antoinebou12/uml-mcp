@@ -20,6 +20,8 @@ from tools.kroki.kroki import plantuml_playground_path_segment
 
 from .config import MCP_SETTINGS
 from .engine_health import EngineHealth, EngineUnavailable
+from .kroki_diagnostics import clean_kroki_error_body
+from .mermaid_source import prepare_mermaid_source
 
 logger = logging.getLogger(__name__)
 
@@ -78,9 +80,12 @@ def _verify_kroki_link(url: str, timeout: float | None) -> None:
 
 
 def prepare_diagram_code(code: str, backend_type: str, theme: str | None) -> str:
-    """Strip and wrap PlantUML when needed; TikZ snippets get standalone wrap; else strip only."""
+    """Strip and wrap PlantUML when needed; TikZ snippets get standalone wrap; Mermaid gets
+    fence/escape cleanup and an optional theme; else strip only."""
     prepared_code = code.strip()
-    if backend_type == "plantuml":
+    if backend_type == "mermaid":
+        prepared_code = prepare_mermaid_source(prepared_code, theme)
+    elif backend_type == "plantuml":
         if "@startuml" not in prepared_code:
             prepared_code = f"@startuml\n{prepared_code}"
         if "@enduml" not in prepared_code:
@@ -168,6 +173,9 @@ def _handle_diagram_error(e: Exception, code: str) -> str:
 
     if isinstance(e, KrokiHTTPError):
         status = getattr(e.response, "status_code", None)
+        # Kroki's body is the renderer's own diagnosis (line number, what was
+        # expected); keep it so the caller can repair the diagram.
+        detail = clean_kroki_error_body(e.content).rstrip(".")
         if status == 404:
             return (
                 "Diagram service endpoint not found. Check KROKI_SERVER and that "
@@ -179,13 +187,17 @@ def _handle_diagram_error(e: Exception, code: str) -> str:
                 "network connectivity."
             )
         if status == 400:
+            if detail:
+                return (
+                    f"Diagram syntax error: {detail}. Fix the diagram source and "
+                    "retry (examples: uml://examples)."
+                )
             return (
                 "Diagram code syntax error. Check examples at uml://examples resource "
                 "for valid syntax."
             )
-        return (
-            f"Diagram service returned HTTP {status}. Check KROKI_SERVER and network."
-        )
+        suffix = f": {detail}" if detail else ""
+        return f"Diagram service returned HTTP {status}{suffix}. Check KROKI_SERVER and network."
     if isinstance(e, KrokiConnectionError):
         detail = str(e).lower()
         if "timeout" in detail or "timed out" in detail:

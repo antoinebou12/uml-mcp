@@ -40,6 +40,53 @@ class TestHandleDiagramError:
         msg = _handle_diagram_error(_make_http_error(500), "code")
         assert "500" in msg
 
+    def test_http_400_keeps_the_renderers_diagnosis(self):
+        """Kroki's own parse error reaches the caller so the diagram can be repaired."""
+        from tools.kroki.kroki import KrokiHTTPError
+
+        response = MagicMock()
+        response.status_code = 400
+        response.url = "https://kroki.io/mermaid/svg"
+        body = (
+            b"Error 400: SyntaxError: Parse error on line 4:\n"
+            b"...D  A --> B  B -->\n--------------------^\n"
+            b"Expecting 'AMP', 'PIPE', got 'EOF'\n"
+            b"Error: Syntax error in graph\n"
+            b"    at Worker.convert (file:///usr/local/kroki/src/worker.js:103:15)"
+        )
+        msg = _handle_diagram_error(KrokiHTTPError(response, body), "graph TD")
+
+        assert "syntax error" in msg.lower()
+        assert "Parse error on line 4" in msg
+        assert "Expecting 'AMP', 'PIPE', got 'EOF'" in msg
+        assert "worker.js" not in msg and "file://" not in msg
+
+    def test_http_500_includes_detail_when_kroki_sends_one(self):
+        from tools.kroki.kroki import KrokiHTTPError
+
+        response = MagicMock()
+        response.status_code = 500
+        response.url = "https://kroki.io/vega/svg"
+        msg = _handle_diagram_error(
+            KrokiHTTPError(response, b"Error 500: vega failed to compile"), "code"
+        )
+
+        assert "500" in msg and "vega failed to compile" in msg
+
+    def test_infrastructure_errors_ignore_the_body(self):
+        """404/503 are about the service, not the diagram: keep the fixed guidance."""
+        from tools.kroki.kroki import KrokiHTTPError
+
+        for status, word in ((404, "not found"), (503, "unavailable")):
+            response = MagicMock()
+            response.status_code = status
+            response.url = f"https://kroki.io/x/{status}"
+            msg = _handle_diagram_error(
+                KrokiHTTPError(response, b"<html>proxy page</html>"), "code"
+            )
+            assert word in msg.lower()
+            assert "proxy page" not in msg
+
     def test_connection_error(self):
         """Connection error returns connectivity message."""
         from tools.kroki.kroki import KrokiConnectionError

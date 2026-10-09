@@ -539,7 +539,10 @@ class KrokiEncodeRequest(BaseModel):
     )
     theme: str | None = Field(
         default=None,
-        description="PlantUML theme (e.g. cerulean). Ignored for non-PlantUML backends.",
+        description=(
+            "PlantUML theme (e.g. cerulean) or Mermaid theme (default, dark, forest, "
+            "neutral, base). Ignored otherwise."
+        ),
     )
 
 

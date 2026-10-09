@@ -107,4 +107,36 @@ stateDiagram-v2
 
 Run `validate_uml(diagram_type="mermaid", code=..., strict=true)` to surface these before calling Kroki.
 
+## Themes
+
+`theme` works for Mermaid: pass one of `default`, `dark`, `forest`, `neutral` or `base` and the
+server adds Mermaid's own `%%{init: {'theme': '...'}}%%` directive (after any `---` frontmatter).
+It applies to the Kroki render and to the mermaid.ink fallback alike. Your own `%%{init}%%`
+directive, or a `theme:` in the frontmatter `config`, always wins, and a name that is not a Mermaid
+theme (such as a PlantUML theme) is ignored.
+
+## Input that is cleaned up for you
+
+Before rendering (and before `validate_uml` checks it), the server repairs input that Mermaid
+cannot parse as written, and leaves valid diagrams untouched:
+
+| Input | What happens |
+| --- | --- |
+| Wrapped in a markdown fence (```` ```mermaid ````), with or without text after it | The fence is removed |
+| One line with double-escaped newlines (`graph TD\n A --> B`) | The `\n` become real newlines (only when the diagram has no real newline and the header is followed directly by `\n`) |
+| Zero-width characters (U+200B, U+200C, U+200D, U+2060) | Removed. Mermaid rejects them with `Lexical error … Unrecognized text`, and they cannot be seen |
+
+## Syntax errors name the line
+
+When Mermaid rejects a diagram, the error carries the parser's own diagnosis, so the diagram can be
+fixed without guessing:
+
+```text
+Diagram syntax error: Parse error on line 4: ...D A --> B B --> Expecting 'AMP', 'COLON', 'PIPE',
+..., got 'EOF'. Fix the diagram source and retry (examples: uml://examples).
+```
+
+The same applies to the other Kroki backends (Graphviz, D2, PlantUML, …). Server stack traces and
+file paths are stripped from the message.
+
 See also: [Tutorials → Mermaid live examples](../tutorials/mermaid.md), [Diagram Assistant](../diagram-assistant.md).
