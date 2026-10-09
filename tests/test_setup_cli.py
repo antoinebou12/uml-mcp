@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import stat
+import sys
 from pathlib import Path
 
 import pytest
@@ -69,7 +70,8 @@ def test_setup_non_interactive_writes_valid_yaml(tmp_path):
     assert app_config.otel.enabled and not app_config.rate_limit.enabled
     assert data["rendering"]["kroki_server"] == "http://kroki:8000"
     assert data["setup"]["profile"] == "docker" and "otel" in data["setup"]["features"]
-    assert stat.S_IMODE(target.stat().st_mode) == 0o600
+    if sys.platform != "win32":  # NTFS has no POSIX permission bits
+        assert stat.S_IMODE(target.stat().st_mode) == 0o600
     # second run needs --force; with it a backup is kept
     assert runner.invoke(app, ["setup", "--path", str(target), "--yes"]).exit_code == 1
     assert (

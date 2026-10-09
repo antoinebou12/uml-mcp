@@ -222,6 +222,42 @@ def build_local_admin_router() -> APIRouter:
     return router
 
 
+def build_password_admin_router() -> APIRouter:
+    """Read-only dashboard behind an email + password sign-in (hosted deployments).
+
+    Enabled by :func:`mcp_core.admin.password_auth.enabled` (``ADMIN_EMAIL``, a
+    password and ``ADMIN_SESSION_SECRET``). The SPA calls the same ``/admin/api``
+    routes with the session cookie; writes and Stop are always refused.
+    """
+    from ..admin_ui import add_spa_routes
+    from .password_auth import add_login_routes, password_guards
+    from .routes import add_admin_routes
+
+    router = APIRouter(include_in_schema=False)
+    guards = password_guards()
+    add_login_routes(router)
+    add_spa_routes(router, guards.read)
+
+    @router.get("/admin/api/overview")
+    async def overview(request: Request) -> JSONResponse:
+        guards.read(request)
+        from ..core.config import MCP_SETTINGS
+
+        return JSONResponse(
+            {
+                "mode": "password",
+                "local": False,
+                "version": MCP_SETTINGS.version,
+                "uptime_seconds": METRICS.snapshot()["uptime_seconds"],
+            },
+            headers=NO_STORE,
+        )
+
+    add_ops_routes(router, guards.read)
+    add_admin_routes(router, guards)
+    return router
+
+
 def metrics_response() -> Response:
     return Response(METRICS.prometheus(), media_type="text/plain; version=0.0.4")
 
@@ -229,5 +265,6 @@ def metrics_response() -> Response:
 __all__ = [
     "add_ops_routes",
     "build_local_admin_router",
+    "build_password_admin_router",
     "metrics_response",
 ]
