@@ -231,10 +231,14 @@ def _generate_diagram_mermaid_fallback(
     """Fallback to Mermaid.ink when Kroki fails."""
     from tools.kroki.mermaid import generate_mermaid_urls
 
-    logger.info("Using Mermaid.ink fallback")
+    mermaid_ink_server = MCP_SETTINGS.mermaid_ink_server
+    logger.info("Using Mermaid.ink fallback: %s", mermaid_ink_server)
 
     urls = generate_mermaid_urls(
-        diagram_text=code, theme="default", image_format=output_format.lower()
+        diagram_text=code,
+        theme="default",
+        image_format=output_format.lower(),
+        ink_base=mermaid_ink_server,
     )
     url = urls.image_url
     playground = urls.edit_url

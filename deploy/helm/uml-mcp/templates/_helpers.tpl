@@ -27,6 +27,47 @@ app.kubernetes.io/name: {{ include "uml-mcp.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
+{{/*
+Renderer components (Kroki / PlantUML / mermaid.ink). Call with
+(dict "ctx" $ "component" "kroki").
+
+The selector labels use a different app.kubernetes.io/name than the server, or the
+server Service (name + instance) would also match renderer pods and route MCP
+traffic to them.
+*/}}
+{{- define "uml-mcp.rendererSelectorLabels" -}}
+app.kubernetes.io/name: {{ printf "%s-%s" (include "uml-mcp.name" .ctx) .component | trunc 63 | trimSuffix "-" }}
+app.kubernetes.io/instance: {{ .ctx.Release.Name }}
+{{- end }}
+
+{{/* Resource name, trimmed so "-<component>" still fits the 63-char DNS label limit. */}}
+{{- define "uml-mcp.rendererName" -}}
+{{- printf "%s-%s" (include "uml-mcp.fullname" .ctx | trunc (int (sub 62 (len .component))) | trimSuffix "-") .component }}
+{{- end }}
+
+{{/* In-cluster Service URL when enabled, otherwise the configured external URL (maybe empty). */}}
+{{- define "uml-mcp.krokiUrl" -}}
+{{- if .Values.kroki.enabled }}{{ printf "http://%s:%v" (include "uml-mcp.rendererName" (dict "ctx" . "component" "kroki")) .Values.kroki.service.port }}{{ end }}
+{{- end }}
+
+{{- define "uml-mcp.plantumlUrl" -}}
+{{- if .Values.plantuml.enabled }}{{ printf "http://%s:%v" (include "uml-mcp.rendererName" (dict "ctx" . "component" "plantuml")) .Values.plantuml.service.port }}{{ else }}{{ .Values.plantuml.externalUrl }}{{ end }}
+{{- end }}
+
+{{- define "uml-mcp.mermaidInkUrl" -}}
+{{- if .Values.mermaidInk.enabled }}{{ printf "http://%s:%v" (include "uml-mcp.rendererName" (dict "ctx" . "component" "mermaid-ink")) .Values.mermaidInk.service.port }}{{ else }}{{ .Values.mermaidInk.externalUrl }}{{ end }}
+{{- end }}
+
+{{/*
+MCP_DIAGRAM_FALLBACK: an explicit diagramFallback wins; when null it is "true" if a
+fallback renderer is configured and empty otherwise (the app's own default applies).
+*/}}
+{{- define "uml-mcp.diagramFallback" -}}
+{{- if kindIs "invalid" .Values.diagramFallback }}
+{{- if or (include "uml-mcp.plantumlUrl" .) (include "uml-mcp.mermaidInkUrl" .) }}true{{ end }}
+{{- else }}{{ .Values.diagramFallback }}{{ end }}
+{{- end }}
+
 {{- define "uml-mcp.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
 {{- default (include "uml-mcp.fullname" .) .Values.serviceAccount.name }}

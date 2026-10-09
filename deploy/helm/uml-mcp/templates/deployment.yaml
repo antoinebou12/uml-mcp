@@ -1,5 +1,26 @@
 {{- if not .Values.image.repository }}{{ fail "image.repository is required (no public image is published; build and push the Dockerfile)" }}{{ end }}
 {{- $authOn := include "uml-mcp.authEnabled" . }}
+{{- /*
+  Env vars owned by the renderer values (kroki / plantuml / mermaidInk / diagramFallback).
+  An `env` entry with the same name is skipped below: a duplicate name is applied
+  last-wins by kubectl but rejected by server-side apply (Flux, Argo CD SSA).
+*/}}
+{{- $rEnv := dict }}
+{{- if .Values.kroki.enabled }}
+{{- $_ := set $rEnv "USE_LOCAL_KROKI" "true" }}
+{{- $_ := set $rEnv "KROKI_SERVER" (include "uml-mcp.krokiUrl" .) }}
+{{- end }}
+{{- with (include "uml-mcp.plantumlUrl" .) }}
+{{- $_ := set $rEnv "USE_LOCAL_PLANTUML" "true" }}
+{{- $_ := set $rEnv "PLANTUML_SERVER" . }}
+{{- end }}
+{{- with (include "uml-mcp.mermaidInkUrl" .) }}
+{{- $_ := set $rEnv "USE_LOCAL_MERMAID_INK" "true" }}
+{{- $_ := set $rEnv "MERMAID_INK_SERVER" . }}
+{{- end }}
+{{- with (include "uml-mcp.diagramFallback" .) }}
+{{- $_ := set $rEnv "MCP_DIAGRAM_FALLBACK" . }}
+{{- end }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -75,6 +96,12 @@ spec:
             - {name: UML_MCP_CONFIG, value: none}
             {{- end }}
             {{- range $k, $v := .Values.env }}
+            {{- if not (hasKey $rEnv $k) }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+            {{- end }}
+            {{- range $k, $v := $rEnv }}
             - name: {{ $k }}
               value: {{ $v | quote }}
             {{- end }}
