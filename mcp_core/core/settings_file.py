@@ -45,6 +45,10 @@ ENV_MAP: dict[tuple[str, str], str] = {
     ("rendering", "output_dir"): "MCP_OUTPUT_DIR",
     ("rendering", "max_code_length"): "MCP_MAX_CODE_LENGTH",
     ("rendering", "max_render_seconds"): "MCP_MAX_RENDER_SECONDS",
+    (
+        "rendering",
+        "kroki_circuit_cooldown_seconds",
+    ): "MCP_KROKI_CIRCUIT_COOLDOWN_SECONDS",
     ("rendering", "batch_max_items"): "MCP_BATCH_MAX_ITEMS",
     ("rendering", "batch_concurrency"): "MCP_BATCH_CONCURRENCY",
 }
@@ -260,6 +264,11 @@ class RenderingSettings(_Model):
     )
     max_code_length: int | None = _f(None, "Maximum diagram source length.", ge=1)
     max_render_seconds: float | None = _f(None, "Render timeout in seconds.", gt=0)
+    kroki_circuit_cooldown_seconds: float | None = _f(
+        None,
+        "Seconds to skip a failing Kroki Mermaid engine and use the fallback (0 = off).",
+        ge=0,
+    )
     batch_max_items: int | None = _f(None, "Maximum diagrams per batch call.", ge=1)
     batch_concurrency: int | None = _f(None, "Parallel renders per batch.", ge=1)
 

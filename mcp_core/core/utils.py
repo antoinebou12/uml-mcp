@@ -14,6 +14,7 @@ from typing import Any
 
 from .config import MCP_SETTINGS
 from .diagram_rendering import (
+    MERMAID_ENGINE,
     DiagramRenderContext,
     _handle_diagram_error,  # noqa: F401 — re-export for callers/tests
     prepare_diagram_code,
@@ -50,6 +51,7 @@ def use_kroki_server(url: str) -> None:
     global _kroki_client
     MCP_SETTINGS.kroki_server = url.rstrip("/")
     _kroki_client = None
+    MERMAID_ENGINE.reset()  # what we learned about the old server does not apply
 
 
 # Optional override for tests: if set, generate_diagram calls this instead of real I/O
