@@ -59,6 +59,7 @@ These map one-to-one to existing env vars:
 | `server.stateless_http` | `FASTMCP_STATELESS_HTTP` |
 | `rendering.kroki_server` / `rendering.plantuml_server` | `KROKI_SERVER` / `PLANTUML_SERVER` |
 | `rendering.use_local_kroki` / `rendering.use_local_plantuml` | `USE_LOCAL_KROKI` / `USE_LOCAL_PLANTUML` |
+| `rendering.mermaid_ink_server` / `rendering.use_local_mermaid_ink` | `MERMAID_INK_SERVER` / `USE_LOCAL_MERMAID_INK` |
 | `rendering.url_only` / `rendering.memory_only` / `rendering.read_only` | `MCP_URL_ONLY` / `MCP_MEMORY_ONLY` / `MCP_READ_ONLY` |
 | `rendering.diagram_fallback` | `MCP_DIAGRAM_FALLBACK` |
 | `rendering.output_dir` (`~` expanded) | `MCP_OUTPUT_DIR` |

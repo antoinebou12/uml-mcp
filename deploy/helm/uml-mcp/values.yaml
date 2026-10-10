@@ -121,3 +121,60 @@ pdb:
 networkPolicy:
   enabled: false
   ingressNamespaceSelector: {}   # e.g. {kubernetes.io/metadata.name: ingress-nginx}
+
+# Optional in-cluster renderers, all OFF by default: Kroki is https://kroki.io (env.KROKI_SERVER)
+# and the PlantUML / mermaid.ink fallbacks are not used. Rendering order matches the app:
+# Kroki first, then (when the fallback chain is on) the PlantUML server for PlantUML-family
+# diagrams and mermaid.ink for Mermaid. Enabling one points uml-mcp at its Service; that wins
+# over `env`, while `extraEnv` still wins over everything. Images are pinned to the same
+# releases docker-compose.yml pulls.
+kroki:
+  enabled: false          # in-cluster Kroki; sets KROKI_SERVER and USE_LOCAL_KROKI
+  image: {repository: yuzutech/kroki, tag: "0.33.0", pullPolicy: IfNotPresent}
+  service: {port: 8000}
+  resources: {}
+  # Engines run as sidecars in the Kroki pod and are reached on localhost, like the
+  # `mermaid` / `blockdiag` services in docker-compose.yml. (blockdiag is versioned
+  # independently of Kroki; 0.21.3 is its latest release.)
+  companions:
+    mermaid:
+      enabled: true
+      image: {repository: yuzutech/kroki-mermaid, tag: "0.33.0", pullPolicy: IfNotPresent}
+      resources: {}
+    blockdiag:
+      enabled: true
+      image: {repository: yuzutech/kroki-blockdiag, tag: "0.21.3", pullPolicy: IfNotPresent}
+      resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+plantuml:
+  enabled: false          # in-cluster PlantUML server, the fallback for PlantUML-family diagrams
+  externalUrl: ""         # use an existing server instead (ignored when enabled)
+  image: {repository: plantuml/plantuml-server, tag: jetty-v1.2026.6, pullPolicy: IfNotPresent}
+  service: {port: 8080}
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+mermaidInk:
+  enabled: false          # in-cluster mermaid.ink, the fallback for Mermaid diagrams
+  externalUrl: ""         # use an existing server instead (ignored when enabled)
+  image: {repository: ghcr.io/jihchi/mermaid.ink, tag: v16.0.0, pullPolicy: IfNotPresent}
+  service: {port: 3000}
+  # Headless Chromium needs syscalls the runtime's default seccomp profile blocks.
+  # Unconfined is upstream's documented option; Pod Security "baseline" and "restricted"
+  # reject it, so in such namespaces supply a Localhost profile here or leave mermaidInk off.
+  securityContext:
+    seccompProfile: {type: Unconfined}
+  env: {}                 # see https://github.com/jihchi/mermaid.ink#environment-variables
+  resources: {}
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# MCP_DIAGRAM_FALLBACK. null = on when a PlantUML or mermaid.ink server is configured
+# (in-cluster or externalUrl), otherwise left to the app's default. true/false forces it.
+diagramFallback: null

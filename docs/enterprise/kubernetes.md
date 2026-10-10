@@ -61,10 +61,50 @@ Generate a values file with
 | `admin.enabled` | `false` | Read-only `/admin` console |
 | `config` | `{}` | [`uml-mcp.yaml`](../configuration/uml-mcp-yaml.md) sections (tools, rate_limit, logging, audit, metrics, rendering, server) rendered into a ConfigMap and loaded through `UML_MCP_CONFIG`; values in `env` still win; `config.auth` is rejected (use `auth.*`) |
 | `uvicorn.forwardedAllowIps` | `*` | Restrict to your ingress CIDR |
-| `networkPolicy.enabled` | `false` | Allows ingress from the ingress namespace, plus DNS and HTTPS egress |
+| `networkPolicy.enabled` | `false` | Allows ingress from the ingress namespace, plus DNS and HTTPS egress (and the in-cluster renderers below, when enabled) |
+| `kroki.enabled` | `false` | Deploy Kroki with Mermaid and BlockDiag sidecars and point `KROKI_SERVER` at it |
+| `plantuml.enabled` / `plantuml.externalUrl` | `false` / – | In-cluster PlantUML server, or the URL of an existing one, as the PlantUML-family fallback |
+| `mermaidInk.enabled` / `mermaidInk.externalUrl` | `false` / – | In-cluster mermaid.ink, or the URL of an existing one, as the Mermaid fallback |
+| `diagramFallback` | `null` | `MCP_DIAGRAM_FALLBACK`. `null` turns it on when a PlantUML or mermaid.ink server is configured; `true`/`false` forces it |
 
 Entra access tokens can be large. On ingress-nginx set
 `nginx.ingress.kubernetes.io/large-client-header-buffers: "4 32k"`.
+
+## In-cluster renderers (optional)
+
+By default the chart renders through the public `https://kroki.io` and has no fallback
+renderers. For an air-gapped cluster, or just to keep diagram source off the internet, enable
+the ones you want. Each gets its own Deployment and ClusterIP Service next to the server:
+
+```bash
+helm upgrade --install uml-mcp deploy/helm/uml-mcp -n uml-mcp \
+  --set image.repository=myregistry.azurecr.io/uml-mcp \
+  --set kroki.enabled=true --set plantuml.enabled=true --set mermaidInk.enabled=true \
+  --set networkPolicy.enabled=true
+```
+
+- **Kroki** runs with its Mermaid and BlockDiag engines as sidecars in one pod (`kroki.companions.*`),
+  the same shape as `docker-compose.yml`. Images are pinned to the releases compose pulls.
+- **PlantUML** and **mermaid.ink** are *fallbacks*: UML-MCP tries Kroki first and only reaches for
+  them when it fails (see [Fallback strategy](../fallback-mechanism.md)). Configuring either one
+  turns `MCP_DIAGRAM_FALLBACK` on, unless you set `diagramFallback` yourself. Use `externalUrl`
+  to point at a server you already run instead of deploying one; with `networkPolicy.enabled`,
+  a non-HTTPS `externalUrl` also needs its own egress rule.
+- The values above own `KROKI_SERVER`, `PLANTUML_SERVER`, `MERMAID_INK_SERVER`, `USE_LOCAL_*` and
+  `MCP_DIAGRAM_FALLBACK`; an `env:` entry with one of those names is ignored (a duplicate name
+  would break server-side apply). Use `diagramFallback` to force the chain on or off, and
+  `extraEnv` to override anything else.
+
+!!! warning "mermaid.ink needs a relaxed seccomp profile"
+
+    mermaid.ink drives headless Chromium, which needs syscalls the runtime's default seccomp
+    profile blocks, so the chart sets `seccompProfile: Unconfined` on that container only (the
+    upstream-documented option, the same as compose). Pod Security *baseline* and *restricted*
+    namespaces reject it: supply a `Localhost` profile through `mermaidInk.securityContext`, or
+    leave `mermaidInk` off there.
+
+The chart is verified by `helm lint --strict`, `helm template` (in CI for every `ci/*-values.yaml`)
+and `tests/test_helm_renderers.py`; the renderer images have not been exercised on a live cluster.
 
 ## Operations
 

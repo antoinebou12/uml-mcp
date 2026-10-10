@@ -36,6 +36,8 @@ ENV_MAP: dict[tuple[str, str], str] = {
     ("rendering", "plantuml_server"): "PLANTUML_SERVER",
     ("rendering", "use_local_kroki"): "USE_LOCAL_KROKI",
     ("rendering", "use_local_plantuml"): "USE_LOCAL_PLANTUML",
+    ("rendering", "mermaid_ink_server"): "MERMAID_INK_SERVER",
+    ("rendering", "use_local_mermaid_ink"): "USE_LOCAL_MERMAID_INK",
     ("rendering", "url_only"): "MCP_URL_ONLY",
     ("rendering", "memory_only"): "MCP_MEMORY_ONLY",
     ("rendering", "read_only"): "MCP_READ_ONLY",
@@ -245,6 +247,10 @@ class RenderingSettings(_Model):
         None, "Use the Kroki container from docker compose."
     )
     use_local_plantuml: bool | None = _f(None, "Use the PlantUML container.")
+    mermaid_ink_server: str | None = _f(
+        None, "mermaid.ink server used as the Mermaid fallback (empty = public)."
+    )
+    use_local_mermaid_ink: bool | None = _f(None, "Use the mermaid.ink container.")
     url_only: bool | None = _f(None, "Return URLs only, never image bytes.")
     memory_only: bool | None = _f(None, "Never write files; keep results in memory.")
     read_only: bool | None = _f(None, "Refuse to write output files.")

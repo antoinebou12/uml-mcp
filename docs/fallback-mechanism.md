@@ -2,6 +2,16 @@
 
 UML-MCP tries **Kroki** first for rendering. If Kroki fails or is unreachable, the pipeline may fall back to a **PlantUML server** (for PlantUML-family diagrams) or **Mermaid.ink** (for Mermaid). Responses may include a `source` field (`kroki`, `plantuml_server`, or `mermaid_ink`) naming the backend that produced the image.
 
+All three backends can be self-hosted:
+
+| Backend | Setting | Self-hosted with |
+| --- | --- | --- |
+| Kroki | `KROKI_SERVER` / `USE_LOCAL_KROKI` | Docker compose (default stack), Helm `kroki.enabled` |
+| PlantUML server | `PLANTUML_SERVER` / `USE_LOCAL_PLANTUML` | Docker compose `--profile plantuml`, Helm `plantuml.enabled` |
+| mermaid.ink | `MERMAID_INK_SERVER` / `USE_LOCAL_MERMAID_INK` | Docker compose `--profile mermaid-ink`, Helm `mermaidInk.enabled` |
+
+See [Docker](deploy/docker.md) and [Kubernetes (Helm)](enterprise/kubernetes.md#in-cluster-renderers-optional).
+
 ## URL-only mode (hosted deployments)
 
 On Vercel the server runs in URL-only mode: it returns a link to the rendered diagram instead of downloading the image, so by default it never contacts Kroki. That made a Mermaid link look successful even when Kroki's Mermaid renderer was down (HTTP 500 or a hang), and the fallback above could never run.

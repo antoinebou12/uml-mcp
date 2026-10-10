@@ -1,6 +1,6 @@
 ---
 title: Docker
-description: "Run UML-MCP in Docker: full stack with bundled Kroki, Mermaid, and BlockDiag, plain HTTP, or stdio MCP."
+description: "Run UML-MCP in Docker: full stack with bundled Kroki, Mermaid, and BlockDiag, optional self-hosted PlantUML and mermaid.ink fallbacks, plain HTTP, or stdio MCP."
 tags:
   - docker
   - deploy
@@ -59,17 +59,51 @@ omitting them leaves today's behavior exactly as it was.
 
 A successful PlantUML render reports `"source": "plantuml_server"` in the tool response.
 
-### Fully offline
-
-Local Kroki plus local PlantUML means no outbound calls for any supported diagram type:
-
-```bash
-MCP_DIAGRAM_FALLBACK=true USE_LOCAL_PLANTUML=true docker compose --profile plantuml up -d
-```
-
 Without the profile, the `PLANTUML_SERVER` default points at a `plantuml-server` host that
 does not exist in the default stack — so the fallback simply fails and the Kroki error is
 returned, which is the current behavior.
+
+## Optional local mermaid.ink
+
+Mermaid's fallback renderer is [mermaid.ink](https://github.com/jihchi/mermaid.ink). The
+compose file ships a self-hosted copy behind its own opt-in profile:
+
+```bash
+MCP_DIAGRAM_FALLBACK=true USE_LOCAL_MERMAID_INK=true docker compose --profile mermaid-ink up -d
+```
+
+That adds `ghcr.io/jihchi/mermaid.ink:v16.0.0`, published on host port `8003`. With
+`USE_LOCAL_MERMAID_INK=true`, UML-MCP sends Mermaid fallback renders to
+`http://mermaid-ink:3000` instead of the public `https://mermaid.ink`; set
+`MERMAID_INK_SERVER` to point somewhere else. Left unset, the public instance is used as
+before. A successful render reports `"source": "mermaid_ink"`.
+
+!!! note "Chromium sandbox"
+
+    mermaid.ink renders with headless Chromium, which needs syscalls Docker's default seccomp
+    profile blocks. The service runs with `security_opt: seccomp=unconfined`, upstream's
+    documented alternative to `--cap-add=SYS_ADMIN`. Its health check uses `node` (the image
+    has no `curl`).
+
+## Fully offline
+
+The `fallback` profile starts both fallback renderers at once. Together with the local Kroki
+of the default stack, no diagram type needs an outbound call:
+
+```bash
+MCP_DIAGRAM_FALLBACK=true USE_LOCAL_PLANTUML=true USE_LOCAL_MERMAID_INK=true \
+  docker compose --profile fallback up -d
+```
+
+!!! tip "URLs in responses"
+
+    Fallback responses carry URLs on the compose network (`http://mermaid-ink:3000/...`,
+    `http://plantuml-server:8080/...`), just like local Kroki URLs. They are fetched
+    server-side, so `content_base64` / saved files work; the links themselves resolve only
+    inside the stack (or via the published host ports).
+
+On Kubernetes, the [Helm chart](../enterprise/kubernetes.md#in-cluster-renderers-optional) can
+run the same renderers in-cluster.
 
 ## API + MCP only (public Kroki)
 
@@ -102,9 +136,11 @@ The Docker image reads the same variables as the local server. The most useful f
 | `PLANTUML_SERVER` | PlantUML server URL (fallback); resolves to the `plantuml` profile service | `http://plantuml-server:8080` |
 | `USE_LOCAL_KROKI` | Use a local Kroki instance (`true`/`false`) | `false` |
 | `USE_LOCAL_PLANTUML` | Use a local PlantUML instance (`true`/`false`) | `false` |
+| `MERMAID_INK_SERVER` | mermaid.ink URL (Mermaid fallback); empty means public | `https://mermaid.ink` |
+| `USE_LOCAL_MERMAID_INK` | Use the `mermaid-ink` profile service (`http://mermaid-ink:3000`) | `false` |
 | `MCP_OUTPUT_DIR` | Where to write rendered diagrams | `./output` |
 | `MCP_READ_ONLY` | Reject `output_dir` (read-only mode) | `false` |
-| `MCP_DIAGRAM_FALLBACK` | Enable the PlantUML / Mermaid.ink fallback chain | (auto) |
+| `MCP_DIAGRAM_FALLBACK` | Enable the PlantUML / Mermaid.ink fallback chain | (auto; `false` in compose) |
 
 Full table: [Configuration](../configuration.md).
 
