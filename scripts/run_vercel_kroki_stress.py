@@ -155,7 +155,7 @@ FIXTURES_21_37: list[dict[str, str]] = [
     },
     {
         "diagram_type": "excalidraw",
-        "code": '{"type":"excalidraw","version":2,"source":"kroki","elements":[{"id":"rect","type":"rectangle","x":100,"y":100,"width":200,"height":100,"angle":0,"strokeColor":"#000000","backgroundColor":"#ffffff","fillStyle":"solid","strokeWidth":1,"strokeStyle":"solid","roughness":1,"opacity":100,"groupIds":[],"frameId":null,"roundness":null,"seed":1,"version":1,"versionNonce":1,"isDeleted":false,"boundElements":[],"updated":1,"link":null,"locked":false}],"appState":{"viewBackgroundColor":"#ffffff"},"files":{}}',
+        "code": '{"type":"excalidraw","version":2,"source":"kroki","elements":[{"id":"rect","type":"rectangle","x":100,"y":100,"width":200,"height":100,"angle":0,"strokeColor":"#000000","backgroundColor":"#ffffff","fillStyle":"solid","strokeWidth":1,"strokeStyle":"solid","roughness":1,"opacity":100,"groupIds":[],"frameId":null,"roundness":null,"seed":1,"version":1,"versionNonce":1,"isDeleted":false,"boundElements":[],"updated":1,"link":null,"locked":false},{"id":"label","type":"text","x":150,"y":140,"text":"UML-MCP","fontSize":20}],"appState":{"viewBackgroundColor":"#ffffff"},"files":{}}',
     },
     {
         "diagram_type": "goat",
@@ -223,7 +223,7 @@ FIXTURES_21_37: list[dict[str, str]] = [
     },
     {
         "diagram_type": "vega",
-        "code": '{"$schema":"https://vega.github.io/schema/vega/v5.json","width":240,"height":160,"data":[{"name":"table","values":[{"x":1,"y":2},{"x":2,"y":5},{"x":3,"y":3}]}],"scales":[{"name":"x","type":"linear","range":"width","domain":{"data":"table","field":"x"}},{"name":"y","type":"linear","range":"height","domain":{"data":"table","field":"y"}}],"marks":[{"type":"symbol","from":{"data":"table"},"encode":{"enter":{"x":{"scale":"x","field":"x"},"y":{"scale":"y","field":"y"},"size":{"value":100}}}}]}',
+        "code": '{"$schema":"https://vega.github.io/schema/vega/v5.json","width":240,"height":160,"data":[{"name":"table","values":[{"x":1,"y":2},{"x":2,"y":5},{"x":3,"y":3}]}],"scales":[{"name":"x","type":"linear","range":"width","nice":true,"domain":{"data":"table","field":"x"}},{"name":"y","type":"linear","range":"height","nice":true,"domain":{"data":"table","field":"y"}}],"axes":[{"orient":"bottom","scale":"x","title":"requests"},{"orient":"left","scale":"y","title":"latency"}],"marks":[{"type":"symbol","from":{"data":"table"},"encode":{"enter":{"x":{"scale":"x","field":"x"},"y":{"scale":"y","field":"y"},"size":{"value":100}}}}]}',
     },
     {
         "diagram_type": "vegalite",
@@ -371,14 +371,20 @@ class McpClient:
 
 
 def _content_problem(row: dict[str, Any]) -> str | None:
-    """None when an SVG row's content is a well-formed ``<svg>`` document."""
+    """None when an SVG row's content is a well-formed ``<svg>`` showing some text.
+
+    A blank drawing (an engine that returns an empty canvas) still parses, so well-formed
+    is not enough; every fixture in this file carries a label for that reason.
+    """
     encoded = row.get("content_base64")
     if not encoded:
         return "no content_base64"
     try:
-        check_svg(base64.b64decode(encoded))
+        text = check_svg(base64.b64decode(encoded))
     except (RenderCheckError, ValueError) as exc:
         return str(exc)
+    if not text.strip():
+        return "SVG shows no text"
     return None
 
 
