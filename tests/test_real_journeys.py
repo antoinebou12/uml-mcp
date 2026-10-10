@@ -352,6 +352,13 @@ def _axe(page) -> list[dict[str, Any]]:
     """Serious/critical accessibility violations on the current page (axe-core)."""
     axe_mod = pytest.importorskip("axe_playwright_python")
     script = Path(axe_mod.__file__).with_name("axe.min.js").read_text(encoding="utf-8")
+    # Measure the settled UI: a card mid-way through its fade-in has washed-out text
+    # and fails color-contrast for a few hundred ms. Looping skeleton pulses never
+    # finish, so only finite animations are awaited.
+    page.wait_for_function(
+        "() => document.getAnimations().every(a => a.playState !== 'running'"
+        " || a.effect?.getComputedTiming().iterations === Infinity)"
+    )
     page.evaluate(script)
     result = page.evaluate(
         "() => axe.run(document, {runOnly: {type: 'tag', values: ['wcag2a', 'wcag2aa']}})"

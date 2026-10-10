@@ -20,4 +20,18 @@ spec:
   egress:
     - ports: [{port: 53, protocol: UDP}, {port: 53, protocol: TCP}]
     - ports: [{port: 443, protocol: TCP}]   # Entra ID / JWKS / Kroki over HTTPS
+    {{- /* In-cluster renderers: container ports, not Service ports. */}}
+    {{- $renderers := list
+          (dict "component" "kroki" "on" .Values.kroki.enabled "port" 8000)
+          (dict "component" "plantuml" "on" .Values.plantuml.enabled "port" 8080)
+          (dict "component" "mermaid-ink" "on" .Values.mermaidInk.enabled "port" 3000) }}
+    {{- range $renderers }}
+    {{- if .on }}
+    - to:
+        - podSelector:
+            matchLabels:
+              {{- include "uml-mcp.rendererSelectorLabels" (dict "ctx" $ "component" .component) | nindent 14 }}
+      ports: [{port: {{ .port }}, protocol: TCP}]
+    {{- end }}
+    {{- end }}
 {{- end }}

@@ -34,6 +34,8 @@ Command-line options override values in `fastmcp.json` (e.g. `fastmcp run --port
 | `PLANTUML_SERVER` | URL of the PlantUML server | `http://plantuml-server:8080` |
 | `USE_LOCAL_KROKI` | Use local Kroki server (true/false) | `false` |
 | `USE_LOCAL_PLANTUML` | Use local PlantUML server (true/false) | `false` |
+| `MERMAID_INK_SERVER` | URL of the mermaid.ink server used for the Mermaid fallback (empty = public) | `https://mermaid.ink` |
+| `USE_LOCAL_MERMAID_INK` | Use a self-hosted mermaid.ink; `MERMAID_INK_SERVER` then defaults to `http://mermaid-ink:3000` | `false` |
 | `MCP_DIAGRAM_FALLBACK` | After Kroki fails, try PlantUML server / Mermaid.ink | **On** for typical desktop; **off** when `VERCEL` is set or `USE_LOCAL_KROKI=true` unless overridden |
 | `FASTMCP_STATELESS_HTTP` | Enable stateless HTTP for multi-worker/horizontal scaling (true/false) | `false` |
 | `MCP_READ_ONLY` | Reject `output_dir` and never write diagram files to disk | `false` |

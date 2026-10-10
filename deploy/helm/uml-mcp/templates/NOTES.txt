@@ -8,4 +8,10 @@ Auth mode: {{ .Values.auth.mode }}
 {{- else }}
   WARNING: /mcp is unauthenticated. Set auth.mode=jwt (or entra-proxy) for enterprise SSO.
 {{- end }}
+
+Renderers:
+  Kroki:               {{ include "uml-mcp.krokiUrl" . | default (printf "%s (env.KROKI_SERVER)" (default "https://kroki.io" .Values.env.KROKI_SERVER)) }}
+  PlantUML fallback:   {{ include "uml-mcp.plantumlUrl" . | default "not configured" }}
+  mermaid.ink fallback: {{ include "uml-mcp.mermaidInkUrl" . | default "not configured (public https://mermaid.ink if the fallback chain is on)" }}
+  MCP_DIAGRAM_FALLBACK: {{ include "uml-mcp.diagramFallback" . | default "unset (app default)" }}
 Docs: https://github.com/antoinebou12/uml-mcp/tree/main/docs/enterprise

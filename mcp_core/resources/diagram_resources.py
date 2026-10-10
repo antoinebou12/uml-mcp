@@ -139,6 +139,7 @@ def get_server_info() -> str:
             "prompts": MCP_SETTINGS.prompts,
             "kroki_server": MCP_SETTINGS.kroki_server,
             "plantuml_server": MCP_SETTINGS.plantuml_server,
+            "mermaid_ink_server": MCP_SETTINGS.mermaid_ink_server,
         },
         indent=2,
     )

@@ -196,6 +196,8 @@ def _effective_env_sections() -> dict[str, dict[str, Any]]:
             "plantuml_server": MCP_SETTINGS.plantuml_server,
             "use_local_kroki": bool(env_bool("USE_LOCAL_KROKI")),
             "use_local_plantuml": bool(env_bool("USE_LOCAL_PLANTUML")),
+            "mermaid_ink_server": MCP_SETTINGS.mermaid_ink_server,
+            "use_local_mermaid_ink": bool(env_bool("USE_LOCAL_MERMAID_INK")),
             "url_only": MCP_SETTINGS.url_only,
             "memory_only": MCP_SETTINGS.memory_only,
             "read_only": MCP_SETTINGS.read_only,
