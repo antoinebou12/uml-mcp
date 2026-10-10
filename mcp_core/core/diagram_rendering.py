@@ -50,6 +50,26 @@ def _url_only_mode(ctx: DiagramRenderContext) -> bool:
     return bool(MCP_SETTINGS.url_only)
 
 
+# Backends whose public Kroki renderer fails often enough (kroki.io's Mermaid returns 500
+# or hangs while the service itself is up) that the URL-only link is checked before it is
+# returned. Add a backend here to extend the check.
+_VERIFIED_URL_BACKENDS = frozenset({"mermaid"})
+
+
+def _verify_kroki_link(url: str, timeout: float | None) -> None:
+    """Raise unless ``url`` currently renders.
+
+    URL-only mode otherwise returns the Kroki link without ever contacting Kroki, so a
+    dead link was reported as a success and the mermaid.ink fallback could never run.
+    The body is discarded: only the status matters.
+    """
+    from tools.kroki.kroki import KrokiHTTPError
+
+    response = httpx.get(url, timeout=timeout, follow_redirects=True)
+    if response.status_code >= 400:
+        raise KrokiHTTPError(response, response.content)
+
+
 def prepare_diagram_code(code: str, backend_type: str, theme: str | None) -> str:
     """Strip and wrap PlantUML when needed; TikZ snippets get standalone wrap; else strip only."""
     prepared_code = code.strip()
@@ -304,6 +324,13 @@ def try_kroki_render(
             kroki_url = client.get_url(
                 ctx.backend_type, ctx.prepared_code, ctx.output_format
             )
+            # Only worth checking when a failure can fall back to something else.
+            verified = (
+                ctx.backend_type in _VERIFIED_URL_BACKENDS
+                and MCP_SETTINGS.diagram_fallback_enabled
+            )
+            if verified:
+                _verify_kroki_link(kroki_url, kroki_timeout)
             playground = client.get_playground_url(ctx.backend_type, ctx.prepared_code)
             out_url_only: dict[str, Any] = {
                 "code": ctx.prepared_code,
@@ -313,7 +340,9 @@ def try_kroki_render(
                 "source": "kroki",
             }
             logger.info(
-                "URL-only Kroki for %s diagram (no image fetch)", ctx.diagram_type
+                "URL-only Kroki for %s diagram (no image fetch%s)",
+                ctx.diagram_type,
+                ", link verified" if verified else "",
             )
             return out_url_only, None
 

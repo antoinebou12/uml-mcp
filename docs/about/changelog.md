@@ -15,6 +15,10 @@ Release notes and tagged versions live on GitHub:
 
     Use GitHub's "Watch → Custom → Releases" to get an email or notification on every release.
 
+## Unreleased
+
+- Fix: in URL-only mode (the Vercel default) `generate_uml` returned a Kroki link for Mermaid without contacting Kroki, so the link could be dead while the call reported success. The link is now checked and replaced by a mermaid.ink link when it fails. The deploy smoke test also fetches the returned Mermaid and PlantUML links. See [Diagram rendering fallback](../fallback-mechanism.md).
+
 ## 1.4.0
 
 - Optional enterprise SSO for HTTP deployments: `MCP_AUTH_MODE=jwt` (Entra ID / OIDC token validation) and `entra-proxy` (RFC 8414 / 7591 facade with S256-only PKCE). Includes RFC 9728 metadata, strict 401/403/404 separation and a read-only admin console. See [Enterprise](../enterprise/README.md).

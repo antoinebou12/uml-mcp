@@ -39,7 +39,7 @@ Command-line options override values in `fastmcp.json` (e.g. `fastmcp run --port
 | `MCP_READ_ONLY` | Reject `output_dir` and never write diagram files to disk | `false` |
 | `MCP_MAX_CODE_LENGTH` | Maximum diagram source length (characters) | `500000` |
 | `MCP_MAX_RENDER_SECONDS` | HTTP timeout budget for Kroki/fallback image fetch (seconds) | `30` |
-| `MCP_KROKI_MERMAID_TIMEOUT_SECONDS` | Fail-fast Kroki deadline for Mermaid before mermaid.ink fallback (capped by `MCP_MAX_RENDER_SECONDS`) | `8` |
+| `MCP_KROKI_MERMAID_TIMEOUT_SECONDS` | Fail-fast Kroki deadline for Mermaid before mermaid.ink fallback (capped by `MCP_MAX_RENDER_SECONDS`). Also the deadline for the Mermaid link check in URL-only mode (see below). | `8` |
 | `MCP_BATCH_MAX_ITEMS` | Maximum items per `generate_uml_batch` call | `20` |
 | `MCP_BATCH_CONCURRENCY` | Max parallel workers for `generate_uml_batch` (clamped 1–16). Mermaid-majority batches are further capped at 2 to reduce Mermaid.ink stampedes on hosted deployments. | `4` |
 | `MCP_RATE_LIMIT_PER_MINUTE` | Per-client IP requests per minute for `/mcp`, `/generate_diagram`, `/kroki_encode` (FastAPI only). `0` disables. | `0` |
@@ -48,6 +48,8 @@ Command-line options override values in `fastmcp.json` (e.g. `fastmcp run --port
 | `MCP_AUTH_MODE` | Optional enterprise SSO for HTTP: `none`, `jwt`, `entra-proxy`. See [Enterprise configuration](enterprise/configuration.md) | `none` |
 
 When **`MCP_URL_ONLY=true`**, the server avoids downloading rendered image bytes inside the process (lower latency and cost on serverless). Responses omit `content_base64` unless you disable URL-only mode. Exceptions: **`generate_uml_image`** always fetches bytes so MCP clients can show an inline image in chat; **`generate_uml`** with **`png`** or **`jpeg`** also force-fetches. Render results include structured **`display_markdown`** (markdown image + URL + playground). **`MCP_MEMORY_ONLY=true`** skips all file writes; use URL/base64-from-client fetch if needed.
+
+In URL-only mode the server would otherwise return a Kroki link without ever contacting Kroki. Public Kroki's Mermaid renderer often returns HTTP 500 or hangs while the service itself is up, so for **Mermaid** the link is checked first (within `MCP_KROKI_MERMAID_TIMEOUT_SECONDS`). If the check fails, the result carries a **mermaid.ink** link instead (`source: mermaid_ink`, `fallback_used: true`). The check runs only when `MCP_DIAGRAM_FALLBACK` is on (the hosted `vercel.json` sets it); other diagram types are not checked.
 
 ## Health check (HTTP deployment)
 
