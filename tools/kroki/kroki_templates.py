@@ -450,7 +450,7 @@ endmodule""",
 \\end{tikzpicture}
 \\end{document}""",
             # Vega example
-            "vega": """{"$schema":"https://vega.github.io/schema/vega/v5.json","width":200,"height":200,"data":[{"name":"table","values":[{"x":1,"y":2},{"x":2,"y":4}]}],"scales":[{"name":"x","type":"linear","range":"width","domain":{"data":"table","field":"x"}},{"name":"y","type":"linear","range":"height","domain":{"data":"table","field":"y"}}],"marks":[{"type":"symbol","from":{"data":"table"},"encode":{"enter":{"x":{"scale":"x","field":"x"},"y":{"scale":"y","field":"y"},"size":{"value":50}}}}]}""",
+            "vega": """{"$schema":"https://vega.github.io/schema/vega/v5.json","width":200,"height":200,"data":[{"name":"table","values":[{"x":1,"y":2},{"x":2,"y":4}]}],"scales":[{"name":"x","type":"linear","range":"width","nice":true,"domain":{"data":"table","field":"x"}},{"name":"y","type":"linear","range":"height","nice":true,"domain":{"data":"table","field":"y"}}],"axes":[{"orient":"bottom","scale":"x","title":"x"},{"orient":"left","scale":"y","title":"y"}],"marks":[{"type":"symbol","from":{"data":"table"},"encode":{"enter":{"x":{"scale":"x","field":"x"},"y":{"scale":"y","field":"y"},"size":{"value":50}}}}]}""",
             # Vega-Lite example
             "vegalite": """{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"a":1,"b":2},{"a":2,"b":4}]},"mark":"point","encoding":{"x":{"field":"a","type":"quantitative"},"y":{"field":"b","type":"quantitative"}}}""",
             # WaveDrom example
@@ -799,7 +799,7 @@ Table posts {
   user_id int [ref: > users.id]
 }""",
             # Excalidraw template (minimal JSON)
-            "excalidraw": """{"type":"excalidraw","version":2,"source":"kroki","elements":[{"id":"r1","type":"rectangle","x":50,"y":50,"width":150,"height":80,"angle":0,"strokeColor":"#000","backgroundColor":"#fff","fillStyle":"solid"}],"appState":{"viewBackgroundColor":"#fff"},"files":{}}""",
+            "excalidraw": """{"type":"excalidraw","version":2,"source":"kroki","elements":[{"id":"r1","type":"rectangle","x":50,"y":50,"width":150,"height":80,"angle":0,"strokeColor":"#000","backgroundColor":"#fff","fillStyle":"solid"},{"id":"t1","type":"text","x":80,"y":78,"text":"Label","fontSize":20}],"appState":{"viewBackgroundColor":"#fff"},"files":{}}""",
             # GoAT template (ASCII boxes)
             "goat": """.-------.
 | Start +--->| End |
@@ -875,7 +875,7 @@ endmodule""",
 \\end{tikzpicture}
 \\end{document}""",
             # Vega template
-            "vega": """{"$schema":"https://vega.github.io/schema/vega/v5.json","width":200,"height":200,"data":[{"name":"d","values":[{"v":1},{"v":2}]}],"marks":[{"type":"rect","from":{"data":"d"},"encode":{"enter":{"x":{"value":0},"y":{"scale":"y","field":"v"},"width":{"value":20},"height":{"scale":"y","band":1}}}}],"scales":[{"name":"y","type":"band","range":"height","domain":{"data":"d","field":"v"}}]}""",
+            "vega": """{"$schema":"https://vega.github.io/schema/vega/v5.json","width":200,"height":200,"data":[{"name":"d","values":[{"v":1},{"v":2}]}],"marks":[{"type":"rect","from":{"data":"d"},"encode":{"enter":{"x":{"value":0},"y":{"scale":"y","field":"v"},"width":{"value":20},"height":{"scale":"y","band":1}}}}],"scales":[{"name":"y","type":"band","range":"height","domain":{"data":"d","field":"v"}}],"axes":[{"orient":"left","scale":"y","title":"v"}]}""",
             # Vega-Lite template
             "vegalite": """{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"a":1},{"a":2}]},"mark":"bar","encoding":{"x":{"field":"a","type":"quantitative"}}}""",
             # WaveDrom template
