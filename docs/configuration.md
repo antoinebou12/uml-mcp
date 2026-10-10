@@ -40,6 +40,7 @@ Command-line options override values in `fastmcp.json` (e.g. `fastmcp run --port
 | `MCP_MAX_CODE_LENGTH` | Maximum diagram source length (characters) | `500000` |
 | `MCP_MAX_RENDER_SECONDS` | HTTP timeout budget for Kroki/fallback image fetch (seconds) | `30` |
 | `MCP_KROKI_MERMAID_TIMEOUT_SECONDS` | Fail-fast Kroki deadline for Mermaid before mermaid.ink fallback (capped by `MCP_MAX_RENDER_SECONDS`). Also the deadline for the Mermaid link check in URL-only mode (see below). | `8` |
+| `MCP_KROKI_CIRCUIT_COOLDOWN_SECONDS` | After two consecutive timeouts or 5xx/429 answers from Kroki's Mermaid renderer, skip it for this long and render with mermaid.ink straight away. Needs `MCP_DIAGRAM_FALLBACK`. `0` always tries Kroki. See [Diagram rendering fallback](fallback-mechanism.md#when-kroki-is-down) | `60` |
 | `MCP_BATCH_MAX_ITEMS` | Maximum items per `generate_uml_batch` call | `20` |
 | `MCP_BATCH_CONCURRENCY` | Max parallel workers for `generate_uml_batch` (clamped 1–16). Mermaid-majority batches are further capped at 2 to reduce Mermaid.ink stampedes on hosted deployments. | `4` |
 | `MCP_RATE_LIMIT_PER_MINUTE` | Per-client IP requests per minute for `/mcp`, `/generate_diagram`, `/kroki_encode` (FastAPI only). `0` disables. | `0` |

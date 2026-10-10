@@ -18,6 +18,7 @@ Release notes and tagged versions live on GitHub:
 ## Unreleased
 
 - Fix: in URL-only mode (the Vercel default) `generate_uml` returned a Kroki link for Mermaid without contacting Kroki, so the link could be dead while the call reported success. The link is now checked and replaced by a mermaid.ink link when it fails. The deploy smoke test also fetches the returned Mermaid and PlantUML links. See [Diagram rendering fallback](../fallback-mechanism.md).
+- Fix: when Kroki's Mermaid renderer hangs (public kroki.io has done so), every new Mermaid diagram waited out the timeout before falling back. After two failures in a row the renderer is now skipped for `MCP_KROKI_CIRCUIT_COOLDOWN_SECONDS` (default 60, `0` turns it off) and Mermaid goes straight to mermaid.ink. Syntax errors never count as failures. See [When Kroki is down](../fallback-mechanism.md#when-kroki-is-down).
 
 ## 1.4.0
 

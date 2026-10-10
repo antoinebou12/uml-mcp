@@ -63,6 +63,7 @@ These map one-to-one to existing env vars:
 | `rendering.diagram_fallback` | `MCP_DIAGRAM_FALLBACK` |
 | `rendering.output_dir` (`~` expanded) | `MCP_OUTPUT_DIR` |
 | `rendering.max_code_length` / `rendering.max_render_seconds` | `MCP_MAX_CODE_LENGTH` / `MCP_MAX_RENDER_SECONDS` |
+| `rendering.kroki_circuit_cooldown_seconds` | `MCP_KROKI_CIRCUIT_COOLDOWN_SECONDS` |
 | `rendering.batch_max_items` / `rendering.batch_concurrency` | `MCP_BATCH_MAX_ITEMS` / `MCP_BATCH_CONCURRENCY` |
 
 ### `tools` — least privilege

@@ -19,8 +19,15 @@ import httpx
 from tools.kroki.kroki import plantuml_playground_path_segment
 
 from .config import MCP_SETTINGS
+from .engine_health import EngineHealth, EngineUnavailable
 
 logger = logging.getLogger(__name__)
+
+#: Health memory for Kroki's Mermaid engine, the one that hangs on public kroki.io.
+MERMAID_ENGINE = EngineHealth(
+    "Mermaid",
+    cooldown=lambda: float(MCP_SETTINGS.kroki_circuit_cooldown_seconds),
+)
 
 
 def _http_timeout() -> httpx.Timeout:
@@ -122,8 +129,38 @@ def _attach_render_metadata(
     return out
 
 
+def _engine_alive(exc: Exception) -> bool | None:
+    """What a failed Kroki call says about the engine: True = it answered (the diagram
+    was the problem), False = it is down or hanging, None = nothing either way."""
+    from tools.kroki.kroki import KrokiConnectionError, KrokiHTTPError
+
+    if isinstance(exc, KrokiHTTPError):
+        status = getattr(exc.response, "status_code", None)
+        if isinstance(status, int):
+            if status >= 500 or status == 429:
+                return False
+            if status in (400, 413, 422):
+                return True
+        return None
+    # httpx errors come from the URL-only link check; Kroki* errors from the client.
+    if isinstance(exc, (KrokiConnectionError, httpx.TransportError, TimeoutError)):
+        return False
+    return None
+
+
+def _breaker_applies(ctx: DiagramRenderContext) -> bool:
+    """Route around the Mermaid engine only when there is a fallback to route to."""
+    return ctx.backend_type == "mermaid" and bool(MCP_SETTINGS.diagram_fallback_enabled)
+
+
 def _handle_diagram_error(e: Exception, code: str) -> str:
     """Return actionable error message for diagram generation failures."""
+    if isinstance(e, EngineUnavailable):
+        return (
+            f"Kroki's {e.engine} renderer has been failing, so it is being skipped for "
+            f"another {e.retry_in:.0f}s (set MCP_KROKI_CIRCUIT_COOLDOWN_SECONDS=0 to "
+            "always try it)."
+        )
     try:
         from tools.kroki.kroki import KrokiConnectionError, KrokiHTTPError
     except ImportError:
@@ -318,6 +355,13 @@ def try_kroki_render(
             float(MCP_SETTINGS.max_render_seconds),
         )
 
+    breaker_on = _breaker_applies(ctx)
+    if breaker_on and MERMAID_ENGINE.is_open():
+        logger.info(
+            "Skipping Kroki for %s: Mermaid engine is failing", ctx.diagram_type
+        )
+        return None, EngineUnavailable(MERMAID_ENGINE.name, MERMAID_ENGINE.retry_in())
+
     try:
         logger.info("Attempting Kroki for %s diagram", ctx.diagram_type)
         if _url_only_mode(ctx):
@@ -331,6 +375,8 @@ def try_kroki_render(
             )
             if verified:
                 _verify_kroki_link(kroki_url, kroki_timeout)
+                if breaker_on:
+                    MERMAID_ENGINE.success()
             playground = client.get_playground_url(ctx.backend_type, ctx.prepared_code)
             out_url_only: dict[str, Any] = {
                 "code": ctx.prepared_code,
@@ -352,6 +398,8 @@ def try_kroki_render(
             ctx.output_format,
             timeout=kroki_timeout,
         )
+        if breaker_on:
+            MERMAID_ENGINE.success()
         content = result["content"]
         if (
             ctx.output_format.lower() == "svg"
@@ -398,6 +446,12 @@ def try_kroki_render(
             ctx.diagram_type,
             str(e),
         )
+        if breaker_on:
+            alive = _engine_alive(e)
+            if alive is False:
+                MERMAID_ENGINE.failure()
+            elif alive is True:
+                MERMAID_ENGINE.success()
         return None, e
 
 

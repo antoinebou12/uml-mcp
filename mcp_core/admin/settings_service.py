@@ -203,6 +203,7 @@ def _effective_env_sections() -> dict[str, dict[str, Any]]:
             "output_dir": MCP_SETTINGS.output_dir,
             "max_code_length": MCP_SETTINGS.max_code_length,
             "max_render_seconds": MCP_SETTINGS.max_render_seconds,
+            "kroki_circuit_cooldown_seconds": MCP_SETTINGS.kroki_circuit_cooldown_seconds,
             "batch_max_items": MCP_SETTINGS.batch_max_items,
             "batch_concurrency": int(batch_conc)
             if batch_conc and batch_conc.isdigit()

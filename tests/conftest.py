@@ -34,6 +34,17 @@ def _enable_diagram_fallback_for_tests(monkeypatch):
     monkeypatch.setattr(MCP_SETTINGS, "diagram_fallback_enabled", True)
 
 
+@pytest.fixture(autouse=True)
+def _fresh_kroki_engine_health():
+    """The Mermaid circuit breaker is process-global: failures simulated by one test
+    must never make the next one skip Kroki."""
+    from mcp_core.core.diagram_rendering import MERMAID_ENGINE
+
+    MERMAID_ENGINE.reset()
+    yield
+    MERMAID_ENGINE.reset()
+
+
 @pytest.fixture
 def reset_mcp_server_singleton():
     """Reset the MCP server singleton so create_mcp_server() runs fresh."""

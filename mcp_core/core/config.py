@@ -131,6 +131,13 @@ class MCPSettings(BaseModel):
             os.environ.get("MCP_KROKI_MERMAID_TIMEOUT_SECONDS", "8")
         )
     )
+    # After Kroki's Mermaid engine keeps failing (hangs, 5xx), skip it for this many
+    # seconds and use the fallback straight away. 0 disables the circuit breaker.
+    kroki_circuit_cooldown_seconds: float = Field(
+        default_factory=lambda: float(
+            os.environ.get("MCP_KROKI_CIRCUIT_COOLDOWN_SECONDS", "60")
+        )
+    )
     batch_max_items: int = Field(
         default_factory=lambda: int(os.environ.get("MCP_BATCH_MAX_ITEMS", "20"))
     )
