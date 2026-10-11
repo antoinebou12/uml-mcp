@@ -12,7 +12,7 @@ deployment. The rules are inspired by [MXCP's linter](https://mxcp.dev/quality/l
 
 ```bash
 uv run uml-mcp lint                                   # in process; exit 1 on errors
-uv run uml-mcp lint --strict --min-grade A --min-score 100 --token-budget 5500   # the CI gate
+uv run uml-mcp lint --strict --min-grade A --min-score 100 --token-budget 4300   # the CI gate
 uv run uml-mcp lint https://mcp.contoso.com/mcp       # any running server (MCP_LINT_TOKEN for auth)
 uv run uml-mcp lint --format json | jq .grade
 uv run uml-mcp lint --quiet && echo passed
