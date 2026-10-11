@@ -61,7 +61,10 @@ class GenerateUMLInput(BaseModel):
     )
     theme: str | None = Field(
         default=None,
-        description="Optional PlantUML theme; ignored by non-PlantUML backends.",
+        description=(
+            "Optional theme: a PlantUML theme name, or for Mermaid one of default, "
+            "dark, forest, neutral, base; ignored otherwise."
+        ),
     )
     scale: float = Field(
         default=1.0,

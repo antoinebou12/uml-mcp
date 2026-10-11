@@ -28,7 +28,7 @@ Parameters:
 - `code` (string): Diagram source in the syntax for that type.
 - `output_dir` (string, optional): Directory to write the image. Omit for URL/base64 only.
 - `output_format` (string, optional): svg, png, pdf, jpeg, txt, or base64 (default: svg). Allowed values depend on the diagram type; see `uml://formats`.
-- `theme` (string, optional): PlantUML theme (e.g. cerulean) for PlantUML-based types.
+- `theme` (string, optional): a PlantUML theme (e.g. cerulean) for PlantUML-based types, or for Mermaid one of `default`, `dark`, `forest`, `neutral`, `base` (see [Mermaid](../diagrams/mermaid.md#themes)). Ignored otherwise.
 - `scale` (number, optional): Scale factor for SVG only (default: 1.0, min: 0.1). Ignored for png, pdf, jpeg, etc.
 
 Returns JSON with `code`, `url`, `playground`; `local_path` when `output_dir` was set; `content_base64` when not saving; or `error` on failure.
