@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Any
 
 from pydantic import (
     BaseModel,
@@ -243,29 +244,24 @@ class ValidateUMLInput(BaseModel):
         return self
 
 
-class RenderAttempt(BaseModel):
-    """One renderer attempt in the generation pipeline."""
-
-    backend: str
-    ok: bool | None = None
-    status: str | None = None
-    duration_ms: float | None = None
-    error_summary: str | None = None
-    error_code: str | None = None
-    retry_count: int = 0
-
-
-class DiagramError(BaseModel):
-    """Machine-readable detail for a failed diagram request."""
-
-    code: str
-    message: str
-    diagram_type: str | None = None
-    backend: str | None = None
-    retryable: bool = False
-    line: int | None = None
-    column: int | None = None
-    suggestion: str | None = None
+# The nested objects below are advertised as plain objects with their keys listed in a
+# description. Spelling out every nested field in the JSON Schema cost about a third of
+# what a client loads at connect time (tools/list is repeated in every conversation) and
+# said no more than the one-line key list does.
+#
+# error_detail keys: code, message, diagram_type, backend, retryable, line, column,
+# suggestion. attempts[] keys: backend, ok, status, duration_ms, error_summary,
+# error_code, retry_count. diagnostics[] keys: severity, code, message, line, column,
+# suggestion.
+_ERROR_DETAIL = (
+    "Failed requests only: code, message, retryable, line, column, suggestion, "
+    "diagram_type, backend."
+)
+_ATTEMPTS = (
+    "Renderers tried, in order: backend, ok, status, duration_ms, error_summary, "
+    "error_code, retry_count."
+)
+_DIAGNOSTICS = "severity, code, message, line, column, suggestion."
 
 
 class DiagramResult(BaseModel):
@@ -280,26 +276,15 @@ class DiagramResult(BaseModel):
     local_path: str | None = None
     content_base64: str | None = None
     error: str | None = None
-    error_detail: DiagramError | None = None
+    error_detail: dict[str, Any] | None = Field(default=None, description=_ERROR_DETAIL)
     source: str | None = None
-    attempts: list[RenderAttempt] | None = None
+    attempts: list[dict[str, Any]] | None = Field(default=None, description=_ATTEMPTS)
     fallback_used: bool | None = None
     render_ms: float | None = None
     cache_hit: bool | None = None
     cache_lookup_ms: float | None = None
     mime_type: str | None = None
     display_markdown: str | None = None
-
-
-class ValidationDiagnostic(BaseModel):
-    """Actionable local validation diagnostic."""
-
-    severity: str
-    code: str
-    message: str
-    line: int | None = None
-    column: int | None = None
-    suggestion: str | None = None
 
 
 class ValidationResult(BaseModel):
@@ -311,7 +296,9 @@ class ValidationResult(BaseModel):
     errors: list[str] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     suggestions: list[str] = Field(default_factory=list)
-    diagnostics: list[ValidationDiagnostic] = Field(default_factory=list)
+    diagnostics: list[dict[str, Any]] = Field(
+        default_factory=list, description=_DIAGNOSTICS
+    )
     corrected_code: str | None = None
     prepared_code: str | None = None
     strict: bool = False
@@ -319,28 +306,11 @@ class ValidationResult(BaseModel):
     changes: list[str] = Field(default_factory=list)
 
 
-class BatchDiagramItem(BaseModel):
-    """One indexed item returned by generate_uml_batch."""
+class BatchDiagramItem(DiagramResult):
+    """One indexed item returned by generate_uml_batch (a DiagramResult plus its index)."""
 
     index: int
-    code: str | None = None
-    success: bool | None = None
-    diagram_type: str | None = None
-    output_format: str | None = None
-    url: str | None = None
-    playground: str | None = None
-    local_path: str | None = None
-    content_base64: str | None = None
-    error: str | None = None
-    error_detail: DiagramError | None = None
-    source: str | None = None
-    attempts: list[RenderAttempt] | None = None
-    fallback_used: bool | None = None
-    render_ms: float | None = None
-    cache_hit: bool | None = None
-    cache_lookup_ms: float | None = None
-    mime_type: str | None = None
-    display_markdown: str | None = None
+    code: str | None = None  # type: ignore[assignment]  # optional here, required above
 
 
 class BatchDiagramResult(BaseModel):
@@ -365,13 +335,10 @@ class DiagramTypesOutput(RootModel[dict[str, DiagramTypeInfo]]):
 __all__ = [
     "BatchDiagramItem",
     "BatchDiagramResult",
-    "DiagramError",
     "DiagramResult",
     "DiagramTypeInfo",
     "DiagramTypesOutput",
     "GenerateUMLInput",
-    "RenderAttempt",
     "ValidateUMLInput",
-    "ValidationDiagnostic",
     "ValidationResult",
 ]

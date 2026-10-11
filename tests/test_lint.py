@@ -193,7 +193,7 @@ def test_real_server_lint_gate():
             "--min-grade",
             "A",
             "--token-budget",
-            "5500",
+            "4300",
         ],
         capture_output=True,
         text=True,

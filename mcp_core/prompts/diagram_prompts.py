@@ -2,7 +2,10 @@
 MCP prompts for diagram generation using the decorator pattern
 """
 
+import inspect
+import json
 import logging
+import re
 from collections.abc import Callable
 from typing import Any, TypeVar, cast
 
@@ -734,6 +737,46 @@ Avoid:
     return prompt + _layout_overlap_appendix()
 
 
+_CONTEXT_HELP = 'Optional JSON object, e.g. {"diagram_type": "class"}.'
+
+
+def _parse_context(raw: str) -> dict[str, Any]:
+    """Decode the ``context`` prompt argument (a JSON object, as a string)."""
+    if not raw.strip():
+        return {}
+    try:
+        value = json.loads(raw)
+    except ValueError as exc:
+        raise ValueError(f"context must be a JSON object: {exc}") from exc
+    if not isinstance(value, dict):
+        raise TypeError("context must be a JSON object")
+    return value
+
+
+def _summary(func: Callable[..., Any]) -> str:
+    """The docstring text before its ``Args:`` / ``Returns:`` sections."""
+    doc = inspect.getdoc(func) or ""
+    return re.split(r"\n\s*(?:Args|Returns):", doc, maxsplit=1)[0].strip()
+
+
+def _with_string_context(func: Callable[..., str]) -> Callable[..., str]:
+    """Advertise ``context`` as a plain string argument that carries JSON.
+
+    MCP prompt arguments are strings on the wire. Annotating the parameter as a dict made
+    FastMCP append a whole JSON Schema sentence to every prompt's argument description,
+    which every client then loads on connect (about 40 tokens a prompt). FastMCP does that
+    for any annotation other than exactly ``str``, so the description comes from the
+    docstring instead. The prompt functions themselves still take the decoded dict.
+    """
+
+    def prompt(context: str = "") -> str:
+        return func(context=_parse_context(context))
+
+    prompt.__name__ = getattr(func, "__name__", "prompt")
+    prompt.__doc__ = f"{_summary(func)}\n\nArgs:\n    context: {_CONTEXT_HELP}\n"
+    return prompt
+
+
 def register_prompts_with_server(server: Any) -> list[str]:
     """
     Register all decorated prompts with the MCP server
@@ -751,7 +794,9 @@ def register_prompts_with_server(server: Any) -> list[str]:
     from ..observability.audit import instrument
 
     for prompt_name, prompt_info in _registered_prompts.items():
-        func = instrument(prompt_info["function"], "prompt", prompt_name)
+        func = _with_string_context(
+            instrument(prompt_info["function"], "prompt", prompt_name)
+        )
 
         # Register with server using prompt decorator
         prompt_decorator = server.prompt(prompt_name)
