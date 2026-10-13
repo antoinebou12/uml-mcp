@@ -44,10 +44,17 @@ frontend/src/
 
 ```bash
 npm run lint        # eslint
-npm run typecheck   # tsc
+npm run typecheck   # tsc 7 (native compiler)
 npm test            # vitest + Testing Library
-npm run build       # writes ../mcp_core/admin_ui/dist (deterministic)
+npm run build       # typecheck, then writes ../mcp_core/admin_ui/dist (deterministic)
 ```
+
+- **Two TypeScript versions:** `tsc` comes from the `typescript-7` alias (the native
+  TypeScript 7 compiler, about 6x faster here), while `typescript` stays on 6 because
+  `typescript-eslint` needs the JavaScript compiler API that TypeScript 7 no longer ships.
+  When `typescript-eslint` supports 7, drop the alias, bump `typescript` and remove the
+  Renovate rule that holds it back. Run the compiler through `npm run typecheck`, not
+  `npx tsc`, which would pick up version 6.
 
 - **CI:** the `frontend` job runs the checks above, rebuilds, and fails if
   `mcp_core/admin_ui/dist` differs from the commit. Always commit the build output

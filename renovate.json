@@ -22,6 +22,12 @@
       "matchManagers": ["pep621"],
       "matchDepTypes": ["requires-python"],
       "enabled": false
+    },
+    {
+      "description": "frontend: `typescript` stays on 6 because typescript-eslint cannot run on TypeScript 7 (it has no JS compiler API). The native compiler is installed separately as `typescript-7` for typecheck and build; when typescript-eslint supports 7, drop the alias and lift this rule",
+      "matchManagers": ["npm"],
+      "matchDepNames": ["typescript"],
+      "allowedVersions": "<7"
     }
   ]
 }
