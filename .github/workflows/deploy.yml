@@ -91,10 +91,16 @@ jobs:
             --verbose
 
       - name: Publish to Smithery
-        if: ${{ inputs.skip_smithery != true && github.event.inputs.skip_smithery != 'true' }}
+        if: ${{ inputs.skip_smithery != true }}
+        env:
+          SMITHERY_API_KEY: ${{ secrets.SMITHERY_API_KEY }}
         run: |
+          if [ -z "${SMITHERY_API_KEY}" ]; then
+            echo "SMITHERY_API_KEY is not configured; skipping Smithery publish."
+            exit 0
+          fi
           npx -y @smithery/cli publish \
             --name @antoinebou12/uml \
             --url "${VERCEL_URL}/mcp" \
             --config-schema smithery-config-schema.json \
-            --key "${{ secrets.SMITHERY_API_KEY }}"
+            --key "${SMITHERY_API_KEY}"
