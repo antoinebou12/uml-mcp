@@ -90,6 +90,10 @@ def _summarize_tool_result(tool_name: str, result: dict[str, Any]) -> str:
             display = build_display_markdown(result)
         if display:
             summary = f"{summary}\n\n{display}"
+        saved = result.get("local_path")
+        if isinstance(saved, str) and saved:
+            # a written file (for example an interactive HTML page) has nothing else to show
+            summary = f"{summary}\n\nSaved to: {saved}"
         return summary
     if tool_name == "generate_uml_batch":
         rows = result.get("results") or []

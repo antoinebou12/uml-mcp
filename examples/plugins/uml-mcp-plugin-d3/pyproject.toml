@@ -1,0 +1,24 @@
+[project]
+name = "uml-mcp-plugin-d3"
+version = "0.1.0"
+description = "UML-MCP plugin: interactive D3.js diagrams (force graph, cloud architecture, system topology) as standalone HTML or static SVG."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["uml-mcp>=1.4.0"]
+
+# UML-MCP discovers plugins through these entry points and loads them only when
+# `d3` is listed in `plugins.enabled` of uml-mcp.yaml (one name enables both).
+[project.entry-points."uml_mcp.renderers"]
+d3 = "uml_mcp_plugin_d3:D3Renderer"
+
+[project.entry-points."uml_mcp.tools"]
+d3 = "uml_mcp_plugin_d3:register"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+# The wheel includes src/uml_mcp_plugin_d3/assets (the runtime scripts and the vendored,
+# ISC-licensed D3 7.9.0 with its licence file).
+[tool.hatch.build.targets.wheel]
+packages = ["src/uml_mcp_plugin_d3"]

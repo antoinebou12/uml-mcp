@@ -93,6 +93,9 @@ def load_plugins() -> list[PluginStatus]:
                 status.tools = list(ctx.registered)
             else:
                 renderer = _load_renderer(obj)
+                configure = getattr(renderer, "configure", None)
+                if callable(configure):  # optional: plugins.settings.<name>
+                    configure(dict(cfg.settings.get(status.name) or {}))
                 for dtype, spec in renderer.diagram_types.items():
                     if dtype in catalog and dtype not in RENDERERS:
                         raise ValueError(f"diagram type {dtype!r} is already built in")
@@ -122,6 +125,33 @@ def load_plugins() -> list[PluginStatus]:
             )
         )
     return STATUS
+
+
+def plugin_sample(diagram_type: str, kind: str) -> str | None:
+    """A plugin type's own ``example`` or ``template`` (``None`` for built-in types)."""
+    renderer = RENDERERS.get(diagram_type)
+    spec = renderer.diagram_types.get(diagram_type) if renderer else None
+    return getattr(spec, kind, None) if spec else None
+
+
+def plugin_validate(diagram_type: str, code: str) -> list[str] | None:
+    """Problems found by the renderer's optional ``validate`` hook.
+
+    ``None`` means there is nothing to report: a built-in type, a renderer without the
+    hook, or a hook that raised (logged, so a bug in a plugin cannot turn a good diagram
+    into a validation error).
+    """
+    renderer = RENDERERS.get(diagram_type)
+    check = getattr(renderer, "validate", None)
+    if renderer is None or not callable(check):
+        return None
+    try:
+        return [str(message) for message in check(diagram_type, code)]
+    except Exception:
+        logger.warning(
+            "Plugin renderer %s: validate() raised", renderer.name, exc_info=True
+        )
+        return None
 
 
 def render_with_plugin(
@@ -156,5 +186,7 @@ __all__ = [
     "PluginStatus",
     "discover",
     "load_plugins",
+    "plugin_sample",
+    "plugin_validate",
     "render_with_plugin",
 ]

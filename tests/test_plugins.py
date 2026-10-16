@@ -192,3 +192,27 @@ def test_admin_api_lists_and_toggles(plugins, monkeypatch):
         res.status_code == 200 and "plugins.enabled" in res.json()["restart_required"]
     )
     guards.reset_setup_token()
+
+
+def test_hello_samples_are_shown_and_render(plugins):
+    """A plugin type's own example and template reach ``uml://examples`` and render."""
+    from mcp_core.core.utils import generate_diagram
+
+    plugins("plugins: {enabled: [ascii]}\n")
+    loader.load_plugins()
+    declared = loader.RENDERERS["ascii"].diagram_types["ascii"]
+    assert declared.example is not None and declared.template is not None
+    assert loader.plugin_sample("ascii", "example") == declared.example
+    assert loader.plugin_sample("ascii", "template") == declared.template
+    assert (
+        loader.plugin_sample("class", "example") is None
+    )  # built-in: not a plugin sample
+    for sample in (declared.example, declared.template):
+        out = generate_diagram("ascii", sample, "svg")
+        assert out["source"] == "plugin:ascii" and not out.get("error")
+    assert (
+        "UML"
+        in base64.b64decode(
+            generate_diagram("ascii", declared.example, "svg")["content_base64"]
+        ).decode()
+    )

@@ -26,10 +26,18 @@ RENDERERS_GROUP = "uml_mcp.renderers"
 
 @dataclass(frozen=True)
 class DiagramTypeSpec:
-    """A diagram type contributed by a renderer."""
+    """A diagram type contributed by a renderer.
+
+    ``formats`` may include ``html`` (a standalone, possibly interactive page) next to
+    the image formats. ``example`` and ``template`` are shown by ``uml://examples``,
+    ``uml://templates`` and the console, and are how a model learns a custom source
+    format, so give every type one that renders.
+    """
 
     description: str
     formats: tuple[str, ...] = ("svg",)
+    example: str | None = None
+    template: str | None = None
 
 
 @dataclass(frozen=True)
@@ -43,7 +51,18 @@ class RenderOutput:
 
 @runtime_checkable
 class Renderer(Protocol):
-    """Render diagram source to bytes for the diagram types it declares."""
+    """Render diagram source to bytes for the diagram types it declares.
+
+    A renderer may also define two optional methods (neither is part of the protocol
+    check):
+
+    * ``validate(diagram_type, code) -> list[str]``: one message per problem in the
+      source, empty when it is valid. ``validate_uml`` calls it, so a model can fix a
+      custom source format without rendering.
+    * ``configure(settings: dict) -> None``: called once at load time with the plugin's
+      ``plugins.settings.<name>`` mapping. Raise to refuse a bad setting; the plugin is
+      then shown as failed and the server still starts.
+    """
 
     name: str
     diagram_types: dict[str, DiagramTypeSpec]
@@ -73,12 +92,17 @@ class PluginContext:
         annotations: dict[str, Any] | None = None,
         output_schema: Any | None = None,
         example: str | None = None,
+        lint_ignore: dict[str, str] | None = None,
     ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
         """Register an MCP tool named ``<plugin>_<name>``.
 
         Tools get everything built-in tools get: audit, metrics, OTel, rate
         limits, ``tools.enabled/disabled`` gating, lint and auth (read vs
         write from ``annotations["readOnlyHint"]``; missing means write).
+
+        ``lint_ignore`` documents a deliberate exception to a ``uml-mcp lint`` rule as
+        ``{rule: reason}`` (for example ``tool-no-required`` for a tool whose arguments
+        are all optional filters). It is reported as suppressed, never silently dropped.
         """
         from ..tools.tool_decorator import get_tool_registry, mcp_tool
 
@@ -97,6 +121,7 @@ class PluginContext:
                 },
                 output_schema=output_schema,
                 example=example,
+                lint_ignore=lint_ignore,
             )(func)
             self.registered.append(full)
             return wrapped

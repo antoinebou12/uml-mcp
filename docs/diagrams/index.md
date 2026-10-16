@@ -82,6 +82,19 @@ Snippets: [ERD](erd.md) · [DBML](dbml.md) · [BlockDiag](blockdiag.md) · [BPMN
 
 [:octicons-arrow-right-24: TikZ page](tikz.md) · [:octicons-arrow-right-24: Specialty types](specialty.md)
 
+## Plugin diagram types
+
+These appear when the [D3 diagrams plugin](../plugins/d3.md) is installed and enabled. They render
+locally to an interactive page or a static picture.
+
+| `diagram_type` | Description | Output formats |
+| --- | --- | --- |
+| `d3_force` | Force-directed graph with drag, pin, zoom and pan | `html`, `svg` |
+| `d3_architecture` | System or cloud architecture: nested groups, AWS/Azure/GCP/Kubernetes style icons, ports, A*-routed arrows | `html`, `svg` |
+| `d3_topology` | Deployment or network topology, flowing top to bottom | `html`, `svg` |
+
+[:octicons-arrow-right-24: D3 plugin guide](../plugins/d3.md) · [:octicons-arrow-right-24: Cloud architecture diagrams](cloud-architecture.md)
+
 ---
 
 ## Picking a `diagram_type`
@@ -93,7 +106,7 @@ flowchart TD
     Q1 -- no  --> Q2{Process or workflow?}
     Q2 -- yes --> Proc[Use activity, mermaid flowchart, bpmn, or blockdiag]
     Q2 -- no  --> Q3{Architecture / C4?}
-    Q3 -- yes --> Arch[Use c4plantuml or structurizr]
+    Q3 -- yes --> Arch[Use c4plantuml, structurizr, the cloud icon libraries or d3_architecture]
     Q3 -- no  --> Q4{Data / schema?}
     Q4 -- yes --> Data[Use erd or dbml]
     Q4 -- no  --> Q5{Math / scientific?}

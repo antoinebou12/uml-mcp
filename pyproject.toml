@@ -81,6 +81,10 @@ quote-style = "double"
 [tool.ty.src]
 exclude = ["examples/**"]
 
+# The D3 example plugin is imported by its tests (it is not installed).
+[tool.ty.environment]
+extra-paths = ["examples/plugins/uml-mcp-plugin-d3/src"]
+
 # FastMCP / Starlette typing is often stricter than runtime; relax in integration tests.
 [[tool.ty.overrides]]
 include = ["tests/**"]

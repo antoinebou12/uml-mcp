@@ -71,6 +71,7 @@ def catalog() -> list[dict[str, Any]]:
     from tools.kroki.kroki_templates import DiagramExamples
 
     from ..core.config import MCP_SETTINGS
+    from ..plugins.loader import plugin_sample
 
     return [
         {
@@ -78,7 +79,8 @@ def catalog() -> list[dict[str, Any]]:
             "backend": spec.backend,
             "description": spec.description,
             "formats": list(spec.formats),
-            "example": DiagramExamples.get_example(name),
+            "example": plugin_sample(name, "example")
+            or DiagramExamples.get_example(name),
         }
         for name, spec in sorted(MCP_SETTINGS.diagram_types.items())
     ]

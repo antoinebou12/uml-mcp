@@ -75,9 +75,13 @@ def get_diagram_types() -> str:
 )
 def get_diagram_templates() -> str:
     """Get diagram templates for different diagram types"""
+    from ..plugins.loader import plugin_sample
+
     templates = {}
     for name in MCP_SETTINGS.diagram_types:
-        templates[name] = DiagramTemplates.get_template(name)
+        templates[name] = plugin_sample(name, "template") or (
+            DiagramTemplates.get_template(name)
+        )
     return json.dumps(templates, indent=2)
 
 
@@ -87,9 +91,13 @@ def get_diagram_templates() -> str:
 )
 def get_diagram_examples() -> str:
     """Get diagram examples for different diagram types"""
+    from ..plugins.loader import plugin_sample
+
     examples = {}
     for name in MCP_SETTINGS.diagram_types:
-        examples[name] = DiagramExamples.get_example(name)
+        examples[name] = plugin_sample(name, "example") or (
+            DiagramExamples.get_example(name)
+        )
     return json.dumps(examples, indent=2)
 
 

@@ -269,6 +269,11 @@ def validate_uml_inputs(
             extra.extend(_structural_errors_strict_mermaid(prepared))
         elif cfg.backend == "d2":
             extra.extend(_structural_errors_strict_d2(prepared))
+    if cfg.backend.startswith("plugin:"):
+        # Plugin renderers may define validate(); it knows their own source format.
+        from ..plugins.loader import plugin_validate
+
+        extra.extend(plugin_validate(dt_key, prepared) or [])
     all_errors = structural + extra
     suggestions = _suggestions_for_errors(all_errors)
     changes = _normalization_changes(validated.code, prepared, cfg.backend)

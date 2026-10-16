@@ -15,6 +15,10 @@ from pydantic import (
     model_validator,
 )
 
+#: Every output format a request may name. Each diagram type still lists the ones it
+#: supports (``html`` is only accepted by plugin types that declare it).
+OUTPUT_FORMATS = ("svg", "png", "pdf", "jpeg", "txt", "base64", "html")
+
 
 def _env_bool(name: str, default: bool = False) -> bool:
     value = os.environ.get(name, "").strip().lower()
@@ -106,7 +110,7 @@ class GenerateUMLInput(BaseModel):
     @classmethod
     def validate_output_format(cls, v: str) -> str:
         value = v.lower().strip()
-        allowed = ("svg", "png", "pdf", "jpeg", "txt", "base64")
+        allowed = OUTPUT_FORMATS
         if value not in allowed:
             raise ValueError(f"output_format must be one of: {', '.join(allowed)}")
         return value
@@ -225,7 +229,7 @@ class ValidateUMLInput(BaseModel):
     @classmethod
     def validate_output_format(cls, v: str) -> str:
         value = v.lower().strip()
-        allowed = ("svg", "png", "pdf", "jpeg", "txt", "base64")
+        allowed = OUTPUT_FORMATS
         if value not in allowed:
             raise ValueError(f"output_format must be one of: {', '.join(allowed)}")
         return value
