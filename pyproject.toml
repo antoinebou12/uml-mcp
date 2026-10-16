@@ -29,7 +29,7 @@ dependencies = [
     "charset-normalizer==3.5.2",
     "python-dateutil>=2.8.2,<3",
     "graphviz>=0.21,<0.22",
-    "pillow>=12.0.0,<13",
+    "pillow>=13,<14",
     "fastmcp-slim[server]==4.1.0",
     "mcp>=2.0.0,<3.0.0",
     "pyjwt[crypto]>=2.10.0,<3",
