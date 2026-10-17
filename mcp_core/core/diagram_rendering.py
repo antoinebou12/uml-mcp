@@ -110,9 +110,34 @@ def _mime_for_output_format(output_format: str) -> str | None:
         "pdf": "application/pdf",
         "jpeg": "image/jpeg",
         "txt": "text/plain; charset=utf-8",
+        "html": "text/html; charset=utf-8",
         "base64": None,
     }
     return mapping.get(fmt)
+
+
+def _save_plugin_output(ctx: DiagramRenderContext, out: dict[str, Any]) -> None:
+    """Write a plugin result under ``output_dir`` and report it as ``local_path``.
+
+    Mirrors the Kroki path: when the file is written the bytes are not repeated in
+    ``content_base64`` (an interactive HTML page can be large), and when it cannot be
+    written the content is returned instead.
+    """
+    if not ctx.output_dir or not out.get("content_base64"):
+        return
+    stamp = datetime.datetime.now(datetime.UTC).strftime("%Y%m%d%H%M%S")
+    path = Path(ctx.output_dir) / f"{ctx.diagram_type}_{stamp}.{ctx.output_format}"
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(base64.b64decode(out["content_base64"]))
+    except OSError as exc:
+        logger.warning(
+            "Could not save diagram to %s (%s); returning the content only.", path, exc
+        )
+        return
+    out["local_path"] = str(path)
+    del out["content_base64"]
+    logger.info("Diagram saved to %s", path)
 
 
 def _attach_render_metadata(
@@ -630,6 +655,7 @@ def run_diagram_pipeline(
 
         out = render_with_plugin(ctx.diagram_type, ctx.prepared_code, ctx.output_format)
         if not out.get("error"):
+            _save_plugin_output(ctx, out)
             _attach_render_metadata(
                 out,
                 attempts=[{"backend": out["source"], "ok": True}],

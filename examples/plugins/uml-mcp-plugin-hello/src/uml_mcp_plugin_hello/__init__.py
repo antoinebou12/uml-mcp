@@ -48,7 +48,11 @@ class AsciiRenderer:
     def __init__(self) -> None:
         self.diagram_types = {
             "ascii": DiagramTypeSpec(
-                "Plain text / ASCII art rendered as SVG", ("svg",)
+                "Plain text / ASCII art rendered as SVG",
+                ("svg",),
+                # shown by uml://examples and uml://templates
+                example="+--------+\n|  UML   |\n|  MCP   |\n+--------+",
+                template="+--+\n|  |\n+--+",
             ),
         }
 

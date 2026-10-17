@@ -89,6 +89,7 @@ nav:
       - Mermaid: diagrams/mermaid.md
       - D2: diagrams/d2.md
       - Graphviz: diagrams/graphviz.md
+      - Cloud architecture: diagrams/cloud-architecture.md
       - More diagram backends:
           - Overview: diagrams/general.md
           - ERD: diagrams/erd.md
@@ -151,6 +152,7 @@ nav:
   - Plugins:
       - plugins/index.md
       - Author guide: plugins/authoring.md
+      - D3 diagrams: plugins/d3.md
   - Developers:
       - developers/index.md
       - Testing: testing.md

@@ -125,7 +125,7 @@ Configs: [`config/README.md`](config/README.md) (Cursor, VS Code, Codex, Claude,
 | **Quality** | `uml-mcp lint --strict --min-grade A`: mcpx-style grade, token budget, MXCP-style config checks ([rules](docs/developers/linting.md)) |
 | **Admin console** | Setup form, schema-driven settings (save, reset, live apply), activity, live logs, charts, Kroki playground and Docker stack, Stop; local token or `MCP.Admin` ([tour](docs/admin/index.md)) |
 | **Local Kroki** | `uml-mcp kroki up --use`: Kroki + mermaid, blockdiag, bpmn, excalidraw in Docker on `127.0.0.1` ([guide](docs/admin/install.md#4-run-kroki-with-every-companion-docker)) |
-| **Plugins** | Extra MCP tools and diagram renderers from Python packages, allow-listed in `plugins.enabled` ([guide](docs/plugins/index.md) · [author](docs/plugins/authoring.md)) |
+| **Plugins** | Extra MCP tools and diagram renderers from Python packages, allow-listed in `plugins.enabled` ([guide](docs/plugins/index.md) · [author](docs/plugins/authoring.md)). Includes interactive D3 force, cloud architecture and topology diagrams ([D3 plugin](docs/plugins/d3.md)) |
 | **Tracing** | Optional OpenTelemetry spans per request and MCP call (`uml-mcp[otel]`) |
 | **Frontend** | Canonical AG-UI SSE for agent UIs; OpenUI can consume AG-UI and render generated components in your app |
 
