@@ -101,6 +101,22 @@ async def test_get_does_not_depend_on_listing_and_metadata_is_not_mutable():
     assert listing["skills"][0]["frontmatter"]["description"] != "changed by caller"
 
 
+async def test_smoke_contract_skill_names_batch_workflow():
+    """Offline smoke expects skills/list + skill body to mention generate_uml_batch."""
+    server = FastMCP("diagram-skills-smoke", cache_ttl=300, cache_scope="public")
+    register_diagram_skills(server, cache_scope="public")
+    async with Client(server, timeout=10) as client:
+        listing = await client.session.send_request(
+            Request[WireParams, str](method="skills/list", params=WireParams()),
+            TypeAdapter(dict),
+        )
+        frontmatter = listing["skills"][0]["frontmatter"]
+        assert frontmatter["name"] == "uml-mcp-diagrams"
+        text = (await client.read_resource(SKILL_URI))[0].text
+        assert "generate_uml_batch" in text
+        assert "uml-mcp-diagrams" in text
+
+
 @pytest.mark.parametrize(
     "content",
     [
