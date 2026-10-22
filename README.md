@@ -113,6 +113,10 @@ Configs: [`config/README.md`](config/README.md) (Cursor, VS Code, Codex, Claude,
 
 ## At a glance
 
+**MCP Skills:** compatible clients can discover the diagram workflow with
+`skills/list` and load `skill://uml-mcp-diagrams/SKILL.md` through `resources/read`.
+See [Skills over MCP](docs/reference/resources.md#diagram-skill-over-mcp).
+
 | Topic | What you get |
 | --- | --- |
 | **Diagrams** | ~37 types via [Kroki](https://kroki.io/) (UML, Mermaid, D2, TikZ, BPMN, C4, GoAT, UMLet, …) |
@@ -153,6 +157,7 @@ Smoke prompts: [`tests/prompts/chatgpt_mcp_smoke_test.md`](tests/prompts/chatgpt
 | `uml://templates` / `uml://examples` | Starters and samples |
 | `uml://formats` / `uml://capabilities` | Formats and validation matrix |
 | `uml://server-info` / `uml://workflow` | Version/tools and plan-then-generate |
+| `skill://uml-mcp-diagrams/SKILL.md` | Diagram workflow skill (MCP Skills / `resources/read`) |
 
 </details>
 

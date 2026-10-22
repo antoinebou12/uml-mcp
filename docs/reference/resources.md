@@ -21,7 +21,32 @@ Resources are read-only data that an MCP client can fetch with `resources/read`.
 }
 ```
 
-The response wraps a JSON string in MCP's standard envelope. Every UML-MCP resource returns valid JSON inside `contents[0].text`.
+The response wraps a JSON string in MCP's standard envelope. The `uml://` resources return JSON inside `contents[0].text`; the skill resource below returns Markdown.
+
+## Diagram skill over MCP
+
+UML-MCP implements the [MCP Skills extension](https://modelcontextprotocol.io/extensions/skills/overview)
+(`io.modelcontextprotocol/skills`). Clients discover the extension alongside the
+Resources capability in `server/discover`, then call `skills/list` with empty
+params or `skills/get` with
+`{"uri": "skill://uml-mcp-diagrams/SKILL.md"}`.
+
+Both methods return complete skill metadata, unchanged YAML frontmatter, and a
+manifest containing the SHA-256 digest and byte size of the bundled `SKILL.md`.
+Results have a five-minute TTL and public cache scope (private when enterprise
+auth is enabled). These discovery methods require read permission.
+
+Load the instructions with `resources/read` at
+`skill://uml-mcp-diagrams/SKILL.md` (`text/markdown`). Clients without Skills
+support can read this resource directly. Reading is not activation: the host
+controls skill loading, integrity checks, and any user approval. Directory
+reading is not advertised or implemented.
+
+The installed package includes a byte-identical copy of the canonical
+`.skill/skills/uml-mcp-diagrams/SKILL.md`, checked by tests. After editing the
+canonical skill, update `mcp_core/skills/uml-mcp-diagrams/SKILL.md` as well as its
+existing client mirrors. Repository navigation and contributor-only skills are
+not served.
 
 ## Resource catalog
 
