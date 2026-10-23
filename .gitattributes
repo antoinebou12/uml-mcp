@@ -4,3 +4,4 @@
 .well-known/** text eol=lf
 public/.well-known/** text eol=lf
 .skill/skills/**/SKILL.md text eol=lf
+mcp_core/skills/**/SKILL.md text eol=lf

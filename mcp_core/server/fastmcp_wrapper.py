@@ -126,7 +126,7 @@ if use_mock:
 
             return decorator
 
-        def resource(self, path: str):
+        def resource(self, path: str, **kwargs):
             def decorator(func: Callable) -> Callable:
                 self._resources[path] = func
                 return func

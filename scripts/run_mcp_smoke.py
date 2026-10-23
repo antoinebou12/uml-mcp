@@ -10,9 +10,12 @@ Runs the smoke steps with a real MCP client instead of a chat model:
     uv run python scripts/run_mcp_smoke.py --url https://mcp.contoso.com/mcp --token "$TOKEN"
 
 Rendered output is checked, not just its presence: the SVG must parse and show the
-diagram's labels, the PNG must decode with a real size. Prints one line per step and
-ends with ``MCP_SMOKE_TEST: PASS|FAIL - <reason>`` and ``MCP_BATCH_TEST: PASS|FAIL``
-(exit code 0 only when both pass). ``--json`` writes the step report to a file.
+diagram's labels, the PNG must decode with a real size. Offline mode still exercises
+``skills/list`` and ``resources/read`` for ``skill://uml-mcp-diagrams/SKILL.md``
+(including that the skill names ``generate_uml_batch``) plus ``generate_uml_batch``.
+Prints one line per step and ends with ``MCP_SMOKE_TEST: PASS|FAIL - <reason>`` and
+``MCP_BATCH_TEST: PASS|FAIL`` (exit code 0 only when both pass). ``--json`` writes
+the step report to a file.
 """
 
 from __future__ import annotations
@@ -29,11 +32,20 @@ from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+from mcp.types import Request, RequestParams
+from pydantic import ConfigDict, TypeAdapter
+
 from mcp_core.quality.render_check import (
     RenderCheckError,
     check_png,
     check_svg,
 )
+from mcp_core.resources.diagram_skills import SKILL_URI
+
+
+class _WireParams(RequestParams):
+    model_config = ConfigDict(extra="allow")
+
 
 SEQUENCE = """sequenceDiagram
   participant Client
@@ -105,6 +117,12 @@ class Runner:
     def failed(self, phase: str) -> list[str]:
         return [s.name for s in self.steps if s.phase == phase and s.status == "FAIL"]
 
+    async def _skills_request(self, client: Any, method: str, params: dict) -> dict:
+        return await client.session.send_request(
+            Request[_WireParams, str](method=method, params=_WireParams(**params)),
+            TypeAdapter(dict),
+        )
+
     async def smoke(self, client: Any, offline: bool) -> None:
         tools = {t.name for t in await client.list_tools()}
         self.record(
@@ -118,6 +136,32 @@ class Runner:
         self.record(
             "smoke", "prompts", "architecture_report" in prompts, f"{len(prompts)}"
         )
+
+        try:
+            listing = await self._skills_request(client, "skills/list", {})
+            skill = (listing.get("skills") or [{}])[0]
+            frontmatter = skill.get("frontmatter") or {}
+            self.record(
+                "smoke",
+                "skills/list",
+                frontmatter.get("name") == "uml-mcp-diagrams",
+                str(frontmatter.get("name") or "missing"),
+            )
+            contents = await client.read_resource(SKILL_URI)
+            text = getattr(contents[0], "text", "") or ""
+            self.record(
+                "smoke",
+                "skill resource",
+                "generate_uml_batch" in text and "uml-mcp-diagrams" in text,
+                f"{len(text)} bytes",
+            )
+        except Exception as exc:  # noqa: BLE001 - surface capability gaps as FAIL
+            self.record(
+                "smoke",
+                "skills/list",
+                False,
+                f"{type(exc).__name__}: {str(exc)[:120]}",
+            )
 
         types = _structured(
             await client.call_tool("list_diagram_types", {"query": "mermaid"})

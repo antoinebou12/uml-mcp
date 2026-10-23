@@ -29,7 +29,7 @@ description: Navigate the UML-MCP repository and its documentation quickly. Maps
 | Admin console + Kroki page (playground, Docker stack) | `mcp_core/admin/` (`kroki_routes.py`), `mcp_core/kroki/`, `frontend/src/pages/Kroki.tsx`, CLI `uml-mcp kroki` | `tests/test_admin_kroki.py`, `test_real_journeys.py`, `test_e2e_playwright.py` | `docs/admin/` (install, user guide, tour) |
 | Helm / Docker | `deploy/helm/uml-mcp/`, `Dockerfile`, `docker-compose*.yml` | `tests/test_enterprise_packaging.py`, `test_compose_profiles.py` | `docs/enterprise/kubernetes.md`, `docs/deploy/docker.md` |
 | Smoke tests | `scripts/run_mcp_smoke.py`, `tests/prompts/` | `tests/test_chatgpt_mcp_smoke_prompt.py` | `tests/prompts/chatgpt_mcp_smoke_test.md` |
-| Diagram skills | `.skill/skills/uml-mcp-diagrams/SKILL.md` (canonical) | mirror test in `test_enterprise_packaging.py` | `docs/integrations/cursor.md` |
+| Diagram skills / MCP Skills extension | `.skill/skills/uml-mcp-diagrams/SKILL.md` (canonical), `mcp_core/resources/diagram_skills.py`, `mcp_core/skills/uml-mcp-diagrams/SKILL.md` (packaged mirror) | `tests/test_diagram_skills.py`, mirror test in `test_enterprise_packaging.py` | `docs/reference/resources.md`, `docs/integrations/cursor.md` |
 
 ## Docs layout
 

@@ -35,6 +35,8 @@ READ_METHODS: frozenset[str] = frozenset(
         "completion/complete",
         "logging/setLevel",
         "server/discover",
+        "skills/list",
+        "skills/get",
     }
 )
 

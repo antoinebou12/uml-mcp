@@ -41,7 +41,7 @@
       "type": "context",
       "description": "1. Read `AGENTS.md` (preferences, facts) and `SOUL.md` (principles).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-navigation/SKILL.md",
-      "sha256": "a3fdce44c332b04ef252124d1be7e36e296f188561087dbfc8b373275901a02a"
+      "sha256": "a15cfeef3025eb0510c22a301a5700fc961bd6782ff9c9d987bc1ce7c46f0c5b"
     }
   ]
 }
