@@ -2,8 +2,8 @@
 # Stdio MCP: docker run ... python server.py --transport stdio
 # Smithery overrides the container command with python server.py (see smithery.yaml).
 # Enterprise SSO (Entra ID / OAuth 2.1): set MCP_AUTH_* env vars, see docs/enterprise/README.md.
-# Runtime image tracks latest supported CPython (3.14). CI tests 3.12 and 3.14.
-FROM python:3.14-slim
+# Runtime image tracks latest supported CPython (3.15). CI tests 3.12 and 3.15.
+FROM python:3.15-slim
 
 LABEL org.opencontainers.image.title="uml-mcp" \
       org.opencontainers.image.description="UML/diagram MCP server (Kroki) with optional Entra ID / OAuth 2.1 SSO" \
