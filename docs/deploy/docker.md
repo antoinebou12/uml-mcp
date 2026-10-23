@@ -10,6 +10,8 @@ tags:
 
 The repo includes a `Dockerfile` and a `docker-compose.yml` that gets you a full local stack: UML-MCP (FastAPI + MCP HTTP at `/mcp`), local Kroki, Mermaid, and BlockDiag. Everything stays on your machine, which suits air-gapped networks, CI runners, or shared infra where you do not want to depend on `kroki.io`.
 
+The image is based on official `python:3.15-slim` (see `requires-python = ">=3.12,<3.16"`). Local and Vercel installs stay on `.python-version` 3.14 until Vercel offers 3.15.
+
 ## Full local stack (compose)
 
 ```bash

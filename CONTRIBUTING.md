@@ -10,7 +10,7 @@ By participating, you agree to uphold our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 ### Prerequisites
 
-- Python 3.12 (matches `requires-python` in `pyproject.toml`)
+- Python 3.12+ (supported range is `>=3.12,<3.16` in `pyproject.toml`; CI exercises 3.12 and 3.15; Docker uses 3.15)
 - [uv](https://docs.astral.sh/uv/), [Poetry](https://python-poetry.org/), or pip
 
 ### Development setup
