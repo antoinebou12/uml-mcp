@@ -138,6 +138,7 @@ SERVER_INSTRUCTIONS = (
 
 def create_mcp_server():
     """Create and configure the server with all tools, resources, and prompts."""
+    from ..apps.diagram_viewer import register_diagram_viewer
     from ..prompts.diagram_prompts import register_diagram_prompts
     from ..resources.diagram_resources import register_diagram_resources
     from ..resources.diagram_skills import register_diagram_skills
@@ -159,6 +160,7 @@ def create_mcp_server():
     load_plugins()  # before registration: plugin tools/diagram types join the catalog
     tool_names = register_diagram_tools(server)
     resource_names = register_diagram_resources(server)
+    resource_names += register_diagram_viewer(server)
     resource_names += register_diagram_skills(
         server, cache_scope=get_mcp_cache_policy()["cache_scope"]
     )

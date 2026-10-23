@@ -31,7 +31,9 @@ def test_batch_keeps_input_order_and_reports_progress(monkeypatch):
     progress: list[tuple[float, float, str]] = []
     logs: list[tuple[str, str]] = []
     monkeypatch.setattr(
-        notifications, "report_progress", lambda p, t, m: progress.append((p, t, m))
+        notifications,
+        "report_progress",
+        lambda p, t, m, **_kw: progress.append((p, t, m)),
     )
     monkeypatch.setattr(notifications, "log", lambda lvl, msg: logs.append((lvl, msg)))
 
@@ -72,7 +74,7 @@ def test_batch_keeps_input_order_and_reports_progress(monkeypatch):
 def test_batch_validation_failure_is_a_warning_not_an_exception(monkeypatch):
     logs: list[tuple[str, str]] = []
     monkeypatch.setattr(notifications, "log", lambda lvl, msg: logs.append((lvl, msg)))
-    monkeypatch.setattr(notifications, "report_progress", lambda *_a: None)
+    monkeypatch.setattr(notifications, "report_progress", lambda *_a, **_k: None)
 
     malformed: list[Any] = ["not an object"]  # callers can send anything over MCP
     out = diagram_tools.generate_uml_batch(malformed)

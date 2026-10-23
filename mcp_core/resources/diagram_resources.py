@@ -205,6 +205,94 @@ def get_recommended_workflow() -> str:
     )
 
 
+def _normalize_diagram_type(diagram_type: str) -> str:
+    return (diagram_type or "").strip().lower()
+
+
+def _unknown_diagram_type_payload(diagram_type: str) -> str:
+    return json.dumps(
+        {
+            "error": f"Unknown diagram_type: {diagram_type!r}",
+            "hint": "Use uml://types or completion/complete on diagram_type",
+        },
+        indent=2,
+    )
+
+
+def get_template_for_type(diagram_type: str) -> str:
+    """Single-type starter template (resource template ``uml://templates/{diagram_type}``)."""
+    from ..plugins.loader import plugin_sample
+
+    key = _normalize_diagram_type(diagram_type)
+    if key not in MCP_SETTINGS.diagram_types:
+        return _unknown_diagram_type_payload(diagram_type)
+    body = plugin_sample(key, "template") or DiagramTemplates.get_template(key)
+    return json.dumps({"diagram_type": key, "template": body}, indent=2)
+
+
+def get_example_for_type(diagram_type: str) -> str:
+    """Single-type example (resource template ``uml://examples/{diagram_type}``)."""
+    from ..plugins.loader import plugin_sample
+
+    key = _normalize_diagram_type(diagram_type)
+    if key not in MCP_SETTINGS.diagram_types:
+        return _unknown_diagram_type_payload(diagram_type)
+    body = plugin_sample(key, "example") or DiagramExamples.get_example(key)
+    return json.dumps({"diagram_type": key, "example": body}, indent=2)
+
+
+def get_formats_for_type(diagram_type: str) -> str:
+    """Formats for one type (resource template ``uml://formats/{diagram_type}``)."""
+    key = _normalize_diagram_type(diagram_type)
+    cfg = MCP_SETTINGS.diagram_types.get(key)
+    if cfg is None:
+        return _unknown_diagram_type_payload(diagram_type)
+    return json.dumps(
+        {"diagram_type": key, "formats": list(cfg.formats)},
+        indent=2,
+    )
+
+
+def get_recipe_for_id(recipe_id: str) -> str:
+    """Single recipe (resource template ``uml://recipes/{recipe_id}``)."""
+    recipes = json.loads(get_diagram_recipes())
+    key = (recipe_id or "").strip().lower()
+    if key not in recipes:
+        return json.dumps(
+            {
+                "error": f"Unknown recipe_id: {recipe_id!r}",
+                "hint": "Known ids: algorithm_flowchart, paper_concept",
+            },
+            indent=2,
+        )
+    return json.dumps({"recipe_id": key, **recipes[key]}, indent=2)
+
+
+#: URI templates registered alongside the aggregate ``uml://`` resources.
+RESOURCE_TEMPLATES: tuple[tuple[str, str, Callable[..., str]], ...] = (
+    (
+        "uml://templates/{diagram_type}",
+        "Starter template for one diagram_type (JSON: diagram_type + template).",
+        get_template_for_type,
+    ),
+    (
+        "uml://examples/{diagram_type}",
+        "Example diagram for one diagram_type (JSON: diagram_type + example).",
+        get_example_for_type,
+    ),
+    (
+        "uml://formats/{diagram_type}",
+        "Supported output_format values for one diagram_type.",
+        get_formats_for_type,
+    ),
+    (
+        "uml://recipes/{recipe_id}",
+        "One starter recipe (algorithm_flowchart or paper_concept).",
+        get_recipe_for_id,
+    ),
+)
+
+
 def register_resources_with_server(server: Any) -> list[str]:
     """
     Register all decorated resources with the MCP server
@@ -236,6 +324,22 @@ def register_resources_with_server(server: Any) -> list[str]:
     return registered_resource_uris
 
 
+def register_resource_templates_with_server(server: Any) -> list[str]:
+    """Register parameterized ``uml://`` resource templates (SEP resource templates)."""
+    from ..observability.audit import instrument
+
+    uris: list[str] = []
+    for uri, description, func in RESOURCE_TEMPLATES:
+        wrapped = instrument(func, "resource", uri)
+        try:
+            server.resource(uri, description=description)(wrapped)
+        except TypeError:
+            server.resource(uri)(wrapped)
+        uris.append(uri)
+        logger.debug("Registered resource template: %s", uri)
+    return uris
+
+
 def register_diagram_resources(server: Any) -> list[str]:
     """
     Register diagram resources with the MCP server
@@ -250,6 +354,11 @@ def register_diagram_resources(server: Any) -> list[str]:
 
     # Register all resources that were decorated with @mcp_resource
     registered_resources = register_resources_with_server(server)
+    registered_resources += register_resource_templates_with_server(server)
+
+    from .completions import register_completions
+
+    register_completions(server)
 
     # Store registered resources in MCP_SETTINGS
     MCP_SETTINGS.resources = registered_resources

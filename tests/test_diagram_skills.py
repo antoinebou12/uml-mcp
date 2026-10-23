@@ -13,10 +13,12 @@ from pydantic import ConfigDict, TypeAdapter
 from mcp_core.auth.policy import READ_METHODS
 from mcp_core.resources import diagram_skills
 from mcp_core.resources.diagram_skills import (
+    SKILL_ROOT_URI,
     SKILL_URI,
     DiagramSkillsExtension,
     GetSkillParams,
     ListSkillsParams,
+    ReadResourceDirectoryParams,
     register_diagram_skills,
 )
 
@@ -39,10 +41,9 @@ async def test_discovery_and_read_over_real_mcp(scope):
     register_diagram_skills(server, cache_scope=scope)
     async with Client(server, timeout=10) as client:
         discovery = await client.session.send_discover("2026-07-28")
-        assert (
-            discovery["capabilities"]["extensions"]["io.modelcontextprotocol/skills"]
-            == {}
-        )
+        assert discovery["capabilities"]["extensions"][
+            "io.modelcontextprotocol/skills"
+        ] == {"directoryRead": True}
         assert "resources" in discovery["capabilities"]
 
         async def request(method, params):
@@ -99,6 +100,25 @@ async def test_get_does_not_depend_on_listing_and_metadata_is_not_mutable():
     first["skill"]["frontmatter"]["description"] = "changed by caller"
     listing = await extension.list_skills(None, ListSkillsParams())
     assert listing["skills"][0]["frontmatter"]["description"] != "changed by caller"
+
+
+async def test_directory_read_lists_skill_md():
+    extension = DiagramSkillsExtension("public")
+    listing = await extension.read_directory(
+        None, ReadResourceDirectoryParams(uri=SKILL_ROOT_URI)
+    )
+    assert listing["resultType"] == "complete"
+    assert listing["resources"] == [
+        {
+            "uri": SKILL_URI,
+            "name": "SKILL.md",
+            "mimeType": "text/markdown",
+            "description": "Diagram workflow instructions for UML-MCP.",
+        }
+    ]
+    with pytest.raises(MCPError) as error:
+        await extension.read_directory(None, ReadResourceDirectoryParams(uri=SKILL_URI))
+    assert error.value.code == -32602
 
 
 async def test_smoke_contract_skill_names_batch_workflow():

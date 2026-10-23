@@ -152,13 +152,17 @@ package "Backend" {
    !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
    ```
 
-2. Apply themes for better visuals:
+2. Apply themes for better visuals (or pass `theme` to `generate_uml` / use the `diagram_theme` prompt):
    ```plantuml
    @startuml
    !theme cerulean
    class Example
    @enduml
    ```
+
+   ![Cerulean (light)](../assets/catalog/theme-light-class.png){ width="220" }
+   ![Cyborg (dark)](../assets/catalog/theme-dark-plantuml.png){ width="220" }
+   ![Plain (B&W / print)](../assets/catalog/theme-bw-class.png){ width="220" }
 
 3. Use notes for additional information:
    ```plantuml

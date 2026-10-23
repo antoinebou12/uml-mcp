@@ -9,11 +9,15 @@ from typing import Any
 
 from pydantic import ValidationError
 
+from ..apps.diagram_viewer import (
+    diagram_viewer_app_config,
+    diagram_viewer_app_only_config,
+)
 from ..core.config import MCP_SETTINGS
 from ..core.diagram_catalog import get_diagram_types_dict
 from ..core.diagram_service import DiagramRequest, generate_from_request
 from ..core.diagram_validation import validate_uml_inputs
-from . import notifications
+from . import mrtr, notifications
 from .schemas import (
     BatchDiagramResult,
     DiagramResult,
@@ -24,6 +28,11 @@ from .schemas import (
 from .tool_decorator import get_tool_registry, mcp_tool, register_tools_with_server
 
 logger = logging.getLogger(__name__)
+
+# Shared MCP Apps link for both render tools (same viewer resource).
+_DIAGRAM_VIEWER_APP = diagram_viewer_app_config()
+# Viewer-only helper: host must hide from the model (visibility=["app"]).
+_DIAGRAM_VIEWER_APP_ONLY = diagram_viewer_app_only_config()
 
 ANNOTATIONS_DIAGRAM = {
     "readOnlyHint": False,
@@ -205,7 +214,7 @@ def _render_batch_item(
 def generate_uml_batch(
     items: list[dict[str, Any]],
     output_dir: str | None = None,
-) -> dict[str, Any]:
+) -> dict[str, Any] | Any:
     """Render multiple diagrams with bounded concurrency and stable ordering.
 
     Args:
@@ -227,6 +236,10 @@ def generate_uml_batch(
             "results": [],
         }
 
+    confirm = mrtr.maybe_confirm_batch(items)
+    if confirm is not None:
+        return confirm
+
     total = len(items)
     workers = _batch_concurrency(total, items)
     notifications.report_progress(
@@ -247,7 +260,19 @@ def generate_uml_batch(
             row = future.result()
             results[index] = row
             _notify_batch_item(index, total, row)
-            notifications.report_progress(done, total, f"{done}/{total} rendered")
+            notifications.report_progress(
+                done,
+                total,
+                f"{done}/{total} rendered",
+                data={
+                    "index": index,
+                    "done": done,
+                    "total": total,
+                    "diagram_type": row.get("diagram_type"),
+                    "ok": not bool(row.get("error") or row.get("success") is False),
+                    "url": row.get("url"),
+                },
+            )
     return {"results": results}
 
 
@@ -267,12 +292,14 @@ def _notify_batch_item(index: int, total: int, row: dict[str, Any]) -> None:
 @mcp_tool(
     description=(
         "Render one diagram. Returns url, playground, and chat markdown. "
-        "Use output_format=png for inline bytes, or call generate_uml_image."
+        "Use output_format=png for inline bytes, or call generate_uml_image. "
+        "MCP Apps hosts may open the linked diagram viewer."
     ),
     category="uml",
     example="generate_uml('mermaid', 'graph TD; A-->B;')",
     annotations={**ANNOTATIONS_DIAGRAM, "title": "Generate Diagram"},
     output_schema=DiagramResult,
+    app=_DIAGRAM_VIEWER_APP,
 )
 def generate_uml(
     diagram_type: str,
@@ -281,7 +308,7 @@ def generate_uml(
     output_format: str = "svg",
     theme: str | None = None,
     scale: float = 1.0,
-) -> dict[str, Any]:
+) -> dict[str, Any] | Any:
     """Generate a diagram using the specified diagram type.
 
     Args:
@@ -290,6 +317,7 @@ def generate_uml(
         output_dir: Optional local directory for the rendered file; omit on hosted deployments.
         output_format: Requested output format, default svg.
         theme: Optional theme — PlantUML name (e.g. cerulean), Mermaid default/dark/forest/neutral/base, or D2 default/dark (theme-id).
+            Background aliases (light/dark/bw) elicit a concrete theme when the client supports MRTR.
         scale: SVG scale factor; ignored for non-SVG output.
     """
     logger.info(
@@ -297,6 +325,20 @@ def generate_uml(
         diagram_type,
         len(code),
     )
+    resolved = mrtr.resolve_diagram_type(diagram_type)
+    if mrtr.is_input_required(resolved) or (
+        isinstance(resolved, dict) and resolved.get("error")
+    ):
+        return resolved
+    diagram_type = str(resolved)
+
+    theme_resolved = mrtr.resolve_theme(diagram_type, theme)
+    if mrtr.is_input_required(theme_resolved) or (
+        isinstance(theme_resolved, dict) and theme_resolved.get("error")
+    ):
+        return theme_resolved
+    theme = theme_resolved  # type: ignore[assignment]
+
     fmt = (output_format or "svg").strip().lower()
     # Raster formats: fetch bytes even under MCP_URL_ONLY so chat clients get ImageContent.
     force_fetch = fmt in {"png", "jpeg", "jpg"}
@@ -316,12 +358,14 @@ def generate_uml(
 @mcp_tool(
     description=(
         "INLINE IMAGE: render a diagram as MCP ImageContent (PNG default) for chat. "
-        "Use when the user asks to show or display the diagram. Fetches bytes even under URL-only."
+        "Use when the user asks to show or display the diagram. Fetches bytes even under URL-only. "
+        "MCP Apps hosts may open the linked diagram viewer."
     ),
     category="uml",
     example="generate_uml_image('mermaid', 'graph TD; A-->B;', 'png')",
     annotations={**ANNOTATIONS_DIAGRAM, "title": "Generate Inline Diagram Image"},
     output_schema=DiagramResult,
+    app=_DIAGRAM_VIEWER_APP,
 )
 def generate_uml_image(
     diagram_type: str,
@@ -329,7 +373,7 @@ def generate_uml_image(
     output_format: str = "png",
     theme: str | None = None,
     scale: float = 1.0,
-) -> dict[str, Any]:
+) -> dict[str, Any] | Any:
     """Generate a diagram and return it as an inline MCP image content block.
 
     Args:
@@ -337,6 +381,7 @@ def generate_uml_image(
         code: Diagram source code in the syntax required by diagram_type.
         output_format: Output format for the inline image; png (default), svg, or jpeg.
         theme: Optional theme — PlantUML name (e.g. cerulean), Mermaid default/dark/forest/neutral/base, or D2 default/dark (theme-id).
+            Background aliases (light/dark/bw) elicit a concrete theme when the client supports MRTR.
         scale: SVG scale factor; ignored unless output_format is svg.
     """
     logger.info(
@@ -345,6 +390,20 @@ def generate_uml_image(
         output_format,
         len(code),
     )
+    resolved = mrtr.resolve_diagram_type(diagram_type)
+    if mrtr.is_input_required(resolved) or (
+        isinstance(resolved, dict) and resolved.get("error")
+    ):
+        return resolved
+    diagram_type = str(resolved)
+
+    theme_resolved = mrtr.resolve_theme(diagram_type, theme)
+    if mrtr.is_input_required(theme_resolved) or (
+        isinstance(theme_resolved, dict) and theme_resolved.get("error")
+    ):
+        return theme_resolved
+    theme = theme_resolved  # type: ignore[assignment]
+
     return generate_from_request(
         DiagramRequest(
             diagram_type=diagram_type,
@@ -356,6 +415,75 @@ def generate_uml_image(
             force_fetch=True,
         )
     )
+
+
+@mcp_tool(
+    description=(
+        "APP-ONLY: re-render a diagram for the MCP Apps viewer (theme/format). "
+        "Hidden from the model; callable from ui://uml-mcp/diagram-viewer via tools/call."
+    ),
+    category="uml",
+    example="rerender_diagram('mermaid', 'graph TD; A-->B;', 'png', 'forest')",
+    annotations={**ANNOTATIONS_DIAGRAM, "title": "Re-render Diagram (Apps)"},
+    output_schema=DiagramResult,
+    app=_DIAGRAM_VIEWER_APP_ONLY,
+    lint_ignore={
+        "tool-name-convention": (
+            "App-only Apps helper (visibility=['app']); not a model workflow verb."
+        ),
+    },
+)
+def rerender_diagram(
+    diagram_type: str,
+    code: str,
+    output_format: str = "png",
+    theme: str | None = None,
+    scale: float = 1.0,
+) -> dict[str, Any] | Any:
+    """Re-render for the sandboxed Apps viewer (same pipeline as generate_uml_image).
+
+    Args:
+        diagram_type: Catalog diagram type from the previous render.
+        code: Diagram source previously shown in the viewer.
+        output_format: png (default), svg, or jpeg for the viewer.
+        theme: Optional theme override (PlantUML / Mermaid / D2).
+        scale: SVG scale factor; ignored unless output_format is svg.
+    """
+    logger.info(
+        "Called rerender_diagram (app-only): type=%s, format=%s, theme=%s",
+        diagram_type,
+        output_format,
+        theme,
+    )
+    resolved = mrtr.resolve_diagram_type(diagram_type)
+    if mrtr.is_input_required(resolved) or (
+        isinstance(resolved, dict) and resolved.get("error")
+    ):
+        return resolved
+    diagram_type = str(resolved)
+
+    theme_resolved = mrtr.resolve_theme(diagram_type, theme)
+    if mrtr.is_input_required(theme_resolved) or (
+        isinstance(theme_resolved, dict) and theme_resolved.get("error")
+    ):
+        return theme_resolved
+    theme = theme_resolved  # type: ignore[assignment]
+
+    out = generate_from_request(
+        DiagramRequest(
+            diagram_type=diagram_type,
+            code=code,
+            output_dir=None,
+            output_format=output_format,
+            theme=theme,
+            scale=scale,
+            force_fetch=True,
+        )
+    )
+    if isinstance(out, dict) and theme is not None:
+        out = dict(out)
+        out["theme"] = theme
+    return out
 
 
 @mcp_tool(

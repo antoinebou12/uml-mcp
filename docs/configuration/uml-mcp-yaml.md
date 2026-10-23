@@ -67,6 +67,10 @@ These map one-to-one to existing env vars:
 | `rendering.kroki_circuit_cooldown_seconds` | `MCP_KROKI_CIRCUIT_COOLDOWN_SECONDS` |
 | `rendering.batch_max_items` / `rendering.batch_concurrency` | `MCP_BATCH_MAX_ITEMS` / `MCP_BATCH_CONCURRENCY` |
 
+Related env (not in YAML yet): `MCP_BATCH_CONFIRM_MIN` (default `8`) — when a
+client advertises form elicitation, `generate_uml_batch` asks for confirmation
+at or above this size; set `0` to disable ([SEP-2322 MRTR](../api/tools.md)).
+
 ### `tools` — least privilege
 
 ```yaml

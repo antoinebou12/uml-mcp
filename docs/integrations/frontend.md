@@ -56,6 +56,21 @@ Manual ChatGPT / client smoke prompts live under [`tests/prompts/`](https://gith
 - If a client does not render image blocks, it still sees the same result as text/JSON with
   the `url` and `content_base64` fields, so nothing is lost.
 
+### MCP Apps diagram viewer
+
+UML-MCP serves an MCP Apps UI resource at `ui://uml-mcp/diagram-viewer` (MIME
+`text/html;profile=mcp-app`) and links it from `generate_uml` and `generate_uml_image`
+via `_meta.ui`. When your host (for example CopilotKit with `MCPAppsMiddleware` below)
+advertises the `io.modelcontextprotocol/ui` extension, it can open that sandboxed viewer
+and paint the tool result in the conversation. Non-Apps hosts are unchanged: they still
+receive markdown / `ImageContent`. The viewer never fetches Kroki itself; it only shows
+bytes or URLs already present in the tool result.
+
+The viewer toolbar can **re-render** (theme / format) by calling the app-only tool
+`rerender_diagram` through the host (`tools/call`). Hosts MUST hide tools whose
+`_meta.ui.visibility` is `["app"]` from the model’s tool list; UML-MCP still registers
+the tool so the host can proxy the call.
+
 ---
 
 ## Option A — CopilotKit (add diagram tools to an in-app agent)

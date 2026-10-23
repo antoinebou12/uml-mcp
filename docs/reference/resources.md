@@ -8,7 +8,7 @@ tags:
 
 # MCP resources
 
-Resources are read-only data that an MCP client can fetch with `resources/read`. UML-MCP serves seven `uml://` URIs. Source of truth: [`mcp_core/resources/diagram_resources.py`](https://github.com/antoinebou12/uml-mcp/blob/main/mcp_core/resources/diagram_resources.py).
+Resources are read-only data that an MCP client can fetch with `resources/read`. UML-MCP serves aggregate `uml://` URIs plus parameterized **resource templates** (one type or recipe at a time). Source of truth: [`mcp_core/resources/diagram_resources.py`](https://github.com/antoinebou12/uml-mcp/blob/main/mcp_core/resources/diagram_resources.py).
 
 ## Calling a resource
 
@@ -39,8 +39,11 @@ auth is enabled). These discovery methods require read permission.
 Load the instructions with `resources/read` at
 `skill://uml-mcp-diagrams/SKILL.md` (`text/markdown`). Clients without Skills
 support can read this resource directly. Reading is not activation: the host
-controls skill loading, integrity checks, and any user approval. Directory
-reading is not advertised or implemented.
+controls skill loading, integrity checks, and any user approval.
+
+The Skills capability advertises `directoryRead: true`. Call
+`resources/directory/read` on `skill://uml-mcp-diagrams` to list the skill root
+(currently just `SKILL.md`).
 
 The installed package includes a byte-identical copy of the canonical
 `.skill/skills/uml-mcp-diagrams/SKILL.md`, checked by tests. After editing the
@@ -68,6 +71,29 @@ Regenerate them with `uv run python scripts/build_diagram_type_skills.py`.
 | [`uml://capabilities`](#umlcapabilities) | `diagram_type` → backend + formats matrix | Tooling and validation use case |
 | [`uml://server-info`](#umlserver-info) | Server name, version, tools, prompts, Kroki URL | Discovery and health checks |
 | [`uml://workflow`](#umlworkflow) | Recommended plan-then-generate workflow | Add to agent system prompts |
+| `ui://uml-mcp/diagram-viewer` | MCP Apps sandboxed HTML viewer | Hosts that support `io.modelcontextprotocol/ui`; linked from `generate_uml` / `generate_uml_image` |
+
+### Resource templates
+
+Listed via `resources/templates/list`. Prefer these when you need a single type without loading the full catalog JSON.
+
+| URI template | Returns |
+| --- | --- |
+| `uml://templates/{diagram_type}` | `{ "diagram_type", "template" }` |
+| `uml://examples/{diagram_type}` | `{ "diagram_type", "example" }` |
+| `uml://formats/{diagram_type}` | `{ "diagram_type", "formats" }` |
+| `uml://recipes/{recipe_id}` | One recipe (`algorithm_flowchart` or `paper_concept`) |
+
+`completion/complete` on these templates (argument `diagram_type` or `recipe_id`) returns matching catalog names. The same handler also suggests `background` / `diagram_type` tokens for the `diagram_theme` and `uml_diagram` prompts.
+
+```json
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "resources/read",
+  "params": { "uri": "uml://templates/mermaid" }
+}
+```
 
 ---
 

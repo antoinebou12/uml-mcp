@@ -17,7 +17,8 @@ from mcp.shared.exceptions import MCPError
 from mcp.types import RequestParams
 from pydantic import StrictStr
 
-SKILL_URI = "skill://uml-mcp-diagrams/SKILL.md"
+SKILL_ROOT_URI = "skill://uml-mcp-diagrams"
+SKILL_URI = f"{SKILL_ROOT_URI}/SKILL.md"
 
 
 class ListSkillsParams(RequestParams):
@@ -26,6 +27,11 @@ class ListSkillsParams(RequestParams):
 
 class GetSkillParams(RequestParams):
     uri: StrictStr
+
+
+class ReadResourceDirectoryParams(RequestParams):
+    uri: StrictStr
+    cursor: StrictStr | None = None
 
 
 class DiagramSkillsExtension(ServerExtension):
@@ -65,10 +71,19 @@ class DiagramSkillsExtension(ServerExtension):
             ],
         }
 
+    def settings(self) -> dict[str, Any]:
+        # Advertise optional directory listing for the skill root (SEP-2640).
+        return {"directoryRead": True}
+
     def methods(self) -> list[MethodBinding]:
         return [
             MethodBinding("skills/list", ListSkillsParams, self.list_skills),
             MethodBinding("skills/get", GetSkillParams, self.get_skill),
+            MethodBinding(
+                "resources/directory/read",
+                ReadResourceDirectoryParams,
+                self.read_directory,
+            ),
         ]
 
     def _result(self, **payload: Any) -> dict[str, Any]:
@@ -89,6 +104,29 @@ class DiagramSkillsExtension(ServerExtension):
         if params.uri != SKILL_URI:
             raise MCPError(code=-32602, message="Unknown skill URI")
         return self._result(skill=deepcopy(self.entry))
+
+    async def read_directory(
+        self, ctx: Any, params: ReadResourceDirectoryParams
+    ) -> dict[str, Any]:
+        """List direct children of the skill root (``SKILL.md`` only today)."""
+        if params.cursor is not None:
+            raise MCPError(code=-32602, message="Invalid directory cursor")
+        uri = (params.uri or "").rstrip("/")
+        if uri != SKILL_ROOT_URI:
+            raise MCPError(
+                code=-32602,
+                message=f"Not a directory resource: {params.uri!r}",
+            )
+        return self._result(
+            resources=[
+                {
+                    "uri": SKILL_URI,
+                    "name": "SKILL.md",
+                    "mimeType": "text/markdown",
+                    "description": "Diagram workflow instructions for UML-MCP.",
+                }
+            ]
+        )
 
 
 def register_diagram_skills(server: Any, *, cache_scope: str) -> list[str]:

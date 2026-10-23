@@ -26,9 +26,10 @@ EXPECTED_TOOLS = [
     "generate_uml_batch",
     "generate_uml",
     "validate_uml",
+    "rerender_diagram",
 ]
 
-# Expected resource URIs from register_diagram_resources
+# Expected resource URIs from register_diagram_resources (aggregates + templates)
 EXPECTED_RESOURCES = [
     "uml://types",
     "uml://templates",
@@ -36,6 +37,10 @@ EXPECTED_RESOURCES = [
     "uml://formats",
     "uml://server-info",
     "uml://workflow",
+    "uml://templates/{diagram_type}",
+    "uml://examples/{diagram_type}",
+    "uml://formats/{diagram_type}",
+    "uml://recipes/{recipe_id}",
 ]
 
 # Published MCP prompts (publish=True); notation helpers are unpublished.

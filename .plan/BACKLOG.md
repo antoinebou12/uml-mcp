@@ -15,5 +15,23 @@ Priorities: **P1** next release · **P2** soon · **P3** nice to have. Size: S <
 | 9 | [OAuth follow-ups: CIMD, RFC 7662 introspection, Entra OBO, admin PKCE in jwt mode](backlog/P3-oauth-followups.md) | P3 | L | backlog |
 | 11 | [Admin console, setup wizard, installer, plugins v1](done/2026-09-admin-console-setup-plugins.md) | P1 | L | done |
 | 10 | [Stale docs: `FASTMCP_STATELESS_HTTP` default, Vercel keys](backlog/P3-stale-docs.md) | P3 | S | backlog |
+| 12 | [MRTR elicitation for diagram tools (SEP-2322)](done/2026-10-mcp-mrtr-elicitation.md) | P2 | M | done |
+| 13 | [Argument completions for diagram_type / theme](done/2026-10-mcp-completions.md) | P2 | S | done |
+| 14 | [Resource templates for uml://examples and templates](done/2026-10-mcp-resource-templates.md) | P2 | S | done |
+| 15 | [Tasks extension for long batch / architecture_report](backlog/P3-mcp-tasks-extension.md) | P3 | L | backlog |
+| 16 | [MCP Apps interactive viewer (zoom / links)](done/2026-10-mcp-apps-interactive.md) | P3 | M | done (first pass) |
+| 17 | [Partial / streaming tool results (SEP-2998 watch)](backlog/P3-mcp-partial-tool-results.md) | P3 | M | backlog |
+| 18 | [Skills resources/directory/read](done/2026-10-mcp-skills-directory-read.md) | P3 | S | done |
+| 19 | [Structured progress (JSON trailer / SEP-2632)](done/2026-10-mcp-structured-progress.md) | P3 | S | done (interim) |
 
 Shipped: see [`done/`](done/).
+
+### MCP protocol notes (2026-07-28 + draft SEPs)
+
+| Status | Feature |
+| --- | --- |
+| **Done** | Skills (+ `directoryRead`), MCP Apps viewer (zoom/links), server card, completions, resource templates, MRTR elicitation, structured progress trailers, Streamable HTTP, OTEL |
+| **P3 backlog** | [Tasks](backlog/P3-mcp-tasks-extension.md) (SEP-2663), [partial/streaming results](backlog/P3-mcp-partial-tool-results.md) (SEP-2998 watch) |
+| **Blocked** | Full [2026 conformance](blocked/P1-mcp-2026-conformance.md) (FastMCP routing headers / suite gaps) |
+| **Skip** | Roots, Sampling, Logging ([SEP-2577](https://modelcontextprotocol.io/specification/2026-07-28/changelog) deprecated) |
+| **Auth** | CIMD / hardening under [OAuth follow-ups](backlog/P3-oauth-followups.md) |

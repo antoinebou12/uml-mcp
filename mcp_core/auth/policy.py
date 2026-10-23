@@ -28,6 +28,7 @@ READ_METHODS: frozenset[str] = frozenset(
         "resources/list",
         "resources/read",
         "resources/templates/list",
+        "resources/directory/read",
         "resources/subscribe",
         "resources/unsubscribe",
         "prompts/list",

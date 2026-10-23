@@ -10,6 +10,12 @@ tags:
 
 `generate_uml` renders diagrams and can save to disk. `generate_uml_image` returns an inline MCP image content block (PNG by default) so clients such as Cursor and ChatGPT can show the diagram in chat; on hosted deployments it fetches bytes even when `MCP_URL_ONLY` is on. When Kroki only offers SVG for a type (for example `d2` or `bpmn`) but the client asks for `png`/`jpeg`, the server renders SVG and rasterizes locally (`format_fallback: svg_rasterized`). `validate_uml` checks inputs locally without calling Kroki and still reports the native format list. `list_diagram_types` returns the same metadata as the `uml://types` resource. `generate_uml_batch` renders several diagrams in one call (see [Configuration](../configuration.md) for `MCP_BATCH_MAX_ITEMS` and `MCP_BATCH_CONCURRENCY`). For diagram types and formats, use `uml://types` and `uml://formats`.
 
+### MCP Apps diagram viewer
+
+`generate_uml` and `generate_uml_image` advertise MCP Apps metadata (`_meta.ui.resourceUri` → `ui://uml-mcp/diagram-viewer`). Hosts that negotiate the `io.modelcontextprotocol/ui` extension can open that sandboxed HTML resource and display the tool result in chat. The viewer uses `structuredContent` already returned by the tool (PNG/JPEG from `content_base64`, sanitized SVG, or URL/playground text when bytes are absent). It does not call Kroki. Hosts without Apps support keep the usual markdown image and `ImageContent` blocks.
+
+App-only helper **`rerender_diagram`** (`_meta.ui.visibility: ["app"]`) lets the viewer change theme/format via host-proxied `tools/call` without exposing a sixth tool to the model. See [Frontend integration](../integrations/frontend.md#mcp-apps-diagram-viewer).
+
 ## Progressive discovery
 
 UML-MCP exposes a small **workflow** surface (five tools) over ~37 Kroki-backed formats rather than one MCP tool per API or diagram type. The **server** defines tools, resources (`uml://*`), and **one** diagram Skill (`skills/list` / `skill://uml-mcp-diagrams/SKILL.md`); the **client** chooses discovery order and how to chain calls. Connect-time token estimates in [`uml-mcp lint`](../developers/linting.md) include that single `skills/list` entry (CI gate 4500). Notation for each `diagram_type` lives in agent files under `.skill/skills/<diagram_type>/SKILL.md` (agent-skills index), not as extra MCP skills.
@@ -74,7 +80,7 @@ Example (URL / base64 only):
 
 ## `generate_uml_image`
 
-Renders one diagram and returns it as an inline MCP image content block so image-capable clients display the picture in chat. Prefer `output_format` `png` (most compatible); `svg` and `jpeg` are also accepted. Same diagram fields as `generate_uml`, but `output_dir` is always omitted (memory-only). On Vercel / `MCP_URL_ONLY=true`, this tool still fetches rendered bytes so `content_base64` / `ImageContent` is present.
+Renders one diagram and returns it as an inline MCP image content block so image-capable clients display the picture in chat. Prefer `output_format` `png` (most compatible); `svg` and `jpeg` are also accepted. Same diagram fields as `generate_uml`, but `output_dir` is always omitted (memory-only). On Vercel / `MCP_URL_ONLY=true`, this tool still fetches rendered bytes so `content_base64` / `ImageContent` is present. MCP Apps–capable hosts may also open `ui://uml-mcp/diagram-viewer` for the same result.
 
 Example:
 
@@ -103,9 +109,17 @@ Parameters:
 
 Returns `{ "results": [ { "index": 0, ... }, ... ] }` where each entry matches `generate_uml` output or includes `error` for that index. Empty `items` or exceeding `MCP_BATCH_MAX_ITEMS` yields an `error` at the top level.
 
+**MRTR elicitation (SEP-2322).** When the client advertises form elicitation:
+
+- Unknown / mistyped `diagram_type` on `generate_uml` / `generate_uml_image` returns `resultType: "input_required"` with a type picker (otherwise a normal error + `suggestions`).
+- `theme` values that look like page backgrounds (`light`, `dark`, `bw`, …) elicit a concrete theme for that backend.
+- Batches of size ≥ `MCP_BATCH_CONFIRM_MIN` (default `8`; `0` disables) ask for confirmation before render.
+
+Clients without elicitation keep ordinary `{ "error": ... }` responses.
+
 **Progress and logs.** Renders run concurrently and can be slow (a Mermaid batch that falls back to mermaid.ink takes about 30 s per item), so the tool reports as it goes:
 
-- `notifications/progress`: `0/N` when it starts, then `k/N` as each item finishes.
+- `notifications/progress`: `0/N` when it starts, then `k/N` as each item finishes (message may include a compact JSON trailer with `index`, `diagram_type`, `url`, `ok` for hosts that parse it).
 - `notifications/message`: one log per finished item, `info` for a rendered diagram (type, renderer, milliseconds) and `warning` for a failed one (the item's error).
 
 Both are **opt-in**: the server sends them only when the request carries a `progressToken` (`progress_handler` in the FastMCP client). A client that sends no token, including one that merely registered a log handler, receives exactly the response it always did, so simple clients that read only the first event of a streamable HTTP response are unaffected. REST callers see no change either.

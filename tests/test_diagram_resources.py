@@ -245,6 +245,10 @@ class TestRegisterDiagramResources:
             "uml://recipes",
             "uml://server-info",
             "uml://workflow",
+            "uml://templates/{diagram_type}",
+            "uml://examples/{diagram_type}",
+            "uml://formats/{diagram_type}",
+            "uml://recipes/{recipe_id}",
         ]
         for uri in expected_uris:
             assert uri in registered

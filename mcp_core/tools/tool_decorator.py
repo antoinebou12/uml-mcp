@@ -110,6 +110,14 @@ def _summarize_tool_result(tool_name: str, result: dict[str, Any]) -> str:
 
 def _as_mcp_tool_result(tool_name: str, result: Any) -> Any:
     """Adapt legacy Python return values to first-class MCP structured results."""
+    # SEP-2322 MRTR: pass InputRequiredResult (and other non-dict results) through.
+    try:
+        from mcp.types import InputRequiredResult
+
+        if isinstance(result, InputRequiredResult):
+            return result
+    except ImportError:
+        pass
     if not isinstance(result, dict):
         return result
 
@@ -168,11 +176,15 @@ def mcp_tool(
     annotations: dict[str, Any] | None = None,
     output_schema: Any | None = None,
     lint_ignore: dict[str, str] | None = None,
+    app: Any | None = None,
 ) -> Callable[[F], F]:
     """Decorator for registering a function as an MCP tool.
 
     ``lint_ignore`` documents deliberate exceptions to ``uml-mcp lint`` rules as
     ``{rule: reason}``; they are reported as suppressed, never silently dropped.
+
+    ``app`` is an optional FastMCP ``AppConfig`` (or compatible mapping) that
+    links the tool to an MCP Apps ``ui://`` resource via ``_meta.ui``.
     """
 
     def decorator(func: F) -> F:
@@ -213,6 +225,7 @@ def mcp_tool(
             "annotations": annotations or {},
             "output_schema": output_schema,
             "lint_ignore": dict(lint_ignore or {}),
+            "app": app,
             "return_type": (
                 sig.return_annotation
                 if sig.return_annotation is not inspect.Parameter.empty
@@ -231,6 +244,7 @@ TOOL_PREFERRED_ORDER = (
     "generate_uml_image",
     "validate_uml",
     "generate_uml_batch",
+    "rerender_diagram",  # app-only; hosts hide from the model via visibility
 )
 
 
@@ -267,6 +281,7 @@ def register_tools_with_server(server: Any) -> list[str]:
         func = instrument(tool_info["function"], "tool", tool_name)
         annotations = tool_info.get("annotations") or {}
         output_schema = _normalize_output_schema(tool_info.get("output_schema"))
+        ui_app = tool_info.get("app")
 
         @wraps(func)
         def protocol_func(
@@ -285,6 +300,8 @@ def register_tools_with_server(server: Any) -> list[str]:
             tool_kwargs["annotations"] = annotations
         if output_schema is not None:
             tool_kwargs["output_schema"] = output_schema
+        if ui_app is not None:
+            tool_kwargs["app"] = ui_app
 
         try:
             dec = server_any.tool(**tool_kwargs)
@@ -292,31 +309,38 @@ def register_tools_with_server(server: Any) -> list[str]:
         except TypeError:
             # Compatibility path for older/mock server APIs. The project is pinned to
             # FastMCP 4 in production, but tests intentionally exercise a minimal mock.
+            # Drop app= first so mocks that reject unknown kwargs still register tools.
+            tool_kwargs.pop("app", None)
             try:
-                dec = server_any.tool(
-                    name=tool_name,
-                    description=tool_info["description"],
-                )
+                dec = server_any.tool(**tool_kwargs)
                 dec(protocol_func)
             except TypeError:
                 try:
-                    dec = server_any.tool(tool_info["description"])
+                    dec = server_any.tool(
+                        name=tool_name,
+                        description=tool_info["description"],
+                    )
                     dec(protocol_func)
                 except TypeError:
-                    server_any.tool(protocol_func)
+                    try:
+                        dec = server_any.tool(tool_info["description"])
+                        dec(protocol_func)
+                    except TypeError:
+                        server_any.tool(protocol_func)
 
-                if tool_name != protocol_func.__name__:
-                    if hasattr(server, "_tools"):
-                        tools_map: Any = server._tools
-                        tools_map[tool_name] = tools_map.pop(
-                            protocol_func.__name__, protocol_func
-                        )
-                    else:
-                        logger.warning(
-                            "Could not rename tool '%s' to '%s'; server API does not support it",
-                            protocol_func.__name__,
-                            tool_name,
-                        )
+                    if tool_name != protocol_func.__name__:
+                        if hasattr(server, "_tools"):
+                            tools_map: Any = server._tools
+                            tools_map[tool_name] = tools_map.pop(
+                                protocol_func.__name__, protocol_func
+                            )
+                        else:
+                            logger.warning(
+                                "Could not rename tool '%s' to '%s'; "
+                                "server API does not support it",
+                                protocol_func.__name__,
+                                tool_name,
+                            )
 
         registered_tools.append(tool_name)
         logger.debug("Registered tool: %s", tool_name)

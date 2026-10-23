@@ -14,6 +14,23 @@ UML-MCP exposes 30+ diagram types through a single tool surface. This page is th
 
     For the authoritative list at runtime, ask the server: `tools/call list_diagram_types` or `resources/read uml://types`. The static tables below match the values defined in [`mcp_core/core/config.py`](https://github.com/antoinebou12/uml-mcp/blob/main/mcp_core/core/config.py).
 
+## Sample renders
+
+A few catalog types rendered through `generate_uml` (PNG). The full type list follows below.
+
+![Class diagram](../assets/catalog/class.png){ width="280" }
+![Sequence diagram](../assets/catalog/sequence.png){ width="280" }
+![Mermaid](../assets/catalog/mermaid.png){ width="280" }
+![D2](../assets/catalog/d2.png){ width="280" }
+![C4 PlantUML](../assets/catalog/c4plantuml.png){ width="320" }
+![BPMN](../assets/catalog/bpmn.png){ width="280" }
+
+![Sample catalog types overview](../assets/catalog/types-overview.png)
+
+Theme variants for light / dark / B&W page backgrounds (see [`diagram_theme`](../reference/prompts.md#diagram_theme)):
+
+![Themes by background](../assets/catalog/themes-bg-sheet.png)
+
 ## UML (PlantUML family)
 
 All UML types are rendered through the PlantUML backend on Kroki.

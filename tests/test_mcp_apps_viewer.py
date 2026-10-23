@@ -1,0 +1,127 @@
+"""MCP Apps diagram viewer: discover, tools/list meta, resources/read, SVG sanitize."""
+
+from __future__ import annotations
+
+import pytest
+from fastmcp import Client, FastMCP
+from fastmcp.apps import UI_EXTENSION_ID, UI_MIME_TYPE
+
+from mcp_core.apps.diagram_viewer import (
+    DIAGRAM_VIEWER_URI,
+    diagram_viewer_html,
+    register_diagram_viewer,
+)
+from mcp_core.apps.svg_sanitize import sanitize_svg
+from mcp_core.tools.diagram_tools import register_diagram_tools
+
+# ---------------------------------------------------------------- SVG sanitizer
+
+
+def test_sanitize_svg_removes_script_and_event_handlers() -> None:
+    dirty = """
+    <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10">
+      <script>alert(1)</script>
+      <rect width="10" height="10" onclick="evil()" fill="blue"/>
+      <a href="javascript:alert(2)"><text>x</text></a>
+      <foreignObject width="10" height="10"><body xmlns="http://www.w3.org/1999/xhtml">
+        <p>nope</p>
+      </body></foreignObject>
+    </svg>
+    """
+    clean = sanitize_svg(dirty)
+    assert "script" not in clean.lower()
+    assert "onclick" not in clean.lower()
+    assert "javascript:" not in clean.lower()
+    assert "foreignobject" not in clean.lower()
+    assert "rect" in clean.lower()
+    assert 'fill="blue"' in clean or "fill='blue'" in clean or "fill=" in clean
+
+
+def test_sanitize_svg_keeps_ordinary_shapes() -> None:
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg">'
+        '<circle cx="5" cy="5" r="4" fill="red"/>'
+        "</svg>"
+    )
+    assert "circle" in sanitize_svg(svg)
+    assert "fill" in sanitize_svg(svg)
+
+
+def test_sanitize_svg_rejects_unparseable() -> None:
+    assert sanitize_svg("not svg at all <<<") == ""
+
+
+def test_viewer_html_is_self_contained() -> None:
+    html = diagram_viewer_html()
+    assert "text/html" not in html[:50]  # raw document, not a MIME wrapper
+    assert "<!DOCTYPE html>" in html
+    assert "cdn." not in html.lower()
+    assert "ui/initialize" in html
+    assert "ui/notifications/tool-result" in html
+    assert "ui/notifications/tool-input" in html
+    assert "sanitizeSvg" in html
+    assert "content_base64" in html
+    assert "zoomIn" in html and "Playground" in html
+    assert 'name: "rerender_diagram"' in html or "rerender_diagram" in html
+    assert "tools/call" in html
+
+
+# ---------------------------------------------------------------- protocol surface
+
+
+@pytest.fixture
+def apps_server() -> FastMCP:
+    # Decorators already populated the tool registry at import time.
+    server = FastMCP("mcp-apps-viewer-test", cache_ttl=300, cache_scope="public")
+    register_diagram_tools(server)
+    register_diagram_viewer(server)
+    return server
+
+
+@pytest.mark.asyncio
+async def test_discover_advertises_ui_extension(apps_server: FastMCP) -> None:
+    async with Client(apps_server, timeout=10) as client:
+        discovery = await client.session.send_discover("2026-07-28")
+        extensions = discovery["capabilities"].get("extensions") or {}
+        assert UI_EXTENSION_ID in extensions
+
+
+@pytest.mark.asyncio
+async def test_render_tools_link_viewer_in_meta(apps_server: FastMCP) -> None:
+    async with Client(apps_server, timeout=10) as client:
+        tools = {t.name: t for t in await client.list_tools()}
+        for name in ("generate_uml", "generate_uml_image"):
+            tool = tools[name]
+            meta = tool.meta or {}
+            ui = meta.get("ui") or {}
+            assert ui.get("resourceUri") == DIAGRAM_VIEWER_URI, name
+            assert set(ui.get("visibility") or []) == {"model", "app"}, name
+        # App-only re-render helper (host hides from the model; FastMCP still lists it).
+        assert "rerender_diagram" in tools
+        rerender_ui = (tools["rerender_diagram"].meta or {}).get("ui") or {}
+        assert rerender_ui.get("resourceUri") == DIAGRAM_VIEWER_URI
+        assert rerender_ui.get("visibility") == ["app"]
+        # Other workflow tools stay without Apps meta.
+        for name in ("validate_uml", "list_diagram_types", "generate_uml_batch"):
+            meta = (tools[name].meta or {}) if name in tools else {}
+            assert "ui" not in meta or not (meta.get("ui") or {}).get("resourceUri")
+
+
+@pytest.mark.asyncio
+async def test_viewer_resource_read_has_apps_mime(apps_server: FastMCP) -> None:
+    async with Client(apps_server, timeout=10) as client:
+        resources = {str(r.uri): r for r in await client.list_resources()}
+        assert DIAGRAM_VIEWER_URI in resources
+        listed = resources[DIAGRAM_VIEWER_URI]
+        assert listed.mime_type == UI_MIME_TYPE
+        meta = listed.meta or {}
+        ui = meta.get("ui") or {}
+        csp = ui.get("csp") or {}
+        assert csp.get("connectDomains") == []
+        assert "data:" in (csp.get("resourceDomains") or [])
+
+        contents = await client.read_resource(DIAGRAM_VIEWER_URI)
+        assert contents
+        assert contents[0].mime_type == UI_MIME_TYPE
+        assert "<!DOCTYPE html>" in (contents[0].text or "")
+        assert "cdn." not in (contents[0].text or "").lower()

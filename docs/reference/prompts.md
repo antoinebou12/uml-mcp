@@ -38,6 +38,15 @@ Every published prompt accepts an optional `context` string carrying a JSON obje
 | `paper_concept_diagram` | Paper/concept diagrams with clickable citations (prefer SVG); pairs with `uml://recipes` key `paper_concept`. |
 | `architecture_report` | Numbered Markdown architecture report with several `generate_uml` renders and a linked TOC. |
 
+### Gallery
+
+Sample renders from the published prompts and related recipes (same fixtures as `uml-mcp lint --prompts`):
+
+![Prompts contact sheet](../assets/catalog/prompts-sheet.png)
+
+![Algorithm explainer (recipe)](../assets/catalog/algorithm-flowchart.png){ width="480" }
+![Paper / concept diagram](../assets/catalog/paper-concept.png){ width="400" }
+
 ## Per-type notation (agent skills, not MCP prompts)
 
 Load `.skill/skills/<diagram_type>/SKILL.md` (or the [agent-skills index](https://github.com/antoinebou12/uml-mcp/blob/main/.well-known/agent-skills/index.json)) for starters and samples. Former MCP names such as `class_diagram`, `sequence_diagram`, `mermaid_sequence_api`, `bpmn_executable_process`, and `c4_model` are unpublished helpers only.
@@ -83,6 +92,14 @@ Use when the chat UI or document has a **white**, **black/dark**, or **black-and
 | `light` / `white` | `cerulean`, `materia`, `sketchy` | `forest`, `default` | `default` |
 | `dark` / `black` | `blueprint`, `cyborg`, `black-knight` | `dark` | `dark` |
 | `bw` / `print` / `mono` | `plain`, `sketchy`, `mimeograph` | `neutral`, `base` | `default` |
+
+Light / dark / B&W picks side by side (class + PlantUML / Mermaid examples):
+
+![Theme backgrounds contact sheet](../assets/catalog/themes-bg-sheet.png)
+
+| Light (`cerulean`) | Dark (`cyborg`) | B&W (`plain`) |
+| --- | --- | --- |
+| ![Light class](../assets/catalog/theme-light-class.png) | ![Dark PlantUML](../assets/catalog/theme-dark-plantuml.png) | ![B&W class](../assets/catalog/theme-bw-class.png) |
 
 ## `architecture_report`
 

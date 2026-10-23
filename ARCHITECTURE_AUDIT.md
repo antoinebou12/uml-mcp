@@ -110,7 +110,7 @@ See improvement plan PR 1-7. Immediate blockers for MCP result-first-class work:
 
 1. Produce baseline measurements for latency, size, fallback rate
 2. Implement real render cache with deterministic key
-3. Add MCP Apps viewer resource `ui://uml-mcp/diagram-viewer`
+3. Add MCP Apps viewer resource `ui://uml-mcp/diagram-viewer` (done: linked from render tools)
 4. Harden Origin/CORS and output sandbox
 5. Align version source of truth
 

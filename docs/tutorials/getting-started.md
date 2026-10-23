@@ -244,7 +244,7 @@ Three parameters tune the rendered image:
 | Parameter | Effect | Notes |
 | --- | --- | --- |
 | `output_format` | `svg`, `png`, `pdf`, `jpeg`, `txt`, `base64` | Allowed values depend on `diagram_type`; check `uml://formats`. |
-| `theme` | PlantUML `!theme` | Only meaningful for PlantUML-family types (class, sequence, …). |
+| `theme` | PlantUML `!theme`, Mermaid theme, or D2 theme | Prefer the `diagram_theme` prompt when matching a light / dark / B&W page. |
 | `scale` | Float multiplier | SVG only. Default `1.0`, minimum `0.1`. Ignored on Vercel `URL_ONLY` mode. |
 
 ```json
@@ -259,6 +259,14 @@ Three parameters tune the rendered image:
   }
 }
 ```
+
+Example themes for light, dark, and print backgrounds:
+
+![Light theme (class / cerulean)](../assets/catalog/theme-light-class.png){ width="240" }
+![Dark theme (PlantUML / cyborg)](../assets/catalog/theme-dark-plantuml.png){ width="240" }
+![B&W theme (class / plain)](../assets/catalog/theme-bw-class.png){ width="240" }
+
+See [MCP prompts → `diagram_theme`](../reference/prompts.md#diagram_theme) for the background → theme table.
 
 ```mermaid
 sequenceDiagram

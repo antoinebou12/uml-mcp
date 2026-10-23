@@ -15,6 +15,7 @@ lost notification must not fail a render.
 
 from __future__ import annotations
 
+import json
 import logging
 from typing import Any
 
@@ -63,9 +64,27 @@ def _send(method: str, *args: Any) -> None:
         logger.debug("MCP %s notification skipped", method, exc_info=True)
 
 
-def report_progress(progress: float, total: float, message: str) -> None:
-    """Send ``notifications/progress`` (only delivered if the client sent a token)."""
-    _send("report_progress", progress, total, message)
+def report_progress(
+    progress: float,
+    total: float,
+    message: str,
+    *,
+    data: dict[str, Any] | None = None,
+) -> None:
+    """Send ``notifications/progress`` (only delivered if the client sent a token).
+
+    Optional ``data`` is appended as a compact JSON trailer so hosts can parse
+    structured fields before SEP-2632 lands (message stays human-readable).
+    """
+    text = message
+    if data:
+        try:
+            text = (
+                f"{message} |{json.dumps(data, separators=(',', ':'), sort_keys=True)}"
+            )
+        except (TypeError, ValueError):
+            text = message
+    _send("report_progress", progress, total, text)
 
 
 def log(level: str, message: str) -> None:

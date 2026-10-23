@@ -98,6 +98,7 @@ if use_mock:
             self._tools: dict[str, Callable[..., Any]] = {}
             self._prompts: dict[str, Callable[..., Any]] = {}
             self._resources: dict[str, Callable[..., Any]] = {}
+            self._completion_handler: Callable[..., Any] | None = None
             self.logger = logging.getLogger(__name__)
 
         def tool(self, *args, **kwargs):
@@ -132,6 +133,17 @@ if use_mock:
                 return func
 
             return decorator
+
+        def completion(self, handler: Callable | None = None):
+            """Mock completion registration (mirrors FastMCP ``@server.completion``)."""
+
+            def register(fn: Callable) -> Callable:
+                self._completion_handler = fn
+                return fn
+
+            if handler is None:
+                return register
+            return register(handler)
 
         def run(
             self,
