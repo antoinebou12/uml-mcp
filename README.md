@@ -9,7 +9,7 @@
 [![GitHub forks](https://img.shields.io/github/forks/antoinebou12/uml-mcp)](https://github.com/antoinebou12/uml-mcp/network/members)
 [![GitHub issues](https://img.shields.io/github/issues/antoinebou12/uml-mcp)](https://github.com/antoinebou12/uml-mcp/issues)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python >=3.12,<3.15](https://img.shields.io/badge/python-%3E%3D3.12%2C%3C3.15-blue.svg)](https://www.python.org/downloads/)
+[![Python >=3.12,<3.16](https://img.shields.io/badge/python-%3E%3D3.12%2C%3C3.16-blue.svg)](https://www.python.org/downloads/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple)](https://modelcontextprotocol.io/)

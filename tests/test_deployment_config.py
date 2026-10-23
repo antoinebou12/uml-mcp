@@ -25,7 +25,7 @@ def test_pyproject_is_canonical_mcp_2026_manifest() -> None:
     assert "mcp>=2.0.0,<3.0.0" in dependencies
     assert "fastapi>=0.141.1,<0.200.0" in dependencies
     assert "starlette>=1.6.0,<2.0.0" in dependencies
-    assert project["requires-python"] == ">=3.12,<3.15"
+    assert project["requires-python"] == ">=3.12,<3.16"
 
     # Runtime dependencies belong to PEP 621. Keeping a second Poetry dependency
     # table would let package managers resolve different MCP stacks.

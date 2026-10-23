@@ -21,8 +21,8 @@ def test_version_consistency():
 
     # Check README badge contains version range (basic)
     readme = (Path(__file__).parents[1] / "README.md").read_text(encoding="utf-8")
-    # Badge should reflect >=3.12,<3.15
-    assert ">=3.12" in readme
+    # Badge should reflect >=3.12,<3.16
+    assert ">=3.12,<3.16" in readme or "%3C3.16" in readme
 
 
 def test_version_consistency_across_manifests():
