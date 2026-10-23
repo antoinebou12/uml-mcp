@@ -13,7 +13,7 @@
       "type": "context",
       "description": "Modern Python tooling and practices: uv for dependencies, ruff for lint/format, ty for type checking, pytest for tests. Use for this project and when setting up or refactoring Python codebases.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/modern-python/SKILL.md",
-      "sha256": "f3163ae4a4d4ef7b9c833d708364841b2295dfff2d0658eaa9527465dd654632"
+      "sha256": "709ad8e8c3b814d8547eb3682bf57440d8151a415a38950bb0ed83a8a8faa278"
     },
     {
       "name": "sequential-thinking",
