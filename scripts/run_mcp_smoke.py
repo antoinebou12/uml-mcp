@@ -46,6 +46,7 @@ from mcp_core.resources.diagram_skills import SKILL_URI
 class _WireParams(RequestParams):
     model_config = ConfigDict(extra="allow")
 
+
 SEQUENCE = """sequenceDiagram
   participant Client
   participant Server
