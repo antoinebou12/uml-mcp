@@ -1,4 +1,4 @@
----
+﻿---
 title: TikZ prompts and SVG
 description: Natural-language prompts, optional Sequential Thinking MCP, and generate_uml for TikZ/PGF diagrams as SVG.
 tags:
@@ -16,8 +16,8 @@ Use this track when you want **publication-style** vector figures (geometry, plo
 ## Prerequisites
 
 - A connected **UML-MCP** server ([Getting started](getting-started.md)).
-- Optional: a **Sequential Thinking** MCP server in the same client (for example Cursor) if you want explicit multi-step reasoning *before* calling `generate_uml`. It is **not** part of UML-MCP; it complements **`uml_diagram_with_thinking`**, which is a **named prompt** on UML-MCP only.
-- There is **no** TikZ-specific named prompt on UML-MCP. Use **`uml_diagram`** or **`uml_diagram_with_thinking`** and insist on `diagram_type: "tikz"` in the final **`generate_uml`** call.
+- Optional: a **Sequential Thinking** MCP server in the same client (for example Cursor) if you want explicit multi-step reasoning *before* calling `generate_uml`. It is **not** part of UML-MCP; it complements **`uml_diagram`**, which is a **named prompt** on UML-MCP only.
+- There is **no** TikZ-specific named prompt on UML-MCP. Use **`uml_diagram`** (or `.skill/skills/tikz/SKILL.md`) and insist on `diagram_type: "tikz"` in the final **`generate_uml`** call.
 - Omit **`output_dir`** when you only need a Kroki **URL** or **`content_base64`** (typical for hosted MCP). Use **`validate_uml`** with the same `diagram_type`, `code`, and `output_format` to catch unsupported types or formats before rendering (no network call).
 - Check allowed types and formats with **`uml://types`** and **`uml://formats`**, or load **`uml://workflow`** for the standard plan-then-generate flow ([MCP resources](../reference/resources.md)).
 
@@ -71,14 +71,14 @@ If your snippet is **not** a full LaTeX document, put `\usetikzlibrary{...}` and
 
 The same `code` string can appear inside `generate_uml` arguments as a JSON string with escaped newlines (each line ends with `\n`).
 
-## Named MCP prompts (UML-MCP)
+## MCP prompt and agent skill
 
-| Prompt | Use when |
+| Entry | Use when |
 | --- | --- |
-| `uml_diagram` | Generic plan-then-generate for any supported type; steer the model toward TikZ in the plan and set `diagram_type` to `tikz` in the tool call. |
-| `uml_diagram_with_thinking` | Same, with an explicit planning step before TikZ source is finalized. |
+| `uml_diagram` | Plan-then-generate; steer toward TikZ and set `diagram_type` to `tikz`. |
+| `.skill/skills/tikz/SKILL.md` | TikZ starter and formats |
 
-There are **no** TikZ-only named prompts (unlike PlantUML class/sequence helpers). Fetch prompt text with `prompts/get` ([MCP prompts](../reference/prompts.md)). Load **`uml://workflow`** when you want the standard workflow copy ([MCP resources](../reference/resources.md)).
+Fetch prompt text with `prompts/get` ([MCP prompts](../reference/prompts.md)). Load **`uml://workflow`** when you want the standard workflow copy ([MCP resources](../reference/resources.md)).
 
 ## Direct `tools/call` (JSON-RPC)
 

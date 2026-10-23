@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import logging
 import time
 from dataclasses import dataclass
@@ -11,6 +12,7 @@ from pydantic import ValidationError
 
 from .config import MCP_SETTINGS
 from .render_cache import build_render_cache_key, get_render_cache
+from .svg_raster import is_raster_format, normalize_raster_format, rasterize_svg
 from .utils import generate_diagram
 
 logger = logging.getLogger(__name__)
@@ -158,18 +160,31 @@ def generate_from_request(req: DiagramRequest) -> dict[str, Any]:
             "cache_hit": False,
         }
 
+    requested_fmt = validated.output_format.lower().strip()
+    allowed = [f.lower() for f in getattr(types_map[dt_key], "formats", [])]
+    rasterize_to: str | None = None
+    render_fmt = requested_fmt
+    if (
+        is_raster_format(requested_fmt)
+        and requested_fmt not in allowed
+        and "svg" in allowed
+    ):
+        render_fmt = "svg"
+        rasterize_to = normalize_raster_format(requested_fmt)
+
     cache = get_render_cache()
     cache_key: str | None = None
     # File-producing calls are intentionally not cached because a cached local_path may
     # refer to a different request or a file that has since been removed.
+    force_fetch = req.force_fetch or rasterize_to is not None
     if validated.output_dir is None and cache.enabled:
         cache_key = build_render_cache_key(
             diagram_type=dt_key,
             code=validated.code,
-            output_format=validated.output_format,
+            output_format=requested_fmt,
             theme=validated.theme,
             scale=validated.scale,
-            renderer_identity=_renderer_identity(force_fetch=req.force_fetch),
+            renderer_identity=_renderer_identity(force_fetch=force_fetch),
         )
         lookup_start = time.perf_counter()
         cached = cache.get(cache_key)
@@ -177,7 +192,7 @@ def generate_from_request(req: DiagramRequest) -> dict[str, Any]:
         if cached is not None:
             cached["success"] = True
             cached["diagram_type"] = dt_key
-            cached["output_format"] = validated.output_format
+            cached["output_format"] = cached.get("output_format") or requested_fmt
             cached["cache_hit"] = True
             cached["cache_lookup_ms"] = round(lookup_ms, 3)
             return cached
@@ -185,15 +200,15 @@ def generate_from_request(req: DiagramRequest) -> dict[str, Any]:
     result = generate_diagram(
         validated.diagram_type,
         validated.code,
-        validated.output_format,
+        render_fmt,
         validated.output_dir,
         validated.theme,
         validated.scale,
-        force_fetch=req.force_fetch,
+        force_fetch=force_fetch,
     )
     out = dict(result)
     out["diagram_type"] = dt_key
-    out["output_format"] = validated.output_format
+    out["output_format"] = requested_fmt
     out["success"] = not bool(out.get("error"))
     out["cache_hit"] = False
 
@@ -206,6 +221,9 @@ def generate_from_request(req: DiagramRequest) -> dict[str, Any]:
         )
         return out
 
+    if rasterize_to:
+        out = _apply_svg_raster_fallback(out, rasterize_to)
+
     from mcp_core.core.chat_packet import build_display_markdown
 
     display = build_display_markdown(out)
@@ -214,4 +232,47 @@ def generate_from_request(req: DiagramRequest) -> dict[str, Any]:
 
     if cache_key is not None:
         cache.set(cache_key, out)
+    return out
+
+
+def _apply_svg_raster_fallback(result: dict[str, Any], target: str) -> dict[str, Any]:
+    """Turn SVG bytes into PNG/JPEG when the Kroki type has no native raster."""
+    encoded = result.get("content_base64")
+    if not encoded:
+        out = dict(result)
+        out["output_format"] = "svg"
+        out["requested_format"] = target
+        out["format_fallback"] = "svg_no_bytes"
+        out["format_note"] = (
+            f"Native '{target}' is unavailable for this diagram type and no SVG "
+            "bytes were fetched to rasterize; returning SVG URL only. "
+            "Call with force-fetch / generate_uml_image, or use output_format=svg."
+        )
+        return out
+    try:
+        svg_bytes = base64.b64decode(encoded)
+    except (TypeError, ValueError):
+        return result
+    raster = rasterize_svg(svg_bytes, target)
+    out = dict(result)
+    if raster is None:
+        out["output_format"] = "svg"
+        out["mime_type"] = result.get("mime_type") or "image/svg+xml"
+        out["requested_format"] = target
+        out["format_fallback"] = "svg_passthrough"
+        out["format_note"] = (
+            f"Native '{target}' is not offered by Kroki for this type; SVG was "
+            "returned because local SVG→raster conversion is unavailable."
+        )
+        return out
+    raw, mime = raster
+    out["content_base64"] = base64.b64encode(raw).decode("ascii")
+    out["mime_type"] = mime
+    out["output_format"] = target
+    out["native_format"] = "svg"
+    out["format_fallback"] = "svg_rasterized"
+    out["format_note"] = (
+        f"Kroki only serves SVG for this type; '{target}' was produced by local "
+        "SVG rasterization (resvg)."
+    )
     return out

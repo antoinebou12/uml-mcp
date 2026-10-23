@@ -191,6 +191,16 @@ documented in [Enterprise configuration](../enterprise/configuration.md).
 Secrets are rejected here, just as they are in the JSON file: use env vars or
 `*_file` keys that point to mounted secrets.
 
+Useful non-secret keys:
+
+```yaml
+auth:
+  filter_tools_list: true   # read-only tokens: tools/list omits write tools
+```
+
+`filter_tools_list` only applies when `MCP_AUTH_MODE` is not `none`. Write tool calls
+still return 403 with a step-up challenge.
+
 ## Deployment recipes
 
 | Where | How |

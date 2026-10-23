@@ -1,4 +1,4 @@
----
+﻿---
 title: Mermaid live examples
 description: "Gallery of Mermaid diagrams plus prompts, optional Sequential Thinking, and server SVG; flowchart, sequence, class, state, Gantt, ER rendered live on the page."
 tags:
@@ -23,21 +23,19 @@ Every code block on this page is a live Mermaid diagram rendered in your browser
 
 Use **natural-language prompts** first, then have the model produce Mermaid source and call **`generate_uml`** with **`"output_format": "svg"`** when you need a static asset, PDF pipeline, or shareable Kroki URL (unlike the in-page diagrams below, which rely on JavaScript).
 
-**Optional Sequential Thinking MCP.** In clients such as Cursor you can enable a **Sequential Thinking** server alongside UML-MCP. It is a separate product: use its `sequentialthinking` tool to step through scope, diagram type, participants, edge cases, then finish with **`nextThoughtNeeded: false`** before invoking `generate_uml`. UML-MCP’s own **`uml_diagram_with_thinking`** prompt is different: it is fetched with `prompts/get` and only affects how the model plans inside the chat.
+**Optional Sequential Thinking MCP.** In clients such as Cursor you can enable a **Sequential Thinking** server alongside UML-MCP. It is a separate product: use its `sequentialthinking` tool to step through scope, diagram type, participants, edge cases, then finish with **`nextThoughtNeeded: false`** before invoking `generate_uml`. UML-MCP’s own **`uml_diagram`** prompt is different: it is fetched with `prompts/get` and only affects how the model plans inside the chat.
 
-**Named prompts on UML-MCP** (see [MCP prompts](../reference/prompts.md)):
+**MCP prompt + agent skill** (see [MCP prompts](../reference/prompts.md)):
 
-| Prompt | Use when |
+| Entry | Use when |
 | --- | --- |
-| `mermaid_sequence_api` | HTTP-style `sequenceDiagram` with client, API, optional DB, `alt` / errors. |
-| `mermaid_gantt` | `gantt` with sections, `dateFormat`, dependencies. |
-| `convert_class_to_mermaid` | Turn class structure (PlantUML or prose) into `classDiagram`. |
-| `uml_diagram_with_thinking` | Any Mermaid type with an explicit plan-then-code step. |
+| `uml_diagram` | Plan-then-generate any Mermaid diagram (`context.diagram_type` → `mermaid`). |
+| `.skill/skills/mermaid/SKILL.md` | Notation tips (sequence API style, gantt, classDiagram conversion). |
 
 Example chat prompts:
 
 ```
-Using the mermaid_sequence_api style, draw a sequenceDiagram for OAuth2 authorization code flow:
+Using Mermaid sequenceDiagram style (see the mermaid agent skill), draw a sequence for OAuth2 authorization code flow:
 browser, auth server, resource API, and token storage. Include success and error alt branches.
 ```
 
@@ -203,4 +201,4 @@ pie showData
 
     Use `validate_uml(diagram_type="mermaid", code=..., strict=true)` to catch issues like missing `graph` directives or invalid sequence arrows before calling `generate_uml`.
 
-See [Diagram Assistant](../diagram-assistant.md) for the matching named prompts (`mermaid_sequence_api`, `mermaid_gantt`, `convert_class_to_mermaid`).
+See [Diagram Assistant](../diagram-assistant.md) and `.skill/skills/mermaid/SKILL.md` for Mermaid notation tips.

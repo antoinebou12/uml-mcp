@@ -38,21 +38,13 @@ EXPECTED_RESOURCES = [
     "uml://workflow",
 ]
 
-# Expected prompt names from register_diagram_prompts
+# Published MCP prompts (publish=True); notation helpers are unpublished.
 EXPECTED_PROMPTS = [
     "uml_diagram",
-    "uml_diagram_with_thinking",
-    "class_diagram",
-    "sequence_diagram",
-    "activity_diagram",
-    "usecase_diagram",
-    "mermaid_sequence_api",
-    "mermaid_gantt",
-    "bpmn_process_guide",
-    "c4_model",
-    "wireviz_harness",
-    "bpmn_executable_process",
-    "convert_class_to_mermaid",
+    "algorithm_explainer",
+    "paper_concept_diagram",
+    "diagram_theme",
+    "architecture_report",
 ]
 
 

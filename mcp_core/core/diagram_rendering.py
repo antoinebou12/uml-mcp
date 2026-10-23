@@ -79,21 +79,46 @@ def _verify_kroki_link(url: str, timeout: float | None) -> None:
         raise KrokiHTTPError(response, response.content)
 
 
+def _prepare_plantuml_family(code: str, theme: str | None) -> str:
+    """Wrap ``@startuml`` / ``@enduml`` and inject ``!theme`` when missing."""
+    prepared = code.strip()
+    if "@startuml" not in prepared:
+        prepared = f"@startuml\n{prepared}"
+    if "@enduml" not in prepared:
+        prepared = f"{prepared}\n@enduml"
+    if theme and "!theme" not in prepared:
+        prepared = prepared.replace("@startuml", f"@startuml\n!theme {theme}", 1)
+    return prepared
+
+
+def _prepare_d2_theme(code: str, theme: str | None) -> str:
+    """Prefix D2 ``vars.d2-config.theme-id`` when the source has no theme yet."""
+    from mcp_core.core.diagram_themes import resolve_d2_theme_id
+
+    prepared = code.strip()
+    theme_id = resolve_d2_theme_id(theme)
+    if theme_id is None or "d2-config" in prepared or "theme-id" in prepared:
+        return prepared
+    return (
+        "vars: {\n"
+        "  d2-config: {\n"
+        f"    theme-id: {theme_id}\n"
+        "  }\n"
+        "}\n"
+        f"{prepared}"
+    )
+
+
 def prepare_diagram_code(code: str, backend_type: str, theme: str | None) -> str:
     """Strip and wrap PlantUML when needed; TikZ snippets get standalone wrap; Mermaid gets
     fence/escape cleanup and an optional theme; else strip only."""
     prepared_code = code.strip()
     if backend_type == "mermaid":
         prepared_code = prepare_mermaid_source(prepared_code, theme)
-    elif backend_type == "plantuml":
-        if "@startuml" not in prepared_code:
-            prepared_code = f"@startuml\n{prepared_code}"
-        if "@enduml" not in prepared_code:
-            prepared_code = f"{prepared_code}\n@enduml"
-        if theme and "!theme" not in prepared_code:
-            prepared_code = prepared_code.replace(
-                "@startuml", f"@startuml\n!theme {theme}"
-            )
+    elif backend_type in ("plantuml", "c4plantuml"):
+        prepared_code = _prepare_plantuml_family(prepared_code, theme)
+    elif backend_type == "d2":
+        prepared_code = _prepare_d2_theme(prepared_code, theme)
     elif backend_type == "tikz" and "\\documentclass" not in prepared_code:
         from tools.kroki.tikz import wrap_tikz_standalone
 

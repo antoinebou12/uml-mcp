@@ -113,8 +113,10 @@ Configs: [`config/README.md`](config/README.md) (Cursor, VS Code, Codex, Claude,
 
 ## At a glance
 
-**MCP Skills:** compatible clients can discover the diagram workflow with
-`skills/list` and load `skill://uml-mcp-diagrams/SKILL.md` through `resources/read`.
+**MCP Skills:** compatible clients discover the diagram **workflow** with
+`skills/list` and load `skill://uml-mcp-diagrams/SKILL.md` through `resources/read`
+(one skill on the wire; connect-time ~4316 tokens). Per-type notation lives in
+`.skill/skills/<diagram_type>/SKILL.md` via the [agent-skills index](docs/reference/resources.md#per-type-agent-skills).
 See [Skills over MCP](docs/reference/resources.md#diagram-skill-over-mcp).
 
 | Topic | What you get |

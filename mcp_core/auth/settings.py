@@ -107,6 +107,8 @@ class AuthSettings(BaseModel):
     mode: Literal["none", "jwt", "entra-proxy"] = "none"
     resource_url: str = ""
     protect_rest: bool = True
+    #: When True, read-only principals only see read tools in ``tools/list``.
+    filter_tools_list: bool = False
     preflight: Literal["warn", "strict", "off"] = "warn"
 
     algorithms: list[str] = Field(default_factory=lambda: ["RS256"])
@@ -448,6 +450,7 @@ _ENV_INTS: dict[str, str] = {
 }
 _ENV_BOOLS: dict[str, str] = {
     "MCP_AUTH_PROTECT_REST": "protect_rest",
+    "MCP_AUTH_FILTER_TOOLS_LIST": "filter_tools_list",
     "MCP_AUTH_ADVERTISE_OFFLINE_ACCESS": "advertise_offline_access",
     "MCP_AUTH_REQUIRE_USER_ROLES": "require_user_roles",
     "MCP_ADMIN_UI": "admin_ui",

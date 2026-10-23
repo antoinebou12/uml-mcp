@@ -12,6 +12,7 @@ authorization server (``WWW-Authenticate: Bearer resource_metadata=..., scope=..
 from __future__ import annotations
 
 import asyncio
+import json
 from collections.abc import Awaitable, Callable, MutableMapping
 from typing import TYPE_CHECKING, Any
 from urllib.parse import parse_qsl
@@ -22,6 +23,7 @@ from .policy import parse_jsonrpc_body
 
 if TYPE_CHECKING:  # pragma: no cover
     from .integration import AuthRuntime
+    from .policy import Policy
     from .validator import Principal
 
 Scope = MutableMapping[str, Any]
@@ -31,6 +33,9 @@ Send = Callable[[Message], Awaitable[None]]
 
 MAX_AUTH_HEADER = 16 * 1024
 BODY_READ_TIMEOUT = 30.0
+_JSON_CONTENT_TYPES = frozenset(
+    {"application/json", "application/json-rpc", "application/jsonrequest"}
+)
 
 
 def is_mcp_path(path: str) -> bool:
@@ -81,6 +86,7 @@ class AuthMiddleware:
         challenge = policy.challenge_scopes(fixed_perm if surface == "rest" else None)
         tool: str | None = None
         principal: Principal | None = None
+        messages: list[dict[str, Any]] | None = None
         try:
             token = self._extract_token(scope)
             principal = await self.runtime.validator.validate(token)
@@ -133,8 +139,16 @@ class AuthMiddleware:
             policy_decision="allow",
             policy_reason=f"{required} permission ({principal.kind})",
         )
+        filter_list = (
+            settings.filter_tools_list
+            and surface == "mcp"
+            and method == "POST"
+            and not policy.has(principal, "write")
+            and _messages_list_tools(messages)
+        )
+        outbound = _tools_list_filter_send(send, policy) if filter_list else send
         try:
-            await self.app(new_scope, receive, send)
+            await self.app(new_scope, receive, outbound)
         finally:
             reset_context(ctx_token)
 
@@ -272,6 +286,97 @@ def _tool_name(messages: list[dict[str, Any]]) -> str | None:
         if msg.get("method") == "tools/call":
             return (msg.get("params") or {}).get("name")
     return None
+
+
+def _messages_list_tools(messages: list[dict[str, Any]] | None) -> bool:
+    return bool(messages) and any(m.get("method") == "tools/list" for m in messages)
+
+
+def _filter_tools_in_result(result: Any, policy: Policy) -> Any:
+    if not isinstance(result, dict):
+        return result
+    tools = result.get("tools")
+    if not isinstance(tools, list):
+        return result
+    filtered = [
+        t
+        for t in tools
+        if isinstance(t, dict)
+        and isinstance(t.get("name"), str)
+        and policy.tool_permission(t["name"]) == "read"
+    ]
+    if len(filtered) == len(tools):
+        return result
+    out = dict(result)
+    out["tools"] = filtered
+    return out
+
+
+def _filter_tools_list_payload(payload: Any, policy: Policy) -> Any:
+    """Drop write tools from ``tools/list`` JSON-RPC result(s)."""
+    if isinstance(payload, list):
+        return [_filter_tools_list_payload(item, policy) for item in payload]
+    if not isinstance(payload, dict):
+        return payload
+    if "result" in payload:
+        out = dict(payload)
+        out["result"] = _filter_tools_in_result(payload.get("result"), policy)
+        return out
+    return payload
+
+
+def _content_type(headers: list[tuple[bytes, bytes]]) -> str:
+    for key, value in headers:
+        if key.lower() == b"content-type":
+            return value.decode("latin-1", "replace").split(";", 1)[0].strip().lower()
+    return ""
+
+
+def _tools_list_filter_send(send: Send, policy: Policy) -> Send:
+    """Buffer a JSON ``tools/list`` response and omit write tools (SSE untouched)."""
+    status = 200
+    headers: list[tuple[bytes, bytes]] = []
+    started = False
+    chunks: list[bytes] = []
+    passthrough = False
+
+    async def wrapped(message: Message) -> None:
+        nonlocal status, headers, started, passthrough
+        if message["type"] == "http.response.start":
+            status = int(message.get("status", 200))
+            headers = list(message.get("headers") or [])
+            started = True
+            ctype = _content_type(headers)
+            if status != 200 or ctype not in _JSON_CONTENT_TYPES:
+                passthrough = True
+                await send(message)
+            return
+        if message["type"] != "http.response.body":
+            await send(message)
+            return
+        if passthrough:
+            await send(message)
+            return
+        chunks.append(message.get("body", b"") or b"")
+        if message.get("more_body", False):
+            return
+        raw = b"".join(chunks)
+        try:
+            data = json.loads(raw.decode("utf-8"))
+            filtered = _filter_tools_list_payload(data, policy)
+            body = json.dumps(filtered, separators=(",", ":")).encode("utf-8")
+        except (UnicodeDecodeError, ValueError, TypeError):
+            body = raw
+        out_headers = [(k, v) for k, v in headers if k.lower() != b"content-length"]
+        out_headers.append((b"content-length", str(len(body)).encode("ascii")))
+        if not started:  # pragma: no cover - ASGI always starts before body
+            return
+        await send(
+            {"type": "http.response.start", "status": status, "headers": out_headers}
+        )
+        await send({"type": "http.response.body", "body": body, "more_body": False})
+
+    return wrapped
 
 
 def _check_mcp_headers(scope: Scope, messages: list[dict[str, Any]]) -> None:

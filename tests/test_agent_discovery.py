@@ -101,3 +101,15 @@ def test_build_agent_skills_index_tmp(tmp_path):
     assert sk["sha256"] == hashlib.sha256(body).hexdigest()
     assert sk["url"].endswith("/.skill/skills/demo_skill/SKILL.md")
     assert "raw.githubusercontent.com/owner/repo/main/" in sk["url"]
+
+
+def test_build_agent_skills_index_prefers_yaml_description(tmp_path):
+    skill_dir = tmp_path / ".skill" / "skills" / "yaml_skill"
+    skill_dir.mkdir(parents=True)
+    body = (
+        b"---\nname: yaml_skill\ndescription: >-\n  From frontmatter.\n---\n\n"
+        b"# Title\n\nBody paragraph should lose.\n"
+    )
+    (skill_dir / "SKILL.md").write_bytes(body)
+    idx = build_agent_skills_index(tmp_path, github_repo="owner/repo", branch="main")
+    assert idx["skills"][0]["description"] == "From frontmatter."

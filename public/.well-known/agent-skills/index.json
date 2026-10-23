@@ -2,46 +2,305 @@
   "$schema": "https://agentskills.io/schemas/agent-skills-index-v0.2.0.json",
   "skills": [
     {
+      "name": "actdiag",
+      "type": "context",
+      "description": "Writes valid actdiag diagram source for uml-mcp (diagram_type=actdiag). Activity and workflow diagrams (blockdiag family) Use when the user asks for actdiag or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/actdiag/SKILL.md",
+      "sha256": "25c2c18e7cb770f6b3ff09824e09d703dc3497d0e734f86afef2bb65e771e912"
+    },
+    {
+      "name": "activity",
+      "type": "context",
+      "description": "Writes valid activity diagram source for uml-mcp (diagram_type=activity). Shows workflows or business processes Use when the user asks for activity or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/activity/SKILL.md",
+      "sha256": "aacd6edbcd591b2024cf0607310245e56745a5f950a5fa4f79a3819634847213"
+    },
+    {
+      "name": "blockdiag",
+      "type": "context",
+      "description": "Writes valid blockdiag diagram source for uml-mcp (diagram_type=blockdiag). Simple block diagram images Use when the user asks for blockdiag or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/blockdiag/SKILL.md",
+      "sha256": "d8d2fb3203e3b12afe09691c97b1c449e0fb3a9177f0308f84e07da41072370c"
+    },
+    {
+      "name": "bpmn",
+      "type": "context",
+      "description": "Writes valid bpmn diagram source for uml-mcp (diagram_type=bpmn). Business Process Model and Notation Use when the user asks for bpmn or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/bpmn/SKILL.md",
+      "sha256": "661938bf6c369cea23c86d35fadcc90f954e079749e5e4194e9d1ec50d7929b4"
+    },
+    {
+      "name": "bytefield",
+      "type": "context",
+      "description": "Writes valid bytefield diagram source for uml-mcp (diagram_type=bytefield). Binary protocol and byte layout diagrams Use when the user asks for bytefield or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/bytefield/SKILL.md",
+      "sha256": "8a9dbcb342da813e7ba551d1cee7c37e3ec88b185e7f97fb475b3dd911e3357c"
+    },
+    {
+      "name": "c4plantuml",
+      "type": "context",
+      "description": "Writes valid c4plantuml diagram source for uml-mcp (diagram_type=c4plantuml). C4 model diagrams using PlantUML Use when the user asks for c4plantuml or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/c4plantuml/SKILL.md",
+      "sha256": "9686f1a2f0ae3ab0879efcb3b2f27fc1021ea13166212fa2b296e4e92a89f5b7"
+    },
+    {
+      "name": "class",
+      "type": "context",
+      "description": "Writes valid class diagram source for uml-mcp (diagram_type=class). Shows classes, attributes, methods and relationships between classes Use when the user asks for class or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/class/SKILL.md",
+      "sha256": "9f6e39c535a17115a3034b0748d605f9cd0d72d12ce69a856c044b63b2487c17"
+    },
+    {
+      "name": "component",
+      "type": "context",
+      "description": "Writes valid component diagram source for uml-mcp (diagram_type=component). Shows components and dependencies Use when the user asks for component or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/component/SKILL.md",
+      "sha256": "d92ec0efe75939186c0cc3b1e7771d8ab35746cb92583ad3b393d529d65ac77f"
+    },
+    {
+      "name": "d2",
+      "type": "context",
+      "description": "Writes valid d2 diagram source for uml-mcp (diagram_type=d2). A modern diagram scripting language Use when the user asks for d2 or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/d2/SKILL.md",
+      "sha256": "354d11ff3bbe0e75c06b58497139508c39f4062a6e1a33729603809c6a362328"
+    },
+    {
+      "name": "dbml",
+      "type": "context",
+      "description": "Writes valid dbml diagram source for uml-mcp (diagram_type=dbml). Database Markup Language schema diagrams Use when the user asks for dbml or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/dbml/SKILL.md",
+      "sha256": "b3a4f32a611c8f04d37808254a9ead1751a1bf4ede3c67bf6980c0c476c99ccf"
+    },
+    {
+      "name": "deployment",
+      "type": "context",
+      "description": "Writes valid deployment diagram source for uml-mcp (diagram_type=deployment). Shows physical architecture of a system Use when the user asks for deployment or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/deployment/SKILL.md",
+      "sha256": "b244b9610f65896f22eecb8b8b4a636345fd54671cef4e6dd4dbe5cd9b47adb5"
+    },
+    {
+      "name": "ditaa",
+      "type": "context",
+      "description": "Writes valid ditaa diagram source for uml-mcp (diagram_type=ditaa). Diagrams Through ASCII Art Use when the user asks for ditaa or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/ditaa/SKILL.md",
+      "sha256": "d2098dd257036ed833027c23b6ee3656278198a219f089add2da84fa1b1563ac"
+    },
+    {
+      "name": "erd",
+      "type": "context",
+      "description": "Writes valid erd diagram source for uml-mcp (diagram_type=erd). Entity-relationship diagrams Use when the user asks for erd or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/erd/SKILL.md",
+      "sha256": "8062336891042d6f556236ac43ab98d56db174d69d311d6bc26a4f987bdc9443"
+    },
+    {
+      "name": "excalidraw",
+      "type": "context",
+      "description": "Writes valid excalidraw diagram source for uml-mcp (diagram_type=excalidraw). Excalidraw whiteboard-style diagrams Use when the user asks for excalidraw or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/excalidraw/SKILL.md",
+      "sha256": "5b22eff88b31701d7a9a45f9ebf402ae570a340c51803a7c0b14e4a6a7697ffd"
+    },
+    {
+      "name": "goat",
+      "type": "context",
+      "description": "Writes valid goat diagram source for uml-mcp (diagram_type=goat). GoAT ASCII art to SVG diagrams (Markdeep-style) Use when the user asks for goat or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/goat/SKILL.md",
+      "sha256": "a2f27b92481dc04891e5c7b98718e73f9f5b0269bce162a29992c028dc5e1e5e"
+    },
+    {
+      "name": "graphviz",
+      "type": "context",
+      "description": "Writes valid graphviz diagram source for uml-mcp (diagram_type=graphviz). Graph visualization software Use when the user asks for graphviz or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/graphviz/SKILL.md",
+      "sha256": "2bce2ed20e2723cbdb0f5d06551e437aada828c58b90ff3d36d372d2e517557e"
+    },
+    {
       "name": "mcp-python",
       "type": "context",
-      "description": "Create and extend MCP servers in Python with FastMCP and the official MCP Python SDK. Based on [MCP Build a server](https://modelcontextprotocol.io/docs/develop/build-server) and [MCP Best Practices](https://mcp-best-practice.github.io/mcp-best-practice/best-practice/).",
+      "description": "Create and extend MCP (Model Context Protocol) servers in Python using FastMCP and the official SDK. Covers tools, resources, prompts, STDIO vs HTTP transports, logging rules for STDIO, and production best practices. Use when building or modifying MCP servers in Python, adding tools/resources/prompts, debugging MCP servers, or choosing transport and client config.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/mcp-python/SKILL.md",
       "sha256": "fc8b682b80c31fbee8ffe5cfe3f51b893ef369bd6aeadbc6db4b00346028ec77"
     },
     {
+      "name": "mermaid",
+      "type": "context",
+      "description": "Writes valid mermaid diagram source for uml-mcp (diagram_type=mermaid). A JavaScript based diagramming and charting tool Use when the user asks for mermaid or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/mermaid/SKILL.md",
+      "sha256": "c310467b5f46352370af2929d513c3247d25c70fe96cbd3c6e01cfbf870b7cdd"
+    },
+    {
       "name": "modern-python",
       "type": "context",
-      "description": "Modern Python tooling and practices: uv for dependencies, ruff for lint/format, ty for type checking, pytest for tests. Use for this project and when setting up or refactoring Python codebases.",
+      "description": "Modern Python tooling and best practices using uv, ruff, ty, and pytest. Covers project setup with pyproject.toml (PEP 735), src layout, linting/formatting with ruff, type checking with ty, testing with pytest and coverage, pre-commit with prek, and security (pip-audit, detect-secrets, actionlint). Use when setting up or working on Python projects, replacing pip/virtualenv with uv, replacing flake8/black/mypy with ruff/ty, adding pre-commit or security scanning, or when the user mentions uv, ruf",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/modern-python/SKILL.md",
       "sha256": "709ad8e8c3b814d8547eb3682bf57440d8151a415a38950bb0ed83a8a8faa278"
     },
     {
+      "name": "nomnoml",
+      "type": "context",
+      "description": "Writes valid nomnoml diagram source for uml-mcp (diagram_type=nomnoml). UML-style diagrams from shorthand syntax Use when the user asks for nomnoml or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/nomnoml/SKILL.md",
+      "sha256": "d2e2c831187761252541f416197c61df579839b7370a64d98e83487632e52bb4"
+    },
+    {
+      "name": "nwdiag",
+      "type": "context",
+      "description": "Writes valid nwdiag diagram source for uml-mcp (diagram_type=nwdiag). Network diagrams (blockdiag family) Use when the user asks for nwdiag or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/nwdiag/SKILL.md",
+      "sha256": "57d04d9900adebedf272971eb14a84909370f1dcbb514e610cd5e31356cee301"
+    },
+    {
+      "name": "object",
+      "type": "context",
+      "description": "Writes valid object diagram source for uml-mcp (diagram_type=object). Shows instances of classes and their relationships Use when the user asks for object or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/object/SKILL.md",
+      "sha256": "edd1ed8242615a087b9640b7bf916e729bc580276a98b31e71a22322c1081167"
+    },
+    {
+      "name": "packetdiag",
+      "type": "context",
+      "description": "Writes valid packetdiag diagram source for uml-mcp (diagram_type=packetdiag). Network packet layout diagrams Use when the user asks for packetdiag or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/packetdiag/SKILL.md",
+      "sha256": "9c0d0c85be48d383ae4f7be6de42d13ebe344035a68d951cf780e4972fd747c0"
+    },
+    {
+      "name": "pikchr",
+      "type": "context",
+      "description": "Writes valid pikchr diagram source for uml-mcp (diagram_type=pikchr). Pikchr diagram scripting language Use when the user asks for pikchr or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/pikchr/SKILL.md",
+      "sha256": "aacb54dbbeaabad921c850f5198c7dfa57ed4bbfa8b609d06cb0a7199de51423"
+    },
+    {
+      "name": "plantuml",
+      "type": "context",
+      "description": "Writes valid plantuml diagram source for uml-mcp (diagram_type=plantuml). PlantUML raw diagram source (all diagram kinds) Use when the user asks for plantuml or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/plantuml/SKILL.md",
+      "sha256": "7b3064dff828bcfef0c93309d612890e37cdec9ff766e295727432e847683ad2"
+    },
+    {
+      "name": "rackdiag",
+      "type": "context",
+      "description": "Writes valid rackdiag diagram source for uml-mcp (diagram_type=rackdiag). Rack and server layout diagrams (blockdiag family) Use when the user asks for rackdiag or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/rackdiag/SKILL.md",
+      "sha256": "735ba537476f6ed3db0c3b2b29dad29e8dc3c9d441b35d8dfc92bfb5892148bc"
+    },
+    {
+      "name": "seqdiag",
+      "type": "context",
+      "description": "Writes valid seqdiag diagram source for uml-mcp (diagram_type=seqdiag). Sequence diagrams (blockdiag family) Use when the user asks for seqdiag or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/seqdiag/SKILL.md",
+      "sha256": "95290f6dafeb0a7aa60c5d0f2d6e6356dad37c2dc875401ab146a5c5ce52b2e2"
+    },
+    {
+      "name": "sequence",
+      "type": "context",
+      "description": "Writes valid sequence diagram source for uml-mcp (diagram_type=sequence). Shows object interactions arranged in time sequence Use when the user asks for sequence or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/sequence/SKILL.md",
+      "sha256": "44010ce4f40a717029f94c242c026c45e445e2bccc273f253fb9f38df2c1b3a2"
+    },
+    {
       "name": "sequential-thinking",
       "type": "context",
-      "description": "Break down complex work into ordered steps, revise when needed, and produce one clear answer. Use for multi-step tasks, planning, and problems where scope or approach may change.",
+      "description": "Step-by-step and reflective problem-solving for complex or multi-step tasks. Use when tackling complex tasks, planning, design, analysis that may need revision, unclear scope, or when the user asks for step-by-step reasoning. When the sequential-thinking MCP tool is available, use it for hard problems; otherwise apply the same principles in plain reasoning.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/sequential-thinking/SKILL.md",
       "sha256": "bccc58119520979882b89114de306b57f8dad0e55d2ff0961d75b8d075f5b2e0"
     },
     {
+      "name": "state",
+      "type": "context",
+      "description": "Writes valid state diagram source for uml-mcp (diagram_type=state). Shows states of an object during its lifecycle Use when the user asks for state or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/state/SKILL.md",
+      "sha256": "6ec0d302a51b8bf9edec68ae51aeaa9dbe7345b19d385652baed57c15a7a56f7"
+    },
+    {
+      "name": "structurizr",
+      "type": "context",
+      "description": "Writes valid structurizr diagram source for uml-mcp (diagram_type=structurizr). Structurizr C4 and architecture DSL Use when the user asks for structurizr or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/structurizr/SKILL.md",
+      "sha256": "0c7ce7f645dc89b42b9780c9279e4fe7b3be2462a4ef49b6d86fa0235b3369c5"
+    },
+    {
+      "name": "svgbob",
+      "type": "context",
+      "description": "Writes valid svgbob diagram source for uml-mcp (diagram_type=svgbob). ASCII art to SVG diagrams Use when the user asks for svgbob or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/svgbob/SKILL.md",
+      "sha256": "9de01eee8ff9a8ff86913a2e471a25daf7b9fb8bb6d035724c44f3de2e5a7153"
+    },
+    {
+      "name": "symbolator",
+      "type": "context",
+      "description": "Writes valid symbolator diagram source for uml-mcp (diagram_type=symbolator). Digital logic and schematic symbols Use when the user asks for symbolator or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/symbolator/SKILL.md",
+      "sha256": "291d29172249d54206e6e28b368ee8ec1f81aceca0792d7b7603b3e649d0ca66"
+    },
+    {
+      "name": "tikz",
+      "type": "context",
+      "description": "Writes valid tikz diagram source for uml-mcp (diagram_type=tikz). TikZ/PGF graphics (LaTeX) Use when the user asks for tikz or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/tikz/SKILL.md",
+      "sha256": "6abe6be0ed27888f5747d67faa1c363ef13d97c4a07ab9c573f36677c89d71d9"
+    },
+    {
       "name": "uml-diagramming",
       "type": "context",
-      "description": "Generate a single, correct Mermaid or PlantUML code block from a user's description. Output only the diagram script in one code block; no prose outside it.",
+      "description": "Produces Mermaid or PlantUML diagram code from user specifications for UML, architecture, and flow diagrams. Use when the user asks for diagram code or output for the generate_uml / generate_uml_image MCP tools. Supports Kroki-renderable output.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-diagramming/SKILL.md",
       "sha256": "9ac3914865bbc4dbeb07026f05d87289babb7f13d2b5e1c6a22f8e73180d3147"
     },
     {
       "name": "uml-mcp-diagrams",
       "type": "context",
-      "description": "> **Maintainers:** Keep tool tables and `output_dir` wording aligned with the Smithery bundle **[uml-skill/SKILL.md](https://github.com/antoinebou12/uml-skill/blob/main/SKILL.md)** (`diagramming-uml`) and the Claude Code plugin skill **`plugins/uml-mcp/skills/uml-diagrams/SKILL.md`** when you edit any of them. **`.github/skills/uml-mcp-diagrams/SKILL.md`** (GitHub Copilot) must stay a byte-identical copy of this file.",
+      "description": "uml-mcp diagram workflow: validate_uml \u2192 generate_uml / generate_uml_image / generate_uml_batch for Kroki types. Use for UML, Mermaid, D2, URLs, Kroki.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "43a4455c34059c2f97efd50820dfbfe17323d04955904a2a2277ff57e11aa22a"
+      "sha256": "bd37dab9fd949a298cee3d0ed28e21f8a7627312e179220a29ee5842dc23137e"
     },
     {
       "name": "uml-mcp-navigation",
       "type": "context",
-      "description": "1. Read `AGENTS.md` (preferences, facts) and `SOUL.md` (principles).",
+      "description": "Navigate the UML-MCP repository and its documentation quickly. Maps every feature (tools, rendering, auth, config file, audit, rate limits, lint, admin dashboard, Helm, docs) to its code, tests and docs, and lists the commands to verify a change. Use before editing UML-MCP code or docs, when answering \"where is X\", or when planning work from the .plan backlog.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-navigation/SKILL.md",
-      "sha256": "a15cfeef3025eb0510c22a301a5700fc961bd6782ff9c9d987bc1ce7c46f0c5b"
+      "sha256": "770daeef4ee4b6064a6fbbe2f5bb812b38eba13bddbc9540cd592a05ae271e94"
+    },
+    {
+      "name": "umlet",
+      "type": "context",
+      "description": "Writes valid umlet diagram source for uml-mcp (diagram_type=umlet). UMLet UML diagrams from UXF XML source Use when the user asks for umlet or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/umlet/SKILL.md",
+      "sha256": "21f5b583afc79a4cf4bbfa163dcec59d2bc43f680c027105eab38178c580d27e"
+    },
+    {
+      "name": "usecase",
+      "type": "context",
+      "description": "Writes valid usecase diagram source for uml-mcp (diagram_type=usecase). Shows system functionality and actors who interact with it Use when the user asks for usecase or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/usecase/SKILL.md",
+      "sha256": "d4d20d37045fb962d4afd9561f3f557a43f58fa2b602e33d4583c82e73d9e607"
+    },
+    {
+      "name": "vega",
+      "type": "context",
+      "description": "Writes valid vega diagram source for uml-mcp (diagram_type=vega). Vega visualization grammar Use when the user asks for vega or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/vega/SKILL.md",
+      "sha256": "fc5a9d165786449465b1a168a5561e7e0020b1379fe654ca361b18d3f265bccb"
+    },
+    {
+      "name": "vegalite",
+      "type": "context",
+      "description": "Writes valid vegalite diagram source for uml-mcp (diagram_type=vegalite). Vega-Lite visualization grammar Use when the user asks for vegalite or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/vegalite/SKILL.md",
+      "sha256": "d8d1ed38b6eeec7197d70c9850aa5a447df8341dc9a57e7fe1d1d049cd7ae746"
+    },
+    {
+      "name": "wavedrom",
+      "type": "context",
+      "description": "Writes valid wavedrom diagram source for uml-mcp (diagram_type=wavedrom). Waveform and digital timing diagrams Use when the user asks for wavedrom or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/wavedrom/SKILL.md",
+      "sha256": "aa58a4c3fc12d72160bfbc238d2fc3631af5a0e4e04aef93bd00889e9b42a5dd"
+    },
+    {
+      "name": "wireviz",
+      "type": "context",
+      "description": "Writes valid wireviz diagram source for uml-mcp (diagram_type=wireviz). Cable and wiring diagrams Use when the user asks for wireviz or that notation; then call validate_uml / generate_uml / generate_uml_image.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/wireviz/SKILL.md",
+      "sha256": "9531c03379d1cbd873e47b7fdabb6b77ba5512ca9c55db4a3a925e27ef35b2b8"
     }
   ]
 }

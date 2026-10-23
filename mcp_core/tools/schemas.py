@@ -66,8 +66,9 @@ class GenerateUMLInput(BaseModel):
     theme: str | None = Field(
         default=None,
         description=(
-            "Optional theme: a PlantUML theme name, or for Mermaid one of default, "
-            "dark, forest, neutral, base; ignored otherwise."
+            "Optional theme: PlantUML name (e.g. cerulean), Mermaid "
+            "default/dark/forest/neutral/base, or D2 default/dark (theme-id); "
+            "ignored for other backends."
         ),
     )
     scale: float = Field(
@@ -118,16 +119,21 @@ class GenerateUMLInput(BaseModel):
     @model_validator(mode="after")
     def validate_output_format_for_diagram_type(self) -> GenerateUMLInput:
         from ..core.config import MCP_SETTINGS
+        from ..core.svg_raster import is_raster_format
 
         diagram_type = self.diagram_type.lower()
         output_format = self.output_format.lower().strip()
         types_map = getattr(MCP_SETTINGS, "diagram_types", {})
         if diagram_type in types_map:
-            allowed = types_map[diagram_type].formats
+            allowed = [f.lower() for f in types_map[diagram_type].formats]
             if output_format not in allowed:
+                # PNG/JPEG for SVG-only Kroki types: render SVG then rasterize locally.
+                if is_raster_format(output_format) and "svg" in allowed:
+                    return self
                 raise ValueError(
                     f"output_format '{output_format}' not supported for diagram type "
-                    f"'{diagram_type}'. Use uml://formats or choose one of: {', '.join(allowed)}"
+                    f"'{diagram_type}'. Use uml://formats or choose one of: "
+                    f"{', '.join(types_map[diagram_type].formats)}"
                 )
         return self
 

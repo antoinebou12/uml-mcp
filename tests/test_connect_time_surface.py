@@ -15,8 +15,7 @@ from fastmcp import Client, FastMCP
 
 from mcp_core.prompts.diagram_prompts import (
     _parse_context,
-    _summary,
-    get_prompt_registry,
+    get_published_prompt_registry,
     register_diagram_prompts,
 )
 from mcp_core.tools.schemas import BatchDiagramResult, DiagramResult, ValidationResult
@@ -56,7 +55,9 @@ async def test_every_prompt_advertises_one_short_optional_context_argument(
     server: FastMCP,
 ) -> None:
     prompts = await server.list_prompts()
-    assert len(prompts) == len(get_prompt_registry()) >= 16
+    published = get_published_prompt_registry()
+    assert len(prompts) == len(published) == 5
+    assert {p.name for p in prompts} == set(published)
     for prompt in prompts:
         arguments = {a.name: a for a in prompt.arguments or []}
         assert set(arguments) == {"context"}, prompt.name
@@ -73,9 +74,10 @@ async def test_every_prompt_advertises_one_short_optional_context_argument(
 async def test_prompt_descriptions_are_the_docstring_summaries(
     server: FastMCP,
 ) -> None:
-    registry = get_prompt_registry()
+    registry = get_published_prompt_registry()
     for prompt in await server.list_prompts():
-        assert prompt.description == _summary(registry[prompt.name]["function"])
+        # Wire description is the short decorator blurb, not the full docstring.
+        assert prompt.description == registry[prompt.name]["description"]
 
 
 @pytest.mark.asyncio

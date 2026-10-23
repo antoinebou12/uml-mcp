@@ -101,6 +101,8 @@ def test_config_rules():
         {"audit": {"enabled": True, "sinks": ["file"], "include_inputs": "full"}}
     )
     assert {"CFG004", "CFG005"} <= codes(lint_config(risky, None, tools))
+    noop_filter = parse_app_config({"auth": {"filter_tools_list": True}})
+    assert "AUTH002" in codes(lint_config(noop_filter, None, tools))
 
 
 def test_exit_codes():
@@ -193,7 +195,7 @@ def test_real_server_lint_gate():
             "--min-grade",
             "A",
             "--token-budget",
-            "4300",
+            "4500",
         ],
         capture_output=True,
         text=True,
@@ -203,6 +205,7 @@ def test_real_server_lint_gate():
     )
     assert proc.returncode == 0, proc.stdout + proc.stderr
     assert "Grade A · score 100/100" in proc.stdout
+    assert "5 prompts, 1 skill" in proc.stdout
     assert "suppressed tool-no-required tool:list_diagram_types" in proc.stdout
     proc = subprocess.run(
         [sys.executable, "-m", "mcp_core.core.commands", "lint", "--format", "json"],
@@ -212,7 +215,9 @@ def test_real_server_lint_gate():
         timeout=120,
         check=False,
     )
-    server = json.loads(proc.stdout)["server"]
+    report = json.loads(proc.stdout)
+    assert report["counts"]["skills"] == 1
+    server = report["server"]
     assert server["name"] == "uml_mcp" and server["version"].startswith(
         "1."
     )  # not FastMCP's

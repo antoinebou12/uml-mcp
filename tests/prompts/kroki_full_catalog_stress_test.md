@@ -798,19 +798,22 @@ Table diagrams {
     <coordinates>
       <x>10</x>
       <y>10</y>
-      <w>120</w>
-      <h>70</h>
+      <w>180</w>
+      <h>90</h>
     </coordinates>
     <panel_attributes>Account
 --
 -balance: decimal
-++deposit()
++deposit()
 </panel_attributes>
     <additional_attributes/>
   </element>
 </umlet_diagram>
 
 27. nomnoml
+#stroke: #33322E
+#fill: #eee8d5
+#direction: down
 [Client] -> [UML MCP]
 [UML MCP] -> [Kroki]
 [Kroki] -> [Artifact]
@@ -851,17 +854,26 @@ workspace "UML MCP" "Tool-only smoke test" {
 }
 
 31. svgbob
-    .--------.       .--------.
-   /  Client  \---->| UML MCP |
-   \__________/      \________/
+  .--------.       .-------.
+ /  Client  \---->| UML MCP|
+ \__________/      \_______/
+                        |
+                        v
+                   .-------.
+                   | Kroki |
+                   '-------'
 
 32. symbolator
-module counter (
+module uart_tx (
   //# {{clocks|Clocking}}
-  input wire clk,
-  input wire rst,
-  //# {{data|Data}}
-  output reg [7:0] count
+  input  wire       clk,
+  input  wire       rst_n,
+  //# {{ctrl|Control}}
+  input  wire       valid,
+  output wire       ready,
+  //# {{data|Payload}}
+  input  wire [7:0] data,
+  output wire       tx
 );
 endmodule
 

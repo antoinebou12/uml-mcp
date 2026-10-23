@@ -1,4 +1,4 @@
----
+﻿---
 title: PlantUML prompts and SVG
 description: Natural-language prompts, optional Sequential Thinking MCP, named MCP prompts, and generate_uml for server-rendered PlantUML SVG.
 tags:
@@ -14,7 +14,7 @@ Use this track when you want **UML-style** diagrams (classes, sequences, activit
 ## Prerequisites
 
 - A connected **UML-MCP** server ([Getting started](getting-started.md)).
-- Optional: a **Sequential Thinking** MCP server in the same client (for example Cursor) if you want explicit multi-step reasoning *before* calling `generate_uml`. It is **not** part of UML-MCP; it complements `uml_diagram_with_thinking`, which is a **named prompt** on UML-MCP only.
+- Optional: a **Sequential Thinking** MCP server in the same client (for example Cursor) if you want explicit multi-step reasoning *before* calling `generate_uml`. It is **not** part of UML-MCP; it complements `uml_diagram`, which is a **named prompt** on UML-MCP only.
 
 ## Natural-language prompts (copy-paste)
 
@@ -54,18 +54,14 @@ Illustrative steps you might run through the **Sequential Thinking** tool before
 
 Then call **`generate_uml`** with `diagram_type` set to a PlantUML-backed type (for example `class`, `sequence`, or raw `plantuml`), your final source as `code`, **`"output_format": "svg"`**, and omit `output_dir` (or set it to `null`) if you only need a URL or `content_base64` without writing a file.
 
-## Named MCP prompts (UML-MCP)
+## MCP prompt and agent skills
 
-| Prompt | Use when |
+| Entry | Use when |
 | --- | --- |
-| `uml_diagram` | Generic plan-then-generate for any supported type. |
-| `uml_diagram_with_thinking` | Same, with an explicit planning step before code. |
-| `class_diagram` | Class diagram from prose. |
-| `sequence_diagram` | Sequence diagram from prose. |
-| `activity_diagram` | Activity / workflow from prose. |
-| `usecase_diagram` | Use case diagram from prose. |
+| `uml_diagram` | Plan-then-generate (planning on by default); set `context.diagram_type` to `class`, `sequence`, … |
+| `.skill/skills/class/SKILL.md` (etc.) | Notation for each PlantUML-backed type |
 
-Fetch text with `prompts/get` (see [MCP prompts](../reference/prompts.md)).
+Fetch the prompt with `prompts/get` (see [MCP prompts](../reference/prompts.md)).
 
 ## Direct `tools/call` (JSON-RPC)
 

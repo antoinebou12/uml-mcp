@@ -28,18 +28,17 @@ This page lists the MCP tools, resources, and prompts for generating and reading
 - **uml://server-info**: Server name, version, tools, prompts.
 - **uml://workflow**: Recommended workflow: plan first (type, elements, relationships), then call generate_uml.
 
-## Prompts
+## Prompts and skills
 
-Registered prompts that support the four scenarios above:
+MCP `prompts/list` publishes five prompts:
 
-- **mermaid_sequence_api**: Produce a Mermaid sequence diagram for an API call (client, API, auth/DB, request/response, optional `alt`); then call `generate_uml("mermaid", code)`.
-- **mermaid_gantt**: Produce a Mermaid Gantt chart with title, dateFormat, sections, and tasks; then call `generate_uml("mermaid", code)`.
-- **bpmn_process_guide**: Explain how to draw a BPMN process (elements, flow, BPMN 2.0.2); point to `uml://templates` / `uml://examples` (bpmn), the [BPMN guide](tutorials/bpmn.md), and `generate_uml("bpmn", ...)`.
-- **convert_class_to_mermaid**: Convert a class diagram (PlantUML or prose) into Mermaid `classDiagram` and optionally call `generate_uml("mermaid", code)`.
-- **algorithm_explainer**: Pick the right shape for an algorithm (flowchart, activity, state, recursion tree), label every step with its Big-O complexity, and apply per-backend layout rules that minimise crossing arrows before calling `generate_uml`.
-- **paper_concept_diagram**: Visualise a concept from one or more academic papers; encode citations in node labels and add clickable arXiv/DOI links (Mermaid `click`, PlantUML `[[ ]]`, D2 `link:`, Graphviz `URL=`). Recommends `output_format` **svg** so links stay clickable.
+- **uml_diagram**: Plan-then-generate any catalog type (optional `context.diagram_type`).
+- **diagram_theme**: Pick `theme` for light / dark-black / B&W-print backgrounds (`context.background`, `diagram_type`).
+- **algorithm_explainer**: Algorithm shape + Big-O labels; pairs with `uml://recipes` (`algorithm_flowchart`).
+- **paper_concept_diagram**: Paper/concept diagrams with clickable citations (prefer SVG); pairs with `uml://recipes` (`paper_concept`).
+- **architecture_report**: Full Markdown architecture report with several renders.
 
-Other diagram prompts (e.g. `class_diagram`, `sequence_diagram`, `uml_diagram_with_thinking`) remain available for general UML generation.
+For Mermaid sequence/Gantt, BPMN, class→Mermaid conversion, C4, WireViz, and other notation, use **`.skill/skills/<diagram_type>/SKILL.md`** (or `uml://templates` / `uml://examples`) plus **`uml_diagram`** / **`generate_uml`**. See [MCP prompts](reference/prompts.md).
 
 ## Supported diagram types
 
@@ -49,4 +48,4 @@ The server supports (among others): `class`, `sequence`, `activity`, `usecase`, 
 
 - Kroki cheatsheet and docs for syntax and supported diagram types.
 - BPMN 2.0.2 (OMG) for BPMN terminology and element set.
-- Skill: `.skill/skills/uml-diagramming/SKILL.md` and `references/DIAGRAM-TYPES.md` for type mappings and examples.
+- Skills: `.skill/skills/uml-mcp-diagrams/SKILL.md` (MCP workflow), `.skill/skills/<diagram_type>/SKILL.md` (one per catalog type), and `.skill/skills/uml-diagramming/SKILL.md` with `references/DIAGRAM-TYPES.md` for Mermaid/PlantUML intent mapping.

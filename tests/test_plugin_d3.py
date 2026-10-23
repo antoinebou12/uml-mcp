@@ -914,8 +914,11 @@ def test_html_is_accepted_for_plugin_types_that_declare_it_only(d3_plugin) -> No
         GenerateUMLInput(
             diagram_type="class", code="@startuml\n@enduml", output_format="html"
         )
-    with pytest.raises(ValidationError, match="choose one of: html, svg"):
-        GenerateUMLInput(diagram_type="d3_force", code="{}", output_format="png")
+    # PNG is accepted when SVG is declared (local SVG→PNG raster fallback).
+    png = GenerateUMLInput(diagram_type="d3_force", code="{}", output_format="png")
+    assert png.output_format == "png"
+    with pytest.raises(ValidationError, match="not supported for diagram type"):
+        GenerateUMLInput(diagram_type="d3_force", code="{}", output_format="pdf")
 
 
 def test_validate_uml_reports_the_plugin_renderers_own_problems(d3_plugin) -> None:

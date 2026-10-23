@@ -374,21 +374,24 @@ Table orders {
     <coordinates>
       <x>10</x>
       <y>10</y>
-      <w>120</w>
-      <h>70</h>
+      <w>180</w>
+      <h>90</h>
     </coordinates>
     <panel_attributes>Account
 --
 -balance: decimal
-++deposit()
++deposit()
 </panel_attributes>
     <additional_attributes/>
   </element>
 </umlet_diagram>""",
             # Nomnoml example
-            "nomnoml": """[User] -> [API]
-[API] -> [Database]
-[User] - [Cache]""",
+            "nomnoml": """#stroke: #33322E
+#fill: #eee8d5
+#direction: down
+[Client] -> [UML MCP]
+[UML MCP] -> [Kroki]
+[Kroki] -> [Artifact]""",
             # Pikchr example
             "pikchr": """box "Service" fit
 arrow
@@ -407,17 +410,22 @@ box "Database" fit""",
     }
 }""",
             # Svgbob example (ASCII)
-            "svgbob": """    .--------.
-   /  Hello  \\
-  |   World   |
-   \\________/""",
-            # Symbolator example (minimal netlist)
-            "symbolator": """module counter (
+            # Prefer axis-aligned +--- boxes; diagonal / \ "hexagon" ASCII often
+            # mis-parses and looks broken in Kroki's svgbob renderer.
+            "svgbob": """+--------+     +---------+     +-------+
+| Client |---->| UML MCP |---->| Kroki |
++--------+     +---------+     +-------+""",
+            # Symbolator example (grouped pin symbol)
+            "symbolator": """module uart_tx (
   //# {{clocks|Clocking}}
-  input wire clk,
-  input wire rst,
-  //# {{data|Data}}
-  output reg [7:0] count
+  input  wire       clk,
+  input  wire       rst_n,
+  //# {{ctrl|Control}}
+  input  wire       valid,
+  output wire       ready,
+  //# {{data|Payload}}
+  input  wire [7:0] data,
+  output wire       tx
 );
 endmodule""",
             # TikZ example (flowchart + graph + geometry)
@@ -629,15 +637,15 @@ user1 --> sys1: uses
             # base case vs recursive call shapes, and a layout direction to reduce
             # crossings. Use diagram_type "mermaid" with generate_uml.
             "algorithm_flowchart": """flowchart TD
-    Start([Start: sort(arr)])
-    Check{len(arr) <= 1?}
-    Base([Return arr<br/><i>O(1)</i>])
+    Start(["Start: sort(arr)"])
+    Check{"len(arr) <= 1?"}
+    Base(["Return arr<br/><i>O(1)</i>"])
     Pick["Pick pivot<br/><i>O(1)</i>"]
     Partition["Partition around pivot<br/><i>O(n)</i>"]
-    Left[[Recurse on left half<br/><i>T(n/2)</i>]]
-    Right[[Recurse on right half<br/><i>T(n/2)</i>]]
+    Left[["Recurse on left half<br/><i>T(n/2)</i>"]]
+    Right[["Recurse on right half<br/><i>T(n/2)</i>"]]
     Combine["Concat left + pivot + right<br/><i>O(n)</i>"]
-    Done([Return sorted arr])
+    Done(["Return sorted arr"])
 
     Start --> Check
     Check -- yes --> Base
@@ -813,17 +821,19 @@ Table posts {
     <coordinates>
       <x>10</x>
       <y>10</y>
-      <w>100</w>
-      <h>60</h>
+      <w>160</w>
+      <h>80</h>
     </coordinates>
     <panel_attributes>Hello
 --
++world()
 </panel_attributes>
     <additional_attributes/>
   </element>
 </umlet_diagram>""",
             # Nomnoml template
-            "nomnoml": """[A] -> [B]
+            "nomnoml": """#direction: down
+[A] -> [B]
 [B] -> [C]""",
             # Pikchr template
             "pikchr": """box "A" fit
@@ -844,19 +854,16 @@ box "B" fit""",
     }
 }""",
             # Svgbob template
-            "svgbob": """  +---+
-  | A |
-  +---+
-    |
-    v
-  +---+""",
+            "svgbob": """+--------+     +---------+     +-------+
+| Client |---->| UML MCP |---->| Kroki |
++--------+     +---------+     +-------+""",
             # Symbolator template
             "symbolator": """module counter (
   //# {{clocks|Clocking}}
-  input wire clk,
-  input wire rst,
+  input  wire       clk,
+  input  wire       rst_n,
   //# {{data|Data}}
-  output reg [7:0] count
+  output reg  [7:0] count
 );
 endmodule""",
             # TikZ template (flowchart starter with positioning)

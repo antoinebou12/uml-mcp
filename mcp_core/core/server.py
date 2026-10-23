@@ -123,12 +123,16 @@ def get_mcp_cache_policy() -> dict[str, Any]:
 #: Sent in ``initialize`` so agents know the workflow without reading every tool.
 SERVER_INSTRUCTIONS = (
     "UML-MCP renders diagrams (UML via PlantUML, Mermaid, D2, Graphviz, C4, BPMN and "
-    "~30 more Kroki formats). Workflow: 1) list_diagram_types (or read uml://types) "
-    "when unsure of the type; 2) validate_uml to catch syntax errors cheaply; "
-    "3) generate_uml for a URL/playground link or generate_uml_image for an inline "
-    "chat image; generate_uml_batch for several diagrams. Show the returned markdown "
-    "image and link to the user. Prompts (e.g. class_diagram, sequence_diagram) and "
-    "uml://workflow give templates and best practices."
+    "~30 more Kroki formats) through five workflow tools—not one tool per format. "
+    "Progressive discovery: 1) list_diagram_types or resources/read uml://types "
+    "(and uml://formats) when unsure; 2) validate_uml (prefer strict: true for Mermaid "
+    "sequence) before expensive retries; 3) generate_uml for a URL/playground link, "
+    "generate_uml_image for an inline chat image, or generate_uml_batch for several "
+    "diagrams. Prefer these workflow tools over inventing per-format Kroki calls. "
+    "Show the returned markdown image and link to the user. Use the diagram Skill "
+    "(skills/list / skill://uml-mcp-diagrams/SKILL.md), prompts (uml_diagram, "
+    "algorithm_explainer, paper_concept_diagram, architecture_report), "
+    "per-type agent skills under .skill/skills/<diagram_type>/, and uml://workflow."
 )
 
 

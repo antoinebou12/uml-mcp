@@ -289,7 +289,7 @@ def generate_uml(
         code: Diagram source code in the syntax required by diagram_type.
         output_dir: Optional local directory for the rendered file; omit on hosted deployments.
         output_format: Requested output format, default svg.
-        theme: Optional theme: PlantUML theme name, or Mermaid default, dark, forest, neutral, base.
+        theme: Optional theme — PlantUML name (e.g. cerulean), Mermaid default/dark/forest/neutral/base, or D2 default/dark (theme-id).
         scale: SVG scale factor; ignored for non-SVG output.
     """
     logger.info(
@@ -336,7 +336,7 @@ def generate_uml_image(
         diagram_type: Supported diagram type, for example class, sequence, or mermaid.
         code: Diagram source code in the syntax required by diagram_type.
         output_format: Output format for the inline image; png (default), svg, or jpeg.
-        theme: Optional theme: PlantUML theme name, or Mermaid default, dark, forest, neutral, base.
+        theme: Optional theme — PlantUML name (e.g. cerulean), Mermaid default/dark/forest/neutral/base, or D2 default/dark (theme-id).
         scale: SVG scale factor; ignored unless output_format is svg.
     """
     logger.info(

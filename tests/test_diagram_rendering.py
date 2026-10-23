@@ -42,6 +42,23 @@ def test_prepare_diagram_code_plantuml_wraps_and_theme():
     assert "!theme cerulean" in out
 
 
+def test_prepare_diagram_code_c4plantuml_wraps_and_theme():
+    raw = '!include <C4/C4_Context>\nPerson(u, "User")\n'
+    out = prepare_diagram_code(raw, "c4plantuml", "cerulean")
+    assert out.startswith("@startuml\n!theme cerulean")
+    assert "@enduml" in out
+
+
+def test_prepare_diagram_code_d2_injects_theme_id():
+    raw = "a -> b: hello\n"
+    out = prepare_diagram_code(raw, "d2", "dark")
+    assert "theme-id: 103" in out
+    assert "a -> b: hello" in out
+    # Do not double-inject.
+    again = prepare_diagram_code(out, "d2", "dark")
+    assert again.count("theme-id") == 1
+
+
 def test_prepare_diagram_code_mermaid_strip_only():
     out = prepare_diagram_code("  graph TD; A-->B;  ", "mermaid", None)
     assert out == "graph TD; A-->B;"

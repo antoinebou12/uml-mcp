@@ -28,7 +28,7 @@ export default function Lint() {
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Grade" value={r.grade ?? "–"} icon={BadgeCheck} tone={r.grade === "A" ? "success" : "warning"} />
         <StatCard label="Score" value={r.score !== null ? `${r.score}/100` : "–"} icon={BadgeCheck} />
-        <StatCard label="Connect-time tokens" value={r.token_estimate !== null ? `~${r.token_estimate}` : "–"} icon={BadgeCheck} hint="tools/list + resources + prompts" />
+        <StatCard label="Connect-time tokens" value={r.token_estimate !== null ? `~${r.token_estimate}` : "–"} icon={BadgeCheck} hint="tools/list + resources + prompts + skills/list" />
       </div>
       {r.wire_error && <div className="text-sm text-muted-foreground">Protocol checks unavailable: {r.wire_error}</div>}
       {(r.suppressed?.length ?? 0) > 0 && (

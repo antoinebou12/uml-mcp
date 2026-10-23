@@ -19,6 +19,13 @@ from typing import Any
 CLIENTS = ("vscode", "cursor", "claude-desktop", "claude-code")
 SERVER_NAME = "uml-mcp"
 
+#: Applied on first install when the caller did not pass ``env`` (reinstalls keep
+#: the previous ``env`` so Kroki / URL-only settings are not wiped).
+DEFAULT_STDIO_ENV: dict[str, str] = {
+    "KROKI_SERVER": "https://kroki.io",
+    "MCP_DIAGRAM_FALLBACK": "true",
+}
+
 
 def stdio_command() -> tuple[str, list[str]]:
     """Prefer the script installed next to this interpreter, then PATH, then uvx."""
@@ -82,6 +89,16 @@ def merge_config(
     return merged
 
 
+def _existing_server_env(
+    existing: dict[str, Any], client: str
+) -> dict[str, str] | None:
+    root = "servers" if client == "vscode" else "mcpServers"
+    previous = (existing.get(root) or {}).get(SERVER_NAME)
+    if isinstance(previous, dict) and isinstance(previous.get("env"), dict):
+        return {str(k): str(v) for k, v in previous["env"].items()}
+    return None
+
+
 def install(
     client: str,
     *,
@@ -95,8 +112,8 @@ def install(
         raise ValueError(
             f"unknown client {client!r}; choose one of {', '.join(CLIENTS)}"
         )
-    entry = build_entry(client, env)
     if client == "claude-code":
+        entry = build_entry(client, env)
         cmd = " ".join([entry["command"], *entry["args"]])
         flag = " --scope user" if scope == "user" else ""
         return f"claude mcp add{flag} {SERVER_NAME} -- {cmd}", None
@@ -108,6 +125,14 @@ def install(
             existing = json.loads(path.read_text(encoding="utf-8") or "{}")
         except json.JSONDecodeError as exc:
             raise ValueError(f"{path} is not valid JSON; fix it first ({exc})") from exc
+    # defaults < previous env < explicit ``env`` (reinstall must not wipe Kroki URL).
+    combined = dict(DEFAULT_STDIO_ENV)
+    previous_env = _existing_server_env(existing, client)
+    if previous_env:
+        combined.update(previous_env)
+    if env is not None:
+        combined.update(env)
+    entry = build_entry(client, combined)
     merged = merge_config(existing, client, entry)
     text = json.dumps(merged, indent=2) + "\n"
     if dry_run or merged == existing:

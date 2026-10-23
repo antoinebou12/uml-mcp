@@ -239,6 +239,19 @@ def lint_config(
                         "no readOnlyHint/tool_permissions: defaults to write",
                     )
                 )
+    filter_list = bool(app.auth.get("filter_tools_list")) or (
+        auth is not None and bool(getattr(auth, "filter_tools_list", False))
+    )
+    if filter_list and not auth_on:
+        issues.append(
+            LintIssue(
+                "warning",
+                "AUTH002",
+                "auth.filter_tools_list",
+                "filter_tools_list has no effect while auth mode is none",
+                "set MCP_AUTH_MODE or clear auth.filter_tools_list",
+            )
+        )
     return issues
 
 

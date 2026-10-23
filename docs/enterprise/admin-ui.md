@@ -31,7 +31,7 @@ It is served at `/admin` and returns 404 when disabled.
 | **Metrics** | Calls, error rate, denials, p50/p95 per tool, resource and prompt; top denial reasons; sink errors | `/admin/api/metrics` (Prometheus: `/metrics`) |
 | **Rate limits** | Effective policy, the busiest buckets (keys hashed), 429 counts per scope | `/admin/api/rate-limits` |
 | **Configuration** | Effective `uml-mcp.yaml` sections with the **source** of each value (default, file, env), redacted auth settings, and a **download `uml-mcp.yaml`** button (generate only; never applied) | `/admin/api/config`, `/admin/api/config/download` |
-| **Lint** | `uml-mcp lint` results for tools, prompts, resources and config | `/admin/api/lint` |
+| **Lint** | `uml-mcp lint` results for tools, prompts, resources, skills and config | `/admin/api/lint` |
 | **Tools** | Enabled/disabled, read/write classification, annotations, per-tool rate limit | `/admin/api/tools` |
 | **Clients** | Support matrix and generated configs | `/admin/api/overview` |
 | **Token tester** | Paste any token to see which check fails, e.g. `invalid_audience` for a Microsoft Graph token; never stored or echoed | `POST /admin/api/token-check` |

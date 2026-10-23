@@ -1,10 +1,8 @@
 ---
 name: uml-mcp-diagrams
 description: >-
-  Creates diagrams via the uml-mcp MCP server (generate_uml, generate_uml_image,
-  validate_uml, list_diagram_types, generate_uml_batch) and returns shareable
-  Kroki URLs or inline chat images. Use when the user wants diagrams,
-  PlantUML/Mermaid/D2/UML, URLs, Kroki, goat/umlet, or diagram_type.
+  uml-mcp diagram workflow: validate_uml → generate_uml / generate_uml_image /
+  generate_uml_batch for Kroki types. Use for UML, Mermaid, D2, URLs, Kroki.
 ---
 
 > **Maintainers:** Keep tool tables and `output_dir` wording aligned with the Smithery bundle **[uml-skill/SKILL.md](https://github.com/antoinebou12/uml-skill/blob/main/SKILL.md)** (`diagramming-uml`) and the Claude Code plugin skill **`plugins/uml-mcp/skills/uml-diagrams/SKILL.md`** when you edit any of them. **`.github/skills/uml-mcp-diagrams/SKILL.md`** (GitHub Copilot) must stay a byte-identical copy of this file.
@@ -13,7 +11,15 @@ description: >-
 
 ## Goal
 
-Turn the user’s intent into valid `diagram_type` + source `code`, call **generate_uml** (or **generate_uml_image** for chat-visible pictures), and surface the **`url`** (and **`playground`** when present). Prefer **URL-first** output (omit `output_dir` / use `null`) unless the user explicitly asks to save a file. When the user asks to **show the diagram in chat**, prefer **`generate_uml_image`** with `output_format: png`.
+Turn the user’s intent into valid `diagram_type` + source `code`, call the **workflow** tools (**generate_uml**, **generate_uml_image**, **generate_uml_batch**) — not one MCP call per Kroki format — and surface the **`url`** (and **`playground`** when present). Prefer **URL-first** output (omit `output_dir` / use `null`) unless the user explicitly asks to save a file. When the user asks to **show the diagram in chat**, prefer **`generate_uml_image`** with `output_format: png`.
+
+## Progressive discovery (server defines, client chains)
+
+1. **Discover**: `list_diagram_types` or `resources/read` on **`uml://types`** / **`uml://formats`**. For notation (starter, sample, formats) load the agent skill **`.skill/skills/<diagram_type>/SKILL.md`** (one per catalog type; not on MCP `skills/list`).
+2. **Validate**: **`validate_uml`** (prefer **`strict: true`** for Mermaid sequence) before expensive retries.
+3. **Render**: **`generate_uml`**, **`generate_uml_image`**, or **`generate_uml_batch`**.
+
+Do **not** reinvent N separate Kroki HTTP calls or invent per-format MCP tools — the server already maps ~37 formats onto these five tools. MCP `skills/list` returns **this** workflow skill only; per-type skills are agent files in the agent-skills index.
 
 ## Positive patterns (do)
 
@@ -39,7 +45,7 @@ Turn the user’s intent into valid `diagram_type` + source `code`, call **gener
 ## Before generating
 
 1. **If `diagram_type` is unknown or ambiguous**, read **`uml://types`** (or **`uml://capabilities`**) to list valid types and supported backends.
-2. **For starter syntax**, use **`uml://templates`** or **`uml://examples`**; use **`resources/list`** for extra guides (e.g. named Mermaid samples, BPMN 2.0.2 reference) when those URIs are registered.
+2. **For starter syntax**, open **`.skill/skills/<diagram_type>/SKILL.md`**, or use **`uml://templates`** / **`uml://examples`**; use **`resources/list`** for extra guides (e.g. named Mermaid samples, BPMN 2.0.2 reference) when those URIs are registered.
 3. **Optional quality pass**: call **`validate_uml`** with the same `diagram_type`, `code`, and planned `output_format`. Use **`strict: true`** for stricter Mermaid/D2 checks when needed.
 4. If you cannot read **`uml://types`**, call **`list_diagram_types`** for the same metadata.
 
@@ -58,7 +64,7 @@ These rules apply to **diagram source** (Mermaid, PlantUML, D2, etc.), not to HT
 - **Sequence**: Time flows **top → bottom**. Do not model upward message arrows. Use activation where the notation supports it (PlantUML `activate` / `deactivate`; Mermaid `activate` / `deactivate` when appropriate). Close every activation interval you open. Mermaid: **one statement per line**.
 - **State and flowchart**: Label **every** transition or decision branch (event/guard or yes/no). Avoid drawing the same “to error” edge from every state; prefer one note, a group, or a single `*` / global exception path where the DSL allows.
 - **Emphasis**: At most **one** strong visual highlight when the backend allows it (e.g. one Mermaid `classDef` / highlighted participant, one PlantUML `skinparam` / styled element, one D2 node style). Avoid rainbow or per-node rainbow fills — hierarchy and labels carry meaning.
-- **Arrow overlap**: Set one layout direction (`flowchart TD`/`LR`, PlantUML `left to right direction` + `skinparam linetype ortho`, D2 `direction: right`), group related nodes (`subgraph` / `together { }` / D2 container), and use directional arrows (`-down->`, `-right->`) on edges that would otherwise cross. Canonical per-backend rules live in the `algorithm_explainer` and `paper_concept_diagram` prompt outputs (and `uml_diagram_with_thinking`).
+- **Arrow overlap**: Set one layout direction (`flowchart TD`/`LR`, PlantUML `left to right direction` + `skinparam linetype ortho`, D2 `direction: right`), group related nodes (`subgraph` / `together { }` / D2 container), and use directional arrows (`-down->`, `-right->`) on edges that would otherwise cross. The published **`uml_diagram`** prompt embeds the same per-backend appendix; specialty prompts **`algorithm_explainer`** and **`paper_concept_diagram`** reuse it.
 
 ## LLM prompt channels: positive vs negative
 
@@ -84,7 +90,7 @@ For **assistant-facing** explanations (summaries, caveats, next steps), you may 
 | `diagram_type` | Required. Must match a key from `uml://types` (e.g. `class`, `sequence`, `mermaid`, `d2`, `goat`, `umlet`). |
 | `code` | Required. Source in the language that matches `diagram_type`. |
 | `output_dir` | Omit or `null` for **URL-first** output (no write to disk; responses may include **`content_base64`** when no directory is set and URL-only mode is off). Set only if the user wants a saved image. |
-| `output_format` | Default `svg` is usually best for URLs. Use **`png`/`jpeg`** when you want MCP `ImageContent` in chat (force-fetch even under URL-only). Mermaid raster uses mermaid.ink `/img/?type=png` (not `/png/`). |
+| `output_format` | Default `svg` is usually best for URLs. Use **`png`/`jpeg`** when you want MCP `ImageContent` in chat (force-fetch even under URL-only). Mermaid raster uses mermaid.ink `/img/?type=png` (not `/png/`). Types that are **SVG-only** on Kroki (e.g. `d2`, `bpmn`, `goat`, `wavedrom`) still accept `png`/`jpeg`: the server renders SVG and **rasterizes locally** (`format_fallback: svg_rasterized`). Prefer `uml://formats` when you need the native list. |
 | `theme` | PlantUML types only; omit otherwise. |
 | `scale` | SVG only; optional size multiplier. |
 
@@ -95,7 +101,7 @@ Use when the user wants the **picture visible in chat** (Cursor, Copilot, ChatGP
 | Input | Guidance |
 |-------|----------|
 | Same as `generate_uml` | `diagram_type`, `code`, optional `theme` / `scale` |
-| `output_format` | Default **`png`** (widest client support); `svg` / `jpeg` also allowed |
+| `output_format` | Default **`png`** (widest client support); `svg` / `jpeg` also allowed. SVG-only Kroki types are rasterized locally to PNG/JPEG. |
 | `output_dir` | Always omitted (memory-only) |
 
 On hosted deployments with **`MCP_URL_ONLY=true`**, this tool still **force-fetches** rendered bytes so MCP **`ImageContent`** / `content_base64` is present. Prefer this over asking the user to open a URL when they asked to “show” or “render in chat”.
@@ -152,7 +158,17 @@ When several types fit, pick the one the user named; otherwise prefer the type w
 - **Tools**: `generate_uml`, `generate_uml_image`, `validate_uml`, `list_diagram_types`, `generate_uml_batch`
 - **Resources**: `uml://types`, `uml://formats`, `uml://templates`, `uml://examples`, `uml://capabilities`, `uml://recipes`, `uml://server-info`, `uml://workflow`, plus type-specific URIs from **`resources/list`** (named Mermaid samples, BPMN guide, …)
 
-**Prompts** (when the client exposes them): `uml_diagram`, `uml_diagram_with_thinking`, and type-specific prompts (`class_diagram`, `sequence_diagram`, `activity_diagram`, `usecase_diagram`, `mermaid_sequence_api`, `mermaid_gantt`, `bpmn_process_guide`, `c4_model`, `wireviz_harness`, `bpmn_executable_process`, `convert_class_to_mermaid`, `algorithm_explainer`, `paper_concept_diagram`) help structure code before `generate_uml`.
+**MCP prompts** (only these five on `prompts/list`):
+
+| Prompt | When |
+| --- | --- |
+| `uml_diagram` | Default plan-then-generate for any catalog type (`context.diagram_type` optional; `thinking=false` skips the plan preamble) |
+| `diagram_theme` | Pick `theme` for light / dark-black / B&W-print page backgrounds (`context.background`, `diagram_type`) |
+| `algorithm_explainer` | Algorithms with Big-O labels; pairs with `uml://recipes` → `algorithm_flowchart` |
+| `paper_concept_diagram` | Paper/concept diagrams with clickable citations (prefer SVG); pairs with `uml://recipes` → `paper_concept` |
+| `architecture_report` | Full Markdown architecture report with several renders |
+
+**Per-type notation** is **not** an MCP prompt — load `.skill/skills/<diagram_type>/SKILL.md` (e.g. `class`, `sequence`, `mermaid`, `bpmn`). Former prompts such as `class_diagram` / `mermaid_sequence_api` are unpublished helpers only.
 
 Manual ChatGPT / Cursor smoke prompts: **`tests/prompts/chatgpt_mcp_smoke_test.md`**. Full Kroki catalog stress: **`tests/prompts/kroki_full_catalog_stress_test.md`**.
 

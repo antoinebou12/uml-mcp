@@ -155,12 +155,7 @@ def get_server_info() -> str:
 
 @mcp_resource(
     "uml://recipes",
-    description=(
-        "Named recipe templates that span multiple diagram_types (e.g. algorithm_flowchart, "
-        "paper_concept). Each entry pairs a recipe key with a starter source body and the "
-        "diagram_type to pass to generate_uml. Use after the algorithm_explainer or "
-        "paper_concept_diagram prompts."
-    ),
+    description="Starter recipes (algorithm_flowchart, paper_concept) with diagram_type + template for generate_uml.",
 )
 def get_diagram_recipes() -> str:
     """Return curated starter recipes that map a use case to a ready-to-edit source body."""
@@ -193,7 +188,7 @@ def get_diagram_recipes() -> str:
 
 @mcp_resource(
     "uml://workflow",
-    description="Recommended workflow: plan first (diagram type, elements, relationships), then call generate_uml with the final code. Use uml_diagram or uml_diagram_with_thinking prompt.",
+    description="Plan-then-generate workflow; pairs with uml_diagram / skill://uml-mcp-diagrams/SKILL.md.",
 )
 def get_recommended_workflow() -> str:
     """Return the recommended workflow: plan first, then call generate_uml."""
@@ -204,7 +199,7 @@ def get_recommended_workflow() -> str:
                 "and key elements (actors, messages, classes, states, etc.) and relationships. "
                 "Then output the diagram code and call generate_uml with the chosen diagram_type and the final code."
             ),
-            "prompt": "Use the uml_diagram or uml_diagram_with_thinking prompt for plan-then-generate instructions.",
+            "prompt": "Use the uml_diagram prompt or skill://uml-mcp-diagrams/SKILL.md for plan-then-generate.",
         },
         indent=2,
     )

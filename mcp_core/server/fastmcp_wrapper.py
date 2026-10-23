@@ -113,7 +113,7 @@ if use_mock:
 
             return decorator
 
-        def prompt(self, prompt_name: str | None = None):
+        def prompt(self, prompt_name: str | None = None, **_kwargs):
             def decorator(func: Callable) -> Callable:
                 raw = (
                     prompt_name

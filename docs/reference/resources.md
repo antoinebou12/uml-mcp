@@ -1,4 +1,4 @@
----
+﻿---
 title: MCP resources
 description: Full catalog of uml:// resources, what each URI returns, when to use it, and the source of truth.
 tags:
@@ -47,6 +47,15 @@ The installed package includes a byte-identical copy of the canonical
 canonical skill, update `mcp_core/skills/uml-mcp-diagrams/SKILL.md` as well as its
 existing client mirrors. Repository navigation and contributor-only skills are
 not served.
+
+## Per-type agent skills
+
+Every catalog `diagram_type` (the keys in `DIAGRAM_TYPES`) has an on-demand agent
+skill at `.skill/skills/<diagram_type>/SKILL.md`. Those files appear in
+[`/.well-known/agent-skills/index.json`](https://github.com/antoinebou12/uml-mcp/blob/main/.well-known/agent-skills/index.json)
+for Cursor and other index clients. They are **not** registered on MCP
+`skills/list`, so connect-time stays one skill and within the lint token budget.
+Regenerate them with `uv run python scripts/build_diagram_type_skills.py`.
 
 ## Resource catalog
 
@@ -100,7 +109,7 @@ Server identity and runtime metadata:
   "version": "...",
   "description": "...",
   "tools": ["generate_uml", "validate_uml", "list_diagram_types", "generate_uml_batch"],
-  "prompts": ["uml_diagram", "uml_diagram_with_thinking", "..."],
+  "prompts": ["uml_diagram", "algorithm_explainer", "paper_concept_diagram", "architecture_report"],
   "kroki_server": "https://kroki.io",
   "plantuml_server": "..."
 }

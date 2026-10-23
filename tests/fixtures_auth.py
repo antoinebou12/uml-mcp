@@ -193,8 +193,28 @@ FAKE_TOOLS = {
 class FakeMCP:
     """Stands in for FastMCP's Streamable HTTP app mounted at /mcp."""
 
-    def __init__(self) -> None:
+    def __init__(self, tools: dict[str, dict] | None = None) -> None:
         self.seen: list[dict[str, Any]] = []
+        self.tools = tools or FAKE_TOOLS
+
+    def _tools_list_response(self, request_id: Any = 1) -> bytes:
+        tools = [
+            {
+                "name": name,
+                "description": name,
+                "inputSchema": {"type": "object"},
+                "annotations": dict((info or {}).get("annotations") or {}),
+            }
+            for name, info in self.tools.items()
+        ]
+        return json.dumps(
+            {
+                "jsonrpc": "2.0",
+                "id": request_id,
+                "result": {"tools": tools},
+            },
+            separators=(",", ":"),
+        ).encode()
 
     async def __call__(self, scope, receive, send):
         body = b""
@@ -219,6 +239,12 @@ class FakeMCP:
             status, payload = 405, b'{"detail":"Method Not Allowed"}'
         else:
             status, payload = 200, body or b"{}"
+            try:
+                data = json.loads(body.decode() or "{}")
+            except (UnicodeDecodeError, ValueError):
+                data = None
+            if isinstance(data, dict) and data.get("method") == "tools/list":
+                payload = self._tools_list_response(data.get("id", 1))
         await send(
             {
                 "type": "http.response.start",
@@ -239,9 +265,10 @@ def build_auth_app(settings, *, http=None, tools=None, cors_origins=None):
         install_auth,
     )
 
-    runtime = build_auth_runtime(settings, http=http, tool_registry=tools or FAKE_TOOLS)
+    registry = tools or FAKE_TOOLS
+    runtime = build_auth_runtime(settings, http=http, tool_registry=registry)
     app = FastAPI()
-    fake = FakeMCP()
+    fake = FakeMCP(tools=registry)
 
     @app.post("/generate_diagram")
     async def gen(request: Request):

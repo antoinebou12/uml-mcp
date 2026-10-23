@@ -141,13 +141,28 @@ def build_oauth_protected_resource(base_url: str) -> dict[str, Any]:
 def _first_skill_description(skill_md: str) -> str:
     lines = skill_md.splitlines()
     i = 0
-    # Skip YAML frontmatter delimited by --- ... ---
+    # Prefer YAML frontmatter ``description`` when present.
     if lines and lines[0].strip() == "---":
         i = 1
+        fm_lines: list[str] = []
         while i < len(lines) and lines[i].strip() != "---":
+            fm_lines.append(lines[i])
             i += 1
         if i < len(lines) and lines[i].strip() == "---":
             i += 1
+        try:
+            import yaml
+        except ImportError:
+            front = None
+        else:
+            try:
+                front = yaml.safe_load("\n".join(fm_lines))
+            except (yaml.YAMLError, TypeError, ValueError):
+                front = None
+        if isinstance(front, dict):
+            desc = front.get("description")
+            if isinstance(desc, str) and desc.strip():
+                return " ".join(desc.split())[:500]
     while i < len(lines):
         stripped = lines[i].strip()
         i += 1

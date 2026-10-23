@@ -20,7 +20,11 @@ F = TypeVar("F", bound=Callable[..., Any])
 
 
 def mcp_prompt(
-    name: str, description: str | None = None, category: str = "default"
+    name: str,
+    description: str | None = None,
+    category: str = "default",
+    *,
+    publish: bool = True,
 ) -> Callable[[F], F]:
     """
     Decorator for registering a function as an MCP prompt.
@@ -29,6 +33,8 @@ def mcp_prompt(
         name: Prompt name
         description: Prompt description (defaults to function docstring if not provided)
         category: Prompt category for organization
+        publish: When False, keep the helper for tests/recipes but omit from
+            ``prompts/list`` (notation lives in per-type agent skills instead).
 
     Returns:
         Decorated function
@@ -50,6 +56,7 @@ def mcp_prompt(
             "name": name,
             "description": func_description,
             "category": category,
+            "publish": publish,
         }
 
         # Return function unchanged
@@ -58,123 +65,72 @@ def mcp_prompt(
     return decorator
 
 
-# Base UML diagram prompt function
+# Base UML diagram prompt function (only generic plan-then-generate prompt on the wire)
 @mcp_prompt(
     "uml_diagram",
-    description="Base prompt for UML diagram generation. Guides the model to produce diagram code (PlantUML, Mermaid, D2) for any diagram type including class, sequence, activity, use case, and more.",
+    description=(
+        "Plan-then-generate any catalog diagram_type. "
+        "context: diagram_type?, thinking=false?"
+    ),
 )
 def uml_diagram_prompt(context: dict[str, Any] | None = None) -> str:
-    """
-    Base prompt for UML diagram generation
-
-    Args:
-        context: Dictionary containing context information
-
-    Returns:
-        The prompt text
-    """
+    """Plan-then-generate with layout tips for any catalog diagram type."""
     context = context or {}
-
-    # Plan → code → tool call; Kroki renders by backend (plantuml / mermaid / d2 / …).
-    prompt = """You are a software engineer and expert in UML and diagram notation.
-
-Before writing code:
-- Read the **uml://types** resource for valid `diagram_type` values and each type's Kroki backend (e.g. class/sequence → PlantUML family → backend `plantuml`; `mermaid` → `mermaid`; `d2` → `d2`). Your source syntax must match that backend.
-- Read **uml://formats** for allowed `output_format` values for the type you choose.
-
-Rendering is Kroki-first (server-side). Fallbacks exist only for some backends; correct syntax avoids HTTP 400s.
-
-Tool:
-- **generate_uml** — pass `output_dir` only when you must save a file locally; omit `output_dir` for URL, playground, and base64 only (serverless / read-only).
-
-Workflow:
-1. Plan: diagram type, notation (PlantUML / Mermaid / D2), elements, relationships. For ambiguous requests, state your choices briefly.
-2. Output complete diagram source in a fenced code block for the human reader.
-3. Call the tool with the **raw diagram string** as `code` (no markdown fences inside the argument — only the source text).
-
-Syntax guardrails:
-- **PlantUML**: include `@startuml` … `@enduml` in examples (the server may wrap minimal input, but full delimiters reduce Kroki errors). Use `!theme` only when appropriate for PlantUML types.
-- **Mermaid**: valid `graph` / `flowchart` / `sequenceDiagram` / etc. syntax for your diagram.
-- **D2**: valid D2 text for the chosen structure.
-
-Quality: proper notation, all requested elements, readable layout, correct relationships.
+    thinking = context.get("thinking", True)
+    planning = ""
+    if thinking is not False and str(thinking).lower() not in ("0", "false", "no"):
+        planning = """Plan (not inside tool `code`): (1) `diagram_type` from uml://types, (2) scope ≤25 Mermaid / ≤30 PlantUML elements, (3) one focal path. Use sequential-thinking if available.
 
 """
 
-    # Add diagram type specific instructions if provided in context
+    prompt = (
+        planning
+        + """You write diagram source and call uml-mcp tools.
+
+Discover: uml://types, uml://formats, or `.skill/skills/<diagram_type>/SKILL.md`. Syntax must match the type's backend.
+Render: **validate_uml** when unsure → **generate_uml** (omit `output_dir` unless saving) or **generate_uml_image** for chat PNG. Prefer URL + playground in the reply.
+Emit: fenced source for the reader; tool `code` is raw DSL only (no fences).
+PlantUML: `@startuml`…`@enduml`. Mermaid sequence: one statement per line.
+Theme: pass `theme` on generate_uml when the page is light/dark/B&W — use the **diagram_theme** prompt or `.skill/skills/<type>/SKILL.md` Themes section.
+"""
+    )
+
     if "diagram_type" in context:
         diagram_type = context["diagram_type"]
-        prompt += f'\nTarget: a {diagram_type} diagram. When calling generate_uml, set diagram_type to "{diagram_type}" exactly.\n'
+        prompt += f'\nTarget: set diagram_type to "{diagram_type}" exactly on generate_uml.\n'
 
-    return prompt
+    return prompt + _layout_overlap_appendix()
 
 
 def _layout_overlap_appendix() -> str:
-    """Concrete, per-backend rules to minimize crossing/overlapping arrows.
-
-    Reused across prompts that produce arrow-heavy diagrams (algorithms,
-    architectures, concept graphs). Keep it short and declarative — these
-    rules are advice for the LLM, not enforced by the rendering pipeline.
-    """
+    """Compact per-backend rules to minimize crossing arrows (advice only)."""
     return """
-## Reduce arrow overlap / crossings
-
-General:
-- Keep elements under ~25 (Mermaid) / ~30 (PlantUML). Split into an overview plus a detail diagram when larger.
-- Declare related nodes adjacent in the source so the layout engine places them adjacent on screen.
-- Prefer linear chains over hubs; if a hub is unavoidable, put it on its own row or column.
-
-Mermaid (`mermaid`):
-- Pick **one** direction header: `flowchart TD` (top–down) for algorithms; `flowchart LR` (left–right) for pipelines and architectures.
-- Wrap related nodes in `subgraph name [Label] ... end` so they cluster together.
-- Use `linkStyle` only on the **single** emphasis edge; do not mix `-->`, `-.->`, and `==>` arbitrarily.
-- Prefer short edge labels; long labels force the engine to detour and cross other edges.
-
-PlantUML (`class`, `sequence`, `activity`, `usecase`, `state`, `component`, `deployment`, `object`, `c4plantuml`):
-- For non-sequence diagrams, add `skinparam linetype ortho` (or `polyline`) and `left to right direction` near the top.
-- Use directional arrows (`-down->`, `-right->`, `-up->`, `-left->`) on edges that would otherwise cross.
-- Group related elements with `together { ... }` so the layout keeps them on the same row/column.
-- On sequence diagrams: declare participants in left-to-right contact order, use `autoactivate on`, and add `hide footbox` when there are no return messages. Never draw upward message arrows.
-
-D2 (`d2`):
-- Set `direction: right` (or `down`) at the top.
-- Wrap related shapes in containers (`group: { a; b; a -> b }`) so the layout engine can route around them as a unit.
-- When dagre still produces crossings, switch to ELK with `vars: { d2-config: { layout-engine: elk } }`.
-
-Graphviz (`graphviz`):
-- Start with `rankdir=LR;` (or `TB`) and consider `splines=ortho;` for clean orthogonal routing.
-- Use `subgraph cluster_x { ... }` to keep related nodes adjacent.
-- Constrain crossing edges with `constraint=false` only as a last resort.
+## Layout (reduce crossings)
+- Cap size (~25 Mermaid / ~30 PlantUML nodes); split rather than cram; declare related nodes adjacent.
+- **Mermaid:** one of `flowchart TD` or `LR`; `subgraph` clusters; short edge labels; do not mix `-->` / `-.->` / `==>` without meaning.
+- **PlantUML:** `skinparam linetype ortho` + `left to right direction` (non-sequence); directional arrows (`-down->`, `-right->`); `together { }`; sequence: contact order, `autoactivate on`, no upward messages.
+- **D2:** `direction: right|down`; containers for groups; ELK if dagre crosses.
+- **Graphviz:** `rankdir=LR|TB`; `splines=ortho`; `subgraph cluster_*`.
 """
 
 
-# UML diagram with explicit planning step (alias for plan-then-generate workflow)
+# Alias kept for tests / callers; not published (uml_diagram already plans).
 @mcp_prompt(
     "uml_diagram_with_thinking",
-    description="Generate UML diagram with an explicit plan-then-generate workflow. Plan first, then output code and call generate_uml (omit output_dir unless saving a file).",
+    description="Alias of uml_diagram (plan-then-generate). Prefer uml_diagram.",
     category="uml",
+    publish=False,
 )
 def uml_diagram_with_thinking_prompt(context: dict[str, Any] | None = None) -> str:
-    """
-    Prompt for generating UML diagrams with plan-then-generate. Same workflow as
-    uml_diagram (plan first, then code and generate_uml), plus explicit planning
-    instructions and optional sequential-thinking MCP guidance.
-    """
-    planning_preamble = """Before writing diagram code, complete an explicit plan (in your reasoning, not inside the raw `code` tool argument):
-1. **diagram_type** — must match **uml://types**; pick notation (PlantUML / Mermaid / D2 / other) consistent with that type.
-2. **Scope** — approximate node, state, or lifeline count; stay under ~25 elements for Mermaid and ~30 for PlantUML unless you split into two diagrams.
-3. **Emphasis** — at most one focal element or path to highlight in the DSL, if any (avoid rainbow styling).
-
-If a **sequential-thinking** MCP tool is available, use it for steps 1–3 so thoughts stay ordered and revisable before you emit source.
-
-"""
-    return planning_preamble + uml_diagram_prompt(context) + _layout_overlap_appendix()
+    """Same text as ``uml_diagram`` (planning is on by default)."""
+    return uml_diagram_prompt(context)
 
 
-# Class diagram prompt
+# Class diagram prompt (notation → agent skill ``class``; not on prompts/list)
 @mcp_prompt(
     "class_diagram",
     description="Generate UML class diagram from a natural language description. Produces PlantUML code with classes, attributes, methods, visibility, inheritance, composition, and associations.",
+    publish=False,
 )
 def class_diagram_prompt(context: dict[str, Any] | None = None) -> str:
     """
@@ -234,6 +190,7 @@ When calling **generate_uml**, use `diagram_type` **class**.
 @mcp_prompt(
     "sequence_diagram",
     description="Generate UML sequence diagram from a description. Produces PlantUML code with participants, lifelines, messages, activations, and optional return messages.",
+    publish=False,
 )
 def sequence_diagram_prompt(context: dict[str, Any] | None = None) -> str:
     """
@@ -296,6 +253,7 @@ When calling **generate_uml**, use `diagram_type` **sequence**.
 @mcp_prompt(
     "activity_diagram",
     description="Generate UML activity diagram from a description. Produces PlantUML code with start/end, activities, decisions, forks, joins, and swimlanes.",
+    publish=False,
 )
 def activity_diagram_prompt(context: dict[str, Any] | None = None) -> str:
     """
@@ -356,6 +314,7 @@ When calling **generate_uml**, use `diagram_type` **activity**.
 @mcp_prompt(
     "usecase_diagram",
     description="Generate UML use case diagram from a description. Produces PlantUML code with actors, use cases, system boundary, include/extend relationships, and associations.",
+    publish=False,
 )
 def usecase_diagram_prompt(context: dict[str, Any] | None = None) -> str:
     """
@@ -419,6 +378,7 @@ When calling **generate_uml**, use `diagram_type` **usecase**.
     "mermaid_sequence_api",
     description="Produce a Mermaid sequence diagram for an API call flow: client, API, optional Auth/DB, request/response, and optional alt blocks for success vs error.",
     category="mermaid",
+    publish=False,
 )
 def mermaid_sequence_api_prompt(context: dict[str, Any] | None = None) -> str:
     """
@@ -448,6 +408,7 @@ Put the diagram in a single mermaid code block. Then call **generate_uml** with 
     "mermaid_gantt",
     description="Generate a Mermaid Gantt chart with title, dateFormat, sections, and tasks including dependencies (after) and durations.",
     category="mermaid",
+    publish=False,
 )
 def mermaid_gantt_prompt(context: dict[str, Any] | None = None) -> str:
     """
@@ -479,6 +440,7 @@ Put the diagram in a single mermaid code block. Then call **generate_uml** with 
     "bpmn_process_guide",
     description="Explain how to draw a BPMN process model. Covers start/end events, tasks, gateways (XOR, AND, OR), sequence flow, lanes, pools, aligned with BPMN 2.0.2.",
     category="bpmn",
+    publish=False,
 )
 def bpmn_process_guide_prompt(context: dict[str, Any] | None = None) -> str:
     """
@@ -513,6 +475,7 @@ Optionally point the user to:
         "Person/System/Container/Component macros, relationships. Uses diagram_type c4plantuml."
     ),
     category="c4",
+    publish=False,
 )
 def c4_model_prompt(context: dict[str, Any] | None = None) -> str:
     """Task-specific guidance for C4 via Kroki c4plantuml backend (aligned with uml://templates key c4plantuml)."""
@@ -543,6 +506,7 @@ Workflow:
         "Uses diagram_type wireviz."
     ),
     category="wireviz",
+    publish=False,
 )
 def wireviz_harness_prompt(context: dict[str, Any] | None = None) -> str:
     """Aligned with uml://templates and uml://examples for wireviz."""
@@ -568,6 +532,7 @@ Use valid YAML (no tabs; consistent indentation). Output the YAML in a fenced bl
         "Uses diagram_type bpmn."
     ),
     category="bpmn",
+    publish=False,
 )
 def bpmn_executable_process_prompt(context: dict[str, Any] | None = None) -> str:
     """Task-first BPMN XML; aligned with uml://templates (key bpmn)."""
@@ -591,6 +556,7 @@ Output the full XML in a fenced block for the reader, then call **generate_uml**
     "convert_class_to_mermaid",
     description="Convert a class diagram (PlantUML code or prose description) into Mermaid classDiagram syntax, mapping visibility, relationships, and inheritance.",
     category="mermaid",
+    publish=False,
 )
 def convert_class_to_mermaid_prompt(context: dict[str, Any] | None = None) -> str:
     """
@@ -621,114 +587,41 @@ After producing the Mermaid code, call **generate_uml** with `diagram_type` **me
 
 @mcp_prompt(
     "algorithm_explainer",
-    description=(
-        "Explain an algorithm visually: control flow, recursion, or data-structure operation. "
-        "Maps intent to diagram_type (mermaid flowchart, activity, state, d2), labels each step "
-        "with its Big-O complexity, and applies layout rules that minimize arrow overlap."
-    ),
+    description="Algorithm diagram with Big-O labels; uml://recipes algorithm_flowchart.",
     category="algorithm",
 )
 def algorithm_explainer_prompt(context: dict[str, Any] | None = None) -> str:
-    """Task-focused prompt for explaining algorithms as diagrams.
-
-    Steers the model through (1) picking a diagram shape that matches the
-    algorithm's structure, (2) labeling each step with its complexity, and
-    (3) using layout directives that reduce crossing arrows. Then call
-    `generate_uml` with the chosen `diagram_type` and the raw source.
-    """
+    """Explain an algorithm as a diagram with per-step Big-O labels."""
     context = context or {}
-    prompt = """You are a software engineer explaining an algorithm with a diagram.
+    prompt = """Explain an algorithm with a diagram. Every step needs a Big-O label; put the aggregate complexity once in the title/note.
 
-Step 1 — Pick the diagram shape that matches the algorithm:
-- **Linear / branching control flow** (sort, search, parser pass): Mermaid `flowchart TD` → `diagram_type` **mermaid**, or PlantUML activity → `diagram_type` **activity**.
-- **Recursion or divide-and-conquer call tree** (merge sort, quicksort, DP recursion): Mermaid `flowchart TD` as a tree → `diagram_type` **mermaid**, or D2 with `direction: down` → `diagram_type` **d2**.
-- **State changes of a data structure** (stack/queue/lock state machine, automaton): PlantUML state → `diagram_type` **state**.
-- **Pipeline / dataflow stages**: Mermaid `flowchart LR` → `diagram_type` **mermaid**, or D2 with `direction: right` → `diagram_type` **d2**.
+Shape → diagram_type:
+- Linear/branching control flow → **mermaid** flowchart TD or **activity**
+- Recursion / call tree → **mermaid** tree or **d2** (direction: down)
+- Data-structure state machine → **state**
+- Pipeline / dataflow → **mermaid** flowchart LR or **d2** (direction: right)
 
-Step 2 — Annotate each step with its **time complexity** in the node label:
-- Mermaid: `Step["Partition<br/><i>O(n)</i>"]` and place the overall complexity in the diagram title or a top note.
-- PlantUML activity: `:Partition\\n<i>O(n)</i>;`
-- D2: `Partition: "Partition\\nO(n)"` (multi-line labels with `\\n`).
-- Place the **aggregate** complexity (e.g. `T(n) = 2T(n/2) + O(n) = O(n log n)`) in a single note or title — do not repeat it on every node.
-
-Step 3 — Use consistent shapes:
-- Mermaid: `Start([Start])` and `End([Stop])` for terminals (stadium); `{Decision?}` for branches; `[[Recursive call]]` for subroutine invocations; `[/Input/]` and `[\\Output\\]` for I/O when relevant.
-- PlantUML activity: `start`, `stop`, `if/elseif/else/endif`, `repeat`/`while` for loops, `fork`/`join` for parallel branches.
-- D2: `shape: stadium` for terminals, `shape: diamond` for decisions.
-
-Step 4 — Mark **base cases** clearly (rounded / stadium) and **recursive calls** clearly (rectangles), so the reader can scan the tree quickly.
-
-Step 5 — Workflow:
-1. State briefly which shape and `diagram_type` you chose and why.
-2. Emit the complete diagram source in a fenced block for the human reader (Mermaid / PlantUML / D2 as appropriate).
-3. Call **generate_uml** with the chosen `diagram_type` and the **raw source** as `code` (no markdown fences inside the tool argument). Omit `output_dir` unless the user asked for a saved file. Prefer `output_format` **svg**.
-
-Avoid:
-- Skipping the complexity labels — they are the whole point of the diagram.
-- Drawing every error path from every node (use one global error sink / note).
-- Mixing arrow styles (`-->`, `-.->`, `==>`) inside one Mermaid diagram unless the change carries meaning.
+Labels: Mermaid Step["Partition<br/><i>O(n)</i>"]; PlantUML :Partition\\nO(n);; D2 multi-line \\n. Terminals stadium; decisions diamond; mark base cases vs recursive calls.
+Starter: uml://recipes → algorithm_flowchart. Then validate_uml → generate_uml (prefer svg; omit output_dir unless saving). No error-edge from every node; one error sink.
 """
     if "algorithm" in context:
-        prompt += f"\nTarget algorithm: **{context['algorithm']}**. Name it in the title and the first node.\n"
+        prompt += f"\nTarget algorithm: **{context['algorithm']}**. Name it in the title and first node.\n"
     return prompt + _layout_overlap_appendix()
 
 
 @mcp_prompt(
     "paper_concept_diagram",
-    description=(
-        "Visualize a concept from an academic paper (ML architecture, method comparison, "
-        "concept/citation graph). Encodes citations in node labels and adds clickable links "
-        "to arXiv/DOI in Mermaid, PlantUML, D2, and Graphviz. Recommends SVG output."
-    ),
+    description="Paper/concept diagram with clickable citations (SVG); uml://recipes paper_concept.",
     category="research",
 )
 def paper_concept_diagram_prompt(context: dict[str, Any] | None = None) -> str:
-    """Task-focused prompt for academic-paper concept diagrams with clickable citation links."""
+    """Academic-paper concept diagram with clickable citation links."""
     context = context or {}
-    prompt = """You are a research engineer explaining a concept from one or more academic papers as a diagram.
+    prompt = """Diagram a paper concept with short [Author+ Year] labels and real clickable links (never invent URLs).
 
-Step 1 — Pick the diagram language by intent:
-- **ML / system architecture** (encoder–decoder, transformer block, training pipeline): Mermaid `flowchart LR` → `diagram_type` **mermaid**, or D2 → `diagram_type` **d2**.
-- **Method comparison** (baseline vs. proposed) or **relationship between concepts**: Mermaid `flowchart` → `diagram_type` **mermaid**, or Graphviz `digraph` → `diagram_type` **graphviz**.
-- **Citation / concept graph** (how papers depend on each other): Graphviz `digraph` → `diagram_type` **graphviz**.
-
-Step 2 — Encode citations as short, in-label tags (e.g. `[Vaswani+ 2017]`), then attach a **clickable link** to the paper. Prefer arXiv `abs/` URLs (stable); fall back to DOI / publisher URL. **Never fabricate links** — if the user did not give a URL, leave the citation as text only.
-
-Clickable-link syntax per backend:
-- **Mermaid**: declare the node, then add a `click` line.
-  ```
-  flowchart LR
-    Attn["Attention<br/>[Vaswani+ 2017]"]
-    click Attn "https://arxiv.org/abs/1706.03762" "Attention Is All You Need" _blank
-  ```
-- **PlantUML** (works in `class`, `usecase`, `component`, `c4plantuml`): `[[url label]]` after the element.
-  ```
-  class Attention as "Attention\\n[Vaswani+ 2017]" [[https://arxiv.org/abs/1706.03762 Attention Is All You Need]]
-  ```
-- **D2**: `link:` property on the node.
-  ```
-  Attention: {
-    label: "Attention\\n[Vaswani+ 2017]"
-    link: "https://arxiv.org/abs/1706.03762"
-  }
-  ```
-- **Graphviz**: `URL=`, optionally with `tooltip=` and `target="_blank"`.
-  ```
-  Attention [label="Attention\\n[Vaswani+ 2017]", URL="https://arxiv.org/abs/1706.03762", tooltip="Vaswani+ 2017", target="_blank"];
-  ```
-
-Step 3 — Keep labels short. Put long titles in the `tooltip` / second argument of `click`, not in the visible label.
-
-Step 4 — Workflow:
-1. State briefly which view (architecture / comparison / citation graph) and `diagram_type` you chose.
-2. Emit complete diagram source in a fenced block for the human reader.
-3. Call **generate_uml** with the chosen `diagram_type` and the **raw source** as `code`. Omit `output_dir` unless the user asked for a saved file.
-4. Use `output_format` **svg** — PNG/JPEG renderings strip hyperlinks, so the `click` / `[[ ]]` / `URL=` directives become invisible.
-
-Avoid:
-- Inventing arXiv IDs, DOIs, or paper titles. If unsure, drop the link and keep only the textual citation.
-- Putting full paper titles inside node labels (they bloat the layout and force arrow detours). Use `[Author+ Year]` in the label and the full title in the link's title/tooltip.
-- Mixing diagram_types inside one diagram (e.g. PlantUML class syntax inside a Mermaid block).
+Pick type: architecture → mermaid LR or d2; comparison → mermaid/graphviz; citation graph → graphviz.
+Links: Mermaid click Id "https://arxiv.org/abs/…" "Title" _blank; PlantUML [[url label]]; D2 link:; Graphviz URL=. Full title in tooltip, not the node label.
+Must use output_format **svg** (PNG drops links). Starter: uml://recipes → paper_concept. Then generate_uml with raw code.
 """
     if "paper" in context:
         prompt += (
@@ -779,7 +672,7 @@ def _with_string_context(func: Callable[..., str]) -> Callable[..., str]:
 
 def register_prompts_with_server(server: Any) -> list[str]:
     """
-    Register all decorated prompts with the MCP server
+    Register published prompts with the MCP server (``publish=True`` only).
 
     Args:
         server: The MCP server instance
@@ -787,19 +680,30 @@ def register_prompts_with_server(server: Any) -> list[str]:
     Returns:
         List of registered prompt names
     """
-    logger.info(f"Registering {len(_registered_prompts)} prompts with the MCP server")
+    to_publish = {
+        name: info
+        for name, info in _registered_prompts.items()
+        if info.get("publish", True)
+    }
+    logger.info(
+        "Registering %s of %s prompts with the MCP server",
+        len(to_publish),
+        len(_registered_prompts),
+    )
 
     registered_prompt_names = []
 
     from ..observability.audit import instrument
 
-    for prompt_name, prompt_info in _registered_prompts.items():
+    for prompt_name, prompt_info in to_publish.items():
         func = _with_string_context(
             instrument(prompt_info["function"], "prompt", prompt_name)
         )
 
-        # Register with server using prompt decorator
-        prompt_decorator = server.prompt(prompt_name)
+        # Pass the short decorator description so connect-time stays small
+        # (docstrings describe the body, not the prompts/list blurb).
+        desc = str(prompt_info.get("description") or "").strip() or None
+        prompt_decorator = server.prompt(prompt_name, description=desc)
         prompt_decorator(func)
 
         registered_prompt_names.append(prompt_name)
@@ -842,17 +746,122 @@ def get_prompt_registry() -> dict[str, dict[str, Any]]:
     return _registered_prompts
 
 
+def get_published_prompt_registry() -> dict[str, dict[str, Any]]:
+    """Prompts that appear on MCP ``prompts/list`` (``publish`` not False)."""
+    return {
+        name: info
+        for name, info in _registered_prompts.items()
+        if info.get("publish", True)
+    }
+
+
+@mcp_prompt(
+    "diagram_theme",
+    description=(
+        "Pick a generate_uml theme for light, dark/black, or B&W backgrounds. "
+        "context: background?, diagram_type?"
+    ),
+    category="uml",
+)
+def diagram_theme_prompt(context: dict[str, Any] | None = None) -> str:
+    """Choose PlantUML / Mermaid / D2 themes that stay legible on the page background."""
+    from mcp_core.core.config import DIAGRAM_TYPES
+    from mcp_core.core.diagram_themes import (
+        D2_BW_BG,
+        D2_DARK_BG,
+        D2_LIGHT_BG,
+        MERMAID_BW_BG,
+        MERMAID_DARK_BG,
+        MERMAID_LIGHT_BG,
+        PLANTUML_BW_BG,
+        PLANTUML_DARK_BG,
+        PLANTUML_LIGHT_BG,
+        normalize_background,
+        pick_theme,
+        themes_for_background,
+    )
+
+    context = context or {}
+    background = normalize_background(
+        context.get("background") or context.get("bg") or context.get("page")
+    )
+    diagram_type = (context.get("diagram_type") or "").strip().lower()
+
+    light_p = ", ".join(f"`{t}`" for t in PLANTUML_LIGHT_BG)
+    dark_p = ", ".join(f"`{t}`" for t in PLANTUML_DARK_BG)
+    bw_p = ", ".join(f"`{t}`" for t in PLANTUML_BW_BG)
+    light_m = ", ".join(f"`{t}`" for t in MERMAID_LIGHT_BG)
+    dark_m = ", ".join(f"`{t}`" for t in MERMAID_DARK_BG)
+    bw_m = ", ".join(f"`{t}`" for t in MERMAID_BW_BG)
+    light_d = ", ".join(f"`{t}`" for t in D2_LIGHT_BG)
+    dark_d = ", ".join(f"`{t}`" for t in D2_DARK_BG)
+    bw_d = ", ".join(f"`{t}`" for t in D2_BW_BG)
+
+    prompt = f"""Pick a **`theme`** for `generate_uml` / `generate_uml_image` so ink stays readable on the page.
+
+## Background modes
+- **light** / white chat canvas → pastel fills, dark text.
+- **dark** / **black** page → light strokes; never use pale-on-white themes.
+- **bw** / print / monochrome → high-contrast, little chroma (plain / sketchy / mimeograph).
+
+## PlantUML (+ class, sequence, activity, …, c4plantuml)
+- light: {light_p}
+- dark/black: {dark_p}
+- bw: {bw_p}
+Pass `theme` (e.g. `cerulean`); the server injects `!theme <name>` after `@startuml`.
+
+## Mermaid
+- light: {light_m}
+- dark/black: {dark_m}
+- bw: {bw_m}
+
+## D2
+- light: {light_d}
+- dark/black: {dark_d}
+- bw: {bw_d}
+
+## Other backends (no MCP theme)
+Use source styling for contrast: nomnoml `#fill`/`#stroke`, Graphviz `fillcolor`, Vega `background`.
+On a **black** canvas prefer light fills (`#eee8d5`) and dark strokes (`#33322E`).
+
+## Workflow
+1. Decide background: light | dark | bw (from the user or UI).
+2. Load `.skill/skills/<diagram_type>/SKILL.md` Themes/Styling if needed.
+3. Call **validate_uml** when unsure, then **generate_uml** / **generate_uml_image** with `theme` set.
+4. Prefer SVG for crisp B&W print; PNG for chat.
+"""
+
+    if diagram_type and diagram_type in DIAGRAM_TYPES:
+        backend = DIAGRAM_TYPES[diagram_type].backend
+        picks = themes_for_background(backend, background)
+        default = pick_theme(backend, background)
+        prompt += (
+            f'\nTarget: `diagram_type="{diagram_type}"` (backend `{backend}`), '
+            f"background **{background}**.\n"
+        )
+        if default:
+            listed = ", ".join(f"`{t}`" for t in picks)
+            prompt += f"Default `theme`: **`{default}`**. Also good: {listed}.\n"
+        else:
+            prompt += (
+                "This backend has no MCP `theme`; follow the Styling section of its skill.\n"
+            )
+    else:
+        prompt += (
+            f"\nActive background mode: **{background}**. "
+            'Pass context like `{"background":"bw","diagram_type":"class"}`.\n'
+        )
+
+    return prompt
+
+
 @mcp_prompt(
     "architecture_report",
-    description=(
-        "Write a numbered Markdown architecture report for a repository: introduction, "
-        "inputs/outputs, then use case, sequence, class, activity, deployment, user-flow "
-        "and inventory diagrams (Mermaid / PlantUML via Kroki) with a linked table of contents."
-    ),
+    description="Markdown architecture report with generate_uml diagrams and TOC.",
     category="report",
 )
 def architecture_report_prompt(context: dict[str, Any] | None = None) -> str:
-    """Prompt for a full Markdown architecture report with rendered diagrams."""
+    """Full Markdown architecture report with rendered diagrams."""
     context = context or {}
     subject = (
         context.get("subject") or context.get("repository") or "the current repository"

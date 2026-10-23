@@ -35,6 +35,10 @@ EXTENDED_RULES = (
     "server-no-instructions",
     "server-duplicate-prompts",
     "server-duplicate-resources",
+    "server-duplicate-skills",
+    "skill-no-uri",
+    "skill-no-name",
+    "skill-no-description",
 )
 MIN_DESCRIPTION, MAX_DESCRIPTION = 10, 500
 
@@ -49,6 +53,9 @@ class Surface:
     resources: list[dict[str, Any]] = field(default_factory=list)
     resource_templates: list[dict[str, Any]] = field(default_factory=list)
     prompts: list[dict[str, Any]] = field(default_factory=list)
+    #: ``skills/list`` entries (URI, frontmatter, resource digests). Empty when the
+    #: server does not advertise the Skills extension.
+    skills: list[dict[str, Any]] = field(default_factory=list)
     instructions: str | None = None
     #: Documented suppressions: {target: {rule: reason}} (e.g. from ``mcp_tool(lint_ignore=)``)
     ignores: dict[str, dict[str, str]] = field(default_factory=dict)
@@ -318,15 +325,39 @@ def lint_prompt(prompt: dict[str, Any]) -> list[LintIssue]:
     return issues
 
 
+def lint_skill(skill: dict[str, Any]) -> list[LintIssue]:
+    uri = str(skill.get("uri") or "")
+    target = f"skill:{uri or '?'}"
+    front = skill.get("frontmatter")
+    front = front if isinstance(front, dict) else {}
+    name = str(front.get("name") or "")
+    issues: list[LintIssue] = []
+    if not uri:
+        issues.append(_issue("error", "skill-no-uri", target, "skill has no URI"))
+    if not name.strip():
+        issues.append(
+            _issue(
+                "warning",
+                "skill-no-name",
+                target,
+                "skill frontmatter has no name",
+            )
+        )
+    issues += _description_issues(
+        "skill", target, name, str(front.get("description") or "")
+    )
+    return issues
+
+
 def lint_server(s: Surface) -> list[LintIssue]:
     issues = []
-    if not (s.tools or s.resources or s.resource_templates or s.prompts):
+    if not (s.tools or s.resources or s.resource_templates or s.prompts or s.skills):
         issues.append(
             _issue(
                 "error",
                 "server-empty",
                 "server",
-                "server exposes no tools, resources or prompts",
+                "server exposes no tools, resources, prompts or skills",
             )
         )
     if not s.server_name:
@@ -375,6 +406,16 @@ def lint_server(s: Surface) -> list[LintIssue]:
                 "duplicate resource URI",
             )
         )
+    skill_uris = [str(sk.get("uri") or "") for sk in s.skills]
+    for dup in sorted({n for n in skill_uris if n and skill_uris.count(n) > 1}):
+        issues.append(
+            _issue(
+                "error",
+                "server-duplicate-skills",
+                f"skill:{dup}",
+                "duplicate skill URI",
+            )
+        )
     return issues
 
 
@@ -385,6 +426,7 @@ def token_estimate(s: Surface) -> int:
         "resources": s.resources,
         "resourceTemplates": s.resource_templates,
         "prompts": s.prompts,
+        "skills": s.skills,
     }
     return len(json.dumps(payload, separators=(",", ":"))) // 4
 
@@ -401,6 +443,8 @@ def lint_surface(s: Surface) -> Report:
         issues += lint_resource(res)
     for prompt in s.prompts:
         issues += lint_prompt(prompt)
+    for skill in s.skills:
+        issues += lint_skill(skill)
     issues, suppressed = apply_ignores(issues, s.ignores)
     score = (
         0
@@ -411,6 +455,7 @@ def lint_surface(s: Surface) -> Report:
         "tools": len(s.tools),
         "resources": len(s.resources) + len(s.resource_templates),
         "prompts": len(s.prompts),
+        "skills": len(s.skills),
     }
     server = {"name": s.server_name, "version": s.server_version}
     return Report(
@@ -452,6 +497,36 @@ def _dump(items: list[Any]) -> list[dict[str, Any]]:
     return [i.model_dump(by_alias=True, exclude_none=True, mode="json") for i in items]
 
 
+def _skills_method_missing(exc: BaseException) -> bool:
+    error = getattr(exc, "error", None)
+    if getattr(error, "code", None) == -32601:
+        return True
+    return "method not found" in str(exc).lower()
+
+
+async def _list_skills(client: Any) -> list[dict[str, Any]]:
+    """``skills/list`` entries, or [] when the server has no Skills extension."""
+    from mcp.types import Request, RequestParams
+    from pydantic import ConfigDict, TypeAdapter
+
+    class _Params(RequestParams):
+        model_config = ConfigDict(extra="allow")
+
+    try:
+        listing = await client.session.send_request(
+            Request[_Params, str](method="skills/list", params=_Params()),
+            TypeAdapter(dict),
+        )
+    except Exception as exc:
+        if _skills_method_missing(exc):
+            return []
+        raise
+    skills = listing.get("skills") if isinstance(listing, dict) else None
+    if not isinstance(skills, list):
+        return []
+    return [item for item in skills if isinstance(item, dict)]
+
+
 async def fetch_surface(url: str | None = None, token: str | None = None) -> Surface:
     """Connect like a client: in process (default) or to a Streamable HTTP URL."""
     from fastmcp import Client
@@ -480,6 +555,7 @@ async def fetch_surface(url: str | None = None, token: str | None = None) -> Sur
             resources=_dump(await client.list_resources()),
             resource_templates=_dump(await client.list_resource_templates()),
             prompts=_dump(await client.list_prompts()),
+            skills=await _list_skills(client),
         )
 
 
@@ -495,6 +571,7 @@ __all__ = [
     "lint_prompt",
     "lint_resource",
     "lint_server",
+    "lint_skill",
     "lint_surface",
     "lint_tool",
     "parse_ignore",

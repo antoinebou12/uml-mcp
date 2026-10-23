@@ -101,6 +101,8 @@ def test_invalid_token_401(client, tokens):
 def test_read_token_can_list_but_not_generate(client, tokens):
     ok = client.post("/mcp", headers=bearer(tokens["read"]), json=rpc("tools/list"))
     assert ok.status_code == 200
+    listed = {t["name"] for t in ok.json()["result"]["tools"]}
+    assert listed == set(FAKE_TOOLS)  # default: full list (filter opt-in)
     ok = client.post(
         "/mcp",
         headers=bearer(tokens["read"]),
@@ -120,6 +122,30 @@ def test_read_token_can_list_but_not_generate(client, tokens):
     body = r.json()
     assert body["required"] == "write" and body["granted"] == ["read"]
     assert "generate_uml" in body["error_description"]
+
+
+def test_filter_tools_list_hides_write_tools_for_readers(
+    settings_factory, mock_idp, tokens
+):
+    app = build_auth_app(
+        settings_factory(MCP_AUTH_FILTER_TOOLS_LIST="true"),
+        http=mock_idp.client(),
+    )
+    c = TestClient(app)
+    listed = c.post("/mcp", headers=bearer(tokens["read"]), json=rpc("tools/list"))
+    assert listed.status_code == 200
+    names = {t["name"] for t in listed.json()["result"]["tools"]}
+    assert names == {"validate_uml", "list_diagram_types"}
+    write_call = c.post(
+        "/mcp",
+        headers=bearer(tokens["read"]),
+        json=rpc("tools/call", name="generate_uml", arguments={}),
+    )
+    assert write_call.status_code == 403
+    assert write_call.json()["required"] == "write"
+    full = c.post("/mcp", headers=bearer(tokens["rw"]), json=rpc("tools/list"))
+    assert full.status_code == 200
+    assert {t["name"] for t in full.json()["result"]["tools"]} == set(FAKE_TOOLS)
 
 
 def test_unknown_tool_and_method_require_write(client, tokens):

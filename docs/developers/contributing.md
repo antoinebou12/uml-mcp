@@ -28,7 +28,7 @@ uv run pytest tests/ -v
 - [ ] Tests pass (`uv run pytest tests/ -v`).
 - [ ] Lint clean (`uv run ruff check .` and `uv run ruff format --check .`).
 - [ ] Public-facing changes are reflected in the docs (`docs/`).
-- [ ] If you touched MCP tools/resources/prompts, the [Reference](../reference/index.md) section still matches reality.
+- [ ] If you touched MCP tools/resources/prompts/skills, the [Reference](../reference/index.md) section still matches reality. After editing a catalog `diagram_type`, regenerate `.skill/skills/<diagram_type>/SKILL.md` with `uv run python scripts/build_diagram_type_skills.py` and refresh the agent-skills index.
 - [ ] If you added an env var, update [Configuration](../configuration.md).
 
 ## Reporting issues

@@ -29,7 +29,8 @@ description: Navigate the UML-MCP repository and its documentation quickly. Maps
 | Admin console + Kroki page (playground, Docker stack) | `mcp_core/admin/` (`kroki_routes.py`), `mcp_core/kroki/`, `frontend/src/pages/Kroki.tsx`, CLI `uml-mcp kroki` | `tests/test_admin_kroki.py`, `test_real_journeys.py`, `test_e2e_playwright.py` | `docs/admin/` (install, user guide, tour) |
 | Helm / Docker | `deploy/helm/uml-mcp/`, `Dockerfile`, `docker-compose*.yml` | `tests/test_enterprise_packaging.py`, `test_compose_profiles.py` | `docs/enterprise/kubernetes.md`, `docs/deploy/docker.md` |
 | Smoke tests | `scripts/run_mcp_smoke.py`, `tests/prompts/` | `tests/test_chatgpt_mcp_smoke_prompt.py` | `tests/prompts/chatgpt_mcp_smoke_test.md` |
-| Diagram skills / MCP Skills extension | `.skill/skills/uml-mcp-diagrams/SKILL.md` (canonical), `mcp_core/resources/diagram_skills.py`, `mcp_core/skills/uml-mcp-diagrams/SKILL.md` (packaged mirror) | `tests/test_diagram_skills.py`, mirror test in `test_enterprise_packaging.py` | `docs/reference/resources.md`, `docs/integrations/cursor.md` |
+| Diagram skills / MCP Skills extension | `.skill/skills/uml-mcp-diagrams/SKILL.md` (canonical workflow), `mcp_core/resources/diagram_skills.py`, `mcp_core/skills/uml-mcp-diagrams/SKILL.md` (packaged mirror); per-type agent skills `.skill/skills/<diagram_type>/SKILL.md` via `scripts/build_diagram_type_skills.py` | `tests/test_diagram_skills.py`, `tests/test_diagram_type_skills.py`, `tests/test_eval_skills_prompts_recipes.py`, mirror test in `test_enterprise_packaging.py` | `docs/reference/resources.md`, `docs/integrations/cursor.md` |
+| Prompt / recipe / sheet eval | `mcp_core/quality/eval_surface.py`, `scripts/eval_skills_prompts_recipes.py`, `scripts/build_catalog_sheet.py`, `scripts/catalog_sheet_fixtures.py` | `tests/test_eval_skills_prompts_recipes.py`, `tests/test_catalog_sheet_fixtures.py` | `docs/developers/linting.md` |
 
 ## Docs layout
 
@@ -54,6 +55,7 @@ Local CI: `act pull_request -W .github/workflows/ci.yml -j lint` (see `.plan/STA
 ## Rules that bite
 
 - Keep `.skill/skills/uml-mcp-diagrams/SKILL.md` and `.github/skills/uml-mcp-diagrams/SKILL.md` byte-identical.
+- After changing `DIAGRAM_TYPES` or templates/examples, run `uv run python scripts/build_diagram_type_skills.py` and refresh the agent-skills index; MCP `skills/list` must stay the one workflow skill.
 - Version bumps touch many files: `tests/test_version_consistency.py` lists them.
 - Never enable auth on Vercel; never forward client tokens; secrets never in YAML/JSON config.
 - Stdio transport: log to stderr only.

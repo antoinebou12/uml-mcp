@@ -10,8 +10,10 @@ from mcp_core.quality.wire import (
     lint_prompt,
     lint_resource,
     lint_server,
+    lint_skill,
     lint_surface,
     lint_tool,
+    token_estimate,
 )
 from mcp_core.tools.tool_decorator import compact_schema
 
@@ -197,6 +199,23 @@ def test_extended_server_rules():
     } <= got
     s.instructions = "Use render_diagram."
     assert "server-no-instructions" not in codes(lint_server(s))
+
+
+def test_skill_rules_and_token_estimate():
+    bare = lint_skill({})
+    assert {"skill-no-uri", "skill-no-name", "skill-no-description"} <= codes(bare)
+    entry = {
+        "uri": "skill://demo/SKILL.md",
+        "frontmatter": {"name": "demo", "description": "Draw a diagram when asked."},
+    }
+    assert codes(lint_skill(entry)) == set()
+    surface = Surface("s", "1", skills=[entry, dict(entry)])
+    assert "server-duplicate-skills" in codes(lint_server(surface))
+    without = token_estimate(Surface("s", "1", tools=[{"name": "t"}]))
+    with_skill = token_estimate(
+        Surface("s", "1", tools=[{"name": "t"}], skills=[entry])
+    )
+    assert with_skill > without
 
 
 def test_suppressions_are_reported_not_scored():

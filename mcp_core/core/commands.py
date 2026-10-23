@@ -152,10 +152,12 @@ def cmd_lint(args: argparse.Namespace) -> int:
             s: sum(1 for i in issues if i.severity == s)
             for s in ("error", "warning", "info")
         }
+        skill_count = report.counts["skills"]
+        skill_label = "skill" if skill_count == 1 else "skills"
         print(
             f"Grade {report.grade} · score {report.score}/100 · ~{report.token_estimate} tokens · "
             f"{report.counts['tools']} tools, {report.counts['resources']} resources, "
-            f"{report.counts['prompts']} prompts"
+            f"{report.counts['prompts']} prompts, {skill_count} {skill_label}"
         )
         print(
             f"{counts['error']} error(s), {counts['warning']} warning(s), {counts['info']} info"

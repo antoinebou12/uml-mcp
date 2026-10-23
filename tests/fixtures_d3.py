@@ -194,8 +194,9 @@ async def main():
                 "diagram_type": "d3_force", "code": "nodes: a, b", "output_format": "html"}))["error"],
             "html_for_builtin": (await call(client, "generate_uml", {
                 "diagram_type": "class", "code": "@startuml\nclass A\n@enduml", "output_format": "html"}))["error"],
-            "png_for_d3": (await call(client, "generate_uml", {
-                "diagram_type": "d3_force", "code": SAMPLES["d3_force"][1], "output_format": "png"}))["error"],
+            # PNG is allowed via SVG→PNG raster; PDF remains unsupported for d3_*.
+            "pdf_for_d3": (await call(client, "generate_uml", {
+                "diagram_type": "d3_force", "code": SAMPLES["d3_force"][1], "output_format": "pdf"}))["error"],
             "bad_provider": (await call(client, "d3_catalog", {"provider": "oracle"}))["error"],
         }
 

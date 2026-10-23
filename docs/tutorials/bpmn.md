@@ -75,8 +75,8 @@ flowchart LR
 ```
 
 - The `bpmn` diagram type renders to **SVG** through Kroki.
-- For an executable BPMN starter, use the `bpmn_executable_process` prompt or read the `bpmn` template from `uml://templates`.
-- For a process explanation rather than rendering, use the `bpmn_process_guide` prompt.
+- For an executable BPMN starter, use `.skill/skills/bpmn/SKILL.md` or read the `bpmn` template from `uml://templates`.
+- For process guidance, see the [BPMN guide](bpmn.md) and the bpmn agent skill.
 - For minimal XML syntax, see [BPMN (Kroki XML)](../diagrams/bpmn.md).
 
 See also: [BPMN prompts and SVG](bpmn-prompts-svg.md), [Diagram Assistant](../diagram-assistant.md), and [MCP resources reference](../reference/resources.md).

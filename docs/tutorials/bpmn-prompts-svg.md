@@ -1,4 +1,4 @@
----
+﻿---
 title: BPMN prompts and SVG
 description: Natural-language prompts, named MCP prompts, and generate_uml for BPMN 2.0 XML as SVG through Kroki.
 tags:
@@ -14,7 +14,7 @@ Use this track when you want **BPMN 2.0** process models as **XML** rendered to 
 ## Prerequisites
 
 - A connected **UML-MCP** server ([Getting started](getting-started.md)).
-- Optional: a **Sequential Thinking** MCP server in the same client if you want explicit multi-step reasoning *before* calling `generate_uml`. It is **not** part of UML-MCP; it complements `uml_diagram_with_thinking`, which is a **named prompt** on UML-MCP only.
+- Optional: a **Sequential Thinking** MCP server in the same client if you want explicit multi-step reasoning *before* calling `generate_uml`. It is **not** part of UML-MCP; it complements `uml_diagram`, which is a **named prompt** on UML-MCP only.
 
 ## Natural-language prompts (copy-paste)
 
@@ -47,16 +47,15 @@ Single pool with two lanes (Requester, Approver): task submit in Requester lane,
 4. **Risks:** Missing DI often still renders for tiny models; for branching processes, include `BPMNShape` and `BPMNEdge` waypoints.
 5. **Validation:** Call `validate_uml` with `diagram_type: bpmn` and the same `code`, then `generate_uml` with **`"output_format": "svg"`**; omit `output_dir` if you only need a URL or `content_base64`.
 
-## Named MCP prompts (UML-MCP)
+## MCP prompt and agent skill
 
-| Prompt | Use when |
+| Entry | Use when |
 | --- | --- |
-| `uml_diagram` | Generic plan-then-generate for any supported type (steer toward `bpmn` in context). |
-| `uml_diagram_with_thinking` | Same, with an explicit planning step before XML. |
-| `bpmn_process_guide` | Explain BPMN elements and flow rules (BPMN 2.0.2); pairs with `uml://templates` / `uml://examples` (bpmn) and the [BPMN guide](bpmn.md). |
-| `bpmn_executable_process` | Produce minimal executable BPMN 2.0 XML (start, tasks, gateways, end, `sequenceFlow`). |
+| `uml_diagram` | Plan-then-generate; set `context.diagram_type` to `bpmn`. |
+| `.skill/skills/bpmn/SKILL.md` | BPMN 2.0 XML notation, executable starter tips, formats. |
+| `uml://templates` / `uml://examples` (key `bpmn`) | Starter XML bodies. |
 
-Fetch text with `prompts/get` (see [MCP prompts](../reference/prompts.md)).
+Fetch the prompt with `prompts/get` (see [MCP prompts](../reference/prompts.md)).
 
 ## Direct `tools/call` (JSON-RPC)
 

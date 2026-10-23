@@ -1,4 +1,4 @@
----
+﻿---
 title: Tutorials
 description: Step-by-step guides for connecting clients, generating diagrams, and using the MCP tools, resources, and prompts.
 ---
@@ -45,7 +45,7 @@ Pick a starting point. Each tutorial is self-contained and assumes you have a wo
 
     ---
 
-    Service-style sketches, planning with Sequential Thinking, `uml_diagram_with_thinking`, and a D2 SVG example.
+    Service-style sketches, planning with Sequential Thinking, `uml_diagram`, and a D2 SVG example.
 
     [:octicons-arrow-right-24: Open D2 tutorial](d2-prompts-svg.md)
 
@@ -69,7 +69,7 @@ Pick a starting point. Each tutorial is self-contained and assumes you have a wo
 
     ---
 
-    Copy-paste prose prompts, named MCP prompts (`bpmn_process_guide`, `bpmn_executable_process`), a full `tools/call` JSON example with BPMN-DI XML, and a committed Kroki SVG sample.
+    Copy-paste prose prompts, the `uml_diagram` MCP prompt plus `.skill/skills/bpmn/SKILL.md`, a full `tools/call` JSON example with BPMN-DI XML, and a committed Kroki SVG sample.
 
     [:octicons-arrow-right-24: Open BPMN prompts tutorial](bpmn-prompts-svg.md)
 
@@ -82,4 +82,4 @@ Pick a starting point. Each tutorial is self-contained and assumes you have a wo
 
 !!! tip "Plan before you generate"
 
-    The default prompts (`uml_diagram`, `uml_diagram_with_thinking`) ask the model to plan (type, elements, relationships) before calling `generate_uml`. The `uml://workflow` resource summarises the same flow.
+    The default **`uml_diagram`** prompt asks the model to plan (type, elements, relationships) before calling `generate_uml`. The `uml://workflow` resource summarises the same flow.

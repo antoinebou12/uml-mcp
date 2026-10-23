@@ -30,6 +30,36 @@ def test_entry_shapes():
     }
 
 
+def test_install_defaults_and_preserves_env(tmp_path):
+    target = tmp_path / ".cursor" / "mcp.json"
+    target.parent.mkdir()
+    target.write_text(
+        json.dumps(
+            {
+                "mcpServers": {
+                    "uml-mcp": {
+                        "command": "old",
+                        "args": ["x"],
+                        "env": {"KROKI_SERVER": "http://127.0.0.1:8001", "KEEP": "1"},
+                    }
+                }
+            }
+        )
+    )
+    install("cursor", home=tmp_path)
+    entry = json.loads(target.read_text())["mcpServers"]["uml-mcp"]
+    assert entry["env"]["KROKI_SERVER"] == "http://127.0.0.1:8001"
+    assert entry["env"]["KEEP"] == "1"
+    assert entry["env"]["MCP_DIAGRAM_FALLBACK"] == "true"
+    fresh = tmp_path / "fresh"
+    fresh.mkdir()
+    install("cursor", home=fresh)
+    first = json.loads((fresh / ".cursor" / "mcp.json").read_text())["mcpServers"][
+        "uml-mcp"
+    ]
+    assert first["env"] == client_install.DEFAULT_STDIO_ENV
+
+
 def test_prefers_script_next_to_interpreter(monkeypatch, tmp_path):
     bindir = tmp_path / "venv" / "bin"
     bindir.mkdir(parents=True)

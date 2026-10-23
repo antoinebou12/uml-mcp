@@ -1,4 +1,4 @@
----
+﻿---
 title: UML (PlantUML)
 description: PlantUML-based UML diagram types (class, sequence, activity, use case, state, component, deployment, object).
 tags:
@@ -24,7 +24,7 @@ UML-MCP supports the eight standard UML diagram types through the PlantUML backe
 
 !!! tip "Plan before you generate"
 
-    The default `uml_diagram_with_thinking` prompt produces a brief plan (purpose, elements, relationships) before the code, which dramatically improves first-shot diagram quality.
+    The default `uml_diagram` prompt produces a brief plan (purpose, elements, relationships) before the code, which dramatically improves first-shot diagram quality.
 
 ## Class Diagrams
 

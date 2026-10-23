@@ -97,7 +97,7 @@ def test_a_bad_source_gets_an_error_that_says_what_to_fix(mcp_report) -> None:
     assert "links[0].to 'zzz': no such node" in errors["unknown_node"]
     assert "not valid JSON" in errors["not_json"]
     assert "not supported for diagram type 'class'" in errors["html_for_builtin"]
-    assert "choose one of: html, svg" in errors["png_for_d3"]
+    assert "choose one of: html, svg" in errors["pdf_for_d3"]
     assert "use one of aws, azure, gcp" in errors["bad_provider"]
 
 

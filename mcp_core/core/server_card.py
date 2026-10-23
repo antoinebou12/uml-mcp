@@ -35,7 +35,7 @@ def build_server_card(*, strict: bool = False):
         from typing import Any
 
         from mcp_core.core.config import MCP_SETTINGS
-        from mcp_core.prompts.diagram_prompts import get_prompt_registry
+        from mcp_core.prompts.diagram_prompts import get_published_prompt_registry
         from mcp_core.resources.diagram_resources import get_resource_registry
         from mcp_core.tools import (
             diagram_tools,  # noqa: F401 - load tools so registry is populated
@@ -107,7 +107,7 @@ def build_server_card(*, strict: bool = False):
                 }
             )
 
-        prompt_registry = get_prompt_registry()
+        prompt_registry = get_published_prompt_registry()
         prompts = [
             {"name": pname, "description": pinfo.get("description", "")}
             for pname, pinfo in prompt_registry.items()

@@ -8,7 +8,19 @@ tags:
 
 # MCP Tools Reference
 
-`generate_uml` renders diagrams and can save to disk. `generate_uml_image` returns an inline MCP image content block (PNG by default) so clients such as Cursor and ChatGPT can show the diagram in chat; on hosted deployments it fetches bytes even when `MCP_URL_ONLY` is on. `validate_uml` checks inputs locally without calling Kroki. `list_diagram_types` returns the same metadata as the `uml://types` resource. `generate_uml_batch` renders several diagrams in one call (see [Configuration](../configuration.md) for `MCP_BATCH_MAX_ITEMS` and `MCP_BATCH_CONCURRENCY`). For diagram types and formats, use `uml://types` and `uml://formats`.
+`generate_uml` renders diagrams and can save to disk. `generate_uml_image` returns an inline MCP image content block (PNG by default) so clients such as Cursor and ChatGPT can show the diagram in chat; on hosted deployments it fetches bytes even when `MCP_URL_ONLY` is on. When Kroki only offers SVG for a type (for example `d2` or `bpmn`) but the client asks for `png`/`jpeg`, the server renders SVG and rasterizes locally (`format_fallback: svg_rasterized`). `validate_uml` checks inputs locally without calling Kroki and still reports the native format list. `list_diagram_types` returns the same metadata as the `uml://types` resource. `generate_uml_batch` renders several diagrams in one call (see [Configuration](../configuration.md) for `MCP_BATCH_MAX_ITEMS` and `MCP_BATCH_CONCURRENCY`). For diagram types and formats, use `uml://types` and `uml://formats`.
+
+## Progressive discovery
+
+UML-MCP exposes a small **workflow** surface (five tools) over ~37 Kroki-backed formats rather than one MCP tool per API or diagram type. The **server** defines tools, resources (`uml://*`), and **one** diagram Skill (`skills/list` / `skill://uml-mcp-diagrams/SKILL.md`); the **client** chooses discovery order and how to chain calls. Connect-time token estimates in [`uml-mcp lint`](../developers/linting.md) include that single `skills/list` entry (CI gate 4500). Notation for each `diagram_type` lives in agent files under `.skill/skills/<diagram_type>/SKILL.md` (agent-skills index), not as extra MCP skills.
+
+Recommended path for agents:
+
+1. Discover types: `list_diagram_types` or `resources/read` on `uml://types` / `uml://formats` (or load `.skill/skills/<diagram_type>/SKILL.md` for notation).
+2. Cheap check: `validate_uml` (prefer `strict: true` for Mermaid sequence).
+3. Render: `generate_uml`, `generate_uml_image` (chat), or `generate_uml_batch`.
+
+Optional reductions of the connect-time list: `tools.disabled` in [`uml-mcp.yaml`](../configuration/uml-mcp-yaml.md), and enterprise opt-in `auth.filter_tools_list` so read-only tokens only see `readOnlyHint` tools in `tools/list` (write calls still return 403). See [Linting](../developers/linting.md#connect-time-surface) and [Enterprise security](../enterprise/security.md).
 
 !!! tip "Looking for the underlying Python signatures?"
 

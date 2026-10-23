@@ -9,6 +9,7 @@ from mcp_core.prompts.diagram_prompts import (
     _layout_overlap_appendix,
     algorithm_explainer_prompt,
     class_diagram_prompt,
+    diagram_theme_prompt,
     get_prompt_registry,
     paper_concept_diagram_prompt,
     register_diagram_prompts,
@@ -17,6 +18,34 @@ from mcp_core.prompts.diagram_prompts import (
     uml_diagram_with_thinking_prompt,
 )
 from tools.kroki.kroki_templates import DiagramTemplates
+
+
+class TestDiagramThemePrompt:
+    """Tests for diagram_theme_prompt (light / dark / B&W backgrounds)."""
+
+    def test_covers_background_modes_and_generate(self):
+        result = diagram_theme_prompt()
+        assert "generate_uml" in result
+        assert "light" in result.lower()
+        assert "dark" in result.lower() or "black" in result.lower()
+        assert "bw" in result.lower() or "print" in result.lower()
+        assert "plain" in result
+        assert "blueprint" in result
+
+    def test_context_picks_bw_default_for_class(self):
+        result = diagram_theme_prompt(
+            context={"background": "bw", "diagram_type": "class"}
+        )
+        assert 'diagram_type="class"' in result
+        assert "plain" in result
+        assert "background **bw**" in result
+
+    def test_context_picks_dark_for_mermaid(self):
+        result = diagram_theme_prompt(
+            context={"background": "black", "diagram_type": "mermaid"}
+        )
+        assert "background **dark**" in result
+        assert "`dark`" in result or "**`dark`**" in result
 
 
 class TestUmlDiagramPrompt:
@@ -29,14 +58,13 @@ class TestUmlDiagramPrompt:
         assert len(result) > 0
 
     def test_with_empty_context(self):
-        """uml_diagram_prompt(context={}) returns prompt with UML guidance."""
+        """uml_diagram_prompt(context={}) returns prompt with discovery + tools."""
         result = uml_diagram_prompt(context={})
-        assert "UML" in result
-        assert "notation" in result or "syntax" in result or "diagram" in result
         assert "uml://types" in result
         assert "uml://formats" in result
         assert "generate_uml" in result
         assert "output_dir" in result
+        assert "validate_uml" in result
 
     def test_with_diagram_type_in_context(self):
         """uml_diagram_prompt adds diagram type when provided in context."""
@@ -89,33 +117,41 @@ class TestRegisterDiagramPrompts:
 
         registered = register_diagram_prompts(server)
 
-        registry = get_prompt_registry()
-        expected_names = list(registry.keys())
-        assert len(registered) == len(expected_names)
-        assert server.prompt.call_count == len(expected_names)
+        from mcp_core.prompts.diagram_prompts import get_published_prompt_registry
+
+        expected_names = list(get_published_prompt_registry().keys())
+        assert len(registered) == len(expected_names) == 5
+        assert server.prompt.call_count == 5
         for name in expected_names:
             assert name in registered
 
     def test_registry_contains_uml_and_class_prompts(self):
-        """Prompt registry includes uml_diagram and class_diagram."""
+        """Full registry keeps helpers; five prompts are published on the wire."""
+        from mcp_core.prompts.diagram_prompts import get_published_prompt_registry
+
         registry = get_prompt_registry()
         assert "uml_diagram" in registry
-        assert "class_diagram" in registry
-        assert "uml_diagram_with_thinking" in registry
-        assert "c4_model" in registry
-        assert "wireviz_harness" in registry
-        assert "bpmn_executable_process" in registry
+        assert "class_diagram" in registry  # unpublished helper
         assert "algorithm_explainer" in registry
-        assert "paper_concept_diagram" in registry
+        published = get_published_prompt_registry()
+        assert set(published) == {
+            "uml_diagram",
+            "algorithm_explainer",
+            "paper_concept_diagram",
+            "architecture_report",
+            "diagram_theme",
+        }
+        assert registry["class_diagram"].get("publish") is False
+        assert registry["uml_diagram_with_thinking"].get("publish") is False
 
 
 def _has_overlap_appendix(text: str) -> bool:
     """Helper: confirm the per-backend overlap appendix is present."""
     return (
-        "Reduce arrow overlap" in text
+        "Layout (reduce crossings)" in text
         and "flowchart TD" in text
         and "skinparam linetype ortho" in text
-        and "direction: right" in text
+        and ("direction: right" in text or "direction: right|down" in text)
     )
 
 
@@ -164,21 +200,21 @@ class TestPaperConceptDiagramPrompt:
         assert "generate_uml" in result
 
     def test_includes_clickable_link_snippets_per_backend(self):
-        """Mermaid click, PlantUML [[ ]], D2 link:, and Graphviz URL= snippets are present."""
+        """Mermaid click, PlantUML [[ ]], D2 link:, and Graphviz URL= are mentioned."""
         result = paper_concept_diagram_prompt()
         assert "click " in result and "_blank" in result
-        assert "[[https://arxiv.org" in result
-        assert 'link: "https://arxiv.org' in result
-        assert 'URL="https://arxiv.org' in result
+        assert "[[" in result
+        assert "link:" in result
+        assert "URL=" in result
 
     def test_recommends_svg_for_clickable_links(self):
         result = paper_concept_diagram_prompt()
         assert "svg" in result.lower()
-        assert "strip" in result.lower() or "PNG" in result
+        assert "PNG" in result
 
     def test_warns_against_fabricating_links(self):
         result = paper_concept_diagram_prompt()
-        assert "fabricate" in result.lower() or "never" in result.lower()
+        assert "never invent" in result.lower() or "never" in result.lower()
 
     def test_includes_overlap_appendix(self):
         result = paper_concept_diagram_prompt()
@@ -196,43 +232,36 @@ class TestLayoutOverlapAppendix:
 
     def test_has_a_section_heading(self):
         text = _layout_overlap_appendix()
-        assert "Reduce arrow overlap" in text
+        assert "Layout (reduce crossings)" in text
 
     def test_covers_each_targeted_backend(self):
-        """Each of the four backends in scope appears as its own section."""
         text = _layout_overlap_appendix()
         for backend in ("Mermaid", "PlantUML", "D2", "Graphviz"):
             assert backend in text, f"Missing section for {backend}"
 
     def test_recommends_direction_per_backend(self):
         text = _layout_overlap_appendix()
-        # Mermaid direction header
         assert "flowchart TD" in text or "flowchart LR" in text
-        # PlantUML non-sequence direction + ortho routing
         assert "left to right direction" in text
         assert "skinparam linetype ortho" in text
-        # D2 direction property
-        assert "direction: right" in text or "direction: down" in text
-        # Graphviz rank direction
+        assert "direction: right" in text or "direction: right|down" in text
         assert "rankdir=" in text
 
     def test_recommends_directional_arrows_for_plantuml(self):
         text = _layout_overlap_appendix()
-        for arrow in ("-down->", "-right->", "-up->", "-left->"):
-            assert arrow in text, f"Missing directional arrow {arrow}"
+        assert "-down->" in text and "-right->" in text
 
     def test_recommends_grouping_per_backend(self):
         text = _layout_overlap_appendix()
-        # Mermaid subgraph, PlantUML together, Graphviz cluster
         assert "subgraph" in text
-        assert "together {" in text
-        assert "cluster_" in text
+        assert "together" in text
+        assert "cluster" in text
 
-    def test_does_not_break_existing_uml_diagram_prompt(self):
-        """The appendix must not be appended to the base uml_diagram_prompt."""
+    def test_uml_diagram_prompt_includes_overlap_appendix(self):
+        """Published uml_diagram embeds the layout appendix (replaces with_thinking)."""
         appendix = _layout_overlap_appendix()
         base = uml_diagram_prompt()
-        assert appendix not in base
+        assert appendix in base
 
 
 class TestNewPromptsRegistered:

@@ -136,7 +136,16 @@ FIXTURES_1_20: list[dict[str, str]] = [
     },
     {
         "diagram_type": "nwdiag",
-        "code": 'nwdiag {\n  network public {\n    address = "10.0.0.0/24";\n    client [address = "10.0.0.10"];\n    gateway [address = "10.0.0.1"];\n  }\n  network service {\n    address = "10.1.0.0/24";\n    gateway [address = "10.1.0.1"];\n    mcp [address = "10.1.0.10"];\n  }\n}',
+        "code": (
+            "nwdiag {\n"
+            '  network dmz {\n    address = "10.0.0.0/24";\n'
+            '    client [address = "10.0.0.10"];\n'
+            '    gateway [address = "10.0.0.1"];\n  }\n'
+            '  network internal {\n    address = "10.1.0.0/24";\n'
+            '    gateway [address = "10.1.0.1"];\n'
+            '    mcp [address = "10.1.0.10"];\n  }\n'
+            "}"
+        ),
     },
 ]
 
@@ -155,7 +164,7 @@ FIXTURES_21_37: list[dict[str, str]] = [
     },
     {
         "diagram_type": "excalidraw",
-        "code": '{"type":"excalidraw","version":2,"source":"kroki","elements":[{"id":"rect","type":"rectangle","x":100,"y":100,"width":200,"height":100,"angle":0,"strokeColor":"#000000","backgroundColor":"#ffffff","fillStyle":"solid","strokeWidth":1,"strokeStyle":"solid","roughness":1,"opacity":100,"groupIds":[],"frameId":null,"roundness":null,"seed":1,"version":1,"versionNonce":1,"isDeleted":false,"boundElements":[],"updated":1,"link":null,"locked":false},{"id":"label","type":"text","x":150,"y":140,"text":"UML-MCP","fontSize":20}],"appState":{"viewBackgroundColor":"#ffffff"},"files":{}}',
+        "code": '{"type":"excalidraw","version":2,"source":"kroki","elements":[{"id":"client","type":"rectangle","x":40,"y":80,"width":140,"height":70,"angle":0,"strokeColor":"#1e1e1e","backgroundColor":"#a5d8ff","fillStyle":"solid","strokeWidth":2,"strokeStyle":"solid","roughness":1,"opacity":100,"groupIds":[],"frameId":null,"roundness":{"type":3},"seed":11,"version":1,"versionNonce":11,"isDeleted":false,"boundElements":[{"id":"a1","type":"arrow"}],"updated":1,"link":null,"locked":false},{"id":"client_t","type":"text","x":70,"y":102,"width":80,"height":24,"text":"Client","fontSize":20,"strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":1,"strokeStyle":"solid","roughness":0,"opacity":100,"groupIds":[],"frameId":null,"roundness":null,"seed":12,"version":1,"versionNonce":12,"isDeleted":false,"boundElements":[],"updated":1,"link":null,"locked":false,"fontFamily":1,"textAlign":"center","verticalAlign":"middle"},{"id":"mcp","type":"rectangle","x":260,"y":80,"width":160,"height":70,"angle":0,"strokeColor":"#1e1e1e","backgroundColor":"#b2f2bb","fillStyle":"solid","strokeWidth":2,"strokeStyle":"solid","roughness":1,"opacity":100,"groupIds":[],"frameId":null,"roundness":{"type":3},"seed":21,"version":1,"versionNonce":21,"isDeleted":false,"boundElements":[{"id":"a1","type":"arrow"},{"id":"a2","type":"arrow"}],"updated":1,"link":null,"locked":false},{"id":"mcp_t","type":"text","x":290,"y":102,"width":100,"height":24,"text":"UML-MCP","fontSize":20,"strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":1,"strokeStyle":"solid","roughness":0,"opacity":100,"groupIds":[],"frameId":null,"roundness":null,"seed":22,"version":1,"versionNonce":22,"isDeleted":false,"boundElements":[],"updated":1,"link":null,"locked":false,"fontFamily":1,"textAlign":"center","verticalAlign":"middle"},{"id":"kroki","type":"rectangle","x":500,"y":80,"width":140,"height":70,"angle":0,"strokeColor":"#1e1e1e","backgroundColor":"#ffec99","fillStyle":"solid","strokeWidth":2,"strokeStyle":"solid","roughness":1,"opacity":100,"groupIds":[],"frameId":null,"roundness":{"type":3},"seed":31,"version":1,"versionNonce":31,"isDeleted":false,"boundElements":[{"id":"a2","type":"arrow"}],"updated":1,"link":null,"locked":false},{"id":"kroki_t","type":"text","x":535,"y":102,"width":70,"height":24,"text":"Kroki","fontSize":20,"strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":1,"strokeStyle":"solid","roughness":0,"opacity":100,"groupIds":[],"frameId":null,"roundness":null,"seed":32,"version":1,"versionNonce":32,"isDeleted":false,"boundElements":[],"updated":1,"link":null,"locked":false,"fontFamily":1,"textAlign":"center","verticalAlign":"middle"},{"id":"a1","type":"arrow","x":180,"y":115,"width":80,"height":0,"angle":0,"strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"strokeStyle":"solid","roughness":1,"opacity":100,"groupIds":[],"frameId":null,"roundness":{"type":2},"seed":41,"version":1,"versionNonce":41,"isDeleted":false,"boundElements":null,"updated":1,"link":null,"locked":false,"points":[[0,0],[80,0]],"startBinding":{"elementId":"client","focus":0,"gap":1},"endBinding":{"elementId":"mcp","focus":0,"gap":1},"startArrowhead":null,"endArrowhead":"arrow"},{"id":"a2","type":"arrow","x":420,"y":115,"width":80,"height":0,"angle":0,"strokeColor":"#1e1e1e","backgroundColor":"transparent","fillStyle":"solid","strokeWidth":2,"strokeStyle":"solid","roughness":1,"opacity":100,"groupIds":[],"frameId":null,"roundness":{"type":2},"seed":42,"version":1,"versionNonce":42,"isDeleted":false,"boundElements":null,"updated":1,"link":null,"locked":false,"points":[[0,0],[80,0]],"startBinding":{"elementId":"mcp","focus":0,"gap":1},"endBinding":{"elementId":"kroki","focus":0,"gap":1},"startArrowhead":null,"endArrowhead":"arrow"}],"appState":{"viewBackgroundColor":"#ffffff"},"files":{}}',
     },
     {
         "diagram_type": "goat",
@@ -171,13 +180,13 @@ FIXTURES_21_37: list[dict[str, str]] = [
     <coordinates>
       <x>10</x>
       <y>10</y>
-      <w>120</w>
-      <h>70</h>
+      <w>180</w>
+      <h>90</h>
     </coordinates>
     <panel_attributes>Account
 --
 -balance: decimal
-++deposit()
++deposit()
 </panel_attributes>
     <additional_attributes/>
   </element>
@@ -185,7 +194,10 @@ FIXTURES_21_37: list[dict[str, str]] = [
     },
     {
         "diagram_type": "nomnoml",
-        "code": "[Client] -> [UML MCP]\n[UML MCP] -> [Kroki]\n[Kroki] -> [Artifact]",
+        "code": (
+            "#stroke: #33322E\n#fill: #eee8d5\n#direction: down\n"
+            "[Client] -> [UML MCP]\n[UML MCP] -> [Kroki]\n[Kroki] -> [Artifact]"
+        ),
     },
     {
         "diagram_type": "pikchr",
@@ -201,11 +213,28 @@ FIXTURES_21_37: list[dict[str, str]] = [
     },
     {
         "diagram_type": "svgbob",
-        "code": "    .--------.       .--------.\n   /  Client  \\---->| UML MCP |\n   \\__________/      \\________/",
+        "code": (
+            "+--------+     +---------+     +-------+\n"
+            "| Client |---->| UML MCP |---->| Kroki |\n"
+            "+--------+     +---------+     +-------+"
+        ),
     },
     {
         "diagram_type": "symbolator",
-        "code": "module counter (\n  //# {{clocks|Clocking}}\n  input wire clk,\n  input wire rst,\n  //# {{data|Data}}\n  output reg [7:0] count\n);\nendmodule",
+        "code": (
+            "module uart_tx (\n"
+            "  //# {{clocks|Clocking}}\n"
+            "  input  wire       clk,\n"
+            "  input  wire       rst_n,\n"
+            "  //# {{ctrl|Control}}\n"
+            "  input  wire       valid,\n"
+            "  output wire       ready,\n"
+            "  //# {{data|Payload}}\n"
+            "  input  wire [7:0] data,\n"
+            "  output wire       tx\n"
+            ");\n"
+            "endmodule"
+        ),
     },
     {
         "diagram_type": "tikz",
@@ -223,11 +252,11 @@ FIXTURES_21_37: list[dict[str, str]] = [
     },
     {
         "diagram_type": "vega",
-        "code": '{"$schema":"https://vega.github.io/schema/vega/v5.json","width":240,"height":160,"data":[{"name":"table","values":[{"x":1,"y":2},{"x":2,"y":5},{"x":3,"y":3}]}],"scales":[{"name":"x","type":"linear","range":"width","nice":true,"domain":{"data":"table","field":"x"}},{"name":"y","type":"linear","range":"height","nice":true,"domain":{"data":"table","field":"y"}}],"axes":[{"orient":"bottom","scale":"x","title":"requests"},{"orient":"left","scale":"y","title":"latency"}],"marks":[{"type":"symbol","from":{"data":"table"},"encode":{"enter":{"x":{"scale":"x","field":"x"},"y":{"scale":"y","field":"y"},"size":{"value":100}}}}]}',
+        "code": '{"$schema":"https://vega.github.io/schema/vega/v5.json","width":320,"height":200,"padding":12,"data":[{"name":"table","values":[{"x":1,"y":2},{"x":2,"y":5},{"x":3,"y":3}]}],"scales":[{"name":"x","type":"linear","range":"width","nice":true,"domain":{"data":"table","field":"x"}},{"name":"y","type":"linear","range":"height","nice":true,"domain":{"data":"table","field":"y"}}],"axes":[{"orient":"bottom","scale":"x","title":"requests"},{"orient":"left","scale":"y","title":"latency"}],"marks":[{"type":"symbol","from":{"data":"table"},"encode":{"enter":{"x":{"scale":"x","field":"x"},"y":{"scale":"y","field":"y"},"size":{"value":100}}}}]}',
     },
     {
         "diagram_type": "vegalite",
-        "code": '{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"engine":"Mermaid","count":7},{"engine":"PlantUML","count":9},{"engine":"Other","count":21}]},"mark":"bar","encoding":{"x":{"field":"engine","type":"nominal"},"y":{"field":"count","type":"quantitative"}}}',
+        "code": '{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","width":280,"height":180,"data":{"values":[{"engine":"Mermaid","count":7},{"engine":"PlantUML","count":9},{"engine":"Other","count":21}]},"mark":"bar","encoding":{"x":{"field":"engine","type":"nominal","axis":{"labelAngle":0}},"y":{"field":"count","type":"quantitative"}}}',
     },
     {
         "diagram_type": "wavedrom",

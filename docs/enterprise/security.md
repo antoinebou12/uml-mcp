@@ -48,6 +48,10 @@ description: "Threat model, guarantees and known limitations of UML-MCP enterpri
   `MCP_AUTH_PROXY_REFRESH_TOKENS=false` to disable them.
 - **Some state is per replica:** the audit log, the rate limiter and the AG-UI
   start/events run store. Prefer `POST /ag-ui/generate` behind a load balancer.
-- **Per-tool, not per-list.** `tools/list` shows every tool; a disallowed call gets 403.
+- **Per-tool by default.** `tools/list` shows every registered tool; a disallowed call
+  gets 403 with a step-up challenge. Opt in to progressive listing with
+  `auth.filter_tools_list: true` (or `MCP_AUTH_FILTER_TOOLS_LIST=true`): read-only
+  callers then see only tools with `readOnlyHint` (or an explicit `tool_permissions`
+  entry of `read`). Write calls still return 403 until the token has write scope.
 - **Not implemented:** Client ID Metadata Documents and RFC 7662 introspection of
   opaque tokens.

@@ -1,4 +1,4 @@
----
+﻿---
 title: D2 prompts and SVG
 description: Natural-language prompts, optional Sequential Thinking MCP, and generate_uml for D2 diagrams as SVG.
 tags:
@@ -16,7 +16,7 @@ tags:
 - Connected **UML-MCP** ([Getting started](getting-started.md)).
 - Optional **Sequential Thinking** MCP for structured decomposition before tool calls (separate from UML-MCP).
 
-D2 does **not** have an extra named prompt in UML-MCP beyond the general **`uml_diagram`** and **`uml_diagram_with_thinking`** workflows. Pass `diagram_type: "d2"` after planning.
+D2 does **not** have an extra named prompt in UML-MCP beyond the general **`uml_diagram`** workflow (and the `.skill/skills/d2/SKILL.md` agent skill). Pass `diagram_type: "d2"` after planning.
 
 ## Natural-language prompts (copy-paste)
 
@@ -47,7 +47,7 @@ Omit `output_dir` when you want URL / base64 only (typical for hosted MCP).
 
 ## Named prompts
 
-Use **`uml_diagram_with_thinking`** (or `uml_diagram`) with arguments that steer the model toward **`d2`** as the `diagram_type`, and load **`uml://workflow`** for the standard plan-then-generate text ([MCP resources](../reference/resources.md)).
+Use **`uml_diagram`** with arguments that steer the model toward **`d2`** as the `diagram_type`, and load **`uml://workflow`** for the standard plan-then-generate text ([MCP resources](../reference/resources.md)).
 
 ## Direct `tools/call` (JSON-RPC)
 

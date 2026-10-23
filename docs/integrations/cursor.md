@@ -29,12 +29,18 @@ No local Python install is required for the hosted endpoint. The MCP route is **
 
 On every push to `main`, the CD pipeline ([`.github/workflows/deploy.yml`](https://github.com/antoinebou12/uml-mcp/blob/main/.github/workflows/deploy.yml)) smoke-tests the hosted MCP endpoint with JSON-RPC `tools/list` and `list_diagram_types` against the Vercel URL. CI validates [`.cursor/mcp.json`](https://github.com/antoinebou12/uml-mcp/blob/main/.cursor/mcp.json) on each PR.
 
-## Diagram skill for Cursor
+## Diagram skills for Cursor
 
-Use the canonical skill at **[`.skill/skills/uml-mcp-diagrams/SKILL.md`](https://github.com/antoinebou12/uml-mcp/blob/main/.skill/skills/uml-mcp-diagrams/SKILL.md)**:
+Use the workflow skill at **[`.skill/skills/uml-mcp-diagrams/SKILL.md`](https://github.com/antoinebou12/uml-mcp/blob/main/.skill/skills/uml-mcp-diagrams/SKILL.md)** for tools, URL-first replies, and progressive discovery:
 
 - **Cursor Settings → Rules → Add skill** and point at that file, or
 - Symlink/copy it into your user skills directory if your Cursor build expects skills outside the repo.
+
+For a specific Kroki/`diagram_type` notation (syntax, starter, sample), load
+`.skill/skills/<diagram_type>/SKILL.md` (every catalog key has one; listed in
+[`/.well-known/agent-skills/index.json`](https://github.com/antoinebou12/uml-mcp/blob/main/.well-known/agent-skills/index.json)).
+Those per-type skills are agent files only; MCP `skills/list` still returns the
+single workflow skill so connect-time stays small.
 
 Claude Code users should install the **[Claude Code plugin](claude_code.md)** instead (`/uml-mcp:uml-diagrams`), which bundles the same workflow under `plugins/uml-mcp/skills/uml-diagrams/`.
 

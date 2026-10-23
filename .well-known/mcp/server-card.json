@@ -61,7 +61,7 @@
           },
           "theme": {
             "type": "string",
-            "description": "Optional theme: a PlantUML theme name, or for Mermaid one of default, dark, forest, neutral, base; ignored otherwise."
+            "description": "Optional theme: PlantUML name (e.g. cerulean), Mermaid default/dark/forest/neutral/base, or D2 default/dark (theme-id); ignored for other backends."
           },
           "scale": {
             "type": "string",
@@ -219,78 +219,34 @@
     {
       "uri": "uml://recipes",
       "name": "uml://recipes",
-      "description": "Named recipe templates that span multiple diagram_types (e.g. algorithm_flowchart, paper_concept). Each entry pairs a recipe key with a starter source body and the diagram_type to pass to generate_uml. Use after the algorithm_explainer or paper_concept_diagram prompts."
+      "description": "Starter recipes (algorithm_flowchart, paper_concept) with diagram_type + template for generate_uml."
     },
     {
       "uri": "uml://workflow",
       "name": "uml://workflow",
-      "description": "Recommended workflow: plan first (diagram type, elements, relationships), then call generate_uml with the final code. Use uml_diagram or uml_diagram_with_thinking prompt."
+      "description": "Plan-then-generate workflow; pairs with uml_diagram / skill://uml-mcp-diagrams/SKILL.md."
     }
   ],
   "prompts": [
     {
       "name": "uml_diagram",
-      "description": "Base prompt for UML diagram generation. Guides the model to produce diagram code (PlantUML, Mermaid, D2) for any diagram type including class, sequence, activity, use case, and more."
-    },
-    {
-      "name": "uml_diagram_with_thinking",
-      "description": "Generate UML diagram with an explicit plan-then-generate workflow. Plan first, then output code and call generate_uml (omit output_dir unless saving a file)."
-    },
-    {
-      "name": "class_diagram",
-      "description": "Generate UML class diagram from a natural language description. Produces PlantUML code with classes, attributes, methods, visibility, inheritance, composition, and associations."
-    },
-    {
-      "name": "sequence_diagram",
-      "description": "Generate UML sequence diagram from a description. Produces PlantUML code with participants, lifelines, messages, activations, and optional return messages."
-    },
-    {
-      "name": "activity_diagram",
-      "description": "Generate UML activity diagram from a description. Produces PlantUML code with start/end, activities, decisions, forks, joins, and swimlanes."
-    },
-    {
-      "name": "usecase_diagram",
-      "description": "Generate UML use case diagram from a description. Produces PlantUML code with actors, use cases, system boundary, include/extend relationships, and associations."
-    },
-    {
-      "name": "mermaid_sequence_api",
-      "description": "Produce a Mermaid sequence diagram for an API call flow: client, API, optional Auth/DB, request/response, and optional alt blocks for success vs error."
-    },
-    {
-      "name": "mermaid_gantt",
-      "description": "Generate a Mermaid Gantt chart with title, dateFormat, sections, and tasks including dependencies (after) and durations."
-    },
-    {
-      "name": "bpmn_process_guide",
-      "description": "Explain how to draw a BPMN process model. Covers start/end events, tasks, gateways (XOR, AND, OR), sequence flow, lanes, pools, aligned with BPMN 2.0.2."
-    },
-    {
-      "name": "c4_model",
-      "description": "Produce C4 model diagrams using PlantUML C4 includes: context or container views, Person/System/Container/Component macros, relationships. Uses diagram_type c4plantuml."
-    },
-    {
-      "name": "wireviz_harness",
-      "description": "Produce WireViz YAML for cable/connector harnesses: connectors, cables, colors, pins. Uses diagram_type wireviz."
-    },
-    {
-      "name": "bpmn_executable_process",
-      "description": "Build a minimal executable BPMN 2.0 XML process: start, tasks, gateways, end, sequenceFlow. Uses diagram_type bpmn."
-    },
-    {
-      "name": "convert_class_to_mermaid",
-      "description": "Convert a class diagram (PlantUML code or prose description) into Mermaid classDiagram syntax, mapping visibility, relationships, and inheritance."
+      "description": "Plan-then-generate any catalog diagram_type. context: diagram_type?, thinking=false?"
     },
     {
       "name": "algorithm_explainer",
-      "description": "Explain an algorithm visually: control flow, recursion, or data-structure operation. Maps intent to diagram_type (mermaid flowchart, activity, state, d2), labels each step with its Big-O complexity, and applies layout rules that minimize arrow overlap."
+      "description": "Algorithm diagram with Big-O labels; uml://recipes algorithm_flowchart."
     },
     {
       "name": "paper_concept_diagram",
-      "description": "Visualize a concept from an academic paper (ML architecture, method comparison, concept/citation graph). Encodes citations in node labels and adds clickable links to arXiv/DOI in Mermaid, PlantUML, D2, and Graphviz. Recommends SVG output."
+      "description": "Paper/concept diagram with clickable citations (SVG); uml://recipes paper_concept."
+    },
+    {
+      "name": "diagram_theme",
+      "description": "Pick a generate_uml theme for light, dark/black, or B&W backgrounds. context: background?, diagram_type?"
     },
     {
       "name": "architecture_report",
-      "description": "Write a numbered Markdown architecture report for a repository: introduction, inputs/outputs, then use case, sequence, class, activity, deployment, user-flow and inventory diagrams (Mermaid / PlantUML via Kroki) with a linked table of contents."
+      "description": "Markdown architecture report with generate_uml diagrams and TOC."
     }
   ],
   "configSchemaUrl": "config-schema.json"
