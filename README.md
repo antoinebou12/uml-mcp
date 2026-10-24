@@ -22,9 +22,11 @@
 
 It also works as a building block for agent-facing products. Use **MCP** when an agent needs diagram tools, **AG-UI** when a frontend needs a standard event stream, and **OpenUI** when the product should turn model output into interactive, application-owned UI components. These layers complement each other; UML-MCP stays focused on diagram generation.
 
+| Feature | Details |
+|---|---|
 | **Live MCP** | [https://uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp) |
 | **Docs** | [antoinebou12.github.io/uml-mcp](https://antoinebou12.github.io/uml-mcp/) |
-| **Catalog** | ~37 Kroki-backed types · 5 MCP tools · URL + playground + chat PNG |
+| **Catalog** | ~37 Kroki-backed diagram types · 5 MCP tools · URL + playground + chat PNG |
 | **Agent UI** | MCP `/mcp` · canonical AG-UI `/ag-ui` · [OpenUI integration guide](docs/integrations/openui.md) |
 | **Install** | `python scripts/install.py` · `uv tool install uml-mcp && uml-mcp setup` · [Installation](docs/installation.md) |
 | **Console** | `uml-mcp admin`: setup form, settings, live logs, charts, Kroki playground ([install](docs/admin/install.md) · [user guide](docs/admin/user-guide.md) · [tour](docs/admin/index.md)) |
