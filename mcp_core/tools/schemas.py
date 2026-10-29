@@ -278,16 +278,27 @@ _DIAGNOSTICS = "severity, code, message, line, column, suggestion."
 
 
 class DiagramResult(BaseModel):
-    """Structured output for diagram generation tools."""
+    """Structured output for diagram generation tools.
 
-    code: str
+    The first MCP Apps response is bounded because structuredContent and the
+    MCP image block may each contain an encoded copy of the same diagram.
+    """
+
+    code: str = Field(max_length=12_000)
     success: bool | None = None
     diagram_type: str | None = None
     output_format: str | None = None
     url: str | None = None
     playground: str | None = None
     local_path: str | None = None
-    content_base64: str | None = None
+    content_base64: str | None = Field(
+        default=None,
+        max_length=48_000,
+        description="Bounded inline preview (max 48,000 base64 characters); omitted for larger renders.",
+    )
+    inline_omitted: bool | None = None
+    inline_note: str | None = None
+    source_omitted: bool | None = None
     error: str | None = None
     error_detail: dict[str, Any] | None = Field(default=None, description=_ERROR_DETAIL)
     source: str | None = None
