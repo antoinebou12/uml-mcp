@@ -380,7 +380,11 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       }
     }
     // URL-only: never fetch Kroki from the iframe; show links.
-    setStatus(b64 ? "Could not display image bytes; use the URL below." : "URL-only result (no inline bytes).");
+    setStatus(
+      data.inline_note ||
+      (b64 ? "Could not display image bytes; use the URL below." : "URL-only result (no inline bytes)."),
+      Boolean(data.inline_omitted && !data.url)
+    );
     showLinks(data);
     notifySize();
   }
