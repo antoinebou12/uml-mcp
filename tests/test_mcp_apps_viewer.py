@@ -7,10 +7,10 @@ from fastmcp import Client, FastMCP
 from fastmcp.apps import UI_EXTENSION_ID, UI_MIME_TYPE
 
 from mcp_core.apps.diagram_viewer import (
-    DIAGRAM_VIEWER_URI,
-    diagram_viewer_html,
-    diagram_viewer_domain,
     DIAGRAM_VIEWER_DESCRIPTION,
+    DIAGRAM_VIEWER_URI,
+    diagram_viewer_domain,
+    diagram_viewer_html,
     register_diagram_viewer,
 )
 from mcp_core.apps.svg_sanitize import sanitize_svg
@@ -66,6 +66,31 @@ def test_viewer_html_is_self_contained() -> None:
     assert "zoomIn" in html and "Playground" in html
     assert 'name: "rerender_diagram"' in html or "rerender_diagram" in html
     assert "tools/call" in html
+
+
+def test_viewer_html_embeds_per_type_theme_and_format_data() -> None:
+    import json
+    import re
+
+    html = diagram_viewer_html()
+    assert "__UML_MCP_VIEWER_DATA__" not in html
+    # The only <svg> in the page must be the rendered diagram (tests locate it by tag).
+    assert "<svg" not in html
+    match = re.search(r"var DATA = (\{.*?\});\n", html)
+    assert match
+    data = json.loads(match.group(1).replace("<\\/", "</"))
+    assert "cerulean" in data["themes"]["plantuml"]
+    assert "dark" in data["themes"]["mermaid"]
+    assert data["types"]["sequence"]["theme_family"] == "plantuml"
+    assert data["types"]["mermaid"]["theme_family"] == "mermaid"
+    assert data["types"]["graphviz"]["theme_family"] == ""
+    assert set(data["types"]["class"]["formats"]) <= {"png", "svg", "jpeg"}
+    assert "cyborg" in data["dark_themes"]
+
+
+def test_default_app_domain_is_the_submission_host(monkeypatch) -> None:
+    monkeypatch.delenv("MCP_APP_DOMAIN", raising=False)
+    assert diagram_viewer_domain() == "https://uml-mcp.antoineboucher.info"
 
 
 # ---------------------------------------------------------------- protocol surface
@@ -171,8 +196,10 @@ def test_app_view_domain_validation(monkeypatch) -> None:
     monkeypatch.setenv("MCP_APP_DOMAIN", "https://uml-mcp.vercel.app")
     assert diagram_viewer_domain() == "https://uml-mcp.vercel.app"
     for invalid in (
-        "http://example.org", "https://example.org/mcp",
-        "https://user:pw@example.org", "not-a-domain",
+        "http://example.org",
+        "https://example.org/mcp",
+        "https://user:pw@example.org",
+        "not-a-domain",
     ):
         monkeypatch.setenv("MCP_APP_DOMAIN", invalid)
         with pytest.raises(ValueError, match="one HTTPS origin"):

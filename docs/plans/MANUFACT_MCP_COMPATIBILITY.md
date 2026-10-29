@@ -38,8 +38,10 @@ Do not describe large inline images as available when omitted.
 
 ### Exact iframe origin
 
-Default production view origin: `https://fast-steel-xf470.run.mcp-use.com`.
-Set `MCP_APP_DOMAIN=https://uml-mcp.vercel.app` for the Vercel deployment.
+Default production view origin: `https://uml-mcp.antoineboucher.info` (the Vercel
+deployment used for the ChatGPT submission, see
+[ChatGPT app submission](../integrations/chatgpt_app_submission.md)).
+Set `MCP_APP_DOMAIN=https://fast-steel-xf470.run.mcp-use.com` on a Manufact deployment.
 The setting accepts only a single HTTPS origin (no credentials, path,
 fragment or query). Use the same value for all views served by one app.
 For each host, verify whether it accepts the proposed stable origin before

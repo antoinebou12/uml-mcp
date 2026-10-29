@@ -9,18 +9,24 @@ holds. The iframe never calls Kroki; re-render goes through the host as
 
 from __future__ import annotations
 
+import json
+import logging
 import os
 from typing import Any
 from urllib.parse import urlsplit
 
+logger = logging.getLogger(__name__)
+
 DIAGRAM_VIEWER_URI = "ui://uml-mcp/diagram-viewer"
 DIAGRAM_VIEWER_DESCRIPTION = (
     "Interactive UML-MCP diagram viewer with zoom, pan, fit, reset and a "
-    "safe render preview. SVG, PNG and JPEG results are supported."
+    "safe render preview. SVG, PNG and JPEG results are supported; theme and "
+    "format can be switched and re-rendered, and links or source copied."
 )
-# All app views must agree on an exact HTTPS origin. Override for other
-# trusted deployments, e.g. MCP_APP_DOMAIN=https://uml-mcp.vercel.app.
-_DEFAULT_APP_DOMAIN = "https://fast-steel-xf470.run.mcp-use.com"
+# All app views must agree on an exact HTTPS origin. The default is the Vercel
+# production host that also serves /mcp and the OpenAI Apps domain challenge.
+# Override for other trusted deployments, e.g. MCP_APP_DOMAIN=https://uml-mcp.vercel.app.
+_DEFAULT_APP_DOMAIN = "https://uml-mcp.antoineboucher.info"
 
 
 def diagram_viewer_domain() -> str:
@@ -41,7 +47,13 @@ def diagram_viewer_domain() -> str:
     return domain
 
 
+#: Formats the viewer can display inline (and offer for re-render).
+VIEWER_FORMATS = ("png", "svg", "jpeg")
+
+_THEME_DATA_PLACEHOLDER = "__UML_MCP_VIEWER_DATA__"
+
 # Self-contained HTML: postMessage bridge + SVG sanitize (mirrors svg_sanitize.py).
+# No inline <svg> chrome: the only <svg> in the document is the rendered diagram.
 _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,126 +63,273 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
 <style>
   :root {
     color-scheme: light dark;
-    --bg: var(--color-background-primary, #fff);
-    --fg: var(--color-text-primary, #111);
-    --muted: var(--color-text-secondary, #555);
-    --border: var(--color-border-primary, #ddd);
-    --link: var(--color-text-link, #0b57d0);
-    --font: var(--font-sans, system-ui, sans-serif);
+    --bg: var(--color-background-primary, #ffffff);
+    --surface: var(--color-background-secondary, #f6f7f9);
+    --fg: var(--color-text-primary, #161a23);
+    --muted: var(--color-text-secondary, #5d6472);
+    --border: var(--color-border-primary, #e3e6eb);
+    --link: var(--color-text-link, #4f46e5);
+    --accent: #4f46e5;
+    --accent-fg: #ffffff;
+    --danger: #c62828;
+    --ok: #1b873f;
+    --dot: rgba(22, 26, 35, 0.09);
+    --glass: rgba(255, 255, 255, 0.82);
+    --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 6px 20px rgba(16, 24, 40, 0.08);
+    --radius: 12px;
+    --font: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
+    --mono: var(--font-mono, ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: var(--color-background-primary, #14161b);
+      --surface: var(--color-background-secondary, #1b1e25);
+      --fg: var(--color-text-primary, #e8eaef);
+      --muted: var(--color-text-secondary, #9aa1ae);
+      --border: var(--color-border-primary, #2c313b);
+      --link: var(--color-text-link, #a5b4fc);
+      --accent: #818cf8;
+      --accent-fg: #0f1115;
+      --danger: #ff8a80;
+      --ok: #6fdc8c;
+      --dot: rgba(232, 234, 239, 0.08);
+      --glass: rgba(27, 30, 37, 0.84);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-  button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+  html, body { background: var(--bg); }
   body {
-    margin: 0;
-    padding: 12px;
-    font-family: var(--font);
-    background: var(--bg);
+    margin: 0; padding: 12px;
+    font: 13px/1.45 var(--font);
     color: var(--fg);
+    -webkit-font-smoothing: antialiased;
   }
-  #status { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
-  #toolbar {
-    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
-    margin-bottom: 8px; font-size: 13px;
+  button, a.btn, select { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Header: type badge + status chip, link actions on the right. */
+  #header {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin-bottom: 10px;
   }
-  #toolbar button, #toolbar a.btn {
-    appearance: none; border: 1px solid var(--border); background: var(--bg);
-    color: var(--fg); border-radius: 6px; padding: 4px 10px; cursor: pointer;
-    font: inherit; text-decoration: none;
+  #brand { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+  #brandMark {
+    width: 24px; height: 24px; border-radius: 7px; flex: none;
+    display: grid; place-items: center; font-size: 13px; font-weight: 700;
+    color: var(--accent-fg);
+    background: linear-gradient(135deg, var(--accent), #06b6d4);
   }
-  #toolbar button:hover, #toolbar a.btn:hover { border-color: var(--muted); }
-  #toolbar .spacer { flex: 1; }
-  #zoomLabel { color: var(--muted); min-width: 3em; }
-  #toolbar select {
-    border: 1px solid var(--border); background: var(--bg); color: var(--fg);
-    border-radius: 6px; padding: 4px 8px; font: inherit;
+  #typeBadge {
+    font: 600 12px/1 var(--mono); padding: 5px 8px; border-radius: 999px;
+    background: var(--surface); border: 1px solid var(--border);
+    white-space: nowrap;
   }
-  #rerenderRow { display: none; flex-wrap: wrap; gap: 6px; align-items: center;
-    margin-bottom: 8px; font-size: 13px; }
-  #rerenderRow.visible { display: flex; }
+  #status {
+    display: inline-flex; align-items: center; gap: 6px; min-width: 0;
+    color: var(--muted); font-size: 12px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  #status::before {
+    content: ""; width: 7px; height: 7px; border-radius: 50%; flex: none;
+    background: var(--muted); opacity: 0.6;
+  }
+  #status.ok::before { background: var(--ok); opacity: 1; }
+  #status.busy::before { background: var(--accent); opacity: 1; animation: pulse 1s ease-in-out infinite; }
+  #status.err { color: var(--danger); white-space: normal; }
+  #status.err::before { background: var(--danger); opacity: 1; }
+  #actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .btn {
+    appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    height: 30px; padding: 0 11px; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--bg);
+    cursor: pointer; text-decoration: none; white-space: nowrap;
+    transition: background-color .15s, border-color .15s, transform .05s;
+  }
+  .btn:hover { background: var(--surface); border-color: var(--muted); }
+  .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: .55; cursor: progress; }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 600; }
+  .btn.primary:hover { filter: brightness(1.08); background: var(--accent); }
+  .btn.icon { width: 30px; padding: 0; font-size: 15px; }
+
+  /* Canvas: dotted board, diagram sits on a sheet of paper. */
+  #stage { position: relative; }
   #frame {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 280px;
-    height: min(65vh, 560px);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 8px;
+    position: relative;
+    display: flex; justify-content: center; align-items: center;
+    min-height: 280px; height: min(65vh, 560px);
+    border: 1px solid var(--border); border-radius: var(--radius);
     overflow: hidden;
-    background: var(--bg);
-    touch-action: none;
-    cursor: grab;
+    background-color: var(--surface);
+    background-image: radial-gradient(var(--dot) 1px, transparent 1px);
+    background-size: 16px 16px;
+    touch-action: none; cursor: grab;
   }
   #frame.panning { cursor: grabbing; }
   #frame img, #frame svg {
-    max-width: none; height: auto; display: block;
+    flex: none; max-width: none; height: auto; display: block;
     transform-origin: center center;
-    user-select: none;
-    -webkit-user-drag: none;
+    user-select: none; -webkit-user-drag: none;
+    padding: 14px; border-radius: 10px;
+    background: #ffffff; box-shadow: var(--shadow);
   }
-  #meta { margin-top: 10px; font-size: 13px; line-height: 1.45; }
-  #meta a { color: var(--link); word-break: break-all; }
-  .err { color: #b00020; }
+  #frame.paper-dark img, #frame.paper-dark svg { background: #101217; }
+  body.fullscreen #frame { height: calc(100vh - 150px); }
+
+  .empty { display: grid; justify-items: center; gap: 10px; color: var(--muted); text-align: center; padding: 24px; }
+  .skeleton {
+    width: min(320px, 70%); height: 120px; border-radius: 10px;
+    background: linear-gradient(90deg, var(--border) 0%, var(--bg) 50%, var(--border) 100%);
+    background-size: 200% 100%; animation: shimmer 1.4s linear infinite; opacity: .7;
+  }
+
+  #loading {
+    position: absolute; inset: 0; display: grid; place-items: center;
+    background: color-mix(in srgb, var(--surface) 55%, transparent);
+    border-radius: var(--radius); pointer-events: none;
+  }
+  .spinner {
+    width: 28px; height: 28px; border-radius: 50%;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    animation: spin .8s linear infinite;
+  }
+
+  /* Floating zoom bar (bottom-centre of the canvas). */
+  #toolbar {
+    position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
+    display: flex; align-items: center; gap: 2px; padding: 4px;
+    border: 1px solid var(--border); border-radius: 999px;
+    background: var(--glass); box-shadow: var(--shadow);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  }
+  #toolbar button {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    height: 28px; min-width: 28px; padding: 0 10px; border-radius: 999px;
+  }
+  #toolbar button:hover { background: var(--surface); }
+  #toolbar .sep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; }
+  #zoomLabel { min-width: 3.4em; text-align: center; font: 600 12px/1 var(--mono); color: var(--muted); }
+
+  /* Re-render controls. */
+  #rerenderRow {
+    display: none; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin-top: 10px; padding: 8px; border: 1px solid var(--border);
+    border-radius: var(--radius); background: var(--surface);
+  }
+  #rerenderRow.visible { display: flex; }
+  #rerenderRow label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+  #rerenderRow .grow { flex: 1; }
+  select {
+    appearance: none; height: 30px; padding: 0 28px 0 10px; border-radius: 8px;
+    border: 1px solid var(--border); background-color: var(--bg); color: var(--fg); cursor: pointer;
+    background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+    background-position: right 13px top 13px, right 9px top 13px;
+    background-size: 4px 4px; background-repeat: no-repeat;
+  }
+
+  /* Result details: compact copyable links + render stats. */
+  #meta { margin-top: 10px; display: grid; gap: 6px; }
+  .row {
+    display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; align-items: center; gap: 8px;
+    padding: 6px 6px 6px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+  }
+  .row .k { color: var(--muted); font-size: 12px; }
+  .row a { color: var(--link); font: 12px/1.3 var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
+  .row a:hover { text-decoration: underline; }
+  .row .btn { height: 26px; padding: 0 9px; font-size: 12px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    font-size: 11px; padding: 3px 8px; border-radius: 999px;
+    border: 1px solid var(--border); color: var(--muted); background: var(--surface);
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes pulse { 50% { opacity: .35; } }
+  @keyframes shimmer { to { background-position: -200% 0; } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before { animation: none !important; transition: none !important; }
+  }
+  @media (max-width: 480px) {
+    body { padding: 8px; }
+    .row { grid-template-columns: minmax(0, 1fr) auto; }
+    .row .k { display: none; }
+  }
 </style>
 </head>
 <body>
-  <div id="status" role="status" aria-live="polite">Waiting for diagram…</div>
-  <div id="toolbar" hidden>
-    <button type="button" id="zoomOut" aria-label="Zoom out" title="Zoom out">−</button>
-    <span id="zoomLabel">100%</span>
-    <button type="button" id="zoomIn" aria-label="Zoom in" title="Zoom in">+</button>
-    <button type="button" id="zoomFit" title="Fit entire diagram" aria-label="Fit diagram to screen">Fit</button>
-    <button type="button" id="zoomReset" title="Reset zoom and pan">Reset</button>
-    <span class="spacer"></span>
-    <a class="btn" id="openUrl" href="#" target="_blank" rel="noopener" hidden>Open URL</a>
-    <a class="btn" id="openPlay" href="#" target="_blank" rel="noopener" hidden>Playground</a>
+  <div id="header">
+    <div id="brand">
+      <span id="brandMark" aria-hidden="true">U</span>
+      <span id="typeBadge" hidden></span>
+      <span id="status" role="status" aria-live="polite">Waiting for diagram…</span>
+    </div>
+    <div id="actions">
+      <a class="btn" id="openUrl" href="#" target="_blank" rel="noopener" hidden>Open image ↗</a>
+      <a class="btn" id="openPlay" href="#" target="_blank" rel="noopener" hidden>Playground ↗</a>
+      <button type="button" class="btn icon" id="fullscreenBtn" title="Toggle fullscreen" aria-label="Toggle fullscreen" hidden>⤢</button>
+    </div>
+  </div>
+  <div id="stage">
+    <div id="frame" aria-label="Diagram canvas">
+      <div class="empty"><div class="skeleton"></div><div>Waiting for a diagram from the host…</div></div>
+    </div>
+    <div id="loading" hidden><span class="spinner" aria-hidden="true"></span></div>
+    <div id="toolbar" role="toolbar" aria-label="Zoom" hidden>
+      <button type="button" id="zoomOut" aria-label="Zoom out" title="Zoom out (-)">−</button>
+      <span id="zoomLabel">100%</span>
+      <button type="button" id="zoomIn" aria-label="Zoom in" title="Zoom in (+)">+</button>
+      <span class="sep" aria-hidden="true"></span>
+      <button type="button" id="zoomFit" title="Fit entire diagram (F)" aria-label="Fit diagram to screen">Fit</button>
+      <button type="button" id="zoomReset" title="Reset zoom and pan (0)" aria-label="Reset zoom to 100%">1:1</button>
+    </div>
   </div>
   <div id="rerenderRow">
-    <label for="themeSelect">Theme</label>
-    <select id="themeSelect" title="Diagram theme for re-render">
-      <option value="">(default)</option>
-      <option value="cerulean">cerulean</option>
-      <option value="materia">materia</option>
-      <option value="sketchy">sketchy</option>
-      <option value="cyborg">cyborg</option>
-      <option value="blueprint">blueprint</option>
-      <option value="plain">plain</option>
-      <option value="forest">forest</option>
-      <option value="dark">dark</option>
-      <option value="neutral">neutral</option>
-      <option value="default">default</option>
-    </select>
-    <label for="formatSelect">Format</label>
-    <select id="formatSelect" title="Output format for re-render">
-      <option value="png">png</option>
-      <option value="svg">svg</option>
-      <option value="jpeg">jpeg</option>
-    </select>
-    <button type="button" id="rerenderBtn" title="Re-render via app-only tools/call">Re-render</button>
+    <label id="themeWrap">Theme
+      <select id="themeSelect" title="Diagram theme for re-render"><option value="">Default</option></select>
+    </label>
+    <label>Format
+      <select id="formatSelect" title="Output format for re-render">
+        <option value="png">PNG</option>
+        <option value="svg">SVG</option>
+        <option value="jpeg">JPEG</option>
+      </select>
+    </label>
+    <span class="grow"></span>
+    <button type="button" class="btn" id="copySource" title="Copy diagram source">Copy source</button>
+    <button type="button" class="btn primary" id="rerenderBtn" title="Re-render via app-only tools/call">Re-render</button>
   </div>
-  <div id="frame" aria-label="Diagram canvas"></div>
   <div id="meta"></div>
 <script>
 (function () {
   "use strict";
+  var DATA = __UML_MCP_VIEWER_DATA__;
   var STATUS = document.getElementById("status");
   var FRAME = document.getElementById("frame");
   var META = document.getElementById("meta");
   var TOOLBAR = document.getElementById("toolbar");
   var REROW = document.getElementById("rerenderRow");
+  var LOADING = document.getElementById("loading");
+  var TYPE_BADGE = document.getElementById("typeBadge");
   var ZOOM_LABEL = document.getElementById("zoomLabel");
   var OPEN_URL = document.getElementById("openUrl");
   var OPEN_PLAY = document.getElementById("openPlay");
+  var FULLSCREEN_BTN = document.getElementById("fullscreenBtn");
+  var THEME_WRAP = document.getElementById("themeWrap");
   var THEME_SEL = document.getElementById("themeSelect");
   var FORMAT_SEL = document.getElementById("formatSelect");
+  var MIN_ZOOM = 0.1, MAX_ZOOM = 8;
   var zoom = 1;
+  var fitZoom = 1;
   var panX = 0, panY = 0, panStart = null;
   var nextId = 1;
   var pending = Object.create(null);
   /** @type {{diagram_type?: string, code?: string, theme?: string, output_format?: string}|null} */
   var lastArgs = null;
   var canCallTools = true;
+  var displayMode = "inline";
   var STRIP_TAGS = {
     script: 1, foreignobject: 1, iframe: 1, object: 1, embed: 1, link: 1, meta: 1, base: 1
   };
@@ -229,37 +388,87 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     return new XMLSerializer().serializeToString(root);
   }
 
-  function applyTheme(hostContext) {
-    var vars = hostContext && hostContext.styles && hostContext.styles.variables;
-    if (!vars) return;
-    var root = document.documentElement;
-    Object.keys(vars).forEach(function (k) {
-      if (vars[k] != null) root.style.setProperty(k, vars[k]);
-    });
+  function applyHostContext(hostContext) {
+    if (!hostContext) return;
+    var vars = hostContext.styles && hostContext.styles.variables;
+    if (vars) {
+      var root = document.documentElement;
+      Object.keys(vars).forEach(function (k) {
+        if (vars[k] != null) root.style.setProperty(k, vars[k]);
+      });
+    }
+    if (hostContext.theme === "dark" || hostContext.theme === "light") {
+      document.documentElement.style.colorScheme = hostContext.theme;
+    }
+    var modes = hostContext.availableDisplayModes;
+    if (Array.isArray(modes)) FULLSCREEN_BTN.hidden = modes.indexOf("fullscreen") < 0;
+    if (hostContext.displayMode) setDisplayMode(hostContext.displayMode);
   }
 
-  function setStatus(text, isErr) {
+  function setDisplayMode(mode) {
+    displayMode = mode === "fullscreen" ? "fullscreen" : "inline";
+    document.body.classList.toggle("fullscreen", displayMode === "fullscreen");
+    FULLSCREEN_BTN.textContent = displayMode === "fullscreen" ? "⤡" : "⤢";
+    notifySize();
+  }
+
+  function setStatus(text, kind) {
     STATUS.textContent = text || "";
-    STATUS.className = isErr ? "err" : "";
+    STATUS.className = kind === true ? "err" : (kind || "");
+    STATUS.title = text || "";
+  }
+
+  function setBusy(busy) {
+    LOADING.hidden = !busy;
+    if (busy) FRAME.setAttribute("aria-busy", "true");
+    else FRAME.removeAttribute("aria-busy");
+  }
+
+  function media() {
+    return FRAME.querySelector("img, svg");
+  }
+
+  function clampZoom(value) {
+    return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, value));
   }
 
   function applyZoom() {
-    var media = FRAME.querySelector("img, svg");
-    if (media) media.style.transform = "translate(" + panX + "px," + panY + "px) scale(" + zoom + ")";
+    var m = media();
+    if (m) m.style.transform = "translate(" + panX + "px," + panY + "px) scale(" + zoom + ")";
     ZOOM_LABEL.textContent = Math.round(zoom * 100) + "%";
     notifySize();
   }
 
+  function computeFit() {
+    var m = media();
+    if (!m) return 1;
+    // SVG elements have no offsetWidth and their bounding box includes the scale.
+    var rect = m.getBoundingClientRect();
+    var width = m.offsetWidth || rect.width / zoom;
+    var height = m.offsetHeight || rect.height / zoom;
+    if (!width || !height) return 1;
+    return clampZoom(Math.min(
+      (FRAME.clientWidth - 32) / width, (FRAME.clientHeight - 72) / height
+    ));
+  }
+
   function fitDiagram() {
-    var media = FRAME.querySelector("img, svg");
-    if (!media) return;
-    var width = media.offsetWidth || media.getBoundingClientRect().width;
-    var height = media.offsetHeight || media.getBoundingClientRect().height;
-    if (!width || !height) return;
-    zoom = Math.max(0.25, Math.min(4, Math.min(
-      (FRAME.clientWidth - 24) / width, (FRAME.clientHeight - 24) / height
-    )));
+    fitZoom = computeFit();
+    zoom = fitZoom;
     panX = panY = 0;
+    applyZoom();
+  }
+
+  /** Shrink oversized diagrams to fit on first paint; never upscale small ones. */
+  function autoFit() {
+    fitZoom = computeFit();
+    zoom = Math.min(1, fitZoom);
+    panX = panY = 0;
+    applyZoom();
+  }
+
+  function zoomBy(factor) {
+    zoom = clampZoom(Math.round(zoom * factor * 100) / 100);
     applyZoom();
   }
 
@@ -270,48 +479,145 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     } catch (e) { return ""; }
   }
 
-  function showLinks(data) {
-    data = Object.assign({}, data, {
-      url: safeUrl(data.url), playground: safeUrl(data.playground)
+  function legacyCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    ta.setAttribute("readonly", "");
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    var ok = false;
+    try { ok = document.execCommand("copy"); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return ok;
+  }
+
+  function copyText(text, btn) {
+    var label = btn.textContent;
+    function done(ok) {
+      btn.textContent = ok ? "Copied ✓" : "Copy blocked";
+      setTimeout(function () { btn.textContent = label; }, 1400);
+    }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(
+          function () { done(true); },
+          function () { done(legacyCopy(text)); }
+        );
+        return;
+      }
+    } catch (e) { /* fall through to the legacy path */ }
+    done(legacyCopy(text));
+  }
+
+  function linkRow(label, href) {
+    var row = document.createElement("div");
+    row.className = "row";
+    var k = document.createElement("span");
+    k.className = "k";
+    k.textContent = label;
+    var a = document.createElement("a");
+    a.href = href;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.title = href;
+    a.textContent = href;
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn";
+    btn.textContent = "Copy";
+    btn.addEventListener("click", function () { copyText(href, btn); });
+    row.appendChild(k);
+    row.appendChild(a);
+    row.appendChild(btn);
+    return row;
+  }
+
+  function statChips(data) {
+    var chips = [];
+    if (data.output_format) chips.push(String(data.output_format).toUpperCase());
+    if (data.theme) chips.push("theme: " + data.theme);
+    if (typeof data.render_ms === "number") chips.push(Math.round(data.render_ms) + " ms");
+    if (data.cache_hit) chips.push("cached");
+    if (data.fallback_used) chips.push("fallback renderer");
+    if (!chips.length) return null;
+    var wrap = document.createElement("div");
+    wrap.className = "chips";
+    chips.forEach(function (text) {
+      var chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = text;
+      wrap.appendChild(chip);
     });
-    var parts = [];
-    if (data.url) {
-      parts.push('<div><strong>URL</strong>: <a href="' + escapeHtml(data.url) +
-        '" target="_blank" rel="noopener">' + escapeHtml(data.url) + "</a></div>");
-      OPEN_URL.href = data.url;
+    return wrap;
+  }
+
+  function showLinks(data) {
+    var url = safeUrl(data.url);
+    var playground = safeUrl(data.playground);
+    META.textContent = "";
+    if (url) {
+      META.appendChild(linkRow("Image URL", url));
+      OPEN_URL.href = url;
       OPEN_URL.hidden = false;
     } else {
       OPEN_URL.hidden = true;
     }
-    if (data.playground) {
-      parts.push('<div><strong>Playground</strong>: <a href="' +
-        escapeHtml(data.playground) + '" target="_blank" rel="noopener">' +
-        escapeHtml(data.playground) + "</a></div>");
-      OPEN_PLAY.href = data.playground;
+    if (playground) {
+      META.appendChild(linkRow("Playground", playground));
+      OPEN_PLAY.href = playground;
       OPEN_PLAY.hidden = false;
     } else {
       OPEN_PLAY.hidden = true;
     }
+    var chips = statChips(data);
+    if (chips) META.appendChild(chips);
     if (data.diagram_type) {
-      parts.push("<div><strong>Type</strong>: " + escapeHtml(String(data.diagram_type)) + "</div>");
+      TYPE_BADGE.textContent = String(data.diagram_type);
+      TYPE_BADGE.hidden = false;
     }
-    META.innerHTML = parts.join("");
-    TOOLBAR.hidden = false;
+    TOOLBAR.hidden = !media();
     updateRerenderRow();
+  }
+
+  function typeInfo(diagramType) {
+    return (DATA.types && DATA.types[diagramType]) || {};
+  }
+
+  function fillSelect(select, values, current, defaultLabel) {
+    select.textContent = "";
+    if (defaultLabel) {
+      var def = document.createElement("option");
+      def.value = "";
+      def.textContent = defaultLabel;
+      select.appendChild(def);
+    }
+    var list = values.slice();
+    if (current && list.indexOf(current) < 0) list.push(current);
+    list.forEach(function (value) {
+      var opt = document.createElement("option");
+      opt.value = value;
+      opt.textContent = defaultLabel ? value : value.toUpperCase();
+      select.appendChild(opt);
+    });
+    select.value = current || (defaultLabel ? "" : list[0] || "");
   }
 
   function updateRerenderRow() {
     var hasCode = !!(lastArgs && lastArgs.code && lastArgs.diagram_type);
     REROW.className = hasCode && canCallTools ? "visible" : "";
-    if (lastArgs) {
-      if (lastArgs.theme != null && lastArgs.theme !== "") {
-        THEME_SEL.value = String(lastArgs.theme);
-      }
-      if (lastArgs.output_format) {
-        FORMAT_SEL.value = String(lastArgs.output_format).toLowerCase() === "jpg"
-          ? "jpeg" : String(lastArgs.output_format).toLowerCase();
-      }
-    }
+    if (!lastArgs) return;
+    var info = typeInfo(lastArgs.diagram_type);
+    var themes = (DATA.themes && DATA.themes[info.theme_family]) || [];
+    var theme = lastArgs.theme != null ? String(lastArgs.theme) : "";
+    THEME_WRAP.hidden = !themes.length && !theme;
+    fillSelect(THEME_SEL, themes, theme, "Default");
+    var format = String(lastArgs.output_format || "png").toLowerCase();
+    if (format === "jpg") format = "jpeg";
+    var formats = info.formats && info.formats.length ? info.formats : DATA.formats;
+    fillSelect(FORMAT_SEL, formats, formats.indexOf(format) >= 0 ? format : "", "");
+    FRAME.classList.toggle("paper-dark", (DATA.dark_themes || []).indexOf(theme.toLowerCase()) >= 0);
   }
 
   function rememberArgsFromData(data) {
@@ -326,27 +632,34 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     }
   }
 
-  function escapeHtml(s) {
-    return String(s)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;");
+  function showEmpty(text) {
+    FRAME.textContent = "";
+    var box = document.createElement("div");
+    box.className = "empty";
+    box.textContent = text;
+    FRAME.appendChild(box);
+  }
+
+  function mount(node) {
+    FRAME.textContent = "";
+    FRAME.appendChild(node);
+    TOOLBAR.hidden = false;
   }
 
   function renderFromStructured(data) {
-    FRAME.innerHTML = "";
     META.textContent = "";
     zoom = 1;
     panX = panY = 0;
     rememberArgsFromData(data);
     if (!data || typeof data !== "object") {
+      showEmpty("No diagram in this tool result.");
       setStatus("No diagram data in tool result.", true);
       TOOLBAR.hidden = true;
       REROW.className = "";
       return;
     }
     if (data.error) {
+      showEmpty("The renderer returned an error. Edit the source and re-render, or open the playground.");
       setStatus(String(data.error), true);
       showLinks(data);
       return;
@@ -355,10 +668,11 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     var b64 = data.content_base64;
     if (b64 && (mime === "image/png" || mime === "image/jpeg" || mime.indexOf("jpeg") >= 0)) {
       var img = document.createElement("img");
-      img.alt = (data.diagram_type || "diagram") + "";
+      img.alt = (data.diagram_type || "diagram") + " diagram";
+      img.addEventListener("load", autoFit);
       img.src = "data:" + (mime || "image/png") + ";base64," + b64;
-      FRAME.appendChild(img);
-      setStatus("Diagram ready");
+      mount(img);
+      setStatus("Diagram ready", "ok");
       showLinks(data);
       applyZoom();
       return;
@@ -373,13 +687,16 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       var clean = sanitizeSvg(raw);
       if (clean) {
         FRAME.innerHTML = clean;
-        setStatus("Diagram ready");
+        TOOLBAR.hidden = false;
+        setStatus("Diagram ready", "ok");
         showLinks(data);
-        applyZoom();
+        autoFit();
         return;
       }
     }
     // URL-only: never fetch Kroki from the iframe; show links.
+    showEmpty(b64 ? "Could not display the image bytes — open the image URL instead." :
+      "This result has links only (no inline image). Open it below, or re-render as PNG.");
     setStatus(
       data.inline_note ||
       (b64 ? "Could not display image bytes; use the URL below." : "URL-only result (no inline bytes)."),
@@ -409,6 +726,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   }
 
   function onToolResult(params) {
+    setBusy(false);
     renderFromStructured(extractStructured(params));
   }
 
@@ -421,6 +739,12 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
         theme: args.theme != null ? String(args.theme) : "",
         output_format: args.output_format ? String(args.output_format) : "png"
       };
+      TYPE_BADGE.textContent = lastArgs.diagram_type;
+      TYPE_BADGE.hidden = false;
+      if (!media()) {
+        setBusy(true);
+        setStatus("Rendering…", "busy");
+      }
       updateRerenderRow();
     }
   }
@@ -439,8 +763,8 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     var btn = document.getElementById("rerenderBtn");
     if (btn.disabled) return;
     btn.disabled = true;
-    FRAME.setAttribute("aria-busy", "true");
-    setStatus("Re-rendering…");
+    setBusy(true);
+    setStatus("Re-rendering…", "busy");
     request("tools/call", { name: "rerender_diagram", arguments: args })
       .then(function (result) {
         lastArgs.theme = args.theme || "";
@@ -453,7 +777,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
         setStatus("Re-render failed: " + msg, true);
       }).finally(function () {
         btn.disabled = false;
-        FRAME.removeAttribute("aria-busy");
+        setBusy(false);
       });
   }
 
@@ -476,30 +800,34 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     } else if (msg.method === "ui/notifications/tool-input") {
       onToolInput(msg.params || {});
     } else if (msg.method === "ui/notifications/tool-cancelled") {
+      setBusy(false);
       setStatus("Tool cancelled" + (msg.params && msg.params.reason ? ": " + msg.params.reason : ""), true);
     } else if (msg.method === "ui/notifications/host-context-changed") {
-      applyTheme(msg.params || {});
+      applyHostContext(msg.params || {});
     } else if (msg.method === "ui/resource-teardown" && msg.id != null) {
       post({ jsonrpc: "2.0", id: msg.id, result: {} });
     }
   });
 
-  document.getElementById("zoomIn").addEventListener("click", function () {
-    zoom = Math.min(4, zoom + 0.25);
-    applyZoom();
-  });
-  document.getElementById("zoomOut").addEventListener("click", function () {
-    zoom = Math.max(0.25, zoom - 0.25);
-    applyZoom();
-  });
+  document.getElementById("zoomIn").addEventListener("click", function () { zoomBy(1.25); });
+  document.getElementById("zoomOut").addEventListener("click", function () { zoomBy(0.8); });
   document.getElementById("zoomFit").addEventListener("click", fitDiagram);
   document.getElementById("zoomReset").addEventListener("click", function () {
     zoom = 1;
     panX = panY = 0;
     applyZoom();
   });
+  document.getElementById("copySource").addEventListener("click", function (event) {
+    if (lastArgs && lastArgs.code) copyText(lastArgs.code, event.currentTarget);
+  });
+  FULLSCREEN_BTN.addEventListener("click", function () {
+    var want = displayMode === "fullscreen" ? "inline" : "fullscreen";
+    request("ui/request-display-mode", { mode: want })
+      .then(function (result) { setDisplayMode((result && result.mode) || want); })
+      .catch(function () { setStatus("Fullscreen is not available in this host.", true); });
+  });
   FRAME.addEventListener("pointerdown", function (event) {
-    if (event.button !== 0 || !FRAME.querySelector("img, svg")) return;
+    if (event.button !== 0 || !media()) return;
     panStart = { x: event.clientX, y: event.clientY, panX: panX, panY: panY };
     FRAME.classList.add("panning");
     FRAME.setPointerCapture(event.pointerId);
@@ -514,31 +842,30 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   FRAME.addEventListener("pointerup", stopPan);
   FRAME.addEventListener("pointercancel", stopPan);
   FRAME.addEventListener("lostpointercapture", stopPan);
+  FRAME.addEventListener("dblclick", function () { if (media()) fitDiagram(); });
   FRAME.addEventListener("wheel", function (event) {
-    if (!FRAME.querySelector("img, svg")) return;
+    if (!media()) return;
     event.preventDefault();
-    zoom = Math.max(0.25, Math.min(4, zoom * (event.deltaY < 0 ? 1.1 : 1 / 1.1)));
-    applyZoom();
+    zoomBy(event.deltaY < 0 ? 1.1 : 1 / 1.1);
   }, { passive: false });
   document.addEventListener("keydown", function (event) {
     if (event.altKey || event.ctrlKey || event.metaKey || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
-    if (event.key === "+" || event.key === "=") zoom = Math.min(4, zoom + 0.25);
-    else if (event.key === "-") zoom = Math.max(0.25, zoom - 0.25);
-    else if (event.key === "0") { zoom = 1; panX = panY = 0; }
-    else if (event.key.toLowerCase() === "f") { fitDiagram(); return; }
+    if (event.key === "+" || event.key === "=") { zoomBy(1.25); }
+    else if (event.key === "-") { zoomBy(0.8); }
+    else if (event.key === "0") { zoom = 1; panX = panY = 0; applyZoom(); }
+    else if (event.key.toLowerCase() === "f") { fitDiagram(); }
     else return;
     event.preventDefault();
-    applyZoom();
   });
   document.getElementById("rerenderBtn").addEventListener("click", rerender);
 
   request("ui/initialize", {
-    appInfo: { name: "uml-mcp-diagram-viewer", version: "1.2.0" },
-    appCapabilities: { availableDisplayModes: ["inline"] }
+    appInfo: { name: "uml-mcp-diagram-viewer", version: "1.3.0" },
+    appCapabilities: { availableDisplayModes: ["inline", "fullscreen"] }
   }).then(function (result) {
-    applyTheme(result && result.hostContext);
+    applyHostContext(result && result.hostContext);
     notify("ui/notifications/initialized", {});
-    if (!FRAME.firstChild) setStatus("Ready — waiting for tool result…");
+    if (!media()) setStatus("Ready — waiting for tool result…");
   }).catch(function () {
     // Standalone open (no host): keep waiting; tests can inject results via postMessage.
     setStatus("Open this view from an MCP Apps host to receive a diagram.");
@@ -550,9 +877,57 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
 """
 
 
+def _viewer_data() -> dict[str, Any]:
+    """Per-type theme families and formats the viewer offers for re-render."""
+    from ..core.diagram_themes import (
+        D2_DARK_BG,
+        MERMAID_DARK_BG,
+        MERMAID_LIGHT_BG,
+        PLANTUML_BW_BG,
+        PLANTUML_DARK_BG,
+        PLANTUML_LIGHT_BG,
+        PLANTUML_RECOMMENDED_THEMES,
+    )
+
+    plantuml = list(
+        dict.fromkeys(
+            PLANTUML_RECOMMENDED_THEMES
+            + PLANTUML_LIGHT_BG
+            + PLANTUML_DARK_BG
+            + PLANTUML_BW_BG
+        )
+    )
+    data: dict[str, Any] = {
+        "formats": list(VIEWER_FORMATS),
+        "themes": {
+            "plantuml": plantuml,
+            "mermaid": list(dict.fromkeys(MERMAID_LIGHT_BG + MERMAID_DARK_BG)),
+            "d2": ["default", "dark"],
+        },
+        "dark_themes": sorted({*PLANTUML_DARK_BG, *MERMAID_DARK_BG, *D2_DARK_BG}),
+        "types": {},
+    }
+    try:
+        from ..core.config import MCP_SETTINGS
+
+        families = {"plantuml": "plantuml", "c4plantuml": "plantuml"}
+        for name, cfg in MCP_SETTINGS.diagram_types.items():
+            backend = str(cfg.backend)
+            data["types"][name] = {
+                "theme_family": families.get(backend, backend)
+                if backend in {"plantuml", "c4plantuml", "mermaid", "d2"}
+                else "",
+                "formats": [f for f in VIEWER_FORMATS if f in cfg.formats],
+            }
+    except Exception as exc:  # noqa: BLE001 - the viewer still works with generic options
+        logger.debug("Diagram viewer: per-type options unavailable: %s", exc)
+    return data
+
+
 def diagram_viewer_html() -> str:
     """Return the Apps HTML document (no CDN, inline script only)."""
-    return _DIAGRAM_VIEWER_HTML
+    payload = json.dumps(_viewer_data(), separators=(",", ":")).replace("</", "<\\/")
+    return _DIAGRAM_VIEWER_HTML.replace(_THEME_DATA_PLACEHOLDER, payload)
 
 
 def diagram_viewer_app_config() -> Any:

@@ -20,6 +20,7 @@ from fastapi.responses import (
     FileResponse,
     HTMLResponse,
     JSONResponse,
+    PlainTextResponse,
     Response,
     StreamingResponse,
 )
@@ -194,9 +195,7 @@ class _MCPAcceptHeaderMiddleware:
                 headers_in = dict(scope.get("headers", []))
                 accept = headers_in.get(b"accept", b"").lower()
                 if b"text/html" in accept and b"text/event-stream" not in accept:
-                    response = HTMLResponse(
-                        homepage_html()
-                    )
+                    response = HTMLResponse(homepage_html())
                     await response(scope, receive, send)
                     return
             if path == "/mcp" or path.startswith("/mcp/"):
@@ -238,9 +237,7 @@ class _MCPOriginValidationMiddleware:
                 headers_in = dict(scope.get("headers", []))
                 accept = headers_in.get(b"accept", b"").lower()
                 if b"text/html" in accept and b"text/event-stream" not in accept:
-                    response = HTMLResponse(
-                        homepage_html()
-                    )
+                    response = HTMLResponse(homepage_html())
                     await response(scope, receive, send)
                     return
             if path == "/mcp" or path.startswith("/mcp/"):
@@ -1015,6 +1012,37 @@ async def get_privacy_policy():
     except Exception:
         logger.exception("Error loading privacy policy")
         raise HTTPException(status_code=500, detail="Failed to load privacy policy")
+
+
+@app.get("/.well-known/terms.txt", tags=[TAG_WELL_KNOWN])
+async def get_terms_of_service():
+    """Return the terms of service (linked from the OpenAI Apps submission)."""
+    terms_path = os.path.join(os.path.dirname(__file__), ".well-known/terms.txt")
+    if not os.path.exists(terms_path):
+        raise HTTPException(status_code=404, detail="Terms of service not found")
+    return FileResponse(terms_path, media_type="text/plain")
+
+
+OPENAI_APPS_CHALLENGE_ENV = "OPENAI_APPS_CHALLENGE_TOKEN"
+
+
+@app.get(
+    "/.well-known/openai-apps-challenge",
+    tags=[TAG_WELL_KNOWN],
+    response_class=PlainTextResponse,
+    responses={404: {"description": "No verification token configured."}},
+)
+async def get_openai_apps_challenge():
+    """OpenAI Apps domain verification: echo the token from OPENAI_APPS_CHALLENGE_TOKEN.
+
+    OpenAI issues the token after the submission ZIP is uploaded; set it as a
+    Vercel environment variable (or ``server.openai_apps_challenge_token`` in
+    uml-mcp.yaml) and redeploy. Unset means 404, so nothing is claimed by default.
+    """
+    token = (os.environ.get(OPENAI_APPS_CHALLENGE_ENV) or "").strip()
+    if not token or not token.isprintable():
+        raise HTTPException(status_code=404, detail="Not found")
+    return PlainTextResponse(token, headers={"Cache-Control": "no-store"})
 
 
 @app.get("/supported_formats", tags=[TAG_REST])

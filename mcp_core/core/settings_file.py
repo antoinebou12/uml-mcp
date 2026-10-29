@@ -32,6 +32,7 @@ ENV_MAP: dict[tuple[str, str], str] = {
     ("server", "allowed_hosts"): "MCP_ALLOWED_HOSTS",
     ("server", "allowed_origins"): "MCP_ALLOWED_ORIGINS",
     ("server", "stateless_http"): "FASTMCP_STATELESS_HTTP",
+    ("server", "openai_apps_challenge_token"): "OPENAI_APPS_CHALLENGE_TOKEN",
     ("rendering", "kroki_server"): "KROKI_SERVER",
     ("rendering", "plantuml_server"): "PLANTUML_SERVER",
     ("rendering", "use_local_kroki"): "USE_LOCAL_KROKI",
@@ -239,6 +240,10 @@ class ServerSettings(_Model):
     )
     stateless_http: bool | None = _f(
         None, "Stateless Streamable HTTP (recommended behind load balancers)."
+    )
+    openai_apps_challenge_token: str | None = _f(
+        None,
+        "OpenAI Apps domain verification token (/.well-known/openai-apps-challenge).",
     )
 
 
