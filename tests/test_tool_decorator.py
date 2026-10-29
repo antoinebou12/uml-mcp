@@ -26,7 +26,7 @@ class TestGetToolRegistry:
         assert "generate_uml" in registry
         assert "generate_uml_image" in registry
         assert "validate_uml" in registry
-        assert len(registry) == 5
+        assert len(registry) == 6
 
     def test_registry_tool_has_metadata(self):
         """Each registry entry has function, name, description, category, parameters."""
@@ -55,7 +55,7 @@ class TestGetToolCategories:
         uml_tools = categories.get("uml", [])
         assert "generate_uml" in uml_tools
         assert "validate_uml" in uml_tools
-        assert len(uml_tools) == 5
+        assert len(uml_tools) == 6
 
 
 class TestMcpToolParameterExtraction:
@@ -131,7 +131,7 @@ class TestRegisterToolsWithServer:
         assert "generate_uml" in result
         assert "validate_uml" in result
         assert "generate_uml_image" in result
-        assert len(result) == 5
+        assert len(result) == 6
 
     def test_register_tools_typeerror_fallback_chain(self):
         """When server.tool rejects kwargs styles, fall back to bare tool(func)."""
@@ -225,5 +225,5 @@ class TestChatCriticalToolOrder:
         assert result.index("generate_uml") < result.index("generate_uml_image")
         assert result.index("generate_uml_image") < result.index("generate_uml_batch")
         image_desc = get_tool_registry()["generate_uml_image"]["description"]
-        assert "INLINE IMAGE" in image_desc
+        assert "MCP ImageContent" in image_desc
         assert len(image_desc) < 280

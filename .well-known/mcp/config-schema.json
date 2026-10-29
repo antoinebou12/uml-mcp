@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "title": "UML-MCP Session Configuration",
-  "description": "Configuration for UML diagram generation when connecting via Smithery. Values are passed as query parameters (HTTP) or CLI args (stdio).",
+  "description": "Configuration for UML diagram generation when connecting via MCP clients. Values are passed as query parameters (HTTP) or CLI args (stdio).",
   "properties": {
     "output_dir": {
       "type": "string",

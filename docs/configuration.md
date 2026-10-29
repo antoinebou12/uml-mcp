@@ -110,10 +110,9 @@ Each diagram type supports specific output formats:
 
 Set `output_format` in the MCP tool arguments when you generate a diagram.
 
-## Server card and config schema (Smithery / quality score)
+## Server card and config schema
 
-Smithery and other MCP clients read the server card for tool metadata and optional session fields:
+MCP clients read the server card for tool metadata and optional session fields:
 
 - The server card at `/.well-known/mcp/server-card.json` lists tool annotations (`readOnlyHint`, `destructiveHint`, `idempotentHint`, `openWorldHint`) and a config schema URL (`configSchemaUrl`: `config-schema.json`).
 - The session config schema is served at `/.well-known/mcp/config-schema.json` (same path as the card) so clients can resolve it when the card is loaded from that origin. It includes `read_only` (maps to `MCP_READ_ONLY`) alongside output directory, Kroki/PlantUML URLs, and theme defaults.
-- When publishing on Smithery, add session configuration from `smithery-config-schema.json` in the project settings (see [Vercel/Smithery integration](integrations/vercel_smithery.md)).

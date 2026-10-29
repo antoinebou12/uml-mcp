@@ -1,6 +1,5 @@
 # Default image command: FastAPI + Swagger/ReDoc + Streamable HTTP MCP at /mcp (agent-friendly).
 # Stdio MCP: docker run ... python server.py --transport stdio
-# Smithery overrides the container command with python server.py (see smithery.yaml).
 # Enterprise SSO (Entra ID / OAuth 2.1): set MCP_AUTH_* env vars, see docs/enterprise/README.md.
 # Runtime image tracks latest supported CPython (3.15). CI tests 3.12 and 3.15.
 FROM python:3.15-slim

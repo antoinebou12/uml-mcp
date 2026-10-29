@@ -115,7 +115,10 @@ class MCPSettings(BaseModel):
     memory_only: bool = Field(default_factory=_memory_only_default)
     url_only: bool = Field(default_factory=_url_only_default)
     diagram_fallback_enabled: bool = Field(default_factory=_diagram_fallback_default)
-    description: str = "Generate UML and other diagrams through MCP"
+    description: str = (
+        "Create and validate UML, Mermaid, D2, Graphviz, C4, BPMN and other diagrams "
+        "from source code. Return rendered images, shareable URLs, and editable playground links."
+    )
     config_schema_url: str = (
         ""  # Optional URL for session config schema (improves Configuration UX score)
     )

@@ -82,7 +82,7 @@ def main() -> None:
 
     public_base = os.environ.get("AGENT_DISCOVERY_BASE_URL", _DEFAULT_PUBLIC_BASE)
 
-    schema_src = os.path.join(_REPO_ROOT, "smithery-config-schema.json")
+    schema_src = os.path.join(_REPO_ROOT, "mcp-config-schema.json")
     out_dir = os.path.join(_REPO_ROOT, ".well-known", "mcp")
     public_dir = os.path.join(_REPO_ROOT, "public", ".well-known", "mcp")
     os.makedirs(out_dir, exist_ok=True)

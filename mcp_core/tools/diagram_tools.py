@@ -64,8 +64,8 @@ def _bounded_limit(limit: int | None) -> int | None:
 
 @mcp_tool(
     description=(
-        "List supported diagram types and formats. Optional filters: query, backend, "
-        "output_format, limit."
+        "Find diagram types by text, renderer, or output format. Returns a map keyed "
+        "by diagram_type, with each type’s backend, description, and supported formats."
     ),
     category="uml",
     example="list_diagram_types(query='sequence', output_format='svg')",
@@ -88,7 +88,7 @@ def list_diagram_types(
         query: Optional text matched against type name, backend, and description.
         backend: Optional renderer/backend name to match exactly.
         output_format: Optional required output format such as svg or png.
-        limit: Optional maximum number of results, clamped to 1-100.
+        limit: Maximum number of matching types to return; omit for all matches.
     """
     logger.info(
         "Called list_diagram_types: query=%s backend=%s format=%s limit=%s",
@@ -218,8 +218,8 @@ def generate_uml_batch(
     """Render multiple diagrams with bounded concurrency and stable ordering.
 
     Args:
-        items: Diagram request objects; each requires diagram_type and code.
-        output_dir: Optional shared local output directory for all rendered files.
+        items: Source diagrams and render options, in the order results should follow.
+        output_dir: Shared local directory for rendered files. Omit for URLs and inline data without file writes.
     """
     logger.info(
         "Called generate_uml_batch: count=%s, output_dir=%s",
@@ -291,7 +291,9 @@ def _notify_batch_item(index: int, total: int, row: dict[str, Any]) -> None:
 
 @mcp_tool(
     description=(
-        "Render one diagram. Returns url, playground, and chat markdown. "
+        "Render diagram source into an image. Returns url (render link), playground "
+        "(source editor), display_markdown (chat embed), and content_base64/mime_type "
+        "when image bytes are fetched. local_path identifies a saved file. "
         "Use output_format=png for inline bytes, or call generate_uml_image. "
         "MCP Apps hosts may open the linked diagram viewer."
     ),
@@ -312,10 +314,10 @@ def generate_uml(
     """Generate a diagram using the specified diagram type.
 
     Args:
-        diagram_type: Supported diagram type, for example class, sequence, or mermaid.
+        diagram_type: Catalog key selecting the source language and renderer; discover keys with list_diagram_types.
         code: Diagram source code in the syntax required by diagram_type.
         output_dir: Optional local directory for the rendered file; omit on hosted deployments.
-        output_format: Requested output format, default svg.
+        output_format: Image or document encoding to produce; consult the type’s formats from list_diagram_types.
         theme: Optional theme — PlantUML name (e.g. cerulean), Mermaid default/dark/forest/neutral/base, or D2 default/dark (theme-id).
             Background aliases (light/dark/bw) elicit a concrete theme when the client supports MRTR.
         scale: SVG scale factor; ignored for non-SVG output.
@@ -357,13 +359,14 @@ def generate_uml(
 
 @mcp_tool(
     description=(
-        "INLINE IMAGE: render a diagram as MCP ImageContent (PNG default) for chat. "
+        "Render a diagram as MCP ImageContent for chat. Returns content_base64 and "
+        "mime_type for image bytes, url and playground links, and display_markdown. "
         "Use when the user asks to show or display the diagram. Fetches bytes even under URL-only. "
         "MCP Apps hosts may open the linked diagram viewer."
     ),
     category="uml",
     example="generate_uml_image('mermaid', 'graph TD; A-->B;', 'png')",
-    annotations={**ANNOTATIONS_DIAGRAM, "title": "Generate Inline Diagram Image"},
+    annotations={**ANNOTATIONS_DIAGRAM, "title": "Generate Diagram Image"},
     output_schema=DiagramResult,
     app=_DIAGRAM_VIEWER_APP,
 )
@@ -377,7 +380,7 @@ def generate_uml_image(
     """Generate a diagram and return it as an inline MCP image content block.
 
     Args:
-        diagram_type: Supported diagram type, for example class, sequence, or mermaid.
+        diagram_type: Catalog key selecting the source language and renderer; discover keys with list_diagram_types.
         code: Diagram source code in the syntax required by diagram_type.
         output_format: Output format for the inline image; png (default), svg, or jpeg.
         theme: Optional theme — PlantUML name (e.g. cerulean), Mermaid default/dark/forest/neutral/base, or D2 default/dark (theme-id).
@@ -419,12 +422,13 @@ def generate_uml_image(
 
 @mcp_tool(
     description=(
-        "APP-ONLY: re-render a diagram for the MCP Apps viewer (theme/format). "
+        "Render the viewer’s diagram source again with the selected theme and format. "
+        "Returns content_base64, mime_type, url, playground, and display_markdown. "
         "Hidden from the model; callable from ui://uml-mcp/diagram-viewer via tools/call."
     ),
     category="uml",
     example="rerender_diagram('mermaid', 'graph TD; A-->B;', 'png', 'forest')",
-    annotations={**ANNOTATIONS_DIAGRAM, "title": "Re-render Diagram (Apps)"},
+    annotations={**ANNOTATIONS_DIAGRAM, "title": "Re-render Diagram"},
     output_schema=DiagramResult,
     app=_DIAGRAM_VIEWER_APP_ONLY,
     lint_ignore={
@@ -443,10 +447,10 @@ def rerender_diagram(
     """Re-render for the sandboxed Apps viewer (same pipeline as generate_uml_image).
 
     Args:
-        diagram_type: Catalog diagram type from the previous render.
-        code: Diagram source previously shown in the viewer.
+        diagram_type: Catalog key selecting the source language and renderer for this diagram.
+        code: Diagram source text in the language selected by diagram_type, taken from the viewer’s previous render.
         output_format: png (default), svg, or jpeg for the viewer.
-        theme: Optional theme override (PlantUML / Mermaid / D2).
+        theme: Visual style for the selected renderer; omit to use its default styling.
         scale: SVG scale factor; ignored unless output_format is svg.
     """
     logger.info(
@@ -489,11 +493,13 @@ def rerender_diagram(
 @mcp_tool(
     description=(
         "Validate diagram type, format, and syntax locally (no render). "
+        "Returns valid, errors, warnings, suggestions, and diagnostics; prepared_code "
+        "is normalized source and changes explains normalization. "
         "Set strict=true for extra Mermaid/D2 checks."
     ),
     category="uml",
     example="validate_uml('class', '@startuml\\nclass A\\n@enduml', 'svg')",
-    annotations={**ANNOTATIONS_VALIDATE, "title": "Validate Diagram"},
+    annotations={**ANNOTATIONS_VALIDATE, "title": "Check Diagram Source"},
     output_schema=ValidationResult,
 )
 def validate_uml(
@@ -505,7 +511,7 @@ def validate_uml(
     """Check inputs and light structure without rendering.
 
     Args:
-        diagram_type: Supported diagram type to validate.
+        diagram_type: Catalog key selecting the source language and renderer to check.
         code: Diagram source code to validate locally without rendering.
         output_format: Output format whose compatibility should be checked.
         strict: Enable additional syntax checks when supported.

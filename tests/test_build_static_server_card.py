@@ -111,7 +111,7 @@ def test_committed_discovery_artifacts_are_current():
         "agent-skills/index.json": build_agent_skills_index(str(REPO_ROOT)),
         "mcp/server-card.json": _fresh_server_card(),
         "mcp/config-schema.json": json.loads(
-            (REPO_ROOT / "smithery-config-schema.json").read_text(encoding="utf-8")
+            (REPO_ROOT / "mcp-config-schema.json").read_text(encoding="utf-8")
         ),
     }
     stale = [

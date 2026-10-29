@@ -9,7 +9,7 @@ The old single-page manual now lives in three sections:
 
 - **[Tutorials → Getting started](tutorials/getting-started.md)**: end-to-end walkthrough from connecting a client to rendering, validating, batching, and tuning output.
 - **[Reference](reference/index.md)**: MCP tools, resources, prompts, Python API, and configuration.
-- **[Deploy](deploy/index.md)**: hosted (Vercel + Smithery), local stdio, Docker, and custom HTTP.
+- **[Deploy](deploy/index.md)**: hosted (Vercel), local stdio, Docker, and custom HTTP.
 
 Old anchors and prompts:
 
@@ -20,4 +20,4 @@ Old anchors and prompts:
 | Using the server | [Tutorials → Getting started](tutorials/getting-started.md) |
 | Tools at a glance | [Reference → MCP tools](api/tools.md) |
 | Supported diagram types | [Diagram types](diagrams/index.md) |
-| Troubleshooting | [Configuration](configuration.md) and [Vercel & Smithery → Troubleshooting](integrations/vercel_smithery.md#troubleshooting) |
+| Troubleshooting | [Configuration](configuration.md) and [Vercel → Troubleshooting](integrations/vercel.md#troubleshooting) |

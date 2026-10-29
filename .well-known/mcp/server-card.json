@@ -1,12 +1,24 @@
 {
   "serverInfo": {
     "name": "UML Diagram Generator",
-    "version": "1.4.0"
+    "version": "1.4.0",
+    "title": "UML Diagram Generator",
+    "description": "Create and validate UML, Mermaid, D2, Graphviz, C4, BPMN and other diagrams from source code. Return rendered images, shareable URLs, and editable playground links.",
+    "websiteUrl": "https://antoinebou12.github.io/uml-mcp/",
+    "icons": [
+      {
+        "src": "https://uml-mcp.vercel.app/favicon.svg",
+        "mimeType": "image/svg+xml",
+        "sizes": [
+          "any"
+        ]
+      }
+    ]
   },
   "tools": [
     {
       "name": "list_diagram_types",
-      "description": "List supported diagram types and formats. Optional filters: query, backend, output_format, limit.",
+      "description": "Find diagram types by text, renderer, or output format. Returns a map keyed by diagram_type, with each type\u2019s backend, description, and supported formats.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -39,7 +51,7 @@
     },
     {
       "name": "generate_uml",
-      "description": "Render one diagram. Returns url, playground, and chat markdown. Use output_format=png for inline bytes, or call generate_uml_image.",
+      "description": "Render diagram source into an image. Returns url (render link), playground (source editor), display_markdown (chat embed), and content_base64/mime_type when image bytes are fetched. local_path identifies a saved file. Use output_format=png for inline bytes, or call generate_uml_image. MCP Apps hosts may open the linked diagram viewer.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -83,7 +95,7 @@
     },
     {
       "name": "generate_uml_image",
-      "description": "INLINE IMAGE: render a diagram as MCP ImageContent (PNG default) for chat. Use when the user asks to show or display the diagram. Fetches bytes even under URL-only.",
+      "description": "Render a diagram as MCP ImageContent for chat. Returns content_base64 and mime_type for image bytes, url and playground links, and display_markdown. Use when the user asks to show or display the diagram. Fetches bytes even under URL-only. MCP Apps hosts may open the linked diagram viewer.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -118,12 +130,12 @@
         "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": true,
-        "title": "Generate Inline Diagram Image"
+        "title": "Generate Diagram Image"
       }
     },
     {
       "name": "validate_uml",
-      "description": "Validate diagram type, format, and syntax locally (no render). Set strict=true for extra Mermaid/D2 checks.",
+      "description": "Validate diagram type, format, and syntax locally (no render). Returns valid, errors, warnings, suggestions, and diagnostics; prepared_code is normalized source and changes explains normalization. Set strict=true for extra Mermaid/D2 checks.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -154,7 +166,7 @@
         "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": false,
-        "title": "Validate Diagram"
+        "title": "Check Diagram Source"
       }
     },
     {
@@ -182,6 +194,46 @@
         "idempotentHint": true,
         "openWorldHint": true,
         "title": "Generate Diagram Batch"
+      }
+    },
+    {
+      "name": "rerender_diagram",
+      "description": "Render the viewer\u2019s diagram source again with the selected theme and format. Returns content_base64, mime_type, url, playground, and display_markdown. Hidden from the model; callable from ui://uml-mcp/diagram-viewer via tools/call.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "diagram_type": {
+            "type": "string",
+            "description": "Diagram Type"
+          },
+          "code": {
+            "type": "string",
+            "description": "Code"
+          },
+          "output_format": {
+            "type": "string",
+            "description": "Output Format"
+          },
+          "theme": {
+            "type": "string",
+            "description": "Theme"
+          },
+          "scale": {
+            "type": "string",
+            "description": "Scale"
+          }
+        },
+        "required": [
+          "diagram_type",
+          "code"
+        ]
+      },
+      "annotations": {
+        "readOnlyHint": false,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": true,
+        "title": "Re-render Diagram"
       }
     }
   ],

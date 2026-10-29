@@ -192,4 +192,4 @@ services:
 - **`output_dir` rejected**: the container has `MCP_READ_ONLY=true` set somewhere; unset it or omit `output_dir` and use the URL/base64 response instead.
 - **Slow first render**: Kroki cold-starts the per-diagram engine on first use; subsequent renders are fast.
 
-See [Configuration](../configuration.md) for the full env table and [Vercel & Smithery](../integrations/vercel_smithery.md) for the hosted deployment alternative.
+See [Configuration](../configuration.md) for the full env table and [Vercel](../integrations/vercel.md) for the hosted deployment alternative.

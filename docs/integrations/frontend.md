@@ -377,6 +377,6 @@ curl -N "https://uml-mcp.vercel.app/ag-ui/events/$RUN_ID"
 
 ## Related resources
 
-- [OpenUI + UML-MCP](openui.md) · [Claude Code plugin](claude_code.md) · [Cursor](cursor.md) · [Vercel & Smithery](vercel_smithery.md)
+- [OpenUI + UML-MCP](openui.md) · [Claude Code plugin](claude_code.md) · [Cursor](cursor.md) · [Vercel](vercel.md)
 - [MCP tools](../api/tools.md)
 - [AG-UI (the protocol)](https://ag-ui.com) · [CopilotKit](https://github.com/copilotkit/copilotkit)

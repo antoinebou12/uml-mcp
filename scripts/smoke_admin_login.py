@@ -74,7 +74,7 @@ def run(base: str, email: str, password: str, require_enabled: bool = False) -> 
         if require_enabled:
             print(hint)
             return 1
-        # Not blocking by default: the deploy job also publishes to Smithery, and the
+        # Not blocking by default: the deploy job checks the public deployment, and the
         # GitHub secrets can exist before the Vercel variables do.
         print(f"::warning::{hint}")
         return 0

@@ -251,7 +251,7 @@
       "type": "context",
       "description": "uml-mcp diagram workflow: validate_uml \u2192 generate_uml / generate_uml_image / generate_uml_batch for Kroki types. Use for UML, Mermaid, D2, URLs, Kroki.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "bd37dab9fd949a298cee3d0ed28e21f8a7627312e179220a29ee5842dc23137e"
+      "sha256": "ff48567b447354f7e5afafbc27dd2ac6efcefbb4f7c01c1854ad92a1a58ea3d1"
     },
     {
       "name": "uml-mcp-navigation",

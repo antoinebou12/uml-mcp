@@ -122,7 +122,7 @@ See [Skills over MCP](docs/reference/resources.md#diagram-skill-over-mcp).
 | **Diagrams** | ~37 types via [Kroki](https://kroki.io/) (UML, Mermaid, D2, TikZ, BPMN, C4, GoAT, UMLet, …) |
 | **Tools** | `generate_uml` · `generate_uml_image` · `validate_uml` · `list_diagram_types` · `generate_uml_batch` |
 | **Chat** | Inline PNG + markdown `![diagram](url)` + **Playground** link |
-| **Deploy** | Local · Docker · Kubernetes ([Helm](deploy/helm/uml-mcp)) · [Vercel](https://vercel.com/) · [Smithery](https://smithery.ai/) |
+| **Deploy** | Local · Docker · Kubernetes ([Helm](deploy/helm/uml-mcp)) · [Vercel](https://vercel.com/) |
 | **Enterprise** | Optional SSO: Microsoft Entra ID / OAuth 2.1 bearer tokens, RFC 9728 metadata, clear 401/403 ([docs/enterprise](docs/enterprise/README.md) · [guide](docs/enterprise/enterprise-guide.md)) |
 | **Config file** | One [`uml-mcp.yaml`](docs/configuration/uml-mcp-yaml.md) (defaults < file < env) · `uml-mcp config init\|show\|validate` · profiles `local` / `docker` / `enterprise` |
 | **Audit & observability** | MXCP-style audit of every tool/resource/prompt call (JSONL rotation, stdout → SIEM) · JSON logs · metrics + Prometheus `/metrics` · rate limits per IP/user/route/tool ([operations](docs/enterprise/operations.md)) |
@@ -191,7 +191,6 @@ Smoke prompts: [`tests/prompts/chatgpt_mcp_smoke_test.md`](tests/prompts/chatgpt
 
 **Vercel** — connect the repo; clients use `https://<project>.vercel.app/mcp`.
 
-**Smithery** — paste that `/mcp` URL at [smithery.ai/new](https://smithery.ai/new). Guide: [docs/integrations/vercel_smithery.md](docs/integrations/vercel_smithery.md).
 
 **Docker**
 

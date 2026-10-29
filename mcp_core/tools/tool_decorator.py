@@ -302,6 +302,10 @@ def register_tools_with_server(server: Any) -> list[str]:
             tool_kwargs["output_schema"] = output_schema
         if ui_app is not None:
             tool_kwargs["app"] = ui_app
+            tool_kwargs["meta"] = {
+                "openai/toolInvocation/invoking": "Rendering diagram",
+                "openai/toolInvocation/invoked": "Diagram rendered",
+            }
 
         try:
             dec = server_any.tool(**tool_kwargs)

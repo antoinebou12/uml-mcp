@@ -62,18 +62,6 @@ To run the server from this clone with file output, merge **[`config/cursor_conf
 
 Set **`cwd`** to the repo root and adjust **`env`** (`KROKI_SERVER`, `MCP_OUTPUT_DIR`, `MCP_DIAGRAM_FALLBACK`) per [Configuration](../configuration.md).
 
-## Smithery registry (alternative)
-
-If you use the [Smithery CLI](https://smithery.ai/docs/concepts/cli) (Node.js 20+):
-
-```bash
-npm install -g @smithery/cli@latest
-smithery auth login
-smithery mcp add antoinebou12/uml --client cursor
-```
-
-Restart Cursor after the command finishes.
-
 ## Test the integration
 
 Example prompt:

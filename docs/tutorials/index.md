@@ -78,7 +78,7 @@ Pick a starting point. Each tutorial is self-contained and assumes you have a wo
 ## Prerequisites
 
 - An MCP-compatible client (Cursor, Claude Desktop, an HTTP client, or `curl`).
-- A running UML-MCP server. Use the public endpoint at `https://uml-mcp.vercel.app/mcp`, install via Smithery, or run locally; see [Deploy](../deploy/index.md).
+- A running UML-MCP server. Use the public endpoint at `https://uml-mcp.vercel.app/mcp`, run locally; see [Deploy](../deploy/index.md).
 
 !!! tip "Plan before you generate"
 
