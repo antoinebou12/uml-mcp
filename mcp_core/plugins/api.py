@@ -32,12 +32,31 @@ class DiagramTypeSpec:
     the image formats. ``example`` and ``template`` are shown by ``uml://examples``,
     ``uml://templates`` and the console, and are how a model learns a custom source
     format, so give every type one that renders.
+
+    Optional capability manifest fields (all have defaults for backward compatibility):
+
+    * ``version``: semver string for the renderer or diagram type (e.g. ``"1.0.0"``).
+    * ``source_schema``: JSON Schema URL or short identifier describing the source format.
+    * ``interaction_features``: viewer capabilities this type supports, e.g.
+      ``("zoom", "pan", "drilldown", "trace", "story", "compare", "inspect",
+        "arrange", "overlays")``.  Only advertise what is actually implemented.
+    * ``security_profile``: ``"static"`` (sanitized SVG/image, no execution),
+      ``"sandboxed"`` (HTML in a sandboxed blob URL iframe) or ``"trusted"``
+      (reserved for built-in types only).
+    * ``renderer_capabilities_version``: bump this integer when the manifest shape
+      changes in a breaking way so callers can gate on it.
     """
 
     description: str
     formats: tuple[str, ...] = ("svg",)
     example: str | None = None
     template: str | None = None
+    # --- optional capability manifest (introduced in renderer_capabilities_version=2) ---
+    version: str | None = None
+    source_schema: str | None = None
+    interaction_features: tuple[str, ...] = ()
+    security_profile: str = "static"
+    renderer_capabilities_version: int = 1
 
 
 @dataclass(frozen=True)
