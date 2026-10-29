@@ -10,8 +10,36 @@ holds. The iframe never calls Kroki; re-render goes through the host as
 from __future__ import annotations
 
 from typing import Any
+import os
+from urllib.parse import urlsplit
 
 DIAGRAM_VIEWER_URI = "ui://uml-mcp/diagram-viewer"
+DIAGRAM_VIEWER_DESCRIPTION = (
+    "Interactive UML-MCP diagram viewer with zoom, pan, fit, reset and a "
+    "safe render preview. SVG, PNG and JPEG results are supported."
+)
+# All app views must agree on an exact HTTPS origin. Override for other
+# trusted deployments, e.g. MCP_APP_DOMAIN=https://uml-mcp.vercel.app.
+_DEFAULT_APP_DOMAIN = "https://fast-steel-xf470.run.mcp-use.com"
+
+
+def diagram_viewer_domain() -> str:
+    """Validate the dedicated iframe origin (no URL path or credentials)."""
+    domain = os.environ.get("MCP_APP_DOMAIN", _DEFAULT_APP_DOMAIN).strip().rstrip("/")
+    parsed = urlsplit(domain)
+    if (
+        parsed.scheme != "https"
+        or not parsed.netloc
+        or parsed.hostname is None
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.path
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError("MCP_APP_DOMAIN must be one HTTPS origin without a path")
+    return domain
+
 
 # Self-contained HTML: postMessage bridge + SVG sanitize (mirrors svg_sanitize.py).
 _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
@@ -75,7 +103,6 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     cursor: grab;
   }
   #frame.panning { cursor: grabbing; }
-  }
   #frame img, #frame svg {
     max-width: none; height: auto; display: block;
     transform-origin: center center;
@@ -549,6 +576,7 @@ def diagram_viewer_resource_app_config() -> Any:
     from fastmcp.apps import AppConfig, ResourceCSP
 
     return AppConfig(
+        domain=diagram_viewer_domain(),
         csp=ResourceCSP(
             connect_domains=[],
             resource_domains=["data:", "blob:"],
@@ -565,9 +593,7 @@ def register_diagram_viewer(server: Any) -> list[str]:
         return diagram_viewer_html()
 
     resource_kwargs: dict[str, Any] = {
-        "description": (
-            "Sandboxed MCP Apps viewer for generate_uml / generate_uml_image results."
-        ),
+        "description": DIAGRAM_VIEWER_DESCRIPTION,
         "mime_type": UI_MIME_TYPE,
         "app": diagram_viewer_resource_app_config(),
     }
