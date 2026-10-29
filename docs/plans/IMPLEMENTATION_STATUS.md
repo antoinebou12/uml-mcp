@@ -5,7 +5,7 @@ This file is a task board, **not evidence of implementation**. Update status onl
 | ID | Priority | Owner | Task | Status | Verification |
 | --- | --- | --- | --- | --- | --- |
 | A-00 | P0 | Astra | Audit baseline, preserve existing unfinished local changes | todo | git status, review PRs, CI and Manufact logs |
-| L-01 | P0 | Luna | MCP Apps viewer zoom, pan, fit, reset, accessibility | in-progress | unit + browser tests |
+| L-01 | P0 | Luna | MCP Apps viewer zoom, pan, fit, reset, accessibility | todo | unit + browser tests |
 | A-01 | P0 | Astra | Renderer/plugin packaging and security contract | todo | plugin catalog + integration tests |
 | L-02 | P1 | Luna | Diagram exploration, drilldown, tracing and overlays | todo | Playwright visual tests |
 | A-02 | P1 | Astra | Iceberg, hexagonal, DDD and C4 adapters | todo | schema + visual fixtures |
