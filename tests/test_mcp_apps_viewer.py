@@ -183,5 +183,6 @@ def test_tool_result_schema_has_inline_limits() -> None:
     from mcp_core.tools.schemas import DiagramResult
 
     props = DiagramResult.model_json_schema()["properties"]
-    assert props["content_base64"]["maxLength"] == 48_000
+    inline = props["content_base64"]
+    assert any(v.get("maxLength") == 48_000 for v in inline.get("anyOf", [inline]))
     assert props["code"]["maxLength"] == 12_000
