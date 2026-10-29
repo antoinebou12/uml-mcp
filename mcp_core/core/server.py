@@ -148,12 +148,31 @@ def create_mcp_server():
     from .config import MCP_SETTINGS
 
     logger.info("Creating MCP server: %s", MCP_SETTINGS.server_name)
+    from mcp.types import Icon
+
+    from .agent_discovery import DOCUMENTATION_SITE_URL, PUBLIC_DEPLOYMENT_URL
+
     server = FastMCP(
         MCP_SETTINGS.server_name,
         version=MCP_SETTINGS.version,  # else initialize reports FastMCP's own version
         instructions=SERVER_INSTRUCTIONS,
+        website_url=DOCUMENTATION_SITE_URL,
+        icons=[
+            Icon(
+                src=f"{PUBLIC_DEPLOYMENT_URL}/favicon.svg",
+                mime_type="image/svg+xml",
+                sizes=["any"],
+            )
+        ],
         **get_mcp_cache_policy(),
     )
+
+    # FastMCP 4 does not expose title/description constructor arguments.
+    # Its MCP SDK server supports these fields on the handshake implementation.
+    low_level = getattr(server, "_mcp_server", None)
+    if low_level is not None:
+        low_level.title = MCP_SETTINGS.display_name
+        low_level.description = MCP_SETTINGS.description
 
     from ..plugins.loader import load_plugins
 

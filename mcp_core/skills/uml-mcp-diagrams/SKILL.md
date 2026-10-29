@@ -5,7 +5,7 @@ description: >-
   generate_uml_batch for Kroki types. Use for UML, Mermaid, D2, URLs, Kroki.
 ---
 
-> **Maintainers:** Keep tool tables and `output_dir` wording aligned with the Smithery bundle **[uml-skill/SKILL.md](https://github.com/antoinebou12/uml-skill/blob/main/SKILL.md)** (`diagramming-uml`) and the Claude Code plugin skill **`plugins/uml-mcp/skills/uml-diagrams/SKILL.md`** when you edit any of them. **`.github/skills/uml-mcp-diagrams/SKILL.md`** (GitHub Copilot) must stay a byte-identical copy of this file.
+> **Maintainers:** Keep the canonical workflow skill, packaged skill, Claude Code plugin, and GitHub Copilot mirror aligned. The Copilot mirror must remain byte-identical to the canonical skill.
 
 # uml-mcp diagram workflow
 

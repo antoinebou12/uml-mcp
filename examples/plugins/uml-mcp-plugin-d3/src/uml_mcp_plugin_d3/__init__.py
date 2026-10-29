@@ -46,6 +46,10 @@ class D3Renderer:
 
     name = "d3"
 
+    #: Interaction modes available for D3 diagram types in the unified viewer.
+    _D3_FEATURES: tuple[str, ...] = ("zoom", "pan", "fit", "reset", "drag", "inspect", "story", "overlays")
+    _ARCH_FEATURES: tuple[str, ...] = _D3_FEATURES + ("drilldown", "trace")
+
     def __init__(self) -> None:
         self.d3_source = "cdn"
         self.max_nodes = MAX_NODES
@@ -55,6 +59,12 @@ class D3Renderer:
                 ("html", "svg"),
                 example=example,
                 template=template,
+                version="1.0.0",
+                interaction_features=(
+                    self._D3_FEATURES if dtype == "d3_force" else self._ARCH_FEATURES
+                ),
+                security_profile="sandboxed",
+                renderer_capabilities_version=2,
             )
             for dtype, (example, template) in SAMPLES.items()
         }

@@ -9,9 +9,37 @@ holds. The iframe never calls Kroki; re-render goes through the host as
 
 from __future__ import annotations
 
+import os
 from typing import Any
+from urllib.parse import urlsplit
 
 DIAGRAM_VIEWER_URI = "ui://uml-mcp/diagram-viewer"
+DIAGRAM_VIEWER_DESCRIPTION = (
+    "Interactive UML-MCP diagram viewer with zoom, pan, fit, reset and a "
+    "safe render preview. SVG, PNG and JPEG results are supported."
+)
+# All app views must agree on an exact HTTPS origin. Override for other
+# trusted deployments, e.g. MCP_APP_DOMAIN=https://uml-mcp.vercel.app.
+_DEFAULT_APP_DOMAIN = "https://fast-steel-xf470.run.mcp-use.com"
+
+
+def diagram_viewer_domain() -> str:
+    """Validate the dedicated iframe origin (no URL path or credentials)."""
+    domain = os.environ.get("MCP_APP_DOMAIN", _DEFAULT_APP_DOMAIN).strip().rstrip("/")
+    parsed = urlsplit(domain)
+    if (
+        parsed.scheme != "https"
+        or not parsed.netloc
+        or parsed.hostname is None
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.path
+        or parsed.query
+        or parsed.fragment
+    ):
+        raise ValueError("MCP_APP_DOMAIN must be one HTTPS origin without a path")
+    return domain
+
 
 # Self-contained HTML: postMessage bridge + SVG sanitize (mirrors svg_sanitize.py).
 _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
@@ -31,6 +59,8 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     --font: var(--font-sans, system-ui, sans-serif);
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  button:focus-visible, a:focus-visible, select:focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
   body {
     margin: 0;
     padding: 12px;
@@ -62,16 +92,22 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 120px;
+    min-height: 280px;
+    height: min(65vh, 560px);
     border: 1px solid var(--border);
     border-radius: 8px;
     padding: 8px;
-    overflow: auto;
+    overflow: hidden;
     background: var(--bg);
+    touch-action: none;
+    cursor: grab;
   }
+  #frame.panning { cursor: grabbing; }
   #frame img, #frame svg {
     max-width: none; height: auto; display: block;
-    transform-origin: top left;
+    transform-origin: center center;
+    user-select: none;
+    -webkit-user-drag: none;
   }
   #meta { margin-top: 10px; font-size: 13px; line-height: 1.45; }
   #meta a { color: var(--link); word-break: break-all; }
@@ -79,12 +115,13 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
 </style>
 </head>
 <body>
-  <div id="status">Waiting for diagram…</div>
+  <div id="status" role="status" aria-live="polite">Waiting for diagram…</div>
   <div id="toolbar" hidden>
-    <button type="button" id="zoomOut" title="Zoom out">−</button>
+    <button type="button" id="zoomOut" aria-label="Zoom out" title="Zoom out">−</button>
     <span id="zoomLabel">100%</span>
-    <button type="button" id="zoomIn" title="Zoom in">+</button>
-    <button type="button" id="zoomReset" title="Reset zoom">Reset</button>
+    <button type="button" id="zoomIn" aria-label="Zoom in" title="Zoom in">+</button>
+    <button type="button" id="zoomFit" title="Fit entire diagram" aria-label="Fit diagram to screen">Fit</button>
+    <button type="button" id="zoomReset" title="Reset zoom and pan">Reset</button>
     <span class="spacer"></span>
     <a class="btn" id="openUrl" href="#" target="_blank" rel="noopener" hidden>Open URL</a>
     <a class="btn" id="openPlay" href="#" target="_blank" rel="noopener" hidden>Playground</a>
@@ -112,7 +149,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     </select>
     <button type="button" id="rerenderBtn" title="Re-render via app-only tools/call">Re-render</button>
   </div>
-  <div id="frame"></div>
+  <div id="frame" aria-label="Diagram canvas"></div>
   <div id="meta"></div>
 <script>
 (function () {
@@ -128,6 +165,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   var THEME_SEL = document.getElementById("themeSelect");
   var FORMAT_SEL = document.getElementById("formatSelect");
   var zoom = 1;
+  var panX = 0, panY = 0, panStart = null;
   var nextId = 1;
   var pending = Object.create(null);
   /** @type {{diagram_type?: string, code?: string, theme?: string, output_format?: string}|null} */
@@ -144,7 +182,11 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   function request(method, params) {
     var id = nextId++;
     return new Promise(function (resolve, reject) {
-      pending[id] = { resolve: resolve, reject: reject };
+      var timer = setTimeout(function () {
+        delete pending[id];
+        reject(new Error("MCP App host did not respond. Retry the action."));
+      }, 30000);
+      pending[id] = { resolve: resolve, reject: reject, timer: timer };
       post({ jsonrpc: "2.0", id: id, method: method, params: params || {} });
     });
   }
@@ -164,7 +206,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     if (doc.querySelector("parsererror")) return "";
     var root = doc.documentElement;
     if (!root || localName(root) !== "svg") return "";
-    var walk = root.querySelectorAll("*");
+    var walk = [root].concat(Array.from(root.querySelectorAll("*")));
     for (var i = walk.length - 1; i >= 0; i--) {
       var node = walk[i];
       if (STRIP_TAGS[localName(node)]) {
@@ -203,12 +245,35 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
 
   function applyZoom() {
     var media = FRAME.querySelector("img, svg");
-    if (media) media.style.transform = "scale(" + zoom + ")";
+    if (media) media.style.transform = "translate(" + panX + "px," + panY + "px) scale(" + zoom + ")";
     ZOOM_LABEL.textContent = Math.round(zoom * 100) + "%";
     notifySize();
   }
 
+  function fitDiagram() {
+    var media = FRAME.querySelector("img, svg");
+    if (!media) return;
+    var width = media.offsetWidth || media.getBoundingClientRect().width;
+    var height = media.offsetHeight || media.getBoundingClientRect().height;
+    if (!width || !height) return;
+    zoom = Math.max(0.25, Math.min(4, Math.min(
+      (FRAME.clientWidth - 24) / width, (FRAME.clientHeight - 24) / height
+    )));
+    panX = panY = 0;
+    applyZoom();
+  }
+
+  function safeUrl(value) {
+    try {
+      var url = new URL(String(value));
+      return (url.protocol === "https:" || url.protocol === "http:") ? url.href : "";
+    } catch (e) { return ""; }
+  }
+
   function showLinks(data) {
+    data = Object.assign({}, data, {
+      url: safeUrl(data.url), playground: safeUrl(data.playground)
+    });
     var parts = [];
     if (data.url) {
       parts.push('<div><strong>URL</strong>: <a href="' + escapeHtml(data.url) +
@@ -271,7 +336,9 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
 
   function renderFromStructured(data) {
     FRAME.innerHTML = "";
+    META.textContent = "";
     zoom = 1;
+    panX = panY = 0;
     rememberArgsFromData(data);
     if (!data || typeof data !== "object") {
       setStatus("No diagram data in tool result.", true);
@@ -298,7 +365,11 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     }
     if (b64 && (mime === "image/svg+xml" || mime.indexOf("svg") >= 0)) {
       var raw;
-      try { raw = atob(b64); } catch (e) { raw = ""; }
+      try {
+        raw = new TextDecoder("utf-8", { fatal: true }).decode(
+          Uint8Array.from(atob(b64), function (c) { return c.charCodeAt(0); })
+        );
+      } catch (e) { raw = ""; }
       var clean = sanitizeSvg(raw);
       if (clean) {
         FRAME.innerHTML = clean;
@@ -309,7 +380,11 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       }
     }
     // URL-only: never fetch Kroki from the iframe; show links.
-    setStatus(b64 ? "Could not display image bytes; use the URL below." : "URL-only result (no inline bytes).");
+    setStatus(
+      data.inline_note ||
+      (b64 ? "Could not display image bytes; use the URL below." : "URL-only result (no inline bytes)."),
+      Boolean(data.inline_omitted && !data.url)
+    );
     showLinks(data);
     notifySize();
   }
@@ -361,6 +436,10 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       theme: THEME_SEL.value || null,
       output_format: FORMAT_SEL.value || "png"
     };
+    var btn = document.getElementById("rerenderBtn");
+    if (btn.disabled) return;
+    btn.disabled = true;
+    FRAME.setAttribute("aria-busy", "true");
     setStatus("Re-rendering…");
     request("tools/call", { name: "rerender_diagram", arguments: args })
       .then(function (result) {
@@ -369,19 +448,23 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
         onToolResult(result || {});
       })
       .catch(function (err) {
-        canCallTools = false;
         updateRerenderRow();
         var msg = (err && err.message) || (typeof err === "string" ? err : "host rejected tools/call");
-        setStatus("Re-render unavailable: " + msg, true);
+        setStatus("Re-render failed: " + msg, true);
+      }).finally(function () {
+        btn.disabled = false;
+        FRAME.removeAttribute("aria-busy");
       });
   }
 
   window.addEventListener("message", function (ev) {
+    if (ev.source !== window.parent) return;
     var msg = ev.data;
     if (!msg || msg.jsonrpc !== "2.0") return;
     if (msg.id != null && (msg.result !== undefined || msg.error)) {
       var p = pending[msg.id];
       if (!p) return;
+      clearTimeout(p.timer);
       delete pending[msg.id];
       if (msg.error) p.reject(msg.error);
       else p.resolve(msg.result);
@@ -409,8 +492,42 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     zoom = Math.max(0.25, zoom - 0.25);
     applyZoom();
   });
+  document.getElementById("zoomFit").addEventListener("click", fitDiagram);
   document.getElementById("zoomReset").addEventListener("click", function () {
     zoom = 1;
+    panX = panY = 0;
+    applyZoom();
+  });
+  FRAME.addEventListener("pointerdown", function (event) {
+    if (event.button !== 0 || !FRAME.querySelector("img, svg")) return;
+    panStart = { x: event.clientX, y: event.clientY, panX: panX, panY: panY };
+    FRAME.classList.add("panning");
+    FRAME.setPointerCapture(event.pointerId);
+  });
+  FRAME.addEventListener("pointermove", function (event) {
+    if (!panStart) return;
+    panX = panStart.panX + event.clientX - panStart.x;
+    panY = panStart.panY + event.clientY - panStart.y;
+    applyZoom();
+  });
+  function stopPan() { panStart = null; FRAME.classList.remove("panning"); }
+  FRAME.addEventListener("pointerup", stopPan);
+  FRAME.addEventListener("pointercancel", stopPan);
+  FRAME.addEventListener("lostpointercapture", stopPan);
+  FRAME.addEventListener("wheel", function (event) {
+    if (!FRAME.querySelector("img, svg")) return;
+    event.preventDefault();
+    zoom = Math.max(0.25, Math.min(4, zoom * (event.deltaY < 0 ? 1.1 : 1 / 1.1)));
+    applyZoom();
+  }, { passive: false });
+  document.addEventListener("keydown", function (event) {
+    if (event.altKey || event.ctrlKey || event.metaKey || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+    if (event.key === "+" || event.key === "=") zoom = Math.min(4, zoom + 0.25);
+    else if (event.key === "-") zoom = Math.max(0.25, zoom - 0.25);
+    else if (event.key === "0") { zoom = 1; panX = panY = 0; }
+    else if (event.key.toLowerCase() === "f") { fitDiagram(); return; }
+    else return;
+    event.preventDefault();
     applyZoom();
   });
   document.getElementById("rerenderBtn").addEventListener("click", rerender);
@@ -421,7 +538,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   }).then(function (result) {
     applyTheme(result && result.hostContext);
     notify("ui/notifications/initialized", {});
-    setStatus("Ready — waiting for tool result…");
+    if (!FRAME.firstChild) setStatus("Ready — waiting for tool result…");
   }).catch(function () {
     // Standalone open (no host): keep waiting; tests can inject results via postMessage.
     setStatus("Open this view from an MCP Apps host to receive a diagram.");
@@ -463,6 +580,7 @@ def diagram_viewer_resource_app_config() -> Any:
     from fastmcp.apps import AppConfig, ResourceCSP
 
     return AppConfig(
+        domain=diagram_viewer_domain(),
         csp=ResourceCSP(
             connect_domains=[],
             resource_domains=["data:", "blob:"],
@@ -479,9 +597,7 @@ def register_diagram_viewer(server: Any) -> list[str]:
         return diagram_viewer_html()
 
     resource_kwargs: dict[str, Any] = {
-        "description": (
-            "Sandboxed MCP Apps viewer for generate_uml / generate_uml_image results."
-        ),
+        "description": DIAGRAM_VIEWER_DESCRIPTION,
         "mime_type": UI_MIME_TYPE,
         "app": diagram_viewer_resource_app_config(),
     }

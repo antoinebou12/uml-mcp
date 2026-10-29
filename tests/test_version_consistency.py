@@ -39,6 +39,3 @@ def test_version_consistency_across_manifests():
         (root / "plugins/uml-mcp/.claude-plugin/plugin.json").read_text()
     )
     assert plugin["version"] == version
-    assert f'version: "{version}"' in (root / "smithery.yaml").read_text() or (
-        f"version: {version}" in (root / "smithery.yaml").read_text()
-    )

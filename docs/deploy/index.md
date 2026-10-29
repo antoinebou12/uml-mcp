@@ -1,6 +1,6 @@
 ---
 title: Deploy
-description: "Deployment options: hosted (Vercel + Smithery), local stdio, HTTP, and Docker."
+description: "Deployment options: hosted (Vercel), local stdio, HTTP, and Docker."
 ---
 
 # Deploy
@@ -13,9 +13,9 @@ UML-MCP runs in four shapes. Pick the one that fits your environment, then jump 
 
     ---
 
-    Use the live Vercel endpoint via Streamable HTTP, or add the published Smithery server to your client.
+    Use the live Vercel endpoint via Streamable HTTP.
 
-    [:octicons-arrow-right-24: Vercel & Smithery](../integrations/vercel_smithery.md)
+    [:octicons-arrow-right-24: Vercel](../integrations/vercel.md)
 
 -   :material-console:{ .lg .middle } **Local stdio**
 
@@ -55,8 +55,8 @@ UML-MCP runs in four shapes. Pick the one that fits your environment, then jump 
 
 ```mermaid
 flowchart TD
-    Start([How will users reach UML-MCP?]) --> Q1{One-click install?}
-    Q1 -- yes --> Smithery[Publish on Smithery, point at your Vercel URL]
+    Start([How will users reach UML-MCP?]) --> Q1{Hosted endpoint?}
+    Q1 -- yes --> Hosted[Connect to the Vercel MCP URL]
     Q1 -- no  --> Q2{Need files on disk?}
     Q2 -- yes --> Q3{IDE-driven?}
     Q3 -- yes --> Stdio[Local stdio: server.py via Cursor / Claude]
@@ -76,7 +76,7 @@ flowchart TD
 | File writes (`output_dir`) | No (read-only) | Yes | Yes (volume mount) | emptyDir | Yes |
 | Local Kroki / PlantUML | No | Optional | Bundled | External | Optional |
 | Auth / OAuth | Open (enterprise auth refused on Vercel) | None | Optional SSO (`docker-compose.enterprise.yml`) | Optional SSO (`auth.mode`) | Optional SSO via `uvicorn app:app` |
-| Best for | Public + Smithery distribution | IDE work, debugging | Air-gapped, shared infra | Enterprise, Entra ID | Behind your reverse proxy |
+| Best for | Public HTTP access | IDE work, debugging | Air-gapped, shared infra | Enterprise, Entra ID | Behind your reverse proxy |
 
 !!! note "MCP route"
 
@@ -92,6 +92,6 @@ flowchart TD
 | OpenAI Codex | [OpenAI Codex](../integrations/openai_codex.md) |
 | Ollama / Open WebUI | [Ollama / Open WebUI](../integrations/ollama.md) |
 | Claude Desktop | [Claude Desktop integration](../integrations/claude_desktop.md) |
-| Smithery (any registered client) | [Vercel & Smithery](../integrations/vercel_smithery.md) |
+| Streamable HTTP clients | [Vercel](../integrations/vercel.md) |
 
 For the rendering fallback chain (Kroki → PlantUML → Mermaid.ink), see [Fallback strategy](../fallback-mechanism.md).

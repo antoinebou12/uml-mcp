@@ -1,6 +1,7 @@
 .git
 .github
 .venv
+.venv-*
 .uv
 .pytest_cache
 .ruff_cache
@@ -19,3 +20,7 @@ deploy
 .env.*
 !.env.example
 *.pdf
+
+**/node_modules
+.cache
+.codex

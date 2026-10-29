@@ -82,7 +82,7 @@ sequenceDiagram
 
     ---
 
-    Local stdio for IDE integration. HTTP for shared infra. Docker for offline. Vercel + Smithery for zero-install hosted MCP.
+    Local stdio for IDE integration. HTTP for shared infra. Docker for offline. Vercel for zero-install hosted MCP.
 
     [:octicons-arrow-right-24: Deploy guide](deploy/index.md)
 
@@ -107,18 +107,6 @@ sequenceDiagram
 ---
 
 ## Quick start
-
-=== ":material-cloud-outline: Smithery (zero install)"
-
-    Add the published server to your client without managing any process:
-
-    ```bash
-    npm install -g @smithery/cli@latest
-    smithery auth login
-    smithery mcp add antoinebou12/uml --client cursor
-    ```
-
-    Or use the legacy one-liner: `npx -y @smithery/cli install antoinebou12/uml --client claude`.
 
 === ":material-web: Hosted HTTP (Vercel)"
 

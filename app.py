@@ -1,6 +1,6 @@
 """
 FastAPI application for UML diagram generation service on Vercel.
-Provides REST API and MCP (Model Context Protocol) at /mcp for Smithery and clients.
+Provides REST API and MCP (Model Context Protocol) at /mcp for clients.
 """
 
 import asyncio
@@ -53,7 +53,7 @@ warnings.filterwarnings(
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Optional MCP HTTP app for /mcp (used on Vercel / Smithery). Requires fastmcp>=2.3.1 for http_app().
+# Optional MCP HTTP app for /mcp (used on Vercel). Requires fastmcp>=2.3.1 for http_app().
 _mcp_http_app = None
 try:
     from mcp_core.core.server import get_mcp_server
@@ -177,7 +177,7 @@ async def redoc_docs(request: Request) -> HTMLResponse:
 
 
 # MCP Streamable HTTP requires Accept: application/json, text/event-stream.
-# Some clients/proxies (e.g. Smithery) omit it; normalize for /mcp so the MCP layer accepts the request.
+# Some clients/proxies omit it; normalize for /mcp so the MCP layer accepts the request.
 MCP_ACCEPT = "application/json, text/event-stream"
 
 
@@ -190,7 +190,16 @@ class _MCPAcceptHeaderMiddleware:
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
             path = scope.get("path", "")
-            if path.startswith("/mcp"):
+            if path in {"/mcp", "/mcp/"} and scope.get("method") == "GET":
+                headers_in = dict(scope.get("headers", []))
+                accept = headers_in.get(b"accept", b"").lower()
+                if b"text/html" in accept and b"text/event-stream" not in accept:
+                    response = HTMLResponse(
+                        homepage_html()
+                    )
+                    await response(scope, receive, send)
+                    return
+            if path == "/mcp" or path.startswith("/mcp/"):
                 headers = list(scope.get("headers", []))
                 accept_val = None
                 for k, v in headers:
@@ -225,7 +234,16 @@ class _MCPOriginValidationMiddleware:
     async def __call__(self, scope, receive, send):
         if scope["type"] == "http":
             path = scope.get("path", "")
-            if path.startswith("/mcp"):
+            if path in {"/mcp", "/mcp/"} and scope.get("method") == "GET":
+                headers_in = dict(scope.get("headers", []))
+                accept = headers_in.get(b"accept", b"").lower()
+                if b"text/html" in accept and b"text/event-stream" not in accept:
+                    response = HTMLResponse(
+                        homepage_html()
+                    )
+                    await response(scope, receive, send)
+                    return
+            if path == "/mcp" or path.startswith("/mcp/"):
                 origin = None
                 for k, v in scope.get("headers", []):
                     if k.lower() == b"origin":
@@ -932,12 +950,12 @@ async def agui_generate(body: AguiRunRequest):
             "content": {
                 "image/x-icon": {"schema": {"type": "string", "format": "binary"}}
             },
-            "description": "Plugin logo (ICO format, used by Smithery and AI plugin manifests).",
+            "description": "Plugin logo (ICO format, used by AI plugin manifests).",
         }
     },
 )
 async def get_logo():
-    """Return the logo for the plugin (used by Smithery and AI plugin manifests)."""
+    """Return the logo for the plugin (used by AI plugin manifests)."""
     logo_path = os.path.join(os.path.dirname(__file__), "favicon.ico")
     if os.path.exists(logo_path):
         return FileResponse(logo_path, media_type="image/x-icon")
@@ -946,7 +964,7 @@ async def get_logo():
 
 @app.get("/.well-known/ai-plugin.json", tags=[TAG_WELL_KNOWN])
 def get_plugin_manifest(request: Request):
-    """Return the plugin manifest for OpenAI plugins and Smithery (base URL from request)."""
+    """Return the plugin manifest for OpenAI plugins  (base URL from request)."""
     try:
         with open(
             os.path.join(os.path.dirname(__file__), ".well-known/ai-plugin.json"), "r"
@@ -979,7 +997,7 @@ def _build_server_card():
 
 @app.get("/.well-known/mcp/server-card.json", tags=[TAG_WELL_KNOWN])
 async def get_mcp_server_card():
-    """MCP server metadata for Smithery and other registries (SEP-1649 server card)."""
+    """MCP server metadata for other registries (SEP-1649 server card)."""
     return JSONResponse(content=_build_server_card())
 
 
@@ -1079,7 +1097,7 @@ if _auth_runtime is None:
         app.include_router(build_local_admin_router())
         logger.info("Local admin dashboard enabled at /admin (loopback clients only)")
 
-# Mount MCP server at /mcp for Smithery and Streamable HTTP clients; fallback when unavailable
+# Mount MCP server at /mcp for Streamable HTTP clients; fallback when unavailable
 if _mcp_http_app is not None:
     logger.info("MCP HTTP app mounted at /mcp")
     app.mount("/mcp", _mcp_http_app)
@@ -1110,3 +1128,12 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8000)
+
+
+@app.get("/mcp.json", include_in_schema=False)
+@app.get("/.well-known/mcp.json", include_in_schema=False)
+async def mcp_client_manifest(request: Request):
+    """Client setup manifest for the current deployment."""
+    return {
+        "mcpServers": {"uml-mcp": {"url": f"{str(request.base_url).rstrip('/')}/mcp"}}
+    }

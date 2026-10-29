@@ -58,9 +58,6 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/antoinebou12/uml-mcp
       name: uml-mcp on GitHub
-    - icon: material/cloud-outline
-      link: https://smithery.ai/server/antoinebou12/uml
-      name: uml-mcp on Smithery
     - icon: material/web
       link: https://uml-mcp.vercel.app/mcp
       name: Live MCP endpoint
@@ -123,7 +120,7 @@ nav:
           - User guide: admin/user-guide.md
           - Hosted login (Vercel): admin/hosted-vercel.md
       - Docker: deploy/docker.md
-      - Vercel & Smithery: integrations/vercel_smithery.md
+      - Vercel: integrations/vercel.md
       - Claude Desktop: integrations/claude_desktop.md
       - Claude Desktop extension (.mcpb): integrations/claude_desktop_mcpb.md
       - Claude Code: integrations/claude_code.md

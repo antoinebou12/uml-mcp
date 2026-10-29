@@ -26,7 +26,7 @@ class TestGetToolRegistry:
         assert "generate_uml" in registry
         assert "generate_uml_image" in registry
         assert "validate_uml" in registry
-        assert len(registry) == 5
+        assert len(registry) == 6
 
     def test_registry_tool_has_metadata(self):
         """Each registry entry has function, name, description, category, parameters."""
@@ -55,7 +55,7 @@ class TestGetToolCategories:
         uml_tools = categories.get("uml", [])
         assert "generate_uml" in uml_tools
         assert "validate_uml" in uml_tools
-        assert len(uml_tools) == 5
+        assert len(uml_tools) == 6
 
 
 class TestMcpToolParameterExtraction:
@@ -131,7 +131,7 @@ class TestRegisterToolsWithServer:
         assert "generate_uml" in result
         assert "validate_uml" in result
         assert "generate_uml_image" in result
-        assert len(result) == 5
+        assert len(result) == 6
 
     def test_register_tools_typeerror_fallback_chain(self):
         """When server.tool rejects kwargs styles, fall back to bare tool(func)."""
@@ -225,5 +225,52 @@ class TestChatCriticalToolOrder:
         assert result.index("generate_uml") < result.index("generate_uml_image")
         assert result.index("generate_uml_image") < result.index("generate_uml_batch")
         image_desc = get_tool_registry()["generate_uml_image"]["description"]
-        assert "INLINE IMAGE" in image_desc
+        assert "MCP ImageContent" in image_desc
         assert len(image_desc) < 280
+
+
+
+class TestBoundedMcpAppResults:
+    def test_large_image_and_source_become_compact_first_result(self):
+        from mcp_core.tools.tool_decorator import _bounded_viewer_result
+
+        original = {
+            "code": "a" * 100_000,
+            "content_base64": "A" * 200_000,
+            "mime_type": "image/png",
+            "diagram_type": "mermaid",
+            "output_format": "png",
+            "url": "https://example.com/render.png",
+        }
+        result = _bounded_viewer_result(original)
+        assert result["content_base64"] is None
+        assert result["inline_omitted"] is True
+        assert result["code"] == ""
+        assert result["source_omitted"] is True
+        assert "inline" in result["inline_note"]
+        assert "https://example.com/render.png" in result["display_markdown"]
+        assert len(original["content_base64"]) == 200_000
+        assert len(original["code"]) == 100_000
+
+    def test_small_inline_result_preserved(self):
+        from mcp_core.tools.tool_decorator import _bounded_viewer_result
+
+        result = _bounded_viewer_result({
+            "code": "graph TD; A-->B",
+            "content_base64": "c21hbGw=",
+            "mime_type": "image/png",
+        })
+        assert result["content_base64"] == "c21hbGw="
+        assert result["code"] == "graph TD; A-->B"
+        assert not result.get("inline_omitted")
+
+    def test_large_url_not_repeated_in_markdown(self):
+        from mcp_core.tools.tool_decorator import _bounded_viewer_result
+
+        result = _bounded_viewer_result({
+            "code": "A",
+            "url": "https://example.com/" + "a" * 10000,
+            "display_markdown": "x" * 100_000,
+        })
+        assert result["url"] is None
+        assert result.get("display_markdown") is None

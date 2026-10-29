@@ -20,7 +20,6 @@ DEFAULT_GITHUB_BRANCH = "main"
 DOCUMENTATION_SITE_URL = "https://antoinebou12.github.io/uml-mcp/"
 PUBLIC_DEPLOYMENT_URL = "https://uml-mcp.vercel.app"
 GITHUB_REPO_URL = f"https://github.com/{DEFAULT_GITHUB_REPO}"
-SMITHERY_LISTING_URL = "https://smithery.ai/server/antoinebou12/uml"
 AGENT_SKILLS_SCHEMA = "https://agentskills.io/schemas/agent-skills-index-v0.2.0.json"
 
 _AI_USER_AGENTS = (
@@ -604,7 +603,6 @@ def homepage_html() -> str:
         <ul>
           <li><a href="/mcp"><code>/mcp</code></a> — Streamable HTTP</li>
           <li><a href="/.well-known/mcp/server-card.json">MCP server card</a></li>
-          <li><a href="{SMITHERY_LISTING_URL}">Smithery catalog</a> (external)</li>
         </ul>
       </section>
       <section class="card" aria-labelledby="h-docs">

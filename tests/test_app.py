@@ -162,7 +162,7 @@ def test_generate_diagram_endpoint_error(mock_generate_diagram):
 
 
 def test_plugin_manifest_endpoint(mock_plugin_manifest):
-    """Test the plugin manifest endpoint (dynamic base URL for Smithery/logo)."""
+    """Test the plugin manifest endpoint (dynamic base URL for deployment/logo)."""
     response = client.get("/.well-known/ai-plugin.json")
     assert response.status_code == 200
     data = response.json()
@@ -175,7 +175,7 @@ def test_plugin_manifest_endpoint(mock_plugin_manifest):
 
 
 def test_mcp_server_card_endpoint():
-    """Test MCP server card for Smithery scanning (/.well-known/mcp/server-card.json)."""
+    """Test MCP server card for MCP discovery (/.well-known/mcp/server-card.json)."""
     response = client.get("/.well-known/mcp/server-card.json")
     assert response.status_code == 200
     data = response.json()
@@ -341,3 +341,15 @@ def test_kroki_encode_unsupported_format():
     data = response.json()
     assert "detail" in data
     assert "Format" in data["detail"] or "not supported" in data["detail"].lower()
+
+
+def test_browser_mcp_setup_and_manifest():
+    with TestClient(app) as client:
+        for path in ("/mcp", "/mcp/"):
+            response = client.get(path, headers={"Accept": "text/html"})
+            assert response.status_code == 200
+            assert "text/html" in response.headers["content-type"]
+        for path in ("/mcp.json", "/.well-known/mcp.json"):
+            response = client.get(path)
+            assert response.status_code == 200
+            assert response.json()["mcpServers"]["uml-mcp"]["url"] == "http://testserver/mcp"

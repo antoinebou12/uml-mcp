@@ -59,18 +59,6 @@ UML-MCP speaks the [Model Context Protocol](https://modelcontextprotocol.io/) ov
 
     Use a local path instead of the Git URL if you already cloned the repo. Details: [Claude Code integration](../integrations/claude_code.md).
 
-=== ":material-cloud-outline: Smithery"
-
-    Use the published server entry (no JSON editing):
-
-    ```bash
-    npm install -g @smithery/cli@latest
-    smithery auth login
-    smithery mcp add antoinebou12/uml --client cursor
-    ```
-
-    Replace `--client cursor` with `--client claude` or any other supported client.
-
 === ":material-console: HTTP client"
 
     Any MCP-compliant HTTP client can POST to `/mcp` with `Accept: application/json, text/event-stream`. Quick smoke test with `curl`:
@@ -323,7 +311,7 @@ Possible values: `"kroki"`, `"plantuml_server"`, `"mermaid_ink"`. See [Fallback 
 
     ---
 
-    Vercel + Smithery, Docker, or local stdio with optional local Kroki.
+    Vercel, Docker, or local stdio with optional local Kroki.
 
     [:octicons-arrow-right-24: Deploy guide](../deploy/index.md)
 

@@ -9,6 +9,8 @@ from fastmcp.apps import UI_EXTENSION_ID, UI_MIME_TYPE
 from mcp_core.apps.diagram_viewer import (
     DIAGRAM_VIEWER_URI,
     diagram_viewer_html,
+    diagram_viewer_domain,
+    DIAGRAM_VIEWER_DESCRIPTION,
     register_diagram_viewer,
 )
 from mcp_core.apps.svg_sanitize import sanitize_svg
@@ -119,9 +121,68 @@ async def test_viewer_resource_read_has_apps_mime(apps_server: FastMCP) -> None:
         csp = ui.get("csp") or {}
         assert csp.get("connectDomains") == []
         assert "data:" in (csp.get("resourceDomains") or [])
+        assert ui["domain"] == diagram_viewer_domain()
 
         contents = await client.read_resource(DIAGRAM_VIEWER_URI)
         assert contents
         assert contents[0].mime_type == UI_MIME_TYPE
+        # The v2 MCP Apps description lives in the standard resource field.
+        # The compatibility checker incorrectly requires a v1 widgetDescription key.
+        assert listed.description == DIAGRAM_VIEWER_DESCRIPTION
         assert "<!DOCTYPE html>" in (contents[0].text or "")
         assert "cdn." not in (contents[0].text or "").lower()
+
+
+@pytest.mark.asyncio
+async def test_render_invocation_labels(apps_server: FastMCP) -> None:
+    async with Client(apps_server) as client:
+        tools = {t.name: t for t in await client.list_tools()}
+        for name in ("generate_uml", "generate_uml_image", "rerender_diagram"):
+            meta = tools[name].meta
+            assert meta["openai/toolInvocation/invoking"] == "Rendering diagram…"
+            assert meta["openai/toolInvocation"] == {
+                "invoking": "Rendering diagram…",
+                "invoked": "Diagram rendered",
+            }
+            assert meta["openai/toolInvocation/invoked"] == "Diagram rendered"
+
+
+@pytest.mark.asyncio
+async def test_production_discovery_identity(monkeypatch) -> None:
+    from mcp_core.core.config import MCP_SETTINGS
+    from mcp_core.core.server import create_mcp_server
+
+    monkeypatch.setattr("mcp_core.server.fastmcp_wrapper.FastMCP", FastMCP)
+    server = create_mcp_server()
+    async with Client(server) as client:
+        discovery = await client.session.send_discover("2026-07-28")
+        info = discovery["serverInfo"]
+        assert info["name"] == MCP_SETTINGS.server_name
+        assert info["version"] == MCP_SETTINGS.version
+        assert info["title"] == MCP_SETTINGS.display_name
+        assert info["description"] == MCP_SETTINGS.description
+        assert info["websiteUrl"] == "https://antoinebou12.github.io/uml-mcp/"
+        assert info["icons"][0]["sizes"] == ["any"]
+        assert info["icons"][0]["mimeType"] == "image/svg+xml"
+        assert UI_EXTENSION_ID in discovery["capabilities"]["extensions"]
+
+
+def test_app_view_domain_validation(monkeypatch) -> None:
+    monkeypatch.setenv("MCP_APP_DOMAIN", "https://uml-mcp.vercel.app")
+    assert diagram_viewer_domain() == "https://uml-mcp.vercel.app"
+    for invalid in (
+        "http://example.org", "https://example.org/mcp",
+        "https://user:pw@example.org", "not-a-domain",
+    ):
+        monkeypatch.setenv("MCP_APP_DOMAIN", invalid)
+        with pytest.raises(ValueError, match="one HTTPS origin"):
+            diagram_viewer_domain()
+
+
+def test_tool_result_schema_has_inline_limits() -> None:
+    from mcp_core.tools.schemas import DiagramResult
+
+    props = DiagramResult.model_json_schema()["properties"]
+    inline = props["content_base64"]
+    assert any(v.get("maxLength") == 48_000 for v in inline.get("anyOf", [inline]))
+    assert props["code"]["maxLength"] == 12_000

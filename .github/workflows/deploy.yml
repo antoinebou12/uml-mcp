@@ -1,6 +1,6 @@
-# Reusable: wait for the Vercel Git deployment, validate MCP 2026, then publish to Smithery.
+# Reusable: wait for the Vercel Git deployment, validate MCP 2026.
 
-name: Deploy (Vercel conformance + Smithery publish)
+name: Deploy (Vercel conformance)
 
 on:
   workflow_call:
@@ -10,15 +10,6 @@ on:
         required: false
         type: string
         default: "https://uml-mcp.vercel.app"
-      skip_smithery:
-        description: "Skip Smithery publish (smoke test only)"
-        required: false
-        type: boolean
-        default: false
-    secrets:
-      SMITHERY_API_KEY:
-        description: "Smithery API key for publish (--key)"
-        required: false
   workflow_dispatch:
     inputs:
       vercel_url:
@@ -26,14 +17,9 @@ on:
         required: false
         type: string
         default: "https://uml-mcp.vercel.app"
-      skip_smithery:
-        description: "Skip Smithery publish (smoke test only)"
-        required: false
-        type: boolean
-        default: true
 
 jobs:
-  test-and-publish:
+  test-deployment:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -90,17 +76,3 @@ jobs:
             --spec-version 2026-07-28 \
             --verbose
 
-      - name: Publish to Smithery
-        if: ${{ inputs.skip_smithery != true }}
-        env:
-          SMITHERY_API_KEY: ${{ secrets.SMITHERY_API_KEY }}
-        run: |
-          if [ -z "${SMITHERY_API_KEY}" ]; then
-            echo "SMITHERY_API_KEY is not configured; skipping Smithery publish."
-            exit 0
-          fi
-          npx -y @smithery/cli publish \
-            --name @antoinebou12/uml \
-            --url "${VERCEL_URL}/mcp" \
-            --config-schema smithery-config-schema.json \
-            --key "${SMITHERY_API_KEY}"

@@ -20,6 +20,52 @@ _registered_tools: dict[str, dict[str, Any]] = {}
 # included for clients that support ``image/svg+xml`` content blocks.
 IMAGE_CONTENT_MIMES = frozenset({"image/png", "image/jpeg", "image/svg+xml"})
 
+# The viewer's structured result and MCP ImageContent duplicate the image bytes.
+# Cap each representation so Claude/ChatGPT keep the initial tool result inline.
+MAX_VIEWER_BASE64_CHARS = 48_000
+MAX_VIEWER_SOURCE_CHARS = 12_000
+MAX_VIEWER_LINK_CHARS = 4_096
+_VIEWER_TOOL_NAMES = frozenset(
+    {"generate_uml", "generate_uml_image", "rerender_diagram"}
+)
+
+
+def _bounded_viewer_result(result: dict[str, Any]) -> dict[str, Any]:
+    """Prepare an intentionally small first Apps result, never truncate base64.
+
+    Render URLs and playgrounds remain usable for oversized diagrams. A plugin
+    without a public URL returns a clear note rather than a corrupt inline
+    image. This is a transport safeguard, not a rendering failure.
+    """
+    out = dict(result)
+    data = out.get("content_base64")
+    if isinstance(data, str) and len(data) > MAX_VIEWER_BASE64_CHARS:
+        out["content_base64"] = None
+        out["inline_omitted"] = True
+        out["inline_note"] = (
+            "Rendered image exceeds the 48,000-character inline preview limit. "
+            "Open the render URL if available, or render a smaller diagram."
+        )
+    code = out.get("code")
+    if isinstance(code, str) and len(code) > MAX_VIEWER_SOURCE_CHARS:
+        out["code"] = ""
+        out["source_omitted"] = True
+        out["inline_note"] = (
+            str(out.get("inline_note") or "") + " "
+            "Diagram source omitted from the initial response due to size; "
+            "viewer re-render requires a smaller source."
+        ).strip()
+    for key in ("url", "playground", "local_path", "display_markdown"):
+        value = out.get(key)
+        if isinstance(value, str) and len(value) > MAX_VIEWER_LINK_CHARS:
+            out[key] = None
+    # Rebuild chat markdown only from safe bounded links.
+    out.pop("display_markdown", None)
+    display = build_display_markdown(out)
+    if display and len(display) <= MAX_VIEWER_LINK_CHARS:
+        out["display_markdown"] = display
+    return out
+
 # Tool names that produce a rendered diagram result (used for the compact summary).
 _RENDER_TOOL_NAMES = frozenset({"generate_uml", "generate_uml_image"})
 
@@ -129,6 +175,9 @@ def _as_mcp_tool_result(tool_name: str, result: Any) -> Any:
         ) as exc:  # pragma: no cover - package is required in production
             raise RuntimeError(str(result["error"])) from exc
         raise ToolError(str(result["error"]))
+
+    if tool_name in _VIEWER_TOOL_NAMES:
+        result = _bounded_viewer_result(result)
 
     if tool_name in _RENDER_TOOL_NAMES and not result.get("display_markdown"):
         display = build_display_markdown(result)
@@ -302,6 +351,16 @@ def register_tools_with_server(server: Any) -> list[str]:
             tool_kwargs["output_schema"] = output_schema
         if ui_app is not None:
             tool_kwargs["app"] = ui_app
+            tool_kwargs["meta"] = {
+                # MCP/OpenAI descriptors use these flat keys.
+                "openai/toolInvocation/invoking": "Rendering diagram…",
+                "openai/toolInvocation/invoked": "Diagram rendered",
+                # Also support the platform checker expecting an object.
+                "openai/toolInvocation": {
+                    "invoking": "Rendering diagram…",
+                    "invoked": "Diagram rendered",
+                },
+            }
 
         try:
             dec = server_any.tool(**tool_kwargs)

@@ -9,7 +9,6 @@ on:
       - "app.py"
       - "api/**"
       - "server.py"
-      - "smithery.yaml"
       - "Dockerfile"
       - "pyproject.toml"
       - "requirements.txt"

@@ -1,5 +1,5 @@
 """
-Build MCP server card (tools, resources, prompts) for Smithery and static JSON.
+Build MCP server card (tools, resources, prompts) for static JSON.
 Used by ``python -m mcp_core.build_static_server_card`` and app.py.
 """
 
@@ -35,6 +35,10 @@ def build_server_card(*, strict: bool = False):
         from typing import Any
 
         from mcp_core.core.config import MCP_SETTINGS
+        from mcp_core.core.agent_discovery import (
+            DOCUMENTATION_SITE_URL,
+            PUBLIC_DEPLOYMENT_URL,
+        )
         from mcp_core.prompts.diagram_prompts import get_published_prompt_registry
         from mcp_core.resources.diagram_resources import get_resource_registry
         from mcp_core.tools import (
@@ -117,6 +121,16 @@ def build_server_card(*, strict: bool = False):
             "serverInfo": {
                 "name": MCP_SETTINGS.display_name,
                 "version": MCP_SETTINGS.version,
+                "title": MCP_SETTINGS.display_name,
+                "description": MCP_SETTINGS.description,
+                "websiteUrl": DOCUMENTATION_SITE_URL,
+                "icons": [
+                    {
+                        "src": f"{PUBLIC_DEPLOYMENT_URL}/favicon.svg",
+                        "mimeType": "image/svg+xml",
+                        "sizes": ["any"],
+                    }
+                ],
             },
             "tools": tools,
             "resources": resources,

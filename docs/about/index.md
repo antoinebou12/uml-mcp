@@ -44,7 +44,6 @@ And the MCP ecosystem:
 
 - [Model Context Protocol](https://modelcontextprotocol.io/): open standard this server speaks.
 - [FastMCP](https://gofastmcp.com/): Python MCP server framework.
-- [Smithery](https://smithery.ai/): MCP server registry.
 - [Vercel](https://vercel.com/): hosts the public deployment.
 
 ## Maintainers
@@ -56,4 +55,3 @@ And the MCP ecosystem:
 - Issues / feature requests: [GitHub Issues](https://github.com/antoinebou12/uml-mcp/issues).
 - Security: [`SECURITY.md`](https://github.com/antoinebou12/uml-mcp/blob/main/SECURITY.md).
 - Live deployment: [https://uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp).
-- Smithery listing: [smithery.ai/server/@antoinebou12/uml](https://smithery.ai/server/@antoinebou12/uml).
