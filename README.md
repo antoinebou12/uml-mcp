@@ -15,8 +15,6 @@
 [![MCP](https://img.shields.io/badge/MCP-Model%20Context%20Protocol-purple)](https://modelcontextprotocol.io/)
 [![Hosted](https://img.shields.io/badge/hosted-Vercel-black)](https://uml-mcp.vercel.app/mcp)
 [![MseeP.ai Security Assessment](https://img.shields.io/badge/MseeP.ai-Security%20Assessment-green)](https://mseep.ai/app/antoinebou12-uml-mcp)
-[![Lulu MCPs](https://getlulu.dev/api/mcps/badge/uml-mcp)](https://getlulu.dev/mcps/uml-mcp)
-[![smithery badge](https://smithery.ai/badge/antoinebou12/uml)](https://smithery.ai/servers/antoinebou12/uml)
 
 **UML-MCP gives an AI assistant a real diagram tool instead of asking it to fake diagrams in Markdown.** Connect it once over [MCP](https://modelcontextprotocol.io/), then ask for a class diagram, sequence diagram, architecture view, Mermaid flowchart, D2 graph, BPMN process, or another Kroki-backed format. The server validates the source, renders it, and returns a URL, playground link, or inline image.
 
