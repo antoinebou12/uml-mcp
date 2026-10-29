@@ -25,6 +25,8 @@ Priorities: **P1** next release · **P2** soon · **P3** nice to have. Size: S <
 | 19 | [Structured progress (JSON trailer / SEP-2632)](done/2026-10-mcp-structured-progress.md) | P3 | S | done (interim) |
 | 20 | [ChatGPT app submission (bundle, domain challenge, viewer)](in-progress/P1-chatgpt-app-submission.md) | P1 | M | in progress |
 
+| 21 | [Diagram platform roadmap](backlog/P2-diagram-platform.md) | P2 | L | backlog; implementation requires audit |
+
 Shipped: see [`done/`](done/).
 
 ### MCP protocol notes (2026-07-28 + draft SEPs)

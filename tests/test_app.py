@@ -352,4 +352,7 @@ def test_browser_mcp_setup_and_manifest():
         for path in ("/mcp.json", "/.well-known/mcp.json"):
             response = client.get(path)
             assert response.status_code == 200
-            assert response.json()["mcpServers"]["uml-mcp"]["url"] == "http://testserver/mcp"
+            assert (
+                response.json()["mcpServers"]["uml-mcp"]["url"]
+                == "http://testserver/mcp"
+            )

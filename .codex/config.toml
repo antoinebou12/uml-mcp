@@ -1,2 +1,3 @@
 [mcp_servers.uml-mcp]
 url = "https://uml-mcp.vercel.app/mcp"
+tool_timeout_sec = 120

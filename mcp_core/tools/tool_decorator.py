@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import inspect
+import json
 import logging
 from collections.abc import Callable
 from functools import wraps
@@ -40,12 +41,21 @@ def _bounded_viewer_result(result: dict[str, Any]) -> dict[str, Any]:
     out = dict(result)
     data = out.get("content_base64")
     if isinstance(data, str) and len(data) > MAX_VIEWER_BASE64_CHARS:
-        out["content_base64"] = None
-        out["inline_omitted"] = True
-        out["inline_note"] = (
-            "Rendered image exceeds the 48,000-character inline preview limit. "
-            "Open the render URL if available, or render a smaller diagram."
+        from mcp_core.apps.preview import compact_preview
+
+        preview = compact_preview(
+            data, str(out.get("mime_type") or ""), MAX_VIEWER_BASE64_CHARS
         )
+        out["content_base64"] = preview
+        if preview:
+            out["mime_type"] = "image/png"
+            out["preview_resized"] = True
+            out["inline_note"] = "Showing a compact PNG preview."
+        else:
+            out["inline_omitted"] = True
+            out["inline_note"] = (
+                "Inline preview unavailable. Open the render link when available."
+            )
     code = out.get("code")
     if isinstance(code, str) and len(code) > MAX_VIEWER_SOURCE_CHARS:
         out["code"] = ""
@@ -64,7 +74,16 @@ def _bounded_viewer_result(result: dict[str, Any]) -> dict[str, Any]:
     display = build_display_markdown(out)
     if display and len(display) <= MAX_VIEWER_LINK_CHARS:
         out["display_markdown"] = display
+    # Diagnostics and escaped Unicode source also count toward the transport
+    # budget. Reserve room for the summary, image block and protocol envelope.
+    for key, value in list(out.items()):
+        if key not in {"code", "content_base64"} and len(json.dumps(value)) > 4096:
+            out.pop(key)
+    if len(json.dumps(out)) + len(out.get("content_base64") or "") > 125_000:
+        out["code"] = ""
+        out["source_omitted"] = True
     return out
+
 
 # Tool names that produce a rendered diagram result (used for the compact summary).
 _RENDER_TOOL_NAMES = frozenset({"generate_uml", "generate_uml_image"})

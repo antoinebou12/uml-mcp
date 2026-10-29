@@ -29,6 +29,7 @@
     "FASTMCP_STATELESS_HTTP": "true",
     "MCP_URL_ONLY": "true",
     "MCP_MEMORY_ONLY": "true",
-    "MCP_DIAGRAM_FALLBACK": "true"
+    "MCP_DIAGRAM_FALLBACK": "true",
+    "UML_MCP_CONFIG": "uml-mcp.vercel.yaml"
   }
 }

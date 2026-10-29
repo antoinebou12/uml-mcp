@@ -70,7 +70,7 @@ environment rather than in git.
 (`ui://uml-mcp/diagram-viewer`). Its resource declares the widget domain
 (`https://uml-mcp.antoineboucher.info` by default, `MCP_APP_DOMAIN` to override),
 an empty `connectDomains` CSP and a standard resource `description` (MCP Apps v2;
-see [Manufact compatibility](../plans/MANUFACT_MCP_COMPATIBILITY.md)). The
+see [Manufact compatibility](manufact-compatibility.md)). The
 viewer offers zoom, pan, fit, per-type theme and format pickers that re-render
 through the app-only `rerender_diagram` tool, copyable links and source, and
 fullscreen when the host allows it.

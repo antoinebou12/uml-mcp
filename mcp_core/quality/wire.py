@@ -420,9 +420,13 @@ def lint_server(s: Surface) -> list[LintIssue]:
 
 
 def token_estimate(s: Surface) -> int:
-    """~4 characters per token over everything a client loads at connect time."""
+    """~4 characters per token for the model-visible discovery surface."""
     payload = {
-        "tools": s.tools,
+        "tools": [
+            t
+            for t in s.tools
+            if t.get("_meta", {}).get("ui", {}).get("visibility") != ["app"]
+        ],
         "resources": s.resources,
         "resourceTemplates": s.resource_templates,
         "prompts": s.prompts,

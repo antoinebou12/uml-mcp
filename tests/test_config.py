@@ -41,7 +41,8 @@ class TestMCPSettingsDefaults:
         assert settings.server_name == "uml_mcp"
         assert settings.display_name == "UML Diagram Generator"
         assert settings.version == "1.4.0"
-        assert settings.description == "Generate UML and other diagrams through MCP"
+        assert "Create and validate UML" in settings.description
+        assert "playground links" in settings.description
 
     @patch.dict(os.environ, {}, clear=False)
     def test_default_output_dir_contains_output(self):

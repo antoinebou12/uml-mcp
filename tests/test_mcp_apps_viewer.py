@@ -181,7 +181,7 @@ async def test_production_discovery_identity(monkeypatch) -> None:
     server = create_mcp_server()
     async with Client(server) as client:
         discovery = await client.session.send_discover("2026-07-28")
-        info = discovery["serverInfo"]
+        info = discovery["_meta"]["io.modelcontextprotocol/serverInfo"]
         assert info["name"] == MCP_SETTINGS.server_name
         assert info["version"] == MCP_SETTINGS.version
         assert info["title"] == MCP_SETTINGS.display_name

@@ -229,7 +229,6 @@ class TestChatCriticalToolOrder:
         assert len(image_desc) < 280
 
 
-
 class TestBoundedMcpAppResults:
     def test_large_image_and_source_become_compact_first_result(self):
         from mcp_core.tools.tool_decorator import _bounded_viewer_result
@@ -247,7 +246,7 @@ class TestBoundedMcpAppResults:
         assert result["inline_omitted"] is True
         assert result["code"] == ""
         assert result["source_omitted"] is True
-        assert "inline" in result["inline_note"]
+        assert "inline" in result["inline_note"].lower()
         assert "https://example.com/render.png" in result["display_markdown"]
         assert len(original["content_base64"]) == 200_000
         assert len(original["code"]) == 100_000
@@ -255,11 +254,13 @@ class TestBoundedMcpAppResults:
     def test_small_inline_result_preserved(self):
         from mcp_core.tools.tool_decorator import _bounded_viewer_result
 
-        result = _bounded_viewer_result({
-            "code": "graph TD; A-->B",
-            "content_base64": "c21hbGw=",
-            "mime_type": "image/png",
-        })
+        result = _bounded_viewer_result(
+            {
+                "code": "graph TD; A-->B",
+                "content_base64": "c21hbGw=",
+                "mime_type": "image/png",
+            }
+        )
         assert result["content_base64"] == "c21hbGw="
         assert result["code"] == "graph TD; A-->B"
         assert not result.get("inline_omitted")
@@ -267,10 +268,12 @@ class TestBoundedMcpAppResults:
     def test_large_url_not_repeated_in_markdown(self):
         from mcp_core.tools.tool_decorator import _bounded_viewer_result
 
-        result = _bounded_viewer_result({
-            "code": "A",
-            "url": "https://example.com/" + "a" * 10000,
-            "display_markdown": "x" * 100_000,
-        })
+        result = _bounded_viewer_result(
+            {
+                "code": "A",
+                "url": "https://example.com/" + "a" * 10000,
+                "display_markdown": "x" * 100_000,
+            }
+        )
         assert result["url"] is None
         assert result.get("display_markdown") is None

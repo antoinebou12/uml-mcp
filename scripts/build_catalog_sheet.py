@@ -34,11 +34,14 @@ def _content_bbox(img: Image.Image, threshold: int = 250) -> tuple[int, int, int
     """Tight bbox of non-near-white opaque pixels (left, top, right, bottom)."""
     rgba = img.convert("RGBA")
     pixels = rgba.load()
+    assert pixels is not None
     width, height = rgba.size
     min_x, min_y, max_x, max_y = width, height, -1, -1
     for y in range(height):
         for x in range(width):
-            r, g, b, a = pixels[x, y]
+            pixel = pixels[x, y]
+            assert isinstance(pixel, tuple)
+            r, g, b, a = pixel
             if a > 10 and (r < threshold or g < threshold or b < threshold):
                 min_x = min(min_x, x)
                 min_y = min(min_y, y)

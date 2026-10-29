@@ -1,6 +1,9 @@
 # Large or unused assets (stay under 250 MB bundle limit)
 public/ressources/
-examples/
+examples/*
+!examples/plugins/
+examples/plugins/*
+!examples/plugins/uml-mcp-plugin-d3/
 docs/
 tests/
 .github/
@@ -40,3 +43,7 @@ __pycache__/
 *.egg-info/
 *.egg
 .plan/
+
+**/node_modules/
+.cache/
+.pytest-full*.log

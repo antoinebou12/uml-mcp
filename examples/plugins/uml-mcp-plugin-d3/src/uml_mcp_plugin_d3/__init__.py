@@ -47,7 +47,16 @@ class D3Renderer:
     name = "d3"
 
     #: Interaction modes available for D3 diagram types in the unified viewer.
-    _D3_FEATURES: tuple[str, ...] = ("zoom", "pan", "fit", "reset", "drag", "inspect", "story", "overlays")
+    _D3_FEATURES: tuple[str, ...] = (
+        "zoom",
+        "pan",
+        "fit",
+        "reset",
+        "drag",
+        "inspect",
+        "story",
+        "overlays",
+    )
     _ARCH_FEATURES: tuple[str, ...] = _D3_FEATURES + ("drilldown", "trace")
 
     def __init__(self) -> None:

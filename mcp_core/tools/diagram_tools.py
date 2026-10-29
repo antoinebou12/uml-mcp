@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any
+from typing import Any, cast
 
 from pydantic import ValidationError
 
@@ -339,7 +339,7 @@ def generate_uml(
         isinstance(theme_resolved, dict) and theme_resolved.get("error")
     ):
         return theme_resolved
-    theme = theme_resolved  # type: ignore[assignment]
+    theme = cast(str | None, theme_resolved)
 
     fmt = (output_format or "svg").strip().lower()
     # Raster formats: fetch bytes even under MCP_URL_ONLY so chat clients get ImageContent.
@@ -359,10 +359,9 @@ def generate_uml(
 
 @mcp_tool(
     description=(
-        "Render a diagram as MCP ImageContent for chat. Returns content_base64 and "
-        "mime_type for image bytes, url and playground links, and display_markdown. "
-        "Use when the user asks to show or display the diagram. Fetches bytes even under URL-only. "
-        "MCP Apps hosts may open the linked diagram viewer."
+        "Render a diagram as MCP ImageContent for chat with a bounded inline preview. "
+        "Returns content_base64, mime_type, render and playground links. "
+        "Fetches bytes even under URL-only. Large images use a PNG thumbnail in MCP Apps."
     ),
     category="uml",
     example="generate_uml_image('mermaid', 'graph TD; A-->B;', 'png')",
@@ -405,7 +404,7 @@ def generate_uml_image(
         isinstance(theme_resolved, dict) and theme_resolved.get("error")
     ):
         return theme_resolved
-    theme = theme_resolved  # type: ignore[assignment]
+    theme = cast(str | None, theme_resolved)
 
     return generate_from_request(
         DiagramRequest(
@@ -428,7 +427,11 @@ def generate_uml_image(
     ),
     category="uml",
     example="rerender_diagram('mermaid', 'graph TD; A-->B;', 'png', 'forest')",
-    annotations={**ANNOTATIONS_DIAGRAM, "title": "Re-render Diagram"},
+    annotations={
+        **ANNOTATIONS_DIAGRAM,
+        "readOnlyHint": True,
+        "title": "Re-render Diagram",
+    },
     output_schema=DiagramResult,
     app=_DIAGRAM_VIEWER_APP_ONLY,
     lint_ignore={
@@ -471,7 +474,7 @@ def rerender_diagram(
         isinstance(theme_resolved, dict) and theme_resolved.get("error")
     ):
         return theme_resolved
-    theme = theme_resolved  # type: ignore[assignment]
+    theme = cast(str | None, theme_resolved)
 
     out = generate_from_request(
         DiagramRequest(

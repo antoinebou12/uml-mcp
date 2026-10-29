@@ -263,21 +263,23 @@ def validate_source_ref_paths(
     ]
     for loc, ref in all_refs:
         if ref.path and ref.path not in existing_paths:
-            problems.append(f"{loc}.path {ref.path!r}: does not exist at pinned revision")
+            problems.append(
+                f"{loc}.path {ref.path!r}: does not exist at pinned revision"
+            )
     return problems
 
 
 __all__ = [
-    "MAX_NODES",
     "MAX_EDGES",
     "MAX_GROUPS",
-    "InterchangeError",
-    "SourceRef",
-    "NodeViewState",
-    "GraphViewState",
-    "GraphNode",
+    "MAX_NODES",
     "GraphEdge",
     "GraphGroup",
+    "GraphNode",
+    "GraphViewState",
+    "InterchangeError",
     "InterchangeGraph",
+    "NodeViewState",
+    "SourceRef",
     "validate_source_ref_paths",
 ]

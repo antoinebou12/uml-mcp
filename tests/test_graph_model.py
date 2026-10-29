@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 
 from mcp_core.core.graph_model import (
@@ -19,15 +21,15 @@ from mcp_core.core.graph_model import (
 
 # ---------------------------------------------------------------- helpers
 def _minimal_graph(**kwargs) -> InterchangeGraph:
-    defaults = dict(
-        title="test",
-        nodes=[GraphNode(id="n1", label="Node 1")],
-        edges=[],
-        groups=[],
-        flows=[],
-        view_state=GraphViewState(),
-        source_type="test",
-    )
+    defaults: dict[str, Any] = {
+        "title": "test",
+        "nodes": [GraphNode(id="n1", label="Node 1")],
+        "edges": [],
+        "groups": [],
+        "flows": [],
+        "view_state": GraphViewState(),
+        "source_type": "test",
+    }
     defaults.update(kwargs)
     return InterchangeGraph(**defaults)
 
@@ -95,7 +97,9 @@ def test_cap_edges():
     from mcp_core.core.graph_model import MAX_EDGES
 
     nodes = [GraphNode(id="a", label="A"), GraphNode(id="b", label="B")]
-    edges = [GraphEdge(id=f"e{i}", source="a", target="b") for i in range(MAX_EDGES + 1)]
+    edges = [
+        GraphEdge(id=f"e{i}", source="a", target="b") for i in range(MAX_EDGES + 1)
+    ]
     with pytest.raises(InterchangeError, match="edges: at most"):
         # Duplicates will also trigger; test cap first
         _minimal_graph(nodes=nodes, edges=edges).validate()
@@ -199,7 +203,9 @@ def test_validate_source_ref_paths_missing():
 # ---------------------------------------------------------------- view state separation
 def test_view_state_separate_from_model():
     """Moving a node in the view must not affect the graph structure."""
-    node = GraphNode(id="n1", label="N1", view_state=NodeViewState(x=100.0, y=200.0, pinned=True))
+    node = GraphNode(
+        id="n1", label="N1", view_state=NodeViewState(x=100.0, y=200.0, pinned=True)
+    )
     g = _minimal_graph(nodes=[node])
     g.validate()
     # Modifying view_state is allowed; it does not touch canonical fields

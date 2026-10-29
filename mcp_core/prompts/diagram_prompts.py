@@ -97,7 +97,9 @@ Theme: pass `theme` on generate_uml when the page is light/dark/B&W — use the 
 
     if "diagram_type" in context:
         diagram_type = context["diagram_type"]
-        prompt += f'\nTarget: set diagram_type to "{diagram_type}" exactly on generate_uml.\n'
+        prompt += (
+            f'\nTarget: set diagram_type to "{diagram_type}" exactly on generate_uml.\n'
+        )
 
     return prompt + _layout_overlap_appendix()
 
@@ -843,9 +845,7 @@ On a **black** canvas prefer light fills (`#eee8d5`) and dark strokes (`#33322E`
             listed = ", ".join(f"`{t}`" for t in picks)
             prompt += f"Default `theme`: **`{default}`**. Also good: {listed}.\n"
         else:
-            prompt += (
-                "This backend has no MCP `theme`; follow the Styling section of its skill.\n"
-            )
+            prompt += "This backend has no MCP `theme`; follow the Styling section of its skill.\n"
     else:
         prompt += (
             f"\nActive background mode: **{background}**. "

@@ -672,7 +672,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       img.addEventListener("load", autoFit);
       img.src = "data:" + (mime || "image/png") + ";base64," + b64;
       mount(img);
-      setStatus("Diagram ready", "ok");
+      setStatus(data.preview_resized ? "Compact preview" : "Diagram ready", "ok");
       showLinks(data);
       applyZoom();
       return;
@@ -688,7 +688,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       if (clean) {
         FRAME.innerHTML = clean;
         TOOLBAR.hidden = false;
-        setStatus("Diagram ready", "ok");
+        setStatus(data.preview_resized ? "Compact preview" : "Diagram ready", "ok");
         showLinks(data);
         autoFit();
         return;

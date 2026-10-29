@@ -8,7 +8,9 @@ from tools.kroki.kroki_templates import DiagramExamples, DiagramTemplates
 
 
 def _class_panel(uxf: str) -> str:
-    match = re.search(r"<panel_attributes>(.*?)</panel_attributes>", uxf, flags=re.DOTALL)
+    match = re.search(
+        r"<panel_attributes>(.*?)</panel_attributes>", uxf, flags=re.DOTALL
+    )
     assert match, "umlet UXF missing panel_attributes"
     return match.group(1)
 
