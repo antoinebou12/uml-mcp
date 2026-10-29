@@ -9,8 +9,8 @@ holds. The iframe never calls Kroki; re-render goes through the host as
 
 from __future__ import annotations
 
-from typing import Any
 import os
+from typing import Any
 from urllib.parse import urlsplit
 
 DIAGRAM_VIEWER_URI = "ui://uml-mcp/diagram-viewer"
