@@ -200,10 +200,44 @@ def test_app_view_domain_validation(monkeypatch) -> None:
         "https://example.org/mcp",
         "https://user:pw@example.org",
         "not-a-domain",
+        "https://example.org:abc",
+        "https://example.org:65536",
+        "https://example.org:0",
+        "https://example.org:",
+        "https://[invalid",
+        "https://exa mple.org",
+        "https://exam\tple.org",
+        "https://bad<host>",
+        "https://-invalid.example",
+        "https://example.org?",
+        "https://example.org#",
+        "https://example.org//",
     ):
         monkeypatch.setenv("MCP_APP_DOMAIN", invalid)
         with pytest.raises(ValueError, match="one HTTPS origin"):
             diagram_viewer_domain()
+
+
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "https://uml-mcp.vercel.app",
+        "https://fast-steel-xf470.run.mcp-use.com",
+        "https://example.org:8443",
+        "https://[::1]:8443",
+    ],
+)
+@pytest.mark.asyncio
+async def test_configured_origin_reaches_resource_wire_metadata(monkeypatch, origin):
+    monkeypatch.setenv("MCP_APP_DOMAIN", origin)
+    server = FastMCP("origin-test")
+    register_diagram_viewer(server)
+    async with Client(server) as client:
+        resources = await client.list_resources()
+        resource = next(r for r in resources if str(r.uri) == DIAGRAM_VIEWER_URI)
+        assert resource.meta["ui"]["domain"] == origin
+        assert resource.description == DIAGRAM_VIEWER_DESCRIPTION
+        assert resource.mime_type == UI_MIME_TYPE
 
 
 def test_tool_result_schema_has_inline_limits() -> None:

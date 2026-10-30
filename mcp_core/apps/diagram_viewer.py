@@ -12,6 +12,8 @@ from __future__ import annotations
 import json
 import logging
 import os
+import re
+from ipaddress import ip_address
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -31,8 +33,28 @@ _DEFAULT_APP_DOMAIN = "https://uml-mcp.antoineboucher.info"
 
 def diagram_viewer_domain() -> str:
     """Validate the dedicated iframe origin (no URL path or credentials)."""
-    domain = os.environ.get("MCP_APP_DOMAIN", _DEFAULT_APP_DOMAIN).strip().rstrip("/")
-    parsed = urlsplit(domain)
+    domain = (
+        os.environ.get("MCP_APP_DOMAIN", _DEFAULT_APP_DOMAIN).strip().removesuffix("/")
+    )
+    message = "MCP_APP_DOMAIN must be one HTTPS origin with a valid host and optional port, without credentials, a path, query or fragment"
+    try:
+        parsed = urlsplit(domain)
+        port = parsed.port
+        host = (parsed.hostname or "").encode("idna").decode("ascii")
+    except ValueError:
+        raise ValueError(message) from None
+    try:
+        ip_address(host)
+        valid_host = True
+    except ValueError:
+        valid_host = (
+            bool(host)
+            and len(host) <= 253
+            and all(
+                re.fullmatch(r"[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?", label)
+                for label in host.split(".")
+            )
+        )
     if (
         parsed.scheme != "https"
         or not parsed.netloc
@@ -42,8 +64,15 @@ def diagram_viewer_domain() -> str:
         or parsed.path
         or parsed.query
         or parsed.fragment
+        or any(c.isspace() or ord(c) < 32 or ord(c) == 127 for c in domain)
+        or "\\" in domain
+        or "?" in domain
+        or "#" in domain
+        or parsed.netloc.endswith(":")
+        or port == 0
+        or not valid_host
     ):
-        raise ValueError("MCP_APP_DOMAIN must be one HTTPS origin without a path")
+        raise ValueError(message)
     return domain
 
 
