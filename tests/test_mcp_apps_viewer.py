@@ -117,7 +117,7 @@ async def test_discover_advertises_ui_extension(apps_server: FastMCP) -> None:
 async def test_render_tools_link_viewer_in_meta(apps_server: FastMCP) -> None:
     async with Client(apps_server, timeout=10) as client:
         tools = {t.name: t for t in await client.list_tools()}
-        for name in ("generate_uml", "generate_uml_image"):
+        for name in ("generate_uml", "generate_uml_image", "generate_uml_batch"):
             tool = tools[name]
             meta = tool.meta or {}
             ui = meta.get("ui") or {}
@@ -128,8 +128,9 @@ async def test_render_tools_link_viewer_in_meta(apps_server: FastMCP) -> None:
         rerender_ui = (tools["rerender_diagram"].meta or {}).get("ui") or {}
         assert rerender_ui.get("resourceUri") == DIAGRAM_VIEWER_URI
         assert rerender_ui.get("visibility") == ["app"]
-        # Other workflow tools stay without Apps meta.
-        for name in ("validate_uml", "list_diagram_types", "generate_uml_batch"):
+        # Checks and catalog lookups stay without Apps meta (no widget per call);
+        # the viewer still calls validate_uml itself from the Source tab.
+        for name in ("validate_uml", "list_diagram_types"):
             meta = (tools[name].meta or {}) if name in tools else {}
             assert "ui" not in meta or not (meta.get("ui") or {}).get("resourceUri")
 
@@ -170,6 +171,10 @@ async def test_render_invocation_labels(apps_server: FastMCP) -> None:
                 "invoked": "Diagram rendered",
             }
             assert meta["openai/toolInvocation/invoked"] == "Diagram rendered"
+        assert tools["generate_uml_batch"].meta["openai/toolInvocation"] == {
+            "invoking": "Rendering diagrams…",
+            "invoked": "Diagrams rendered",
+        }
 
 
 @pytest.mark.asyncio
