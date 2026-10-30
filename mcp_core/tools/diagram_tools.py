@@ -210,6 +210,7 @@ def _render_batch_item(
     ),
     annotations={**ANNOTATIONS_DIAGRAM, "title": "Generate Diagram Batch"},
     output_schema=BatchDiagramResult,
+    app=_DIAGRAM_VIEWER_APP,
 )
 def generate_uml_batch(
     items: list[dict[str, Any]],

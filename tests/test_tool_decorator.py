@@ -277,3 +277,75 @@ class TestBoundedMcpAppResults:
         )
         assert result["url"] is None
         assert result.get("display_markdown") is None
+
+
+class TestBoundedBatchResults:
+    def test_batch_budget_includes_escaped_source_and_diagnostics(self):
+        import json
+
+        from mcp_core.tools.tool_decorator import _bounded_batch_result
+
+        rows = [
+            {
+                "index": i,
+                "code": "\u263a" * 12_000,
+                "content_base64": "A" * 24_000,
+                "error": "x" * 200_000,
+                "url": "https://example.com/" + "a" * 3900,
+            }
+            for i in range(20)
+        ]
+        result = _bounded_batch_result({"results": rows})
+        assert len(json.dumps(result)) <= 125_000
+        assert len(result["results"]) == 20
+        assert rows[0]["error"] == "x" * 200_000
+
+    def test_batch_shares_one_inline_budget_in_order(self):
+        from mcp_core.tools.tool_decorator import (
+            MAX_VIEWER_BASE64_CHARS,
+            _bounded_batch_result,
+        )
+
+        half = "A" * (MAX_VIEWER_BASE64_CHARS // 2 + 1)
+        rows = [
+            {"index": i, "code": f"graph TD; N{i}", "content_base64": half}
+            for i in range(3)
+        ]
+        result = _bounded_batch_result({"results": rows})
+        out = result["results"]
+        assert out[0]["content_base64"] == half
+        # The second no longer fits; it loads on demand instead of being cut.
+        assert out[1]["content_base64"] is None
+        assert out[2]["content_base64"] is None
+        assert "on demand" in out[1]["inline_note"] or "opened" in out[1]["inline_note"]
+        assert not out[1].get("inline_omitted")
+        assert [r["code"] for r in out] == [r["code"] for r in rows]
+        assert rows[1]["content_base64"] == half  # input untouched
+
+    def test_batch_bounds_source_links_and_errors(self):
+        from mcp_core.tools.tool_decorator import (
+            MAX_VIEWER_SOURCE_CHARS,
+            _bounded_batch_result,
+        )
+
+        rows = [
+            {"index": 0, "code": "x" * (MAX_VIEWER_SOURCE_CHARS + 1)},
+            {
+                "index": 1,
+                "success": False,
+                "error": "bad",
+                "url": "https://e/" + "a" * 5000,
+            },
+            "not-a-dict",
+        ]
+        out = _bounded_batch_result({"results": rows})["results"]
+        assert out[0]["code"] is None and out[0]["source_omitted"] is True
+        assert out[1]["error"] == "bad" and out[1]["url"] is None
+        assert out[2] == "not-a-dict"
+
+    def test_non_batch_payload_passes_through(self):
+        from mcp_core.tools.tool_decorator import _bounded_batch_result
+
+        assert _bounded_batch_result({"error": "items must not be empty"}) == {
+            "error": "items must not be empty"
+        }

@@ -66,7 +66,7 @@ environment rather than in git.
 
 ## Diagram viewer
 
-`generate_uml` and `generate_uml_image` link the sandboxed MCP Apps viewer
+`generate_uml`, `generate_uml_image`, and `generate_uml_batch` link the sandboxed MCP Apps viewer
 (`ui://uml-mcp/diagram-viewer`). Its resource declares the widget domain
 (`https://uml-mcp.antoineboucher.info` by default, `MCP_APP_DOMAIN` to override),
 an empty `connectDomains` CSP and a standard resource `description` (MCP Apps v2;
@@ -74,3 +74,13 @@ see [Manufact compatibility](manufact-compatibility.md)). The
 viewer offers zoom, pan, fit, per-type theme and format pickers that re-render
 through the app-only `rerender_diagram` tool, copyable links and source, and
 fullscreen when the host allows it.
+
+Batch results appear in a gallery, including failed items and links whose previews
+load when selected. The server shares a bounded inline-image budget across the
+batch. PDF results remain links; text diagrams display as text.
+
+The Source tab lets you edit, check syntax, and render again with Ctrl+Enter.
+Validation messages link to the affected line. Failed renders offer edit and retry
+actions, plus an assistant repair request when the host supports messages.
+Hosts without tool-call support keep source read-only and expose available links.
+Arrow keys, Home, and End navigate the view tabs and batch gallery.

@@ -85,6 +85,77 @@ def _bounded_viewer_result(result: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
+def _bounded_batch_result(result: dict[str, Any]) -> dict[str, Any]:
+    """Share one inline budget across a batch shown in the viewer gallery.
+
+    Items keep their bytes in order while the total fits the single-result
+    budget; later ones drop to links, and the viewer fetches their preview on
+    demand through ``rerender_diagram``. Source echo is bounded the same way.
+    """
+    rows = result.get("results")
+    if not isinstance(rows, list):
+        return result
+    image_budget = MAX_VIEWER_BASE64_CHARS
+    source_budget = MAX_VIEWER_SOURCE_CHARS * 2
+    bounded: list[Any] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            bounded.append(row)
+            continue
+        item = dict(row)
+        data = item.get("content_base64")
+        if isinstance(data, str) and data:
+            if len(data) <= image_budget:
+                image_budget -= len(data)
+            else:
+                # Not "inline_omitted": the image is fine, it just loads on demand.
+                item["content_base64"] = None
+                item["inline_note"] = "Preview loads when this diagram is opened."
+        code = item.get("code")
+        if isinstance(code, str) and code:
+            if len(code) <= min(source_budget, MAX_VIEWER_SOURCE_CHARS):
+                source_budget -= len(code)
+            else:
+                item["code"] = None
+                item["source_omitted"] = True
+        for key in ("url", "playground", "local_path"):
+            value = item.get(key)
+            if isinstance(value, str) and len(value) > MAX_VIEWER_LINK_CHARS:
+                item[key] = None
+        item.pop("display_markdown", None)
+        # Renderer diagnostics must not bypass the batch preview budget.
+        for key, value in list(item.items()):
+            if key not in {"code", "content_base64"} and len(json.dumps(value)) > 4096:
+                item[key] = value[:1000] if isinstance(value, str) else None
+        bounded.append(item)
+    out = {**result, "results": bounded}
+    # Escaped Unicode and per-item links also contribute to the whole result.
+    for item in reversed(bounded):
+        if len(json.dumps(out)) <= 125_000:
+            break
+        if isinstance(item, dict):
+            for key in (
+                "code",
+                "content_base64",
+                "url",
+                "playground",
+                "local_path",
+                "attempts",
+            ):
+                item[key] = None
+            item["source_omitted"] = True
+            item["inline_note"] = (
+                "Preview details omitted to keep the batch response small."
+            )
+    return out
+
+
+#: Status labels hosts show while a viewer-linked tool runs.
+_INVOCATION_LABELS = {
+    "generate_uml_batch": ("Rendering diagrams…", "Diagrams rendered"),
+}
+_DEFAULT_INVOCATION_LABELS = ("Rendering diagram…", "Diagram rendered")
+
 # Tool names that produce a rendered diagram result (used for the compact summary).
 _RENDER_TOOL_NAMES = frozenset({"generate_uml", "generate_uml_image"})
 
@@ -197,6 +268,8 @@ def _as_mcp_tool_result(tool_name: str, result: Any) -> Any:
 
     if tool_name in _VIEWER_TOOL_NAMES:
         result = _bounded_viewer_result(result)
+    elif tool_name == "generate_uml_batch":
+        result = _bounded_batch_result(result)
 
     if tool_name in _RENDER_TOOL_NAMES and not result.get("display_markdown"):
         display = build_display_markdown(result)
@@ -370,15 +443,15 @@ def register_tools_with_server(server: Any) -> list[str]:
             tool_kwargs["output_schema"] = output_schema
         if ui_app is not None:
             tool_kwargs["app"] = ui_app
+            invoking, invoked = _INVOCATION_LABELS.get(
+                tool_name, _DEFAULT_INVOCATION_LABELS
+            )
             tool_kwargs["meta"] = {
                 # MCP/OpenAI descriptors use these flat keys.
-                "openai/toolInvocation/invoking": "Rendering diagram…",
-                "openai/toolInvocation/invoked": "Diagram rendered",
+                "openai/toolInvocation/invoking": invoking,
+                "openai/toolInvocation/invoked": invoked,
                 # Also support the platform checker expecting an object.
-                "openai/toolInvocation": {
-                    "invoking": "Rendering diagram…",
-                    "invoked": "Diagram rendered",
-                },
+                "openai/toolInvocation": {"invoking": invoking, "invoked": invoked},
             }
 
         try:
