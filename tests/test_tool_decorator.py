@@ -280,6 +280,26 @@ class TestBoundedMcpAppResults:
 
 
 class TestBoundedBatchResults:
+    def test_batch_budget_includes_escaped_source_and_diagnostics(self):
+        import json
+
+        from mcp_core.tools.tool_decorator import _bounded_batch_result
+
+        rows = [
+            {
+                "index": i,
+                "code": "\u263a" * 12_000,
+                "content_base64": "A" * 24_000,
+                "error": "x" * 200_000,
+                "url": "https://example.com/" + "a" * 3900,
+            }
+            for i in range(20)
+        ]
+        result = _bounded_batch_result({"results": rows})
+        assert len(json.dumps(result)) <= 125_000
+        assert len(result["results"]) == 20
+        assert rows[0]["error"] == "x" * 200_000
+
     def test_batch_shares_one_inline_budget_in_order(self):
         from mcp_core.tools.tool_decorator import (
             MAX_VIEWER_BASE64_CHARS,

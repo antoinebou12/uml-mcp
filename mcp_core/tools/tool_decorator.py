@@ -123,8 +123,31 @@ def _bounded_batch_result(result: dict[str, Any]) -> dict[str, Any]:
             if isinstance(value, str) and len(value) > MAX_VIEWER_LINK_CHARS:
                 item[key] = None
         item.pop("display_markdown", None)
+        # Renderer diagnostics must not bypass the batch preview budget.
+        for key, value in list(item.items()):
+            if key not in {"code", "content_base64"} and len(json.dumps(value)) > 4096:
+                item[key] = value[:1000] if isinstance(value, str) else None
         bounded.append(item)
-    return {**result, "results": bounded}
+    out = {**result, "results": bounded}
+    # Escaped Unicode and per-item links also contribute to the whole result.
+    for item in reversed(bounded):
+        if len(json.dumps(out)) <= 125_000:
+            break
+        if isinstance(item, dict):
+            for key in (
+                "code",
+                "content_base64",
+                "url",
+                "playground",
+                "local_path",
+                "attempts",
+            ):
+                item[key] = None
+            item["source_omitted"] = True
+            item["inline_note"] = (
+                "Preview details omitted to keep the batch response small."
+            )
+    return out
 
 
 #: Status labels hosts show while a viewer-linked tool runs.
