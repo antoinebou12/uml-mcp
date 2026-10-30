@@ -1,7 +1,7 @@
 # MCP Apps compatibility and deployment
 
 The viewer resource uses `ui://uml-mcp/diagram-viewer` with MIME type
-`text/html;profile=mcp-app`. All three viewer tools advertise the
+`text/html;profile=mcp-app`. All four viewer tools (including batch generation) advertise the
 `openai/toolInvocation` object and the flat OpenAI invocation labels.
 
 The default HTTPS viewer origin is `https://uml-mcp.antoineboucher.info`.
@@ -19,6 +19,16 @@ requires a separate asset transport; it cannot be displayed as a raster image.
 
 Tests cover valid large images, malformed input, SVG thumbnails, metadata and
 viewer interaction. These checks do not establish a new platform review score.
+
+The app-only `rerender_diagram` helper is declared read-only and can be used by
+bounded platform probes. Generation tools allow optional file export and retain
+their write-capable annotations. The image schema limits base64 to 48,000
+characters; the transport also bounds escaped source, links and diagnostics.
+
+If a hosted report still lists missing invocation labels or domain metadata,
+check its deployed Git revision. A failed build leaves the previous version
+running. The D3 package is required during installation, so build contexts must
+include `examples/plugins/uml-mcp-plugin-d3/src/uml_mcp_plugin_d3` and its assets.
 
 ## Resource descriptions and policy review
 
