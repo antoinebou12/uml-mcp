@@ -23,7 +23,7 @@ from .layout import (
     mono_width,
 )
 from .router import rounded_path
-from .theme import CATEGORY_LABELS, GROUP_STYLES, diagram_css
+from .theme import CATEGORY_LABELS, GROUP_STYLES, static_diagram_css
 
 #: provider -> the badge printed on a node (none for generic and software nodes)
 BADGES = {
@@ -107,7 +107,9 @@ def root_open(
     if description:
         parts.append(f"<desc>{escape(description)}</desc>")
     if not page:  # the page carries the stylesheet once, in its own <style>
-        parts.append(f"<style>{diagram_css()}</style>")
+        parts.append(
+            f"<style>{static_diagram_css('dark' if 'dark' in classes.split() else 'light')}</style>"
+        )
     parts.append(defs_svg())
     return "".join(parts)
 

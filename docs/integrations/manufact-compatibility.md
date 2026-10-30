@@ -38,6 +38,24 @@ The resource has a standard MCP Apps description. The reported checker reads
 v1 metadata is not added to silence it. A complete policy review remains a
 platform action. No SOC 2 or ISO 27001 certification is claimed for this project.
 
+The saved production review completed on October 30, 2026 with a score of 95/100,
+30 passing checks and two warnings. It marked both ChatGPT and Claude ready.
+Domain and invocation metadata passed. The partial policy review supplied no
+details identifying inaccessible evidence, so it cannot be resolved by changing
+server metadata or treated as a completed review.
+
+## Unsolicited HTTP probes
+
+The shared FastAPI app rejects common credential-file, PHP and repository-file
+probe paths with an empty HTTP 403 before application dispatch. This applies on
+both Vercel and Manufact. MCP, health, documentation, admin and `.well-known`
+verification endpoints remain accessible under their normal access rules.
+
+Gateway request logs still record these rejections. Application middleware cannot
+stop traffic reaching the hosting provider; edge firewall rules are required for
+that. The guard does not ban peer addresses because a hosting gateway can share
+one address across unrelated clients. Ordinary unknown paths still return 404.
+
 ## Manufact builds
 
 Automatic deployments are restricted to `main`. Do not start Manufact PR or
