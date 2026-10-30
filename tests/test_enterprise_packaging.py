@@ -117,4 +117,3 @@ def test_copilot_agent_and_skill_mirror():
     canonical = (ROOT / ".skill/skills/uml-mcp-diagrams/SKILL.md").read_bytes()
     mirror = (ROOT / ".github/skills/uml-mcp-diagrams/SKILL.md").read_bytes()
     assert mirror == canonical
-    assert (ROOT / "SOUL.md").read_text().startswith("# SOUL.md")

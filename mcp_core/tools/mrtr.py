@@ -101,16 +101,16 @@ def form_elicit(
     from mcp.types import ElicitRequest, ElicitRequestFormParams, InputRequiredResult
 
     return InputRequiredResult(
-        inputRequests={
+        input_requests={
             key: ElicitRequest(
                 params=ElicitRequestFormParams(
                     mode="form",
                     message=message,
-                    requestedSchema=schema,
+                    requested_schema=schema,
                 )
             )
         },
-        requestState=request_state,
+        request_state=request_state,
     )
 
 

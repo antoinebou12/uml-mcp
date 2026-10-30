@@ -95,7 +95,7 @@
     },
     {
       "name": "generate_uml_image",
-      "description": "Render a diagram as MCP ImageContent for chat. Returns content_base64 and mime_type for image bytes, url and playground links, and display_markdown. Use when the user asks to show or display the diagram. Fetches bytes even under URL-only. MCP Apps hosts may open the linked diagram viewer.",
+      "description": "Render a diagram as MCP ImageContent for chat with a bounded inline preview. Returns content_base64, mime_type, render and playground links. Fetches bytes even under URL-only. Large images use a PNG thumbnail in MCP Apps.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -229,7 +229,7 @@
         ]
       },
       "annotations": {
-        "readOnlyHint": false,
+        "readOnlyHint": true,
         "destructiveHint": false,
         "idempotentHint": true,
         "openWorldHint": true,

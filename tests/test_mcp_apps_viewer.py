@@ -7,10 +7,10 @@ from fastmcp import Client, FastMCP
 from fastmcp.apps import UI_EXTENSION_ID, UI_MIME_TYPE
 
 from mcp_core.apps.diagram_viewer import (
-    DIAGRAM_VIEWER_URI,
-    diagram_viewer_html,
-    diagram_viewer_domain,
     DIAGRAM_VIEWER_DESCRIPTION,
+    DIAGRAM_VIEWER_URI,
+    diagram_viewer_domain,
+    diagram_viewer_html,
     register_diagram_viewer,
 )
 from mcp_core.apps.svg_sanitize import sanitize_svg
@@ -68,6 +68,31 @@ def test_viewer_html_is_self_contained() -> None:
     assert "tools/call" in html
 
 
+def test_viewer_html_embeds_per_type_theme_and_format_data() -> None:
+    import json
+    import re
+
+    html = diagram_viewer_html()
+    assert "__UML_MCP_VIEWER_DATA__" not in html
+    # The only <svg> in the page must be the rendered diagram (tests locate it by tag).
+    assert "<svg" not in html
+    match = re.search(r"var DATA = (\{.*?\});\n", html)
+    assert match
+    data = json.loads(match.group(1).replace("<\\/", "</"))
+    assert "cerulean" in data["themes"]["plantuml"]
+    assert "dark" in data["themes"]["mermaid"]
+    assert data["types"]["sequence"]["theme_family"] == "plantuml"
+    assert data["types"]["mermaid"]["theme_family"] == "mermaid"
+    assert data["types"]["graphviz"]["theme_family"] == ""
+    assert set(data["types"]["class"]["formats"]) <= {"png", "svg", "jpeg"}
+    assert "cyborg" in data["dark_themes"]
+
+
+def test_default_app_domain_is_the_submission_host(monkeypatch) -> None:
+    monkeypatch.delenv("MCP_APP_DOMAIN", raising=False)
+    assert diagram_viewer_domain() == "https://uml-mcp.antoineboucher.info"
+
+
 # ---------------------------------------------------------------- protocol surface
 
 
@@ -92,7 +117,7 @@ async def test_discover_advertises_ui_extension(apps_server: FastMCP) -> None:
 async def test_render_tools_link_viewer_in_meta(apps_server: FastMCP) -> None:
     async with Client(apps_server, timeout=10) as client:
         tools = {t.name: t for t in await client.list_tools()}
-        for name in ("generate_uml", "generate_uml_image"):
+        for name in ("generate_uml", "generate_uml_image", "generate_uml_batch"):
             tool = tools[name]
             meta = tool.meta or {}
             ui = meta.get("ui") or {}
@@ -103,8 +128,9 @@ async def test_render_tools_link_viewer_in_meta(apps_server: FastMCP) -> None:
         rerender_ui = (tools["rerender_diagram"].meta or {}).get("ui") or {}
         assert rerender_ui.get("resourceUri") == DIAGRAM_VIEWER_URI
         assert rerender_ui.get("visibility") == ["app"]
-        # Other workflow tools stay without Apps meta.
-        for name in ("validate_uml", "list_diagram_types", "generate_uml_batch"):
+        # Checks and catalog lookups stay without Apps meta (no widget per call);
+        # the viewer still calls validate_uml itself from the Source tab.
+        for name in ("validate_uml", "list_diagram_types"):
             meta = (tools[name].meta or {}) if name in tools else {}
             assert "ui" not in meta or not (meta.get("ui") or {}).get("resourceUri")
 
@@ -145,6 +171,10 @@ async def test_render_invocation_labels(apps_server: FastMCP) -> None:
                 "invoked": "Diagram rendered",
             }
             assert meta["openai/toolInvocation/invoked"] == "Diagram rendered"
+        assert tools["generate_uml_batch"].meta["openai/toolInvocation"] == {
+            "invoking": "Rendering diagrams…",
+            "invoked": "Diagrams rendered",
+        }
 
 
 @pytest.mark.asyncio
@@ -156,7 +186,7 @@ async def test_production_discovery_identity(monkeypatch) -> None:
     server = create_mcp_server()
     async with Client(server) as client:
         discovery = await client.session.send_discover("2026-07-28")
-        info = discovery["serverInfo"]
+        info = discovery["_meta"]["io.modelcontextprotocol/serverInfo"]
         assert info["name"] == MCP_SETTINGS.server_name
         assert info["version"] == MCP_SETTINGS.version
         assert info["title"] == MCP_SETTINGS.display_name
@@ -171,12 +201,48 @@ def test_app_view_domain_validation(monkeypatch) -> None:
     monkeypatch.setenv("MCP_APP_DOMAIN", "https://uml-mcp.vercel.app")
     assert diagram_viewer_domain() == "https://uml-mcp.vercel.app"
     for invalid in (
-        "http://example.org", "https://example.org/mcp",
-        "https://user:pw@example.org", "not-a-domain",
+        "http://example.org",
+        "https://example.org/mcp",
+        "https://user:pw@example.org",
+        "not-a-domain",
+        "https://example.org:abc",
+        "https://example.org:65536",
+        "https://example.org:0",
+        "https://example.org:",
+        "https://[invalid",
+        "https://exa mple.org",
+        "https://exam\tple.org",
+        "https://bad<host>",
+        "https://-invalid.example",
+        "https://example.org?",
+        "https://example.org#",
+        "https://example.org//",
     ):
         monkeypatch.setenv("MCP_APP_DOMAIN", invalid)
         with pytest.raises(ValueError, match="one HTTPS origin"):
             diagram_viewer_domain()
+
+
+@pytest.mark.parametrize(
+    "origin",
+    [
+        "https://uml-mcp.vercel.app",
+        "https://fast-steel-xf470.run.mcp-use.com",
+        "https://example.org:8443",
+        "https://[::1]:8443",
+    ],
+)
+@pytest.mark.asyncio
+async def test_configured_origin_reaches_resource_wire_metadata(monkeypatch, origin):
+    monkeypatch.setenv("MCP_APP_DOMAIN", origin)
+    server = FastMCP("origin-test")
+    register_diagram_viewer(server)
+    async with Client(server) as client:
+        resources = await client.list_resources()
+        resource = next(r for r in resources if str(r.uri) == DIAGRAM_VIEWER_URI)
+        assert resource.meta["ui"]["domain"] == origin
+        assert resource.description == DIAGRAM_VIEWER_DESCRIPTION
+        assert resource.mime_type == UI_MIME_TYPE
 
 
 def test_tool_result_schema_has_inline_limits() -> None:

@@ -1,4 +1,4 @@
-"""Packaging contract: published distribution ships mcp_core + tools only."""
+"""Packaging contract: published distribution includes the bundled D3 plugin."""
 
 from pathlib import Path
 
@@ -10,4 +10,4 @@ def test_poetry_packages_surface() -> None:
     data = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
     packages = data["tool"]["poetry"]["packages"]
     includes = {p["include"] for p in packages}
-    assert includes == {"mcp_core", "tools"}
+    assert includes == {"mcp_core", "tools", "uml_mcp_plugin_d3"}

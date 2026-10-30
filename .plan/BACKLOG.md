@@ -23,6 +23,9 @@ Priorities: **P1** next release · **P2** soon · **P3** nice to have. Size: S <
 | 17 | [Partial / streaming tool results (SEP-2998 watch)](backlog/P3-mcp-partial-tool-results.md) | P3 | M | backlog |
 | 18 | [Skills resources/directory/read](done/2026-10-mcp-skills-directory-read.md) | P3 | S | done |
 | 19 | [Structured progress (JSON trailer / SEP-2632)](done/2026-10-mcp-structured-progress.md) | P3 | S | done (interim) |
+| 20 | [ChatGPT app submission (bundle, domain challenge, viewer)](in-progress/P1-chatgpt-app-submission.md) | P1 | M | in progress |
+
+| 21 | [Diagram platform roadmap](backlog/P2-diagram-platform.md) | P2 | L | backlog; implementation requires audit |
 
 Shipped: see [`done/`](done/).
 

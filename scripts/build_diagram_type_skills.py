@@ -77,7 +77,7 @@ NOTATION_TIPS: dict[str, str] = {
     ),
     "svgbob": (
         "- Prefer axis-aligned `+---+` boxes and `---->` arrows; diagonal `/ \\` "
-        "\"balloon\" shapes often mis-render in Kroki's svgbob.\n"
+        '"balloon" shapes often mis-render in Kroki\'s svgbob.\n'
         "- Keep labels short; pad with spaces so left/right edges stay aligned.\n"
         "- One horizontal pipeline (Client → MCP → Kroki) reads best in chat thumbnails.\n"
         "- Good for quick architecture sketches; use PlantUML/Mermaid for formal UML."
@@ -91,7 +91,7 @@ NOTATION_TIPS: dict[str, str] = {
         "- Prefer warm fill + dark stroke (Solarized-ish) so labels stay legible after PNG."
     ),
     "nwdiag": (
-        "- Declare `network name { address = \"…\"; node [address = \"…\"]; }` blocks.\n"
+        '- Declare `network name { address = "…"; node [address = "…"]; }` blocks.\n'
         "- Reuse the same node id in two networks to draw a gateway between them.\n"
         "- Prefer short node ids (`mcp`, `gateway`); put detail in `address` / `description`.\n"
         "- Two networks (DMZ + internal) with a shared gateway is the clearest default layout."
@@ -119,14 +119,14 @@ STYLING_TIPS: dict[str, str] = {
     "graphviz": (
         "- Use `bgcolor`, `color`, `fillcolor`, `fontname`, `style=filled` on "
         "`graph`/`node`/`edge`.\n"
-        "- Example: `node [shape=box, style=filled, fillcolor=\"#E8F4FC\"];`"
+        '- Example: `node [shape=box, style=filled, fillcolor="#E8F4FC"];`'
     ),
     "erd": (
         "- Entity titles and attribute lists are the main visual cues; keep names short.\n"
         "- No MCP `theme` param — layout clarity beats color."
     ),
     "blockdiag": (
-        "- Optional `default_shape`, `node_width`, colors via `color = \"…\"` on nodes.\n"
+        '- Optional `default_shape`, `node_width`, colors via `color = "…"` on nodes.\n'
         "- Keep to one row/column flow for chat thumbnails."
     ),
     "packetdiag": (
@@ -154,32 +154,26 @@ STYLING_TIPS: dict[str, str] = {
         "- Prefer executable BPMN 2.0 with `sequenceFlow`."
     ),
     "bytefield": (
-        "- Use `(defattrs … {:fill \"#…\"})` for row colors.\n"
-        "- No MCP `theme` param."
+        '- Use `(defattrs … {:fill "#…"})` for row colors.\n- No MCP `theme` param.'
     ),
     "dbml": (
         "- Table/column names and `ref:` drive the diagram; no color theme API.\n"
         "- Keep PK/FK annotations for scanability."
     ),
     "ditaa": (
-        "- ASCII boxes + `{c}` / `{d}` color tags when needed.\n"
-        "- No MCP `theme` param."
+        "- ASCII boxes + `{c}` / `{d}` color tags when needed.\n- No MCP `theme` param."
     ),
     "excalidraw": (
         "- Hand-drawn look is built-in; keep stroke colors high-contrast.\n"
         "- No MCP `theme` param."
     ),
-    "goat": (
-        "- ASCII art styling only; align in monospace.\n"
-        "- No MCP `theme` param."
-    ),
+    "goat": ("- ASCII art styling only; align in monospace.\n- No MCP `theme` param."),
     "nomnoml": (
         "- Directives: `#fill`, `#stroke`, `#lineWidth`, `#fontSize`, `#padding`.\n"
         "- No MCP `theme` param — set colors in the source."
     ),
     "pikchr": (
-        "- Use `color`, `fill`, `font` attributes on objects.\n"
-        "- No MCP `theme` param."
+        "- Use `color`, `fill`, `font` attributes on objects.\n- No MCP `theme` param."
     ),
     "structurizr": (
         "- Views + `autoLayout`; branding via Structurizr themes in the DSL when needed.\n"
@@ -214,8 +208,7 @@ STYLING_TIPS: dict[str, str] = {
         "- No MCP `theme` param."
     ),
     "wireviz": (
-        "- Cable colors come from the YAML color names/codes.\n"
-        "- No MCP `theme` param."
+        "- Cable colors come from the YAML color names/codes.\n- No MCP `theme` param."
     ),
 }
 

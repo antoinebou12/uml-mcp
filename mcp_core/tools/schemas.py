@@ -294,8 +294,9 @@ class DiagramResult(BaseModel):
     content_base64: str | None = Field(
         default=None,
         max_length=48_000,
-        description="Bounded inline preview (max 48,000 base64 characters); omitted for larger renders.",
+        description="Bounded inline preview (max 48,000 base64 characters); larger images use a resized PNG preview when possible.",
     )
+    preview_resized: bool | None = None
     inline_omitted: bool | None = None
     inline_note: str | None = None
     source_omitted: bool | None = None

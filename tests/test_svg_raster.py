@@ -69,7 +69,7 @@ def test_svg_to_png_renders_nomnoml_style_pt_fonts():
     assert png is not None
     im = Image.open(BytesIO(png)).convert("RGB")
     # Cream box alone is bright; text introduces darker ink.
-    assert any(p[0] < 100 for p in im.get_flattened_data())
+    assert any(isinstance(p, tuple) and p[0] < 100 for p in im.get_flattened_data())
 
 
 def test_rasterize_svg_jpeg():

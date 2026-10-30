@@ -45,6 +45,12 @@ otel = [
     "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
 ]
 
+[project.entry-points."uml_mcp.renderers"]
+d3 = "uml_mcp_plugin_d3:D3Renderer"
+
+[project.entry-points."uml_mcp.tools"]
+d3 = "uml_mcp_plugin_d3:register"
+
 [project.urls]
 Repository = "https://github.com/antoinebou12/uml-mcp"
 
@@ -56,6 +62,7 @@ mcp-server = "mcp_core.core.server:main"
 packages = [
     { include = "mcp_core" },
     { include = "tools" },
+    { include = "uml_mcp_plugin_d3", from = "examples/plugins/uml-mcp-plugin-d3/src" },
 ]
 
 [tool.pytest.ini_options]

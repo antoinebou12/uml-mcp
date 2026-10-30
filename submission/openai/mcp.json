@@ -1,0 +1,9 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "uml-mcp": {
+      "type": "streamable-http",
+      "url": "https://uml-mcp.antoineboucher.info/mcp"
+    }
+  }
+}

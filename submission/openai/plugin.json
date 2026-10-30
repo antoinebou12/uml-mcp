@@ -1,0 +1,91 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "uml-mcp",
+  "version": "1.4.0",
+  "description": "Render UML, Mermaid, PlantUML, D2, Graphviz and 25+ other diagram languages from text, with an interactive inline viewer.",
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "UML-MCP",
+        "shortDescription": "Diagrams from text: UML, Mermaid, PlantUML, D2",
+        "longDescription": "UML-MCP turns diagram source into rendered images inside the conversation. Ask for a sequence, class, flowchart, C4, ER, state or architecture diagram and it picks the right language (Mermaid, PlantUML, D2, Graphviz, BPMN and more), checks the source locally, renders it through Kroki and opens an interactive viewer with zoom, pan, theme and format switching. Every result includes a shareable render URL and a playground link to keep editing the source. No account or sign-in is needed, and diagram source is not stored.",
+        "developerName": "Antoine Boucher",
+        "category": "Creativity",
+        "websiteURL": "https://uml-mcp.antoineboucher.info",
+        "supportURL": "https://github.com/antoinebou12/uml-mcp/issues",
+        "privacyPolicyURL": "https://uml-mcp.antoineboucher.info/.well-known/privacy.txt",
+        "termsOfServiceURL": "https://uml-mcp.antoineboucher.info/.well-known/terms.txt",
+        "defaultPrompt": [
+          "Draw a sequence diagram of a user signing in through an API gateway.",
+          "Show a PlantUML class diagram for an online shop with the cerulean theme.",
+          "Which diagram types can I render as SVG?"
+        ],
+        "composerIcon": "./assets/logo.png",
+        "logo": "./assets/logo.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "Discover a known rendering language before use.",
+              "prompt": "Which supported diagram types can produce SVG? Show me up to five that match.",
+              "tools_triggered": "list_diagram_types",
+              "expected_behavior": "The assistant calls list_diagram_types with output_format set to svg and limit set to 5, then presents up to five returned type keys with their backend, description, and supported formats."
+            },
+            {
+              "description": "Validate a complete Mermaid sequence diagram using strict local checks without rendering it.",
+              "prompt": "Strictly check this Mermaid source for SVG output, but do not render it:\nsequenceDiagram\n  participant Client\n  participant Server\n  Client->>Server: request\n  Server-->>Client: response",
+              "tools_triggered": "validate_uml",
+              "expected_behavior": "The assistant calls validate_uml with diagram_type mermaid, output_format svg, strict true, and the supplied multiline source. It reports valid status plus any errors, warnings, suggestions, diagnostics, and prepared source returned by the tool; no render URL or image is claimed."
+            },
+            {
+              "description": "Render a Mermaid flowchart as SVG and expose the result links returned by the server.",
+              "prompt": "Render this Mermaid flowchart as an SVG: graph TD\n  Client --> MCP\n  MCP --> Renderer",
+              "tools_triggered": "generate_uml",
+              "expected_behavior": "The assistant calls generate_uml with diagram_type mermaid, output_format svg, and the supplied source. It reports the returned success or actionable error; on success it provides the returned render URL and playground link when present, rather than inventing either link."
+            },
+            {
+              "description": "Request a diagram to be shown inline in chat.",
+              "prompt": "Show me a PNG Mermaid flowchart with Start leading to Finish.",
+              "tools_triggered": "generate_uml_image",
+              "expected_behavior": "The assistant calls generate_uml_image with diagram_type mermaid, PNG output, and Mermaid source connecting Start to Finish. It presents the returned inline image data when available and includes only returned render URL or playground links."
+            },
+            {
+              "description": "Render a themed PlantUML sequence diagram in the interactive viewer.",
+              "prompt": "Show a PlantUML sequence diagram with the cerulean theme where a User calls an API Gateway, which reads from a Cache and falls back to a Database on a miss.",
+              "tools_triggered": "generate_uml_image",
+              "expected_behavior": "The assistant writes PlantUML sequence source with User, API Gateway, Cache and Database participants and an alt block for the cache miss, then calls generate_uml_image with diagram_type sequence and theme cerulean. The diagram viewer opens with the rendered image, and the reply includes only the returned URL and playground links."
+            },
+            {
+              "description": "Render two independent diagrams in one bounded-concurrency batch.",
+              "prompt": "Create these two Mermaid SVG diagrams in one batch: first, graph TD with A --> B; second, sequenceDiagram with Alice->>Bob: Hello and Bob-->>Alice: Hi.",
+              "tools_triggered": "generate_uml_batch",
+              "expected_behavior": "The assistant calls generate_uml_batch once with two ordered Mermaid items using SVG output. It reports a result for each index, including each returned success/error and any returned URL or playground link, while preserving the requested order."
+            }
+          ],
+          "negative": [
+            {
+              "description": "The server has no tool for creating or sending an email attachment; it must not attempt a diagram render or external message.",
+              "prompt": "Email a PDF of my architecture diagram to finance@example.com.",
+              "expected_behavior": "The assistant explains that this MCP server can render diagrams but cannot send email or deliver attachments. It asks for diagram source or a supported rendering request if appropriate, and does not invoke a server tool."
+            },
+            {
+              "description": "The server cannot retrieve a diagram definition from an arbitrary external URL based on the discovered tools.",
+              "prompt": "Download the UML source from https://example.com/private-diagram.puml and render it.",
+              "expected_behavior": "The assistant explains that the connected server accepts diagram source supplied in the conversation but has no discovered URL-download tool. It requests that the user paste the source; it does not invoke a server tool."
+            },
+            {
+              "description": "A request to delete a previously rendered artifact is outside the discovered tool set and must not be treated as a rendering request.",
+              "prompt": "Delete the diagram you generated earlier from the rendering service.",
+              "expected_behavior": "The assistant states that no deletion capability is exposed by this MCP server and does not claim the artifact was removed or invoke a server tool."
+            }
+          ]
+        },
+        "demo_recording_url": "https://cdn.manufact.com/demo-video/1aba462e-2063-47aa-a15e-5dad71d2a317/demo-a684f76b-6bec-40d0-b5d7-4f760465ca1c.mp4"
+      },
+      "publication": {
+        "release_notes": "First public release of UML-MCP for ChatGPT: diagram-type discovery, local source validation, single and batch rendering, inline image rendering, and an interactive diagram viewer with zoom, pan, theme and format switching (backed by an app-only re-render tool). Read-only: no account, no stored diagram source."
+      }
+    }
+  }
+}

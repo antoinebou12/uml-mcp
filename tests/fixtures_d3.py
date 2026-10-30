@@ -1,11 +1,11 @@
 """Shared setup for the D3 plugin tests.
 
-The plugin lives under ``examples/plugins`` and is not installed in the test environment,
-so it is found through patched entry points (the way ``test_plugins.py`` loads the hello
+The plugin source lives under ``examples/plugins``. These tests isolate discovery
+through patched entry points (the way ``test_plugins.py`` loads the hello
 plugin). ``mcp_report`` runs the REAL server (real FastMCP, not the suite's mock) in a
 subprocess with the plugin enabled and drives it like an MCP client does: the in-process
-client, then the ``/mcp`` HTTP route. It writes every page it receives to disk, so the
-browser tests open exactly what an MCP client got.
+client, then the ``/mcp`` HTTP route. HTML calls request file export so full offline pages do not exceed the initial
+MCP Apps payload budget. Browser tests open those exported pages.
 """
 
 from __future__ import annotations
@@ -149,13 +149,13 @@ async def main():
         report["generated"] = {}
         for dtype, (example, _template) in SAMPLES.items():
             for fmt in ("html", "svg"):
-                got = await call(client, "generate_uml", {"diagram_type": dtype, "code": example, "output_format": fmt})
+                got = await call(client, "generate_uml", {"diagram_type": dtype, "code": example, "output_format": fmt, **({"output_dir": str(pages)} if fmt == "html" else {})})
                 if "error" in got:  # reported, so a failing test shows why
                     report["generated"][f"{dtype}.{fmt}"] = {"error": got["error"]}
                     continue
                 res = got["result"]
                 data = res.structured_content
-                body = base64.b64decode(data["content_base64"])
+                body = Path(data["local_path"]).read_bytes() if data.get("local_path") else base64.b64decode(data["content_base64"])
                 (pages / f"{dtype}.{fmt}").write_bytes(body)
                 report["generated"][f"{dtype}.{fmt}"] = {
                     "source": data.get("source"),

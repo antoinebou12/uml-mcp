@@ -57,6 +57,7 @@ These map one-to-one to existing env vars:
 | --- | --- |
 | `server.allowed_hosts` / `server.allowed_origins` | `MCP_ALLOWED_HOSTS` / `MCP_ALLOWED_ORIGINS` |
 | `server.stateless_http` | `FASTMCP_STATELESS_HTTP` |
+| `server.openai_apps_challenge_token` | `OPENAI_APPS_CHALLENGE_TOKEN` (served at `/.well-known/openai-apps-challenge`) |
 | `rendering.kroki_server` / `rendering.plantuml_server` | `KROKI_SERVER` / `PLANTUML_SERVER` |
 | `rendering.use_local_kroki` / `rendering.use_local_plantuml` | `USE_LOCAL_KROKI` / `USE_LOCAL_PLANTUML` |
 | `rendering.mermaid_ink_server` / `rendering.use_local_mermaid_ink` | `MERMAID_INK_SERVER` / `USE_LOCAL_MERMAID_INK` |

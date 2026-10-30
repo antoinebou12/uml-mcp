@@ -15,7 +15,9 @@ def test_viewer_fit_pan_safety_and_rerender_retry() -> None:
         try:
             browser = pw.chromium.launch()
         except playwright.Error as exc:
-            if "Executable doesn't exist" in str(exc) or "browserType.launch" in str(exc):
+            if "Executable doesn't exist" in str(exc) or "browserType.launch" in str(
+                exc
+            ):
                 pytest.skip("Playwright Chromium is not installed")
             raise
 
@@ -56,7 +58,9 @@ def test_viewer_fit_pan_safety_and_rerender_retry() -> None:
                         "diagram_type": "mermaid",
                         "code": "graph TD; A-->B",
                         "mime_type": "image/svg+xml",
-                        "content_base64": base64.b64encode(svg.encode("utf-8")).decode(),
+                        "content_base64": base64.b64encode(
+                            svg.encode("utf-8")
+                        ).decode(),
                         "url": "javascript:alert(1)",
                         "playground": "https://mermaid.live/",
                     }
@@ -71,10 +75,14 @@ def test_viewer_fit_pan_safety_and_rerender_retry() -> None:
             playwright.expect(frame.locator("#openUrl")).to_be_hidden()
             playwright.expect(frame.locator("#openPlay")).to_be_visible()
 
+            # An oversized diagram is shrunk to fit on first paint.
+            label = frame.locator("#zoomLabel")
+            playwright.expect(label).not_to_have_text("100%")
+            fitted = label.inner_text()
             frame.locator("#zoomIn").click()
-            playwright.expect(frame.locator("#zoomLabel")).to_have_text("125%")
+            playwright.expect(label).not_to_have_text(fitted)
             frame.locator("#zoomFit").click()
-            playwright.expect(frame.locator("#zoomLabel")).not_to_have_text("125%")
+            playwright.expect(label).to_have_text(fitted)
             frame.locator("#zoomReset").click()
             playwright.expect(frame.locator("#zoomLabel")).to_have_text("100%")
             assert "translate(0px, 0px)" in (

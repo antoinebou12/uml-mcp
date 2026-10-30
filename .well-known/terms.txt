@@ -1,0 +1,41 @@
+Terms of Service for UML-MCP
+
+Last Updated: 2026-10-29
+
+These terms cover the hosted UML-MCP service at https://uml-mcp.antoineboucher.info
+("the service"), including its MCP endpoint (/mcp), REST API and diagram viewer.
+
+1. The service
+
+UML-MCP renders diagram source text (PlantUML, Mermaid, D2, Graphviz and other
+languages) into images. It is provided free of charge, as is, without warranty of
+any kind, and may change, be rate limited or become unavailable at any time.
+
+2. Your content
+
+You keep all rights to the diagram source you send. You grant the service only the
+permission needed to validate and render it. Rendering may be performed by Kroki
+(https://kroki.io) or another configured renderer; render URLs encode the diagram
+source itself, so anyone holding a URL can see that diagram.
+
+Do not submit secrets, credentials or personal data in diagram source.
+
+3. Acceptable use
+
+Do not use the service to break the law, to attack or overload the service or its
+renderers, or to render content that infringes the rights of others.
+
+4. Liability
+
+To the extent permitted by law, the maintainer is not liable for any damages
+arising from use of the service. Use the rendered output at your own risk.
+
+5. Source code and support
+
+The software is open source under the MIT License:
+https://github.com/antoinebou12/uml-mcp
+
+Questions and issues: https://github.com/antoinebou12/uml-mcp/issues
+
+See also the privacy policy:
+https://uml-mcp.antoineboucher.info/.well-known/privacy.txt

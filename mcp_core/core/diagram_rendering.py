@@ -99,14 +99,7 @@ def _prepare_d2_theme(code: str, theme: str | None) -> str:
     theme_id = resolve_d2_theme_id(theme)
     if theme_id is None or "d2-config" in prepared or "theme-id" in prepared:
         return prepared
-    return (
-        "vars: {\n"
-        "  d2-config: {\n"
-        f"    theme-id: {theme_id}\n"
-        "  }\n"
-        "}\n"
-        f"{prepared}"
-    )
+    return f"vars: {{\n  d2-config: {{\n    theme-id: {theme_id}\n  }}\n}}\n{prepared}"
 
 
 def prepare_diagram_code(code: str, backend_type: str, theme: str | None) -> str:

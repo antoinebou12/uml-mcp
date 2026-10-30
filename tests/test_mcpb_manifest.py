@@ -47,7 +47,11 @@ def registered_tool_names() -> set[str]:
     from mcp_core.tools import diagram_tools  # noqa: F401  (populates the registry)
     from mcp_core.tools.tool_decorator import get_tool_registry
 
-    return set(get_tool_registry())
+    return {
+        name
+        for name, tool in get_tool_registry().items()
+        if getattr(tool.get("app"), "visibility", None) != ["app"]
+    }
 
 
 def test_manifest_is_mcpb_04_uv_bundle(manifest: dict) -> None:
