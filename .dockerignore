@@ -13,7 +13,11 @@ site
 output
 logs
 docs
-examples
+# D3 is a runtime package declared in pyproject.toml. Keep its sources/assets.
+examples/*
+!examples/plugins/
+examples/plugins/*
+!examples/plugins/uml-mcp-plugin-d3/
 tests
 deploy
 .env
