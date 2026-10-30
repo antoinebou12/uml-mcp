@@ -195,6 +195,48 @@ def diagram_css() -> str:
     )
 
 
+def static_diagram_css(theme: str) -> str:
+    """Resolve palette variables for SVG rasterizers without CSS variable support."""
+    import re
+
+    palette = dict(DARK if theme == "dark" else LIGHT)
+    palette.update(
+        {
+            "c-fill": palette["external-fill"],
+            "c-stroke": palette["external-stroke"],
+            "g-stroke": palette["external-stroke"],
+        }
+    )
+    css = diagram_css().split(".d3d .panel", 1)[1].split(".d3d.hl", 1)[0]
+    rules = re.findall(r"([^{}]+)\{([^{}]+)\}", ".d3d .panel" + css)
+
+    def resolve(body: str, values: dict[str, str]) -> str:
+        return re.sub(r"var\(--([\w-]+)\)", lambda m: values[m[1]], body)
+
+    out = [f".d3d{{font-family:{MONO}}}"]
+    for selector, body in rules:
+        out.append(f"{selector}{{{resolve(body, palette)}}}")
+        for category in CATEGORIES:
+            if "--c-" in body:
+                values = {
+                    **palette,
+                    "c-fill": palette[f"{category}-fill"],
+                    "c-stroke": palette[f"{category}-stroke"],
+                }
+                out.append(
+                    f"{selector.replace('.d3d', f'.d3d .cat-{category}')}{{{resolve(body, values)}}}"
+                )
+            if "--g-" in body:
+                values = {**palette, "g-stroke": palette[f"{category}-stroke"]}
+                out.append(
+                    f"{selector.replace('.d3d', f'.d3d .g-{category}')}{{{resolve(body, values)}}}"
+                )
+    out.extend(
+        f".d3d .prov-{name}{{fill:{color}}}" for name, color in PROVIDER_COLORS.items()
+    )
+    return "".join(out)
+
+
 def chrome_css() -> str:
     """The stylesheet of the page around the diagram (toolbar, panel, menus)."""
     light = {

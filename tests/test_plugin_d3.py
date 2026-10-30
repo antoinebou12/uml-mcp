@@ -1514,8 +1514,10 @@ def test_both_palettes_define_every_category_and_keep_text_readable() -> None:
 
 
 @pytest.mark.parametrize("theme", ["light", "dark", "auto"])
-def test_the_theme_is_a_class_and_the_stylesheet_serves_all_of_them(theme: str) -> None:
-    from uml_mcp_plugin_d3.theme import diagram_css
+def test_static_theme_is_resolved_and_browser_styles_support_all_themes(
+    theme: str,
+) -> None:
+    from uml_mcp_plugin_d3.theme import diagram_css, static_diagram_css
 
     code = json.dumps({**example("d3_architecture"), "theme": theme})
     svg = D3Renderer().render("d3_architecture", code, "svg").content.decode()
@@ -1528,7 +1530,8 @@ def test_the_theme_is_a_class_and_the_stylesheet_serves_all_of_them(theme: str) 
         and ".d3d.auto" in css
     )
     assert (
-        "<style>" in svg and css in svg
+        "<style>" in svg
+        and static_diagram_css("dark" if theme == "dark" else "light") in svg
     )  # a standalone SVG carries its own stylesheet
 
 
