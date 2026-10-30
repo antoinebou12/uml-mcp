@@ -29,7 +29,7 @@ MCPB_CLI = "@anthropic-ai/mcpb@2.1.2"
 
 # Runtime packages copied into the bundle. Only these suffixes travel with them.
 RUNTIME_PACKAGES = ("mcp_core", "tools")
-PACKAGE_SUFFIXES = {".py", ".json", ".j2", ".txt", ".md"}
+PACKAGE_SUFFIXES = {".py", ".json", ".j2", ".txt", ".md", ".ttf"}
 PACKAGE_SKIP_DIRS = {"__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache"}
 
 # Single files copied verbatim into the bundle root.
