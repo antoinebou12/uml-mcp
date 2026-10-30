@@ -307,6 +307,10 @@ if _mcp_http_app is not None:
 
     app.add_middleware(cast(Any, MCPExactPathMiddleware))
 
+from mcp_core.core.probe_guard import ProbeGuardMiddleware
+
+app.add_middleware(ProbeGuardMiddleware)
+
 # Import local modules
 try:
     from mcp_core.core.config import MCP_SETTINGS
