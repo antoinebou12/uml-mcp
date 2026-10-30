@@ -128,6 +128,7 @@ async def test_render_tools_link_viewer_in_meta(apps_server: FastMCP) -> None:
         rerender_ui = (tools["rerender_diagram"].meta or {}).get("ui") or {}
         assert rerender_ui.get("resourceUri") == DIAGRAM_VIEWER_URI
         assert rerender_ui.get("visibility") == ["app"]
+        assert tools["rerender_diagram"].annotations.read_only_hint is True
         # Checks and catalog lookups stay without Apps meta (no widget per call);
         # the viewer still calls validate_uml itself from the Source tab.
         for name in ("validate_uml", "list_diagram_types"):
