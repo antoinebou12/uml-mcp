@@ -147,6 +147,9 @@ def _prepare_svg_for_resvg(text: str) -> tuple[str, int | None, int | None]:
 
 
 def _resvg_kwargs(prepared: str, *, zoom: float) -> dict:
+    from mcp_core.apps.svg_sanitize import flatten_svg_labels
+
+    prepared = flatten_svg_labels(prepared)
     kwargs: dict = {"svg_string": prepared, "zoom": zoom}
     fonts = _system_font_files()
     if fonts:

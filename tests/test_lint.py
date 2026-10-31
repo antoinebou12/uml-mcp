@@ -7,6 +7,7 @@ import os
 import subprocess
 import sys
 from types import SimpleNamespace
+from typing import Any
 
 from mcp_core.core import commands
 from mcp_core.core.settings_file import parse_app_config
@@ -221,3 +222,39 @@ def test_real_server_lint_gate():
     assert server["name"] == "uml_mcp" and server["version"].startswith(
         "1."
     )  # not FastMCP's
+
+
+def test_apps_readiness_lint_detects_domain_labels_and_unbounded_images():
+    resource = {
+        "name": "Viewer",
+        "uri": "ui://app/view",
+        "mimeType": "text/html;profile=mcp-app",
+        "description": "A useful diagram viewer",
+        "_meta": {"ui": {"domain": "https://app.example.com"}},
+    }
+    assert not wire.lint_resource(resource)
+    resource["_meta"]["ui"]["domain"] = "https://app.example.com/path"
+    assert "view-domain-invalid" in codes(wire.lint_resource(resource))
+    tool: dict[str, Any] = {
+        "name": "render",
+        "description": "Render a diagram preview",
+        "_meta": {"ui": {"resourceUri": "ui://app/view"}},
+        "outputSchema": {
+            "type": "object",
+            "properties": {"content_base64": {"type": "string"}},
+        },
+    }
+    result = codes(wire.lint_tool(tool))
+    assert {"tool-invocation-metadata-missing", "tool-inline-image-unbounded"} <= result
+    tool["_meta"]["openai/toolInvocation"] = {
+        "invoking": "Rendering",
+        "invoked": "Rendered",
+    }
+    tool["outputSchema"] = {
+        "type": "object",
+        "properties": {"content_base64": {"type": "string", "maxLength": 48000}},
+    }
+    assert not {
+        "tool-invocation-metadata-missing",
+        "tool-inline-image-unbounded",
+    } & codes(wire.lint_tool(tool))

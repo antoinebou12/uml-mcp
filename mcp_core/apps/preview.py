@@ -35,9 +35,30 @@ def compact_preview(
                 svg,
                 flags=re.IGNORECASE,
             )
+
+            def check_embedded_raster(match: re.Match[str]) -> str:
+                payload = match[2].split(",", 1)[1]
+                embedded = base64.b64decode(payload, validate=True)
+                with Image.open(BytesIO(embedded)) as image:
+                    if (
+                        image.format not in {"PNG", "JPEG", "WEBP"}
+                        or image.width * image.height > 16_000_000
+                    ):
+                        raise ValueError("Unsupported embedded preview image")
+                    image.verify()
+                # Exempt validated, self-contained raster data from the URL guard.
+                # The original data URI remains in the SVG passed to resvg.
+                return match[1] + "#" + match[3]
+
+            checked_svg = re.sub(
+                r"""(href\s*=\s*["'])(data:image/(?:png|jpeg|webp);base64,[^"']+)(["'])""",
+                check_embedded_raster,
+                svg,
+                flags=re.IGNORECASE,
+            )
             if re.search(
                 r"""(?:href\s*=\s*["']\s*(?!\#)|url\(\s*["']?(?!\#))""",
-                svg,
+                checked_svg,
                 re.IGNORECASE,
             ):
                 return None
@@ -73,6 +94,7 @@ def compact_preview(
         UnicodeError,
         UnidentifiedImageError,
         Image.DecompressionBombError,
+        SyntaxError,
     ):
         return None
     return None

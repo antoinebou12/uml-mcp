@@ -207,6 +207,16 @@ def generate_from_request(req: DiagramRequest) -> dict[str, Any]:
         force_fetch=force_fetch,
     )
     out = dict(result)
+    if out.get("content_base64") and out.get("mime_type") == "image/svg+xml":
+        from mcp_core.apps.svg_sanitize import flatten_svg_labels
+
+        try:
+            svg = base64.b64decode(out["content_base64"]).decode("utf-8")
+            out["content_base64"] = base64.b64encode(
+                flatten_svg_labels(svg).encode()
+            ).decode()
+        except (ValueError, UnicodeError):
+            logger.debug("Renderer returned invalid SVG encoding")
     out["diagram_type"] = dt_key
     out["output_format"] = requested_fmt
     out["success"] = not bool(out.get("error"))

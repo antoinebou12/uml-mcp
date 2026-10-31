@@ -2,6 +2,8 @@ import base64
 import hashlib
 import json
 
+import pytest
+
 from mcp_core.core.mermaid_source import mermaid_theme_from_source
 from mcp_core.core.viewer_theme import apply_viewer_theme
 from mcp_core.tools.diagram_export import download_diagram
@@ -125,3 +127,89 @@ def test_linked_svg_can_produce_preview_without_loading_navigation_url():
         compact_preview(base64.b64encode(image).decode(), "image/svg+xml", 48000)
         is None
     )
+
+
+@pytest.mark.parametrize(
+    "format,mime",
+    [
+        ("svg", "image/svg+xml"),
+        ("png", "image/png"),
+        ("html", "text/html"),
+        ("pdf", "application/pdf"),
+    ],
+)
+def test_d3_supports_all_viewer_file_exports(d3_plugin, format, mime):
+    from io import BytesIO
+
+    from PIL import Image
+    from uml_mcp_plugin_d3.samples import SAMPLES
+
+    d3_plugin()
+    code = SAMPLES["d3_architecture"][0]
+    parts, offset, digest = [], 0, None
+    while True:
+        result = download_diagram(
+            "d3_architecture", code, format, offset=offset, sha256=digest
+        )
+        assert "error" not in result, result
+        assert result["mime_type"] == mime
+        parts.append(result["chunk"])
+        offset, digest = result["next_offset"], result["sha256"]
+        if offset == result["total"]:
+            break
+    raw = base64.b64decode("".join(parts))
+    assert hashlib.sha256(raw).hexdigest() == digest
+    if format == "pdf":
+        assert raw.startswith(b"%PDF-") and b"/Subtype /Image" in raw
+        assert b"/CreationDate" not in raw and b"/ModDate" not in raw
+    elif format == "png":
+        assert Image.open(BytesIO(raw)).width > 2000
+    elif format == "html":
+        assert b"cdn.jsdelivr.net" not in raw and b"plugin-download" in raw
+
+
+def test_chunked_plugin_download_reuses_the_bounded_render_cache(
+    d3_plugin, monkeypatch
+):
+    from uml_mcp_plugin_d3 import D3Renderer
+    from uml_mcp_plugin_d3.samples import SAMPLES
+
+    from mcp_core.core.render_cache import get_render_cache
+
+    d3_plugin()
+    monkeypatch.setenv("MCP_RENDER_CACHE_ENABLED", "1")
+    cache = get_render_cache()
+    cache.clear()
+    calls = []
+    render = D3Renderer.render
+
+    def record(self, *args):
+        calls.append(args)
+        return render(self, *args)
+
+    monkeypatch.setattr(D3Renderer, "render", record)
+    try:
+        code = SAMPLES["d3_architecture"][0]
+        first = download_diagram("d3_architecture", code, "png")
+        assert first["next_offset"] < first["total"]
+        second = download_diagram(
+            "d3_architecture",
+            code,
+            "png",
+            offset=first["next_offset"],
+            sha256=first["sha256"],
+        )
+        assert second["offset"] == first["next_offset"] and len(calls) == 1
+        assert "error" in download_diagram(
+            "d3_architecture",
+            code,
+            "png",
+            offset=first["next_offset"],
+            sha256="changed",
+        )
+        assert (
+            download_diagram("mermaid", " source ", "source")["sha256"]
+            != download_diagram("mermaid", "source", "source")["sha256"]
+        )
+    finally:
+        cache.clear()

@@ -32,7 +32,7 @@ from .layout import (
 )
 from .spec import ArchSpec, ForceSpec
 from .svg import architecture_svg
-from .theme import chrome_css, diagram_css
+from .theme import chrome_css, diagram_css, static_diagram_css
 
 D3_VERSION = "7.9.0"
 D3_FILE = f"d3.v{D3_VERSION}.min.js"
@@ -129,6 +129,11 @@ def _page(
         f'<div class="hint">{escape(hint)}</div></main>'
         '<div id="tip" role="tooltip"></div>'
         f'<script type="application/json" id="spec">{json_for_script(data)}</script>'
+        '<script type="application/json" id="svg-export-css">'
+        + json_for_script(
+            {"light": static_diagram_css("light"), "dark": static_diagram_css("dark")}
+        )
+        + "</script>"
         f"{d3_tag}<script>{script}</script></body></html>\n"
     )
 

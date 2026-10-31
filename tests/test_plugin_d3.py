@@ -758,8 +758,8 @@ def test_user_text_cannot_break_out_of_the_data_block() -> None:
     data = json.loads(block)
     assert data["nodes"][0]["label"] == payload  # and it round-trips unchanged
     assert (
-        text.lower().count("<script") == 3
-    )  # data, d3 (cdn) and the runtime: nothing injected
+        text.lower().count("<script") == 4
+    )  # data, export palettes, d3 and runtime: nothing injected
 
 
 def test_page_data_matches_the_layout() -> None:

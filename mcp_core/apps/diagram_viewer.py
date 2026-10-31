@@ -21,9 +21,8 @@ logger = logging.getLogger(__name__)
 
 DIAGRAM_VIEWER_URI = "ui://uml-mcp/diagram-viewer"
 DIAGRAM_VIEWER_DESCRIPTION = (
-    "Interactive UML-MCP diagram viewer with zoom, pan, fit, reset and a "
-    "safe render preview. SVG, PNG and JPEG results are supported; theme and "
-    "format can be switched and re-rendered, and links or source copied."
+    "Interactive UML-MCP viewer for SVG, PNG, JPEG and plugin HTML. Zoom, edit "
+    "source, switch themes and formats, and export source, SVG, PNG, HTML or supported PDF."
 )
 # All app views must agree on an exact HTTPS origin. The default is the Vercel
 # production host that also serves /mcp and the OpenAI Apps domain challenge.
@@ -77,7 +76,7 @@ def diagram_viewer_domain() -> str:
 
 
 #: Formats the viewer can display inline (and offer for re-render).
-VIEWER_FORMATS = ("png", "svg", "jpeg")
+VIEWER_FORMATS = ("png", "svg", "jpeg", "html")
 
 _THEME_DATA_PLACEHOLDER = "__UML_MCP_VIEWER_DATA__"
 
@@ -239,6 +238,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     background: #ffffff; box-shadow: var(--shadow);
   }
   #frame.paper-dark > img, #frame.paper-dark > svg { background: #101217; }
+  #frame iframe.plugin-frame { width:100%; height:var(--frame-h); border:0; flex:none; background:var(--surface); }
   #frame pre.ascii {
     margin: 16px; padding: 14px; border-radius: 10px; background: #ffffff; color: #161a23;
     box-shadow: var(--shadow); font: 12px/1.35 var(--mono); white-space: pre; overflow: auto; max-width: 100%;
@@ -451,13 +451,14 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   /** Rendered results: one for generate_uml / generate_uml_image, N for a batch. */
   var items = [];
   var current = 0;
+  var pluginFrame = null;
   /** Arguments of the last call (single render) and per-index batch input. */
   var lastArgs = null;
   var batchInput = [];
   var STRIP_TAGS = {
     script: 1, foreignobject: 1, iframe: 1, object: 1, embed: 1, link: 1, meta: 1, base: 1
   };
-  var EXT = { "image/png": "png", "image/jpeg": "jpg", "image/svg+xml": "svg", "application/pdf": "pdf", "text/plain": "txt" };
+  var EXT = { "image/png": "png", "image/jpeg": "jpg", "image/svg+xml": "svg", "application/pdf": "pdf", "text/plain": "txt", "text/html": "html" };
 
   // ------------------------------------------------------------ host bridge
 
@@ -522,6 +523,20 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     if (doc.querySelector("parsererror")) return "";
     var root = doc.documentElement;
     if (!root || localName(root) !== "svg") return "";
+    Array.from(root.querySelectorAll("foreignObject")).forEach(function(node) {
+      node.querySelectorAll("script,style,iframe,object,embed").forEach(function(n) { n.remove(); });
+      var lines = Array.from(node.querySelectorAll("p")).map(function(p) {return p.textContent.trim();}).filter(Boolean);
+      if (!lines.length) lines = [node.textContent.replace(/\s+/g, " ").trim()];
+      var x = parseFloat(node.getAttribute("x")) || 0, y = parseFloat(node.getAttribute("y")) || 0;
+      var w = parseFloat(node.getAttribute("width")) || 80, h = parseFloat(node.getAttribute("height")) || 24;
+      var size = Math.min(16, Math.max(10, h / lines.length / 1.5));
+      var label = doc.createElementNS("http://www.w3.org/2000/svg", "text");
+      var color = String(svgText).match(/color:\s*(#[0-9a-fA-F]{3,8}|black|white)\b/);
+      var attrs = {x:x+w/2,y:y+h/2-(lines.length-1)*size*.6,"text-anchor":"middle","dominant-baseline":"central","font-size":size,"font-family":"sans-serif",fill:color?color[1]:"#111827"};
+      Object.keys(attrs).forEach(function(k) {label.setAttribute(k, attrs[k]);});
+      lines.forEach(function(line,i) { var span=doc.createElementNS(label.namespaceURI,"tspan"); span.setAttribute("x",x+w/2); span.setAttribute("dy",i?size*1.2:0); span.textContent=line; label.appendChild(span); });
+      node.replaceWith(label);
+    });
     var walk = [root].concat(Array.from(root.querySelectorAll("*")));
     for (var i = walk.length - 1; i >= 0; i--) {
       var node = walk[i];
@@ -835,6 +850,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
 
   function renderItem() {
     var item = items[current];
+    pluginFrame = null;
     zoom = 1;
     panX = panY = 0;
     FRAME.classList.remove("paper-dark");
@@ -865,6 +881,10 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     }
     var mime = String(item.mime_type || "").toLowerCase();
     var b64 = item.content_base64;
+    if (!b64 && item._fullLoading) {
+      showEmpty(item.output_format === "html" ? "Loading interactive HTML…" : "Loading full preview…");
+      setStatus("Loading preview…", "busy"); showLinks(item); return;
+    }
     var ready = item.preview_resized ? "Compact preview" : "Diagram ready";
     if (items.length > 1) {
       var failed = items.filter(isFailed).length;
@@ -892,6 +912,19 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
         autoFit();
         return;
       }
+    }
+    if (b64 && mime.indexOf("text/html") === 0) {
+      FRAME.classList.add("static"); FRAME.textContent = "";
+      pluginFrame = el("iframe", "plugin-frame");
+      pluginFrame.title = "Interactive diagram";
+      pluginFrame.setAttribute("sandbox", "allow-scripts");
+      var htmlUrl = URL.createObjectURL(new Blob([decodeBase64Text(b64)], {type:"text/html"}));
+      pluginFrame.src = htmlUrl;
+      pluginFrame.addEventListener("load", function() { URL.revokeObjectURL(htmlUrl); });
+      FRAME.appendChild(pluginFrame); TOOLBAR.hidden = true;
+      setStatus("HTML preview · use its controls to interact", "ok");
+      showLinks(item);
+      return;
     }
     if (b64 && mime.indexOf("text/") === 0) {
       FRAME.classList.add("static");
@@ -993,12 +1026,12 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     if (url) OPEN_URL.href = url;
     if (playground) OPEN_PLAY.href = playground;
     DOWNLOAD_BTN.hidden = !((item.code && can("serverTools")) || hasBytes(item));
-    if (item.mime_type === "text/plain" || !can("serverTools")) $("exportFormat").value = "current";
+    if (String(item.mime_type || "").indexOf("text/plain") === 0 || !can("serverTools")) $("exportFormat").value = "current";
     $("exportFormat").hidden = DOWNLOAD_BTN.hidden;
     Array.from($("exportFormat").options).forEach(function(option) {
-      option.disabled = option.value !== "current" && !can("serverTools");
+      option.disabled = option.value === "current" ? !hasBytes(item) : !can("serverTools");
     });
-    $("exportFormat").querySelector('option[value="pdf"]').disabled = !can("serverTools") || (typeInfo(item.diagram_type).native_formats || []).indexOf("pdf") < 0;
+    $("exportFormat").querySelector('option[value="pdf"]').disabled = !can("serverTools") || (typeInfo(item.diagram_type).export_formats || typeInfo(item.diagram_type).native_formats || []).indexOf("pdf") < 0;
     var chips = statChips(item);
     if (chips) META.appendChild(chips);
     TOOLBAR.hidden = !media();
@@ -1028,12 +1061,32 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
         !(item.preview_resized || item.inline_omitted ||
           (item.mime_type && item.mime_type.indexOf("image/") === 0 && item.mime_type !== "image/svg+xml" && (typeInfo(item.diagram_type).formats || []).indexOf("svg") >= 0))) return;
     item._fullTried = true;
-    var format = item._requestedFormat || ((typeInfo(item.diagram_type).formats || []).indexOf("svg") >= 0 || item.output_format === "svg" ? "svg" : "png");
+    item._fullLoading = true;
+    var format = item._requestedFormat || (item.output_format === "html" ? "html" : ((typeInfo(item.diagram_type).formats || []).indexOf("svg") >= 0 || item.output_format === "svg" ? "svg" : "png"));
     readExport(item, format, item.code, item.theme).then(function(result) {
       item.content_base64 = result.encoded; item.mime_type = result.file.mime_type; item.output_format = format;
+      item._fullLoading = false;
       item.preview_resized = false; item.inline_omitted = false; item.inline_note = "";
       if (items[current] === item) renderItem();
-    }).catch(function() { /* Keep the bounded preview and download controls usable. */ });
+    }).catch(function(err) {
+      item._fullLoading = false;
+      item.inline_note = "Full preview unavailable: " + errorText(err);
+      if (items[current] === item) { renderItem(); setStatus(item.inline_note, true); }
+    });
+  }
+
+  async function deliverFile(encoded, file) {
+    if (window.parent !== window) {
+      var reply = await request("ui/download-file", {contents:[{type:"resource",resource:{
+        uri:"file:///" + file.filename,mimeType:file.mime_type,blob:encoded}}]});
+      if (reply && reply.isError) throw new Error("The host could not save this file.");
+    } else {
+      var bytes = Uint8Array.from(atob(encoded), function(c) { return c.charCodeAt(0); });
+      var blobUrl = URL.createObjectURL(new Blob([bytes], {type:file.mime_type}));
+      var anchor = document.createElement("a"); anchor.href = blobUrl;
+      anchor.download = file.filename; document.body.appendChild(anchor); anchor.click(); anchor.remove();
+      setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 60000);
+    }
   }
 
   async function download() {
@@ -1042,20 +1095,17 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     DOWNLOAD_BTN.disabled = true;
     try {
       var format = $("exportFormat").value;
-      var result = format === "current" ? {encoded:item.content_base64, file:{filename:String(item.diagram_type || "diagram").replace(/[^a-z0-9_-]/gi,"-") + "." + (EXT[item.mime_type] || "bin"),mime_type:item.mime_type}} :
+      if (pluginFrame && pluginFrame.dataset.exports === "ready" &&
+          ["svg", "png", "html"].indexOf(format) >= 0) {
+        pluginFrame.contentWindow.postMessage({type:"uml-mcp/plugin-export",format:format}, "*");
+        setStatus("Preparing " + format.toUpperCase() + " export…", "busy");
+        return;
+      }
+      var result = format === "current" ? {encoded:item.content_base64, file:{filename:String(item.diagram_type || "diagram").replace(/[^a-z0-9_-]/gi,"-") + "." + (EXT[String(item.mime_type || "").split(";")[0].trim()] || "bin"),mime_type:item.mime_type}} :
         await readExport(item, format, SOURCE_EDIT.value || item.code, THEME_SEL.value || item.theme);
       var file = result.file, encoded = result.encoded;
-      if (can("downloadFile")) {
-        await request("ui/download-file", {contents:[{type:"resource",resource:{
-          uri:"file:///" + file.filename,mimeType:file.mime_type,blob:encoded}}]});
-      } else {
-        var bytes = Uint8Array.from(atob(encoded), function(c) { return c.charCodeAt(0); });
-        var blobUrl = URL.createObjectURL(new Blob([bytes], {type:file.mime_type}));
-        var anchor = document.createElement("a"); anchor.href = blobUrl;
-        anchor.download = file.filename; document.body.appendChild(anchor); anchor.click(); anchor.remove();
-        setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 60000);
-      }
-      setStatus("Download ready", "ok");
+      await deliverFile(encoded, file);
+      setStatus("Download requested", "ok");
     } catch (err) { setStatus("Download failed: " + errorText(err), true); }
     finally { DOWNLOAD_BTN.disabled = false; }
   }
@@ -1414,6 +1464,20 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   }
 
   window.addEventListener("message", function (ev) {
+    if (pluginFrame && ev.source === pluginFrame.contentWindow) {
+      var packet = ev.data || {};
+      if (packet.type === "uml-mcp/plugin-ready") {
+        pluginFrame.dataset.exports = "ready";
+        pluginFrame.contentWindow.postMessage({type:"uml-mcp/plugin-bridge-ready"}, "*");
+      }
+      if (packet.type === "uml-mcp/plugin-download" && typeof packet.blob === "string" &&
+          packet.blob.length <= 11000000 && /^[-a-zA-Z0-9_.]+$/.test(packet.filename || "") &&
+          ["image/svg+xml", "image/png", "text/html", "application/pdf"].indexOf(packet.mime_type) >= 0) {
+        deliverFile(packet.blob, packet).then(function() {setStatus("Download requested", "ok");})
+          .catch(function(err) {setStatus("Download failed: " + errorText(err), true);});
+      }
+      return;
+    }
     if (ev.source !== window.parent) return;
     var msg = ev.data;
     if (!msg || msg.jsonrpc !== "2.0") return;
@@ -1601,6 +1665,8 @@ def _viewer_data() -> dict[str, Any]:
                 if backend in {"plantuml", "c4plantuml", "mermaid", "d2", "plugin:d3"}
                 else "",
                 "native_formats": list(cfg.formats),
+                "export_formats": list(cfg.formats)
+                + (["png", "pdf"] if backend == "plugin:d3" else []),
                 "formats": [
                     f
                     for f in VIEWER_FORMATS
@@ -1648,6 +1714,7 @@ def diagram_viewer_resource_app_config() -> Any:
         csp=ResourceCSP(
             connect_domains=[],
             resource_domains=["data:", "blob:"],
+            frame_domains=["blob:"],
         ),
         prefers_border=False,
     )

@@ -29,7 +29,14 @@ Inspect text, logo contrast and edge endpoints, including after theme changes.
 A clean parse is not proof of a readable graph. Keep cloud storage, cache,
 authentication, queues and payment services distinct when the user supplied them.
 
-The App exports SVG and PNG plus interactive standalone HTML with its D3 runtime
-and logos bundled. Request downloads through the viewer; do not claim an HTML
+The App exports SVG, PNG, PDF and interactive standalone HTML with its D3
+runtime and logos bundled. PDF embeds a high-resolution raster; use SVG for
+vector editing. Select HTML in the viewer to use the interactive plugin. Large
+HTML pages load on demand rather than in the initial tool result. Request downloads through the viewer; do not claim an HTML
 file exists merely because source was printed. If the plugin failed, report the
 actual error and preserve the graph inventory for a supported fallback.
+
+In the embedded HTML view, SVG, PNG and HTML downloads preserve the live layout
+and theme. PDF export renders the source specification. File downloads go through
+the MCP host; an unsupported or rejected host download must be reported rather
+than claimed successful. Standalone HTML opened in a browser downloads directly.

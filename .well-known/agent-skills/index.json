@@ -258,21 +258,21 @@
       "type": "context",
       "description": "Discover installed D3 plugins and render architecture diagrams with cloud and AI logos in the MCP App.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-d3-plugins/SKILL.md",
-      "sha256": "50adfcf366d951b689689d7d3ced529f51c072ba29996c55e48057168c4161fe"
+      "sha256": "7a6d7cdd98a9c3aacd4870b2fec06d350db7361fdfe6f2c3e864ae1fb42f784e"
     },
     {
       "name": "uml-mcp-diagrams",
       "type": "context",
       "description": "Render and verify UML, C4, Mermaid, D2 and D3 diagrams.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "790e9b3f8f62bfeb395fb1e01285ac1acb6f9f0ff4ab8104d82016063f589b19"
+      "sha256": "bf423469c1b58c35716ea29d632c89882335db681da57056f7ec4a3b9a5e4883"
     },
     {
       "name": "uml-mcp-mermaid",
       "type": "context",
       "description": "Render readable complex Mermaid flowcharts and sequences, preserving labels, themes and playground links.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-mermaid/SKILL.md",
-      "sha256": "cb264676e7f1ae8772e36e7cfff7fa926b02c2eb9b7361fb7ca9c76b86c57a3a"
+      "sha256": "351a69b9f9ca40acec1f336a8036f3fd03d2963d7c4c79bc18699ae45e091b3e"
     },
     {
       "name": "uml-mcp-navigation",

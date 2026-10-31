@@ -313,3 +313,12 @@ class TestDiagramTools:
             {"diagram_type": "mermaid", "code": "z"},
         ]
         assert _batch_concurrency(3, items) == 3
+
+
+def test_catalog_matches_query_words_across_name_backend_and_description():
+    for query in ("C4 PlantUML", "PlantUML C4", "c4-plantuml", "c4_plantuml"):
+        result = list_diagram_types(query=query)
+        assert "c4plantuml" in result
+        assert "structurizr" not in result
+    assert not list_diagram_types(query="C4 missingword")
+    assert not list_diagram_types(query="!!!")

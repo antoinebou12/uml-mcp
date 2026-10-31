@@ -139,3 +139,9 @@ MCP_AUTH_SMOKE_TEST: FAIL - <short reason>
 
 Pass criteria: sign-in happened only once, `validate_uml` works with the read scope,
 generation works after (at most one) step-up, and no token appears in the transcript.
+
+## App and plugin acceptance
+
+Run [MCP App and plugin acceptance](mcp_apps_plugin_acceptance_test.md) separately
+from the baseline tool-count phases. Tool success and valid SVG XML do not prove
+visible labels or working downloads. Uninspected cases remain UNVERIFIED.

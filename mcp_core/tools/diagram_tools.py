@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import os
+import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Any, cast
 
@@ -103,6 +104,7 @@ def list_diagram_types(
     )
     types_map = get_diagram_types_dict()
     query_value = (query or "").strip().lower()
+    query_terms = re.findall(r"[^\W_]+", query_value) or [query_value]
     backend_value = (backend or "").strip().lower()
     format_value = (output_format or "").strip().lower()
 
@@ -116,7 +118,7 @@ def list_diagram_types(
                     str(info.get("description", "")),
                 )
             ).lower()
-            if query_value not in haystack:
+            if not all(term in haystack for term in query_terms):
                 continue
         if backend_value and str(info.get("backend", "")).lower() != backend_value:
             continue
@@ -300,8 +302,7 @@ def _notify_batch_item(index: int, total: int, row: dict[str, Any]) -> None:
         "Render diagram source into an image. Returns url (render link), playground "
         "(source editor), display_markdown (chat embed), and content_base64/mime_type "
         "when image bytes are fetched. local_path identifies a saved file. "
-        "Use output_format=png for inline bytes, or call generate_uml_image. "
-        "MCP Apps hosts may open the linked diagram viewer."
+        "Prefer SVG in MCP Apps; generate_uml_image fetches preview bytes."
     ),
     category="uml",
     example="generate_uml('mermaid', 'graph TD; A-->B;')",
