@@ -417,6 +417,42 @@ def _content_problem(row: dict[str, Any]) -> str | None:
     return None
 
 
+def _full_svg(mcp: McpClient, row: Any, item: dict[str, Any]) -> Any:
+    """Inspect the full vector when the initial result carries a thumbnail."""
+    if not isinstance(row, dict) or row.get("error"):
+        return row
+    if row.get("content_base64") and row.get("mime_type") == "image/svg+xml":
+        return row
+    args = {
+        "diagram_type": item["diagram_type"],
+        "code": item["code"],
+        "output_format": "svg",
+        "offset": 0,
+    }
+    chunks = []
+    while True:
+        rpc = mcp.call("download_diagram", args)
+        file = (rpc.get("result") or {}).get("structuredContent") or {}
+        if not file.get("chunk") or file.get("offset") != args["offset"]:
+            return {
+                **row,
+                "error": "Full SVG retrieval failed: " + _tool_result_text(rpc)[:160],
+            }
+        chunks.append(file["chunk"])
+        if (
+            file["next_offset"] != args["offset"] + len(file["chunk"])
+            or not args["offset"] < file["next_offset"] <= file["total"] <= 11_000_000
+        ):
+            return {**row, "error": "Invalid full SVG download sequence"}
+        args.update(offset=file["next_offset"], sha256=file["sha256"])
+        if args["offset"] == file["total"]:
+            return {
+                **row,
+                "content_base64": "".join(chunks),
+                "mime_type": file["mime_type"],
+            }
+
+
 def _item_ok(row: Any, check_content: bool = False) -> bool:
     if not isinstance(row, dict):
         return False
@@ -495,6 +531,8 @@ def main(argv: list[str] | None = None) -> int:
         items1 = [{**f, "output_format": "svg", "scale": 1.0} for f in FIXTURES_1_20]
         rpc1 = mcp.call("generate_uml_batch", {"items": items1})
         rows1 = _extract_batch_rows(rpc1)
+        if args.check_content:
+            rows1 = [_full_svg(mcp, row, item) for row, item in zip(rows1, items1)]
         ok1 = sum(1 for r in rows1 if _item_ok(r, args.check_content))
         print(f"batch1 rows={len(rows1)} ok={ok1}")
         for i, r in enumerate(rows1):
@@ -508,6 +546,8 @@ def main(argv: list[str] | None = None) -> int:
         items2 = [{**f, "output_format": "svg", "scale": 1.0} for f in FIXTURES_21_37]
         rpc2 = mcp.call("generate_uml_batch", {"items": items2})
         rows2 = _extract_batch_rows(rpc2)
+        if args.check_content:
+            rows2 = [_full_svg(mcp, row, item) for row, item in zip(rows2, items2)]
         ok2 = sum(1 for r in rows2 if _item_ok(r, args.check_content))
         print(f"batch2 rows={len(rows2)} ok={ok2}")
         for i, r in enumerate(rows2):

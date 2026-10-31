@@ -180,6 +180,36 @@ async def _render_all(base: str, sources: dict[str, tuple[str, str]]) -> dict:
             ]
             batch = await client.call_tool("generate_uml_batch", {"items": items})
             for name, row in zip(chunk, batch.structured_content["results"]):
+                if not row.get("error") and (
+                    not row.get("content_base64")
+                    or row.get("mime_type") != "image/svg+xml"
+                ):
+                    args = {
+                        "diagram_type": sources[name][0],
+                        "code": sources[name][1],
+                        "output_format": "svg",
+                        "offset": 0,
+                    }
+                    parts = []
+                    while True:
+                        reply = await client.call_tool("download_diagram", args)
+                        file = reply.structured_content
+                        assert file["offset"] == args["offset"]
+                        assert (
+                            args["offset"]
+                            < file["next_offset"]
+                            <= file["total"]
+                            <= 11_000_000
+                        )
+                        parts.append(file["chunk"])
+                        args.update(offset=file["next_offset"], sha256=file["sha256"])
+                        if args["offset"] == file["total"]:
+                            row = {
+                                **row,
+                                "content_base64": "".join(parts),
+                                "mime_type": file["mime_type"],
+                            }
+                            break
                 out[name] = row
     return out
 
