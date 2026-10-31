@@ -106,7 +106,7 @@ services:
   # Self-hosted mermaid.ink, the Mermaid *fallback* renderer. Set
   # MCP_DIAGRAM_FALLBACK=true and USE_LOCAL_MERMAID_INK=true to use it.
   mermaid-ink:
-    image: ghcr.io/jihchi/mermaid.ink:v16.0.0
+    image: ghcr.io/jihchi/mermaid.ink:v17.0.0
     profiles:
       - mermaid-ink
       - fallback

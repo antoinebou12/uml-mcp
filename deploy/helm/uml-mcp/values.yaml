@@ -162,7 +162,7 @@ plantuml:
 mermaidInk:
   enabled: false          # in-cluster mermaid.ink, the fallback for Mermaid diagrams
   externalUrl: ""         # use an existing server instead (ignored when enabled)
-  image: {repository: ghcr.io/jihchi/mermaid.ink, tag: v16.0.0, pullPolicy: IfNotPresent}
+  image: {repository: ghcr.io/jihchi/mermaid.ink, tag: v17.0.0, pullPolicy: IfNotPresent}
   service: {port: 3000}
   # Headless Chromium needs syscalls the runtime's default seccomp profile blocks.
   # Unconfined is upstream's documented option; Pod Security "baseline" and "restricted"
