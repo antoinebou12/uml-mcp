@@ -51,7 +51,7 @@
     },
     {
       "name": "generate_uml",
-      "description": "Render diagram source into an image. Returns url (render link), playground (source editor), display_markdown (chat embed), and content_base64/mime_type when image bytes are fetched. local_path identifies a saved file. Use output_format=png for inline bytes, or call generate_uml_image. MCP Apps hosts may open the linked diagram viewer.",
+      "description": "Render diagram source into an image. Returns url (render link), playground (source editor), display_markdown (chat embed), and content_base64/mime_type when image bytes are fetched. local_path identifies a saved file. Prefer SVG in MCP Apps; generate_uml_image fetches preview bytes.",
       "inputSchema": {
         "type": "object",
         "properties": {

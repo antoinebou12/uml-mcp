@@ -81,3 +81,9 @@ When converting to D2, use supported shapes and keep service names as labels.
 The observed `shape: key` request failed in Kroki; use a labelled rectangle for
 an authentication service, then check the rendered result. Structural validation
 alone does not verify every renderer-specific shape or external library.
+
+For an interactive D3 view, request HTML when the live catalog supports it. The
+App loads the full page on demand if the initial HTML exceeds its size budget.
+An omitted initial HTML payload does not prove the render failed; verify the
+viewer or file export before claiming it displayed. Downloads in an App use the
+host API. Report a rejected or unsupported download instead of claiming it saved.

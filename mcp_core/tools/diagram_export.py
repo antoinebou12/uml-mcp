@@ -3,6 +3,7 @@
 import base64
 import hashlib
 import html
+from io import BytesIO
 
 from pydantic import BaseModel, Field
 
@@ -61,6 +62,23 @@ def download_diagram(
         return {"error": "Download offset must be a nonnegative multiple of 32000."}
     if not code.strip() or len(code) > 200_000:
         return {"error": "Download requires source between 1 and 200000 characters."}
+    from mcp_core.core.diagram_service import _renderer_identity
+    from mcp_core.core.render_cache import build_render_cache_key, get_render_cache
+    from mcp_core.core.settings_file import get_app_config
+
+    cache = get_render_cache()
+    cache_key = "export:" + build_render_cache_key(
+        diagram_type=diagram_type,
+        code=hashlib.sha256(code.encode()).hexdigest(),
+        output_format=output_format,
+        theme=theme,
+        scale=1.0,
+        renderer_identity=_renderer_identity(force_fetch=True)
+        + get_app_config().plugins.model_dump_json(),
+    )
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return _export_chunk(cached, offset, sha256)
     from mcp_core.core.viewer_theme import apply_viewer_theme
 
     if output_format != "source":
@@ -70,7 +88,6 @@ def download_diagram(
     elif output_format == "html" and diagram_type.startswith("d3_"):
         from uml_mcp_plugin_d3 import D3Renderer
 
-        from mcp_core.core.settings_file import get_app_config
         from mcp_core.plugins.loader import RENDERERS
 
         if diagram_type not in RENDERERS:
@@ -86,8 +103,16 @@ def download_diagram(
         from mcp_core.core.config import MCP_SETTINGS
 
         info = MCP_SETTINGS.diagram_types.get(diagram_type)
-        raster_from_svg = (
-            output_format == "png" and info is not None and "svg" in info.formats
+        plugin_pdf = bool(
+            output_format == "pdf"
+            and info is not None
+            and info.backend.startswith("plugin:")
+            and "svg" in info.formats
+        )
+        raster_from_svg = bool(
+            (output_format == "png" or plugin_pdf)
+            and info is not None
+            and "svg" in info.formats
         )
         result = generate_from_request(
             DiagramRequest(
@@ -115,6 +140,23 @@ def download_diagram(
             if png is None:
                 return {"error": "PNG conversion failed. Download SVG instead."}
             raw, mime = png, "image/png"
+            if plugin_pdf:
+                from PIL import Image
+
+                with Image.open(BytesIO(png)) as image:
+                    rgba = image.convert("RGBA")
+                    paper = Image.new("RGB", rgba.size, "white")
+                    paper.paste(rgba, mask=rgba.getchannel("A"))
+                    pdf = BytesIO()
+                    paper.save(
+                        pdf,
+                        format="PDF",
+                        resolution=144.0,
+                        quality=95,
+                        creationDate=None,
+                        modDate=None,
+                    )
+                    raw, mime = pdf.getvalue(), "application/pdf"
         if output_format == "html":
             image = base64.b64encode(raw).decode()
             raw = (
@@ -123,12 +165,23 @@ def download_diagram(
             mime = "text/html"
     if len(raw) > 8_000_000:
         return {"error": "Export exceeds 8 MB. Reduce the diagram size."}
-    digest = hashlib.sha256(raw).hexdigest()
-    if sha256 and sha256 != digest:
+    file = {
+        "encoded": base64.b64encode(raw).decode(),
+        "sha256": hashlib.sha256(raw).hexdigest(),
+        "mime_type": mime,
+        "filename": "diagram."
+        + ("txt" if output_format == "source" else output_format),
+    }
+    cache.set(cache_key, file)
+    return _export_chunk(file, offset, sha256)
+
+
+def _export_chunk(file: dict, offset: int, digest: str | None) -> dict:
+    if digest and digest != file["sha256"]:
         return {
             "error": "The render changed during download. Start the download again."
         }
-    encoded = base64.b64encode(raw).decode()
+    encoded = file["encoded"]
     if offset > len(encoded):
         return {"error": "Download offset exceeds the file size. Start again."}
     chunk = encoded[offset : offset + 32_000]
@@ -137,8 +190,7 @@ def download_diagram(
         "offset": offset,
         "next_offset": offset + len(chunk),
         "total": len(encoded),
-        "sha256": digest,
-        "mime_type": mime,
-        "filename": "diagram."
-        + ("txt" if output_format == "source" else output_format),
+        "sha256": file["sha256"],
+        "mime_type": file["mime_type"],
+        "filename": file["filename"],
     }

@@ -9,6 +9,7 @@ var UmlViewer = (function () {
   'use strict';
 
   var SVG_NS = 'http://www.w3.org/2000/svg';
+  var hostBridge = false;
 
   function escapeJson(text) {
     // same escaping the server uses, so the data block can never close its own script element
@@ -21,6 +22,15 @@ var UmlViewer = (function () {
 
   function download(content, type, name) {
     var blob = content instanceof Blob ? content : new Blob([content], { type: type });
+    if (hostBridge) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        window.parent.postMessage({type:'uml-mcp/plugin-download', filename:name,
+          mime_type:type, blob:String(reader.result).split(',')[1]}, '*');
+      };
+      reader.readAsDataURL(blob);
+      return;
+    }
     var a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
     a.download = name;
@@ -94,7 +104,10 @@ var UmlViewer = (function () {
     var css = document.getElementById('diagram-css');
     if (css) {
       var style = document.createElementNS(SVG_NS, 'style');
-      style.textContent = css.textContent;
+      var computed = getComputedStyle(svg);
+      style.textContent = css.textContent.replace(/var\((--[\w-]+)\)/g, function (_, key) {
+        return computed.getPropertyValue(key).trim() || 'inherit';
+      });
       clone.insertBefore(style, clone.querySelector('defs'));
     }
     clone.classList.remove('light', 'dark', 'auto');
@@ -222,6 +235,17 @@ var UmlViewer = (function () {
       else if (event.key === '0') fit();
     });
 
+    if (window.parent !== window) {
+      window.addEventListener('message', function (event) {
+        if (event.source !== window.parent || !event.data) return;
+        if (event.data.type === 'uml-mcp/plugin-bridge-ready') { hostBridge = true; return; }
+        if (event.data.type !== 'uml-mcp/plugin-export') return;
+        var id = {svg:'save', png:'png', html:'html'}[event.data.format];
+        var control = id && document.getElementById(id);
+        if (control) control.click();
+      });
+      window.parent.postMessage({type:'uml-mcp/plugin-ready', exports:['svg','png','html']}, '*');
+    }
     return { zoom: zoom, fit: fit, showTip: showTip, hideTip: hideTip, button: button };
   }
 

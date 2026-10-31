@@ -50,3 +50,32 @@ def test_labelled_preview_keeps_resolution_within_budget():
     assert result and len(result) <= 48_000
     image = Image.open(BytesIO(base64.b64decode(result)))
     assert image.width >= 960
+
+
+def test_c4_embedded_raster_icon_keeps_a_bounded_preview():
+    buf = BytesIO()
+    Image.new("RGB", (52, 52), "blue").save(buf, format="PNG")
+    icon = base64.b64encode(buf.getvalue()).decode()
+    svg = f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="400" height="200"><image xlink:href="data:image/png;base64,{icon}" width="52" height="52"/><text x="20" y="100">C4 Container</text></svg>'
+    result = compact_preview(
+        base64.b64encode(svg.encode()).decode(),
+        "image/svg+xml",
+        12000,
+        max_dimension=160,
+    )
+    assert result and len(result) <= 12000
+    assert Image.open(BytesIO(base64.b64decode(result))).width <= 160
+
+
+def test_embedded_svg_or_invalid_raster_does_not_bypass_resource_guard():
+    nested = base64.b64encode(
+        b'<svg xmlns="http://www.w3.org/2000/svg"><image href="https://example.com/tracker.png"/></svg>'
+    ).decode()
+    for mime in ("svg+xml", "png"):
+        svg = f'<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><image href="data:image/{mime};base64,{nested}"/></svg>'
+        assert (
+            compact_preview(
+                base64.b64encode(svg.encode()).decode(), "image/svg+xml", 12000
+            )
+            is None
+        )

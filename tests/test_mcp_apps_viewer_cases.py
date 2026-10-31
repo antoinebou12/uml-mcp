@@ -31,9 +31,13 @@ HOST = """([html, caps, responses]) => {
         }
         window.calls.push({method: m.method, params: m.params});
         if (m.method === 'tools/call') {
-            const res = responses[m.params.name];
+            const args = m.params.arguments || {};
+            const res = responses[m.params.name + ':' + args.output_format + ':' + (args.offset || 0)] || responses[m.params.name];
             return res ? reply({result: res})
                        : reply({error: {code: -32603, message: 'no stub'}});
+        }
+        if (m.method === 'ui/download-file' && responses['ui/download-file']) {
+            return reply({result: responses['ui/download-file']});
         }
         reply({result: {}});
     });
@@ -484,14 +488,14 @@ def test_png_to_svg_rerender_keeps_labels_and_new_link(browser):
     host.expect(host.frame.locator("#formatSelect")).to_have_value("svg")
 
 
-def test_current_svg_download_works_without_host_download_capability(browser):
+def test_current_svg_download_probes_unadvertised_host_download_support(browser):
     host = Host(browser, {}, {})
     host.send("ui/notifications/tool-result", _svg_result("Standalone download"))
     host.expect(host.frame.locator("#downloadBtn")).to_be_visible()
     host.expect(host.frame.locator("#exportFormat")).to_have_value("current")
-    with host.page.expect_download() as pending:
-        host.frame.locator("#downloadBtn").click()
-    raw = Path(pending.value.path()).read_text(encoding="utf-8")
+    host.frame.locator("#downloadBtn").click()
+    call = host.wait_calls("ui/download-file")[0]
+    raw = base64.b64decode(call["params"]["contents"][0]["resource"]["blob"]).decode()
     assert "Standalone download" in raw and "<svg" in raw
     assert not host.tool_calls("download_diagram")
 
@@ -528,3 +532,84 @@ def test_explicit_png_preview_is_not_overridden_by_svg_hydration(browser):
     host.expect(host.frame.locator("#formatSelect")).to_have_value("png")
     host.wait_calls("tools/call", 2)
     assert host.tool_calls("download_diagram")[0]["output_format"] == "png"
+
+
+def test_host_download_rejection_is_reported(browser):
+    host = Host(browser, {}, {"ui/download-file": {"isError": True}})
+    host.send("ui/notifications/tool-result", _svg_result("Rejected download"))
+    host.frame.locator("#downloadBtn").click()
+    host.expect(host.frame.locator("#status")).to_contain_text("Download failed")
+    host.expect(host.frame.locator("#downloadBtn")).to_be_enabled()
+
+
+def test_plugin_html_is_isolated_and_exports_live_svg_png_and_html(browser, d3_plugin):
+    import hashlib
+    from io import BytesIO
+
+    from PIL import Image
+    from uml_mcp_plugin_d3 import D3Renderer
+    from uml_mcp_plugin_d3.samples import SAMPLES
+
+    d3_plugin()
+    code = SAMPLES["d3_architecture"][0]
+    renderer = D3Renderer()
+    renderer.configure({"d3_source": "inline"})
+    raw = renderer.render("d3_architecture", code, "html").content
+    encoded = base64.b64encode(raw).decode()
+    digest = hashlib.sha256(raw).hexdigest()
+    responses = {}
+    for offset in range(0, len(encoded), 32000):
+        chunk = encoded[offset : offset + 32000]
+        responses[f"download_diagram:html:{offset}"] = {
+            "structuredContent": {
+                "chunk": chunk,
+                "offset": offset,
+                "next_offset": offset + len(chunk),
+                "total": len(encoded),
+                "sha256": digest,
+                "mime_type": "text/html",
+                "filename": "diagram.html",
+            }
+        }
+    host = Host(browser, TOOLS, responses)
+    host.send(
+        "ui/notifications/tool-result",
+        {
+            "structuredContent": {
+                "diagram_type": "d3_architecture",
+                "code": code,
+                "output_format": "html",
+                "mime_type": "text/html; charset=utf-8",
+                "inline_omitted": True,
+            }
+        },
+    )
+    outer = host.frame
+    inner = outer.frame_locator("iframe.plugin-frame")
+    host.expect(inner.locator("body")).to_have_attribute("data-ready", "architecture")
+    host.expect(inner.locator("g.node")).to_have_count(7)
+    assert (
+        outer.locator("iframe.plugin-frame").get_attribute("sandbox") == "allow-scripts"
+    )
+    assert (
+        inner.locator("body").evaluate(
+            "() => { try { return window.parent.document.title; } catch (_) { return 'isolated'; } }"
+        )
+        == "isolated"
+    )
+    inner.locator("#theme").click()
+    for count, format in enumerate(("svg", "png", "html"), start=1):
+        outer.locator("#exportFormat").select_option(format)
+        outer.locator("#downloadBtn").click()
+        call = host.wait_calls("ui/download-file", count)[-1]
+        resource = call["params"]["contents"][0]["resource"]
+        data = base64.b64decode(resource["blob"])
+        if format == "svg":
+            assert b"var(" not in data and b"arch dark" in data
+        elif format == "png":
+            assert Image.open(BytesIO(data)).width > 2000
+        else:
+            assert (
+                data.startswith(b"<!doctype html>") and b"cdn.jsdelivr.net" not in data
+            )
+    assert not outer.locator('#exportFormat option[value="pdf"]').is_disabled()
