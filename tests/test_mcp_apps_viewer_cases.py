@@ -606,6 +606,13 @@ def test_plugin_html_is_isolated_and_exports_live_svg_png_and_html(browser, d3_p
         data = base64.b64decode(resource["blob"])
         if format == "svg":
             assert b"var(" not in data and b"arch dark" in data
+            exported = browser.new_page()
+            exported.set_content(data.decode())
+            colors = "nodes => nodes.map(node => getComputedStyle(node).fill)"
+            assert exported.locator("rect.card").evaluate_all(colors) == inner.locator(
+                "rect.card"
+            ).evaluate_all(colors)
+            exported.close()
         elif format == "png":
             assert Image.open(BytesIO(data)).width > 2000
         else:

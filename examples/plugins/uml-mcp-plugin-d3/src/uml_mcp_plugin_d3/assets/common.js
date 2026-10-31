@@ -104,10 +104,8 @@ var UmlViewer = (function () {
     var css = document.getElementById('diagram-css');
     if (css) {
       var style = document.createElementNS(SVG_NS, 'style');
-      var computed = getComputedStyle(svg);
-      style.textContent = css.textContent.replace(/var\((--[\w-]+)\)/g, function (_, key) {
-        return computed.getPropertyValue(key).trim() || 'inherit';
-      });
+      var exportCss = document.getElementById('svg-export-css');
+      style.textContent = exportCss ? JSON.parse(exportCss.textContent)[isDark() ? 'dark' : 'light'] : css.textContent;
       clone.insertBefore(style, clone.querySelector('defs'));
     }
     clone.classList.remove('light', 'dark', 'auto');
