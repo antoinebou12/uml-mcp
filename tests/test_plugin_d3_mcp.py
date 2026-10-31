@@ -151,6 +151,7 @@ def test_the_plugin_package_ships_everything_it_loads() -> None:
     names = {p.name for p in (package / "assets").iterdir()}
     assert names == {
         "arch.js",
+        "bounds.js",
         "common.js",
         "force.js",
         "router.js",

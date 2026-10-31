@@ -249,7 +249,7 @@ var UmlRouter = (function () {
     });
     var candidates = [];
     ordered.forEach(function (r) {
-      (r.len >= 2 * need ? [0.5, 0.25, 0.75] : [0.5]).forEach(function (t) {
+      (r.len >= need ? [0.5, 0.25, 0.75] : [0.5]).forEach(function (t) {
         candidates.push([r.a[0] + (r.b[0] - r.a[0]) * t, r.a[1] + (r.b[1] - r.a[1]) * t]);
       });
     });

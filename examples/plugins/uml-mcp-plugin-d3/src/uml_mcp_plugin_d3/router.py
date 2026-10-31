@@ -241,7 +241,7 @@ def label_point(
 
     candidates: list[Point] = []
     for _index, (length, a, b) in sorted(enumerate(runs), key=rank):
-        for t in (0.5, 0.25, 0.75) if length >= 2 * need else (0.5,):
+        for t in (0.5, 0.25, 0.75) if length >= need else (0.5,):
             candidates.append((a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t))
     half_w, half_h = width / 2 + LABEL_MARGIN, 8 + LABEL_MARGIN
     for x, y in candidates:

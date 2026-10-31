@@ -71,6 +71,9 @@ def _toolbar(kind: str) -> str:
         '<button id="pause" type="button">Pause</button>'
         if kind == "force"
         else '<button id="flow" type="button" aria-pressed="false">Flow</button>'
+        '<button id="physics" type="button" aria-pressed="false" '
+        'title="Settle nodes inside their current containers">Physics</button>'
+        '<button id="focus" type="button" disabled title="Zoom to selection">Focus</button>'
     )
     return (
         '<div class="bar">'
@@ -128,6 +131,7 @@ def _page(
         '<button id="zin" type="button" title="Zoom in">+</button></div>'
         f'<div class="hint">{escape(hint)}</div></main>'
         '<div id="tip" role="tooltip"></div>'
+        '<output id="selection-status" class="sr-only" aria-live="polite"></output>'
         f'<script type="application/json" id="spec">{json_for_script(data)}</script>'
         '<script type="application/json" id="svg-export-css">'
         + json_for_script(
@@ -164,7 +168,10 @@ def architecture_page(layout: Layout, spec: ArchSpec, *, d3_source: str = "cdn")
             }
             for b in layout.boxes
         ],
-        "groups": [{"id": g.id, "parent": g.parent} for g in layout.groups],
+        "groups": [
+            {"id": g.id, "parent": g.parent, "label": g.label, "type": g.type}
+            for g in layout.groups
+        ],
         "edges": [
             {
                 "id": e.id,
@@ -186,8 +193,13 @@ def architecture_page(layout: Layout, spec: ArchSpec, *, d3_source: str = "cdn")
         kind="architecture",
         svg=architecture_svg(layout, title=None, theme=spec.theme, page=True),
         data=data,
-        runtime=[asset("common.js"), asset("router.js"), asset("arch.js")],
-        hint="Scroll to zoom, drag the background to pan, drag a box to move it (arrows re-route)",
+        runtime=[
+            asset("common.js"),
+            asset("router.js"),
+            asset("bounds.js"),
+            asset("arch.js"),
+        ],
+        hint="Scroll to zoom; click to trace; double-click to focus; Escape to clear",
         d3_source=d3_source,
     )
 

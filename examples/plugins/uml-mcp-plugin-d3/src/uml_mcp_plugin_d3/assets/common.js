@@ -61,9 +61,12 @@ var UmlViewer = (function () {
     if (viewport) viewport.removeAttribute('transform');
     var dots = clone.querySelector ? clone.querySelector('pattern#dots') : null;
     if (dots) dots.removeAttribute('patternTransform');
-    clone.querySelectorAll('.on, .dragging, .hl, .flow').forEach(function (el) {
-      el.classList.remove('on', 'dragging', 'hl', 'flow');
+    if (clone.classList) clone.classList.remove('hl', 'flow', 'selected', 'dragging');
+    clone.querySelectorAll('.on, .dragging, .hl, .flow, .selected').forEach(function (el) {
+      el.classList.remove('on', 'dragging', 'hl', 'flow', 'selected');
     });
+    clone.querySelectorAll('.connection-overlay').forEach(function (el) { el.remove(); });
+    clone.querySelectorAll('g[aria-pressed]').forEach(function (el) { el.setAttribute('aria-pressed', 'false'); });
     // inline style attributes are not allowed by the page's Content-Security-Policy
     clone.querySelectorAll('[style]').forEach(function (el) { el.removeAttribute('style'); });
     if (clone.removeAttribute) clone.removeAttribute('style');
@@ -100,6 +103,7 @@ var UmlViewer = (function () {
   // A standalone SVG: the stylesheet travels inside it and the theme is the one on screen.
   function svgText(svg, box) {
     var clone = cleanClone(svg);
+    clone.setAttribute('role', 'img');
     setCanvas(clone, box, true);
     var css = document.getElementById('diagram-css');
     if (css) {
@@ -139,6 +143,11 @@ var UmlViewer = (function () {
     if (menu) menu.removeAttribute('open');
     var flow = doc.querySelector('#flow');
     if (flow) flow.setAttribute('aria-pressed', 'false');
+    var physics = doc.querySelector('#physics');
+    if (physics) physics.setAttribute('aria-pressed', 'false');
+    var status = doc.querySelector('#selection-status');
+    if (status) status.textContent = '';
+    doc.querySelector('body').removeAttribute('data-physics');
     setCanvas(doc.querySelector('svg'), box, false);
     return '<!doctype html>\n' + doc.outerHTML + '\n';
   }
@@ -178,17 +187,18 @@ var UmlViewer = (function () {
       });
     svg.call(zoom).on('dblclick.zoom', null);
 
-    function fit() {
-      var box = vp.node().getBBox();
+    function fitTo(box) {
       var vb = svg.node().viewBox.baseVal;
       if (!box.width || !box.height) return;
       var low = (o.extent || [0.2, 6])[0];
       var k = Math.min(4, Math.max(low, 0.94 * Math.min(vb.width / box.width, vb.height / box.height)));
       var t = d3.zoomIdentity
-        .translate(vb.width / 2 - k * (box.x + box.width / 2), vb.height / 2 - k * (box.y + box.height / 2))
+        .translate(vb.x + vb.width / 2 - k * (box.x + box.width / 2), vb.y + vb.height / 2 - k * (box.y + box.height / 2))
         .scale(k);
-      svg.transition().duration(250).call(zoom.transform, t);
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      svg.transition().duration(reduced ? 0 : 250).call(zoom.transform, t);
     }
+    function fit() { fitTo(vp.node().getBBox()); }
 
     function button(id, fn) {
       var el = document.getElementById(id);
@@ -213,10 +223,12 @@ var UmlViewer = (function () {
       this.setAttribute('aria-pressed', String(on));
     });
     button('save', function () {
+      if (o.beforeExport) o.beforeExport();
       closeMenu();
       download(svgText(svg.node(), canvasBox(svg, vp)), 'image/svg+xml', fileName(o.title, o.name, 'svg'));
     });
     button('png', function () {
+      if (o.beforeExport) o.beforeExport();
       closeMenu();
       var box = canvasBox(svg, vp);
       pngBlob(svgText(svg.node(), box), box[2], box[3], function (blob) {
@@ -224,6 +236,7 @@ var UmlViewer = (function () {
       });
     });
     button('html', function () {
+      if (o.beforeExport) o.beforeExport();
       closeMenu();
       download(htmlText(o.snapshot(), canvasBox(svg, vp)), 'text/html', fileName(o.title, o.name, 'html'));
     });
@@ -244,7 +257,7 @@ var UmlViewer = (function () {
       });
       window.parent.postMessage({type:'uml-mcp/plugin-ready', exports:['svg','png','html']}, '*');
     }
-    return { zoom: zoom, fit: fit, showTip: showTip, hideTip: hideTip, button: button };
+    return { zoom: zoom, fit: fit, fitTo: fitTo, showTip: showTip, hideTip: hideTip, button: button };
   }
 
   return { init: init };

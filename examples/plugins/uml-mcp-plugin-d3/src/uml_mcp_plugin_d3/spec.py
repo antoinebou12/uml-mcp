@@ -135,6 +135,7 @@ class ArchSpec(_Model):
     theme: Literal["light", "dark", "auto"] = "light"
     provider: str = "generic"
     direction: Literal["LR", "TB"] | None = None
+    group_by: Literal["none", "category"] = "none"
     groups: list[ArchGroup] = []
     nodes: list[ArchNode]
     links: list[ArchLink] = []

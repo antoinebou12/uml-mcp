@@ -29,6 +29,20 @@ Inspect text, logo contrast and edge endpoints, including after theme changes.
 A clean parse is not proof of a readable graph. Keep cloud storage, cache,
 authentication, queues and payment services distinct when the user supplied them.
 
+For architecture containers, declare `groups` with `id`, `label`, `type` and
+optional `parent`, then set each node's `group`. Preserve the user's boundaries
+and labelled relationships when converting formats. For category-only grouping,
+`group_by: "category"` wraps ungrouped nodes; it does not infer network or cloud
+account boundaries. Use named ports for distinct flows when needed. Check routes
+and label placement after dragging, then reopen an HTML export to verify the
+containers and connections survived.
+
+In the interactive architecture/topology HTML, Physics settles cards inside
+their current container bounds. It starts off; enable it before testing bounded
+dragging. Clicking a card or container traces its connections, including nested
+members. Focus or double-click zooms to the selection; Escape clears it. Check
+that exports retain settled positions and reopen without temporary highlights.
+
 The App exports SVG, PNG, PDF and interactive standalone HTML with its D3
 runtime and logos bundled. PDF embeds a high-resolution raster; use SVG for
 vector editing. Select HTML in the viewer to use the interactive plugin. Large

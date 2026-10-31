@@ -1,0 +1,159 @@
+{
+  "title": "Commerce Platform Inventory",
+  "direction": "LR",
+  "nodes": [
+    {
+      "id": "frontend",
+      "label": "React Frontend",
+      "category": "frontend",
+      "service": "tech:react",
+      "group": "app"
+    },
+    {
+      "id": "api",
+      "label": "Commerce API",
+      "category": "backend",
+      "service": "aws:apigateway",
+      "group": "app"
+    },
+    {
+      "id": "auth",
+      "label": "Authentication",
+      "category": "security",
+      "service": "aws:cognito",
+      "group": "app"
+    },
+    {
+      "id": "cache",
+      "label": "Session Cache",
+      "category": "backend",
+      "service": "aws:elasticache",
+      "group": "data"
+    },
+    {
+      "id": "database",
+      "label": "Order Database",
+      "category": "database",
+      "service": "aws:rds",
+      "group": "data"
+    },
+    {
+      "id": "queue",
+      "label": "Fulfillment Queue",
+      "category": "messagebus",
+      "service": "aws:sqs",
+      "group": "data"
+    },
+    {
+      "id": "storage",
+      "label": "Receipt Storage",
+      "category": "database",
+      "service": "aws:s3",
+      "group": "data"
+    },
+    {
+      "id": "payment",
+      "label": "Payment Provider",
+      "category": "external",
+      "kind": "service",
+      "group": "integrations"
+    },
+    {
+      "id": "gcp",
+      "label": "GCP Analytics",
+      "category": "cloud",
+      "service": "gcp:bigquery",
+      "group": "integrations"
+    },
+    {
+      "id": "chatgpt",
+      "label": "ChatGPT",
+      "category": "external",
+      "service": "tech:chatgpt",
+      "group": "integrations"
+    },
+    {
+      "id": "claude",
+      "label": "Claude",
+      "category": "external",
+      "service": "tech:claude",
+      "group": "integrations"
+    }
+  ],
+  "links": [
+    {
+      "from": "frontend",
+      "to": "api",
+      "label": "HTTPS requests"
+    },
+    {
+      "from": "api",
+      "to": "auth",
+      "label": "Verify identity"
+    },
+    {
+      "from": "api",
+      "to": "cache",
+      "label": "Read sessions"
+    },
+    {
+      "from": "api",
+      "to": "database",
+      "label": "Persist orders"
+    },
+    {
+      "from": "api",
+      "to": "queue",
+      "label": "Enqueue fulfillment"
+    },
+    {
+      "from": "api",
+      "to": "storage",
+      "label": "Write receipts"
+    },
+    {
+      "from": "api",
+      "to": "payment",
+      "label": "Authorize payment"
+    },
+    {
+      "from": "database",
+      "to": "gcp",
+      "label": "Export analytics"
+    },
+    {
+      "from": "api",
+      "to": "chatgpt",
+      "label": "AI support"
+    },
+    {
+      "from": "api",
+      "to": "claude",
+      "label": "AI review"
+    }
+  ],
+  "groups": [
+    {
+      "id": "commerce",
+      "label": "Commerce platform (logical)",
+      "type": "system"
+    },
+    {
+      "id": "app",
+      "label": "Application services",
+      "type": "cluster",
+      "parent": "commerce"
+    },
+    {
+      "id": "data",
+      "label": "Persistence and events",
+      "type": "env",
+      "parent": "commerce"
+    },
+    {
+      "id": "integrations",
+      "label": "External integrations",
+      "type": "system"
+    }
+  ]
+}

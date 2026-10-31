@@ -74,7 +74,7 @@ def test_vendored_d3_is_the_published_file() -> None:
 
 
 @pytest.mark.parametrize(
-    "name", ["common.js", "router.js", "arch.js", "force.js", html.D3_FILE]
+    "name", ["common.js", "router.js", "bounds.js", "arch.js", "force.js", html.D3_FILE]
 )
 def test_scripts_are_safe_to_inline(name: str) -> None:
     """A ``</script``, ``<script`` or ``<!--`` inside an inline script would end or confuse it."""
@@ -1565,6 +1565,62 @@ def test_group_titles_sit_on_their_border_and_borders_follow_the_type() -> None:
     assert svg.count('class="t-group"') == 3
 
 
+@pytest.mark.parametrize("direction", ["LR", "TB"])
+def test_category_containers_preserve_explicit_groups_and_source(
+    direction: str,
+) -> None:
+    parsed = spec.parse_arch(
+        "d3_architecture",
+        arch(
+            direction=direction,
+            group_by="category",
+            groups=[{"id": "auto-frontend", "label": "Explicit boundary"}],
+            nodes=[
+                {"id": "a", "category": "frontend", "group": "auto-frontend"},
+                {"id": "b", "category": "frontend"},
+                {"id": "c", "category": "database"},
+                {"id": "d", "category": "database"},
+            ],
+        ),
+    )
+    original = parsed.model_dump()
+    arranged = layout.build(parsed, "d3_architecture", direction)
+    assert parsed.model_dump() == original
+    groups = {g.id: g for g in arranged.groups}
+    boxes = {b.id: b for b in arranged.boxes}
+    assert boxes["a"].group == "auto-frontend"
+    assert boxes["b"].group == "auto-frontend-2"
+    assert boxes["c"].group == boxes["d"].group == "auto-database"
+    assert len(groups) == 3
+    for box in boxes.values():
+        assert box.group is not None
+        group = groups[box.group]
+        assert group.x < box.x and group.y < box.y
+        assert group.x + group.w > box.x + box.w
+        assert group.y + group.h > box.y + box.h
+
+
+def test_category_containers_are_opt_in() -> None:
+    assert not layout.build(
+        spec.parse_arch("d3_architecture", arch()), "d3_architecture", "LR"
+    ).groups
+    assert any(
+        "group_by" in p for p in problems("d3_architecture", arch(group_by="provider"))
+    )
+
+
+def test_commerce_container_example_preserves_components_and_relationships() -> None:
+    source = D3_SRC.parent / "examples/commerce-containers.json"
+    parsed = spec.parse_arch("d3_architecture", source.read_text(encoding="utf-8"))
+    arranged = layout.build(parsed, "d3_architecture", "LR")
+    assert len(arranged.boxes) == 11 and len(arranged.groups) == 4
+    assert len(arranged.edges) == 10
+    assert {(e.source, e.target, e.label) for e in arranged.edges} == {
+        (link.source, link.target, link.label) for link in parsed.links
+    }
+    assert all(b.label for b in arranged.boxes)
+
+
 # ---------------------------------------------------------------------- force look
 def test_the_force_graph_shares_the_look_and_counts_its_groups() -> None:
     model = force.build(spec.parse_force(SAMPLES["d3_force"][0]))
@@ -1606,6 +1662,11 @@ def test_a_label_moves_along_the_run_to_clear_a_neighbouring_box() -> None:
     assert router.label_point(run, 60, []) == (100, 150)
     x, y = router.label_point(run, 60, [beside])
     assert (x, y) == (100, 75) and not rect_overlap((x - 30, y - 8, 60, 16), beside)
+
+
+def test_short_run_label_can_move_clear_of_an_earlier_label() -> None:
+    previous_label = (50, -11, 10, 22)
+    assert router.label_point([(0, 0), (100, 0)], 40, [previous_label]) == (25, 0)
 
 
 def test_a_label_falls_back_to_the_best_run_when_every_spot_is_blocked() -> None:
