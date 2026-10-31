@@ -164,7 +164,10 @@ def architecture_page(layout: Layout, spec: ArchSpec, *, d3_source: str = "cdn")
             }
             for b in layout.boxes
         ],
-        "groups": [{"id": g.id, "parent": g.parent} for g in layout.groups],
+        "groups": [
+            {"id": g.id, "parent": g.parent, "label": g.label, "type": g.type}
+            for g in layout.groups
+        ],
         "edges": [
             {
                 "id": e.id,

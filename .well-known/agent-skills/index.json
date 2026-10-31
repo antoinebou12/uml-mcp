@@ -258,7 +258,7 @@
       "type": "context",
       "description": "Discover installed D3 plugins and render architecture diagrams with cloud and AI logos in the MCP App.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-d3-plugins/SKILL.md",
-      "sha256": "7a6d7cdd98a9c3aacd4870b2fec06d350db7361fdfe6f2c3e864ae1fb42f784e"
+      "sha256": "b6a906666a6ba3c44128ef2d7db75fc5f025872a2174a8bd0468f83afa631baa"
     },
     {
       "name": "uml-mcp-diagrams",

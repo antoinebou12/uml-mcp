@@ -36,9 +36,12 @@
   });
 
   // ---------------------------------------------------------------- groups
-  var children = { root: [] }, members = {};
+  var children = {}, members = {}, rootGroups = [];
   data.groups.forEach(function (g) { children[g.id] = children[g.id] || []; });
-  data.groups.forEach(function (g) { (children[g.parent || 'root'] = children[g.parent || 'root'] || []).push(g.id); });
+  data.groups.forEach(function (g) {
+    if (g.parent) children[g.parent].push(g.id);
+    else rootGroups.push(g.id);
+  });
   data.nodes.forEach(function (n) { if (n.group) (members[n.group] = members[n.group] || []).push(n); });
 
   function groupRect(id, out) {
@@ -55,7 +58,7 @@
 
   function updateGroups() {
     var rects = {};
-    children.root.forEach(function (id) { groupRect(id, rects); });
+    rootGroups.forEach(function (id) { groupRect(id, rects); });
     Object.keys(rects).forEach(function (id) {
       var r = rects[id], el = groupEls[id];
       el.select('rect').attr('x', r[0]).attr('y', r[1]).attr('width', r[2]).attr('height', r[3]);
@@ -79,8 +82,22 @@
 
   function routeEdges(subset) {
     var rects = boxRects();
-    var grid = new UmlRouter.Grid(rects, { cell: C.gridCell, margin: C.gridMargin });
-    if (subset) edges.forEach(function (e) { if (!subset[e.id]) grid.mark(e.points); });
+    data.groups.forEach(function(g) {
+      var bounds = groupEls[g.id].select('rect.group-box');
+      var title = g.label || groupEls[g.id].select('text').text() || g.id;
+      rects.push([+bounds.attr('x') + 10, +bounds.attr('y') - 10, title.length * 6.6 + 12, 20]);
+    });
+    var labels = rects.slice();
+    function reserveLabel(e) {
+      if (e.label.empty()) return;
+      var p = /translate\(([-\d.]+)[ ,]+([-\d.]+)\)/.exec(e.label.attr('transform') || '');
+      if (p) labels.push([+p[1] - e.labelWidth / 2 - 3, +p[2] - 11, e.labelWidth + 6, 22]);
+    }
+    var grid = new UmlRouter.Grid(boxRects(), { cell: C.gridCell, margin: C.gridMargin });
+    rects.slice(data.nodes.length).forEach(function(r) {
+      [5,10,15].forEach(function(dy) {grid.mark([[r[0],r[1]+dy],[r[0]+r[2],r[1]+dy]]);});
+    });
+    if (subset) edges.forEach(function (e) { if (!subset[e.id]) { grid.mark(e.points); reserveLabel(e); } });
     edges.forEach(function (e) {
       if (subset && !subset[e.id]) return;
       var a = nodes[e.from], b = nodes[e.to];
@@ -88,7 +105,8 @@
         grid,
         [a.x + e.srcOffset[0], a.y + e.srcOffset[1]], e.srcDir,
         [b.x + e.dstOffset[0], b.y + e.dstOffset[1]], e.dstDir);
-      drawEdge(e, rects);
+      drawEdge(e, labels);
+      reserveLabel(e);
     });
   }
 

@@ -112,6 +112,53 @@ def choose_export(page, button: str) -> None:
     page.click(button)
 
 
+@pytest.mark.parametrize("automatic", [False, True])
+def test_commerce_containers_route_and_survive_html_export(
+    open_page, tmp_path, automatic
+) -> None:
+    from uml_mcp_plugin_d3 import D3Renderer
+
+    from tests.fixtures_d3 import D3_SRC
+
+    source = json.loads(
+        (D3_SRC.parent / "examples/commerce-containers.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    # "root" is a valid group ID, not a reserved browser hierarchy sentinel.
+    source["groups"][0]["id"] = "root"
+    for group in source["groups"]:
+        if group.get("parent") == "commerce":
+            group["parent"] = "root"
+    if automatic:
+        source.pop("groups")
+        source["group_by"] = "category"
+        for node in source["nodes"]:
+            node.pop("group")
+    renderer = D3Renderer()
+    renderer.configure({"d3_source": "inline"})
+    path = tmp_path / "commerce.html"
+    path.write_bytes(
+        renderer.render("d3_architecture", json.dumps(source), "html").content
+    )
+    page, errors = open_page(path)
+    assert page.locator("g.node").count() == 11
+    assert page.locator("g.edge text").count() == 10
+    assert page.locator("g.group").count() == (7 if automatic else 4)
+    drag(page, 'g.node[data-id="database"] rect.card', -100, 90)
+    live = measure(page)
+    assert not live["through"] and not live["overlaps"]
+    with page.expect_download() as download:
+        choose_export(page, "#html")
+    saved = tmp_path / "saved.html"
+    download.value.save_as(saved)
+    again, reopen_errors = open_page(saved)
+    assert measure(again) == live
+    drag(again, 'g.node[data-id="cache"] rect.card', 90, 50)
+    assert not measure(again)["through"]
+    assert errors == reopen_errors == []
+
+
 def measure(page) -> dict:
     return page.evaluate(MEASURE)
 

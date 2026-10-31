@@ -45,6 +45,12 @@ claim access to Manufact unless a connected tool actually returned live data.
     Verify components and directed labelled relationships. In an App, avoid
     repeating the image, links and full source in chat. In a plain client, provide
     one compatible image and working returned render/playground links.
+11. Render the D3 commerce inventory with explicit nested application and data
+    containers and a separate integrations group. Preserve all 11 components
+    and 10 labelled relationships. Drag a data node, check routes against cards
+    and group titles, export HTML and reopen it offline. Verify the containers,
+    labels and moved positions survive. Repeat with `group_by: "category"` and
+    no explicit groups; describe these as logical category containers.
 
 ## Report
 

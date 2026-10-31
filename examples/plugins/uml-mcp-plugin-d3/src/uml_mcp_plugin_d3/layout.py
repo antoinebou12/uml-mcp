@@ -19,7 +19,7 @@ from typing import Any
 
 from .icons import resolve_service
 from .router import DIRS, Grid, Point, label_point, route
-from .spec import ArchSpec, node_label
+from .spec import ArchGroup, ArchSpec, node_label
 from .theme import CATEGORIES, CATEGORY_LABELS
 
 # Geometry (px). Everything is a multiple of the routing grid cell so arrow anchors sit on
@@ -254,6 +254,30 @@ def build(spec: ArchSpec, diagram_type: str, default_direction: str) -> Layout:
             logo=node.logo,
         )
     order = [n.id for n in spec.nodes]
+    if spec.group_by == "category":
+        groups = list(spec.groups)
+        used = {g.id for g in groups}
+        generated: dict[str, str] = {}
+        for box in boxes.values():
+            if box.group is not None:
+                continue
+            if box.category not in generated:
+                gid = f"auto-{box.category}"
+                suffix = 2
+                while gid in used:
+                    gid = f"auto-{box.category}-{suffix}"
+                    suffix += 1
+                used.add(gid)
+                generated[box.category] = gid
+                groups.append(
+                    ArchGroup(
+                        id=gid,
+                        label=f"{CATEGORY_LABELS[box.category]} (category)",
+                        type="system",
+                    )
+                )
+            box.group = generated[box.category]
+        spec = spec.model_copy(update={"groups": groups})
 
     edges: list[Edge] = []
     for index, link in enumerate(spec.links):
@@ -456,7 +480,7 @@ def build(spec: ArchSpec, diagram_type: str, default_direction: str) -> Layout:
 
     # ----------------------------------------------------------- arrow anchors
     place_anchors(boxes, edges, lr)
-    route_edges(list(boxes.values()), edges)
+    route_edges(list(boxes.values()), edges, groups)
 
     everything = [b.rect() for b in boxes.values()] + [
         (g.x, g.y, g.w, g.h) for g in groups
@@ -617,20 +641,33 @@ def place_anchors(boxes: dict[str, Box], edges: list[Edge], lr: bool) -> None:
             e.dst_dir = 3
 
 
-def route_edges(boxes: list[Box], edges: list[Edge]) -> None:
+def route_edges(
+    boxes: list[Box], edges: list[Edge], groups: list[GroupBox] | None = None
+) -> None:
     """Route every arrow around the boxes, in declaration order."""
     by_id = {b.id: b for b in boxes}
+    headers = [
+        (g.x + 10, g.y - 10, mono_width(g.label, 11) + 12, 20) for g in groups or []
+    ]
+    obstacles = [b.rect() for b in boxes] + headers
+    labels = list(obstacles)
     grid = Grid([b.rect() for b in boxes], cell=GRID_CELL, margin=GRID_MARGIN)
+    # Heading lanes are soft reservations: dragging a node near a title must
+    # never wall in its ports and trigger a route through the node itself.
+    for x, y, w, _h in headers:
+        for offset in (5, 10, 15):
+            grid.mark([(x, y + offset), (x + w, y + offset)])
     for e in edges:
         a, b = by_id[e.source], by_id[e.target]
         start = (a.x + e.src_offset[0], a.y + e.src_offset[1])
         goal = (b.x + e.dst_offset[0], b.y + e.dst_offset[1])
         e.points = route(grid, start, e.src_dir, goal, e.dst_dir)
         e.label_at = (
-            label_point(e.points, e.label_width, [b.rect() for b in boxes])
-            if e.label
-            else e.points[0]
+            label_point(e.points, e.label_width, labels) if e.label else e.points[0]
         )
+        if e.label:
+            x, y = e.label_at
+            labels.append((x - e.label_width / 2 - 3, y - 11, e.label_width + 6, 22))
 
 
 __all__ = [
