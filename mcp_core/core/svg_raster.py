@@ -54,6 +54,10 @@ def normalize_raster_format(fmt: str) -> str:
 @lru_cache(maxsize=1)
 def _system_font_files() -> tuple[str, ...]:
     candidates = (
+        Path(__file__).resolve().parents[1]
+        / "assets"
+        / "fonts"
+        / "NotoSans-Regular.ttf",
         Path(r"C:\Windows\Fonts\arial.ttf"),
         Path(r"C:\Windows\Fonts\segoeui.ttf"),
         Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
@@ -147,8 +151,10 @@ def _resvg_kwargs(prepared: str, *, zoom: float) -> dict:
     fonts = _system_font_files()
     if fonts:
         kwargs["font_files"] = list(fonts)
-        kwargs["font_family"] = "Arial"
-        kwargs["sans_serif_family"] = "Arial"
+        kwargs["font_family"] = "Noto Sans"
+        kwargs["sans_serif_family"] = "Noto Sans"
+        kwargs["serif_family"] = "Noto Sans"
+        kwargs["monospace_family"] = "Noto Sans"
     return kwargs
 
 

@@ -247,11 +247,32 @@
       "sha256": "9ac3914865bbc4dbeb07026f05d87289babb7f13d2b5e1c6a22f8e73180d3147"
     },
     {
+      "name": "uml-mcp-batch",
+      "type": "context",
+      "description": "Render and verify diagram batches and consistent multi-format architecture conversions, including four C4 levels.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-batch/SKILL.md",
+      "sha256": "af7223fc567c510d693c93a0b39c65df022c0428a124c002dca4fc449e1dd65f"
+    },
+    {
+      "name": "uml-mcp-d3-plugins",
+      "type": "context",
+      "description": "Discover installed D3 plugins and render architecture diagrams with cloud and AI logos in the MCP App.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-d3-plugins/SKILL.md",
+      "sha256": "50adfcf366d951b689689d7d3ced529f51c072ba29996c55e48057168c4161fe"
+    },
+    {
       "name": "uml-mcp-diagrams",
       "type": "context",
-      "description": "uml-mcp diagram workflow: validate_uml \u2192 generate_uml / generate_uml_image / generate_uml_batch for Kroki types. Use for UML, Mermaid, D2, URLs, Kroki.",
+      "description": "Render and verify UML, C4, Mermaid, D2 and D3 diagrams.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "ff48567b447354f7e5afafbc27dd2ac6efcefbb4f7c01c1854ad92a1a58ea3d1"
+      "sha256": "790e9b3f8f62bfeb395fb1e01285ac1acb6f9f0ff4ab8104d82016063f589b19"
+    },
+    {
+      "name": "uml-mcp-mermaid",
+      "type": "context",
+      "description": "Render readable complex Mermaid flowcharts and sequences, preserving labels, themes and playground links.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-mermaid/SKILL.md",
+      "sha256": "cb264676e7f1ae8772e36e7cfff7fa926b02c2eb9b7361fb7ca9c76b86c57a3a"
     },
     {
       "name": "uml-mcp-navigation",
@@ -259,6 +280,13 @@
       "description": "Navigate the UML-MCP repository and its documentation quickly. Maps every feature (tools, rendering, auth, config file, audit, rate limits, lint, admin dashboard, Helm, docs) to its code, tests and docs, and lists the commands to verify a change. Use before editing UML-MCP code or docs, when answering \"where is X\", or when planning work from the .plan backlog.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-navigation/SKILL.md",
       "sha256": "770daeef4ee4b6064a6fbbe2f5bb812b38eba13bddbc9540cd592a05ae271e94"
+    },
+    {
+      "name": "uml-mcp-plantuml-c4",
+      "type": "context",
+      "description": "Build and verify PlantUML and all four C4 levels with readable SVG labels, valid themes and usable previews.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-plantuml-c4/SKILL.md",
+      "sha256": "69c1b5f126d8a1df951a2900963d16235cda60b24efe7806e1fdf5bd5f8073c8"
     },
     {
       "name": "umlet",

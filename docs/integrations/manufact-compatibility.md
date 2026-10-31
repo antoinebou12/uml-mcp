@@ -74,3 +74,25 @@ uv run --no-sync uvicorn app:app --host 0.0.0.0 --port 8000
 Frontend compilation belongs in CI; checked-in frontend assets are served by
 Python. Changing saved build settings does not replace a running deployment.
 No exact speed improvement is claimed without comparable build logs.
+
+
+## Feedback and rendering checks
+
+Manufact feedback reported false D3 unavailability, inconsistent cross-format
+architectures, and C4 previews with missing text. Read the live type catalog
+before choosing a renderer. The general workflow routes to four focused guides
+through `skill://uml-mcp-guides/{topic}/SKILL.md` (`d3-plugins`, `mermaid`,
+`plantuml-c4`, `batch`). They are also available in the agent-skills index.
+
+A tool-level success does not prove that the host displayed its result. Verify
+each batch item and report inaccessible links or uninspected previews explicitly.
+The App loads full SVGs on demand, while initial thumbnails share a size budget.
+PNG export rasterizes the vector at twice its intrinsic resolution with bundled
+fonts. Downloads use bounded chunks with a digest to detect changed renders.
+
+Named `@startuml` directives retain their names when themes are injected.
+Background aliases `light` and `dark` map to valid PlantUML themes. Batch items
+ignore injected `user_intent` transport metadata but still reject unknown diagram
+fields. Re-rendering replaces the current format and render link, preserving the
+other gallery entries. Resource description and incomplete policy-review warnings
+still require the checker/platform review described above.

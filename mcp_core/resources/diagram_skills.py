@@ -19,6 +19,8 @@ from pydantic import StrictStr
 
 SKILL_ROOT_URI = "skill://uml-mcp-diagrams"
 SKILL_URI = f"{SKILL_ROOT_URI}/SKILL.md"
+GUIDE_TOPICS = ("d3-plugins", "mermaid", "plantuml-c4", "batch")
+GUIDE_URI = "skill://uml-mcp-guides/{topic}/SKILL.md"
 
 
 class ListSkillsParams(RequestParams):
@@ -141,6 +143,23 @@ def register_diagram_skills(server: Any, *, cache_scope: str) -> list[str]:
         description="Diagram workflow instructions for UML-MCP.",
         mime_type="text/markdown",
     )(read_skill)
+    guides = {
+        topic: files("mcp_core")
+        .joinpath("skills", f"uml-mcp-{topic}", "SKILL.md")
+        .read_text(encoding="utf-8")
+        for topic in GUIDE_TOPICS
+    }
+
+    def read_guide(topic: str) -> str:
+        if topic not in guides:
+            raise MCPError(code=-32602, message="Unknown diagram guide")
+        return guides[topic]
+
+    server.resource(
+        GUIDE_URI,
+        description="D3, Mermaid, C4 and batch guides.",
+        mime_type="text/markdown",
+    )(read_guide)
     if callable(getattr(server, "add_extension", None)):
         server.add_extension(extension)
     return [SKILL_URI]

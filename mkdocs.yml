@@ -86,6 +86,7 @@ nav:
       - Mermaid: diagrams/mermaid.md
       - D2: diagrams/d2.md
       - Graphviz: diagrams/graphviz.md
+      - C4 views: diagrams/c4-views.md
       - Cloud architecture: diagrams/cloud-architecture.md
       - More diagram backends:
           - Overview: diagrams/general.md

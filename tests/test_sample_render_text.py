@@ -139,3 +139,40 @@ def test_every_shipped_sample_renders_visible_text(kroki_tier) -> None:
             if not shown:
                 problems.append(f"{name} {kind}: renders no text")
     assert not problems, "\n".join(problems)
+
+
+def test_stress_verifies_full_svg_instead_of_parsing_a_png_thumbnail():
+    from types import SimpleNamespace
+
+    svg = LABELLED.replace("</svg>", "<!--" + "x" * 50000 + "--></svg>")
+    encoded = base64.b64encode(svg.encode()).decode()
+    offsets = []
+
+    def call(name, args):
+        assert name == "download_diagram" and args["output_format"] == "svg"
+        offset = args["offset"]
+        offsets.append(offset)
+        if offset:
+            assert args["sha256"] == "digest"
+        chunk = encoded[offset : offset + 32000]
+        return {
+            "result": {
+                "structuredContent": {
+                    "chunk": chunk,
+                    "offset": offset,
+                    "next_offset": offset + len(chunk),
+                    "total": len(encoded),
+                    "sha256": "digest",
+                    "mime_type": "image/svg+xml",
+                }
+            }
+        }
+
+    stress = _stress_script()
+    row = stress._full_svg(
+        SimpleNamespace(call=call),
+        {"mime_type": "image/png", "content_base64": "thumbnail"},
+        {"diagram_type": "mermaid", "code": "graph TD; A-->B"},
+    )
+    assert stress._content_problem(row) is None
+    assert offsets == [0, 32000, 64000]

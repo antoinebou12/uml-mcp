@@ -154,3 +154,28 @@ def test_invalid_bundled_skill_fails_at_startup(tmp_path, monkeypatch, content):
     monkeypatch.setattr(diagram_skills, "files", lambda package: tmp_path)
     with pytest.raises(ValueError, match="[Bb]undled diagram skill"):
         DiagramSkillsExtension("public")
+
+
+@pytest.mark.parametrize("topic", diagram_skills.GUIDE_TOPICS)
+async def test_focused_guides_are_readable_and_mirrored(topic):
+    server = FastMCP("diagram-guides")
+    register_diagram_skills(server, cache_scope="public")
+    async with Client(server) as client:
+        text = (await client.read_resource(f"skill://uml-mcp-guides/{topic}/SKILL.md"))[
+            0
+        ].text
+        root = Path(__file__).resolve().parents[1]
+        name = f"uml-mcp-{topic}"
+        for base in (
+            ".skill/skills",
+            ".github/skills",
+            "mcp_core/skills",
+            "plugins/uml-mcp/skills",
+        ):
+            assert (root / base / name / "SKILL.md").read_text(encoding="utf-8") == text
+        frontmatter = yaml.safe_load(text.split("---", 2)[1])
+        assert frontmatter["name"] == name
+        assert frontmatter["description"]
+        assert "skill://uml-mcp-diagrams/SKILL.md" in text
+        with pytest.raises(MCPError):
+            await client.read_resource("skill://uml-mcp-guides/unknown/SKILL.md")

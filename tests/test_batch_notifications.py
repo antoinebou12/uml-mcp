@@ -243,3 +243,21 @@ def test_http_clients_without_a_token_get_only_the_result():
     assert report["opted_in"][0] == "notifications/progress"
     assert report["opted_in"][-1] == "result"
     assert "notifications/message" in report["opted_in"]
+
+
+def test_batch_ignores_injected_transport_intent_but_rejects_unknown_diagram_fields(
+    monkeypatch,
+):
+    monkeypatch.setattr(
+        diagram_tools,
+        "generate_from_request",
+        lambda req: {"success": True, "code": req.code},
+    )
+    result = diagram_tools.generate_uml_batch(
+        [
+            {**MERMAID, "user_intent": "Render view"},
+            {**MERMAID, "invalid_setting": True},
+        ]
+    )
+    assert result["results"][0]["success"]
+    assert "invalid_setting" in result["results"][1]["error"]

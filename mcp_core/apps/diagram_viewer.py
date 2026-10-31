@@ -231,14 +231,14 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   }
   #frame.panning { cursor: grabbing; }
   #frame.static { cursor: default; touch-action: auto; overflow: auto; align-items: flex-start; }
-  #frame img, #frame svg {
+  #frame > img, #frame > svg {
     flex: none; max-width: none; height: auto; display: block;
     transform-origin: center center;
     user-select: none; -webkit-user-drag: none;
     padding: 14px; border-radius: 10px;
     background: #ffffff; box-shadow: var(--shadow);
   }
-  #frame.paper-dark img, #frame.paper-dark svg { background: #101217; }
+  #frame.paper-dark > img, #frame.paper-dark > svg { background: #101217; }
   #frame pre.ascii {
     margin: 16px; padding: 14px; border-radius: 10px; background: #ffffff; color: #161a23;
     box-shadow: var(--shadow); font: 12px/1.35 var(--mono); white-space: pre; overflow: auto; max-width: 100%;
@@ -375,6 +375,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     <div id="actions">
       <a class="btn" id="openUrl" href="#" target="_blank" rel="noopener" hidden>Open image ↗</a>
       <a class="btn" id="openPlay" href="#" target="_blank" rel="noopener" hidden>Playground ↗</a>
+      <select id="exportFormat" aria-label="Download format"><option value="current">Current preview</option><option value="source">Source</option><option value="svg" selected>SVG</option><option value="png">PNG</option><option value="html">HTML</option><option value="pdf">PDF</option></select>
       <button type="button" class="btn" id="downloadBtn" title="Download the rendered file" hidden>Download</button>
       <button type="button" class="btn icon" id="fullscreenBtn" title="Toggle fullscreen" aria-label="Toggle fullscreen" hidden>⤢</button>
     </div>
@@ -499,7 +500,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
 
   function openLink(url) {
     if (!url) return;
-    if (can("openLinks")) {
+    if (window.parent !== window) {
       request("ui/open-link", { url: url }).catch(function () {
         window.open(url, "_blank", "noopener");
       });
@@ -743,7 +744,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     var args = argsFor(index) || {};
     var out = Object.assign({}, data);
     if (!out.diagram_type && args.diagram_type) out.diagram_type = String(args.diagram_type);
-    if (!out.code && args.code && !out.source_omitted) out.code = String(args.code);
+    if (!out.code && args.code) { out.code = String(args.code); out.source_omitted = false; }
     if (out.theme == null && args.theme) out.theme = String(args.theme);
     if (!out.output_format && args.output_format) out.output_format = String(args.output_format);
     return out;
@@ -758,7 +759,8 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   }
 
   function inlineFormat(item) {
-    var f = String(item.output_format || "png").toLowerCase();
+    if ((typeInfo(item.diagram_type).formats || []).indexOf("svg") >= 0) return "svg";
+    var f = String(item.output_format || "svg").toLowerCase();
     if (f === "jpg") f = "jpeg";
     return DATA.formats.indexOf(f) >= 0 ? f : "png";
   }
@@ -842,6 +844,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       REROW.className = "";
       return;
     }
+    loadFullPreview(item);
     if (item.diagram_type) {
       TYPE_BADGE.textContent = String(item.diagram_type);
       TYPE_BADGE.hidden = false;
@@ -915,8 +918,8 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       }).then(function (result) {
         var data = extractStructured(result);
         if (data && data.content_base64) {
-          items[idx] = Object.assign({}, item, data, { output_format: item.output_format || data.output_format,
-            url: item.url || data.url, playground: item.playground || data.playground, _previewTried: true });
+          items[idx] = Object.assign({}, item, data, { output_format: data.output_format || inlineFormat(item),
+            url: data.url || item.url, playground: data.playground || item.playground, _previewTried: true });
         }
       }).catch(function () { /* links stay usable */ }).finally(function () {
         setBusy(false);
@@ -985,28 +988,76 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     var url = safeUrl(item.url);
     var playground = safeUrl(item.playground);
     META.textContent = "";
-    if (url) META.appendChild(linkRow("Image URL", url));
-    if (playground) META.appendChild(linkRow("Playground", playground));
     OPEN_URL.hidden = !url;
     OPEN_PLAY.hidden = !playground;
     if (url) OPEN_URL.href = url;
     if (playground) OPEN_PLAY.href = playground;
-    DOWNLOAD_BTN.hidden = !(can("downloadFile") && hasBytes(item) && !item.preview_resized);
+    DOWNLOAD_BTN.hidden = !((item.code && can("serverTools")) || hasBytes(item));
+    if (item.mime_type === "text/plain" || !can("serverTools")) $("exportFormat").value = "current";
+    $("exportFormat").hidden = DOWNLOAD_BTN.hidden;
+    Array.from($("exportFormat").options).forEach(function(option) {
+      option.disabled = option.value !== "current" && !can("serverTools");
+    });
+    $("exportFormat").querySelector('option[value="pdf"]').disabled = !can("serverTools") || (typeInfo(item.diagram_type).native_formats || []).indexOf("pdf") < 0;
     var chips = statChips(item);
     if (chips) META.appendChild(chips);
     TOOLBAR.hidden = !media();
     notifySize();
   }
 
-  function download() {
+  async function readExport(item, format, source, theme) {
+    var args = {diagram_type:item.diagram_type,code:source || item.code,
+      output_format:format,theme:theme || null,offset:0};
+    var encoded = "", checksum = null, file;
+    do {
+      if (checksum) args.sha256 = checksum;
+      file = extractStructured(await callTool("download_diagram", args));
+      if (!file || file.error) throw new Error(file && file.error || "No download data returned");
+      if (typeof file.chunk !== "string" || file.chunk.length > 32000 ||
+          file.offset !== args.offset || file.next_offset !== args.offset + file.chunk.length ||
+          file.next_offset <= args.offset || file.total > 11000000 ||
+          file.next_offset > file.total || (checksum && checksum !== file.sha256))
+        throw new Error("Invalid download sequence. Try again.");
+      checksum = file.sha256; encoded += file.chunk; args.offset = file.next_offset;
+    } while (args.offset < file.total);
+    return {file:file,encoded:encoded};
+  }
+
+  function loadFullPreview(item) {
+    if (!item || !item.code || !can("serverTools") || item._fullTried ||
+        !(item.preview_resized || item.inline_omitted ||
+          (item.mime_type && item.mime_type.indexOf("image/") === 0 && item.mime_type !== "image/svg+xml" && (typeInfo(item.diagram_type).formats || []).indexOf("svg") >= 0))) return;
+    item._fullTried = true;
+    var format = item._requestedFormat || ((typeInfo(item.diagram_type).formats || []).indexOf("svg") >= 0 || item.output_format === "svg" ? "svg" : "png");
+    readExport(item, format, item.code, item.theme).then(function(result) {
+      item.content_base64 = result.encoded; item.mime_type = result.file.mime_type; item.output_format = format;
+      item.preview_resized = false; item.inline_omitted = false; item.inline_note = "";
+      if (items[current] === item) renderItem();
+    }).catch(function() { /* Keep the bounded preview and download controls usable. */ });
+  }
+
+  async function download() {
     var item = items[current];
-    if (!item || !item.content_base64) return;
-    var mime = String(item.mime_type || "application/octet-stream");
-    var name = String(item.diagram_type || "diagram").replace(/[^a-z0-9_-]+/gi, "-") +
-      (items.length > 1 ? "-" + (current + 1) : "") + "." + (EXT[mime] || "bin");
-    request("ui/download-file", {
-      contents: [{ type: "resource", resource: { uri: "file:///" + name, mimeType: mime, blob: item.content_base64 } }]
-    }).catch(function (err) { setStatus("Download failed: " + errorText(err), true); });
+    if (!item) return;
+    DOWNLOAD_BTN.disabled = true;
+    try {
+      var format = $("exportFormat").value;
+      var result = format === "current" ? {encoded:item.content_base64, file:{filename:String(item.diagram_type || "diagram").replace(/[^a-z0-9_-]/gi,"-") + "." + (EXT[item.mime_type] || "bin"),mime_type:item.mime_type}} :
+        await readExport(item, format, SOURCE_EDIT.value || item.code, THEME_SEL.value || item.theme);
+      var file = result.file, encoded = result.encoded;
+      if (can("downloadFile")) {
+        await request("ui/download-file", {contents:[{type:"resource",resource:{
+          uri:"file:///" + file.filename,mimeType:file.mime_type,blob:encoded}}]});
+      } else {
+        var bytes = Uint8Array.from(atob(encoded), function(c) { return c.charCodeAt(0); });
+        var blobUrl = URL.createObjectURL(new Blob([bytes], {type:file.mime_type}));
+        var anchor = document.createElement("a"); anchor.href = blobUrl;
+        anchor.download = file.filename; document.body.appendChild(anchor); anchor.click(); anchor.remove();
+        setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 60000);
+      }
+      setStatus("Download ready", "ok");
+    } catch (err) { setStatus("Download failed: " + errorText(err), true); }
+    finally { DOWNLOAD_BTN.disabled = false; }
   }
 
   // ------------------------------------------------------------ batch gallery
@@ -1207,7 +1258,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       diagram_type: item.diagram_type,
       code: code,
       theme: THEME_SEL.value || null,
-      output_format: FORMAT_SEL.value || "png"
+      output_format: FORMAT_SEL.value || inlineFormat(item)
     };
     if (RERENDER_BTN.disabled) return;
     RERENDER_BTN.disabled = true;
@@ -1219,7 +1270,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
         var data = result && result.isError
           ? { error: textOf(result) || "Render failed", success: false }
           : extractStructured(result) || {};
-        items[idx] = Object.assign({ index: item.index }, args, data, { _previewTried: true });
+        items[idx] = Object.assign({ index: item.index }, args, data, { _previewTried: true, _requestedFormat: args.output_format });
         // The source the user sent is the truth (a bounded result may omit it).
         items[idx].code = args.code;
         if (idx === current) renderItem();
@@ -1437,8 +1488,14 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   });
   [OPEN_URL, OPEN_PLAY].forEach(function (a) {
     a.addEventListener("click", function (ev) {
-      if (can("openLinks")) { ev.preventDefault(); openLink(a.href); }
+      ev.preventDefault(); openLink(a.href);
     });
+  });
+  FRAME.addEventListener("click", function(ev) {
+    var a = ev.target.closest && ev.target.closest("a");
+    if (!a) return;
+    var href = safeUrl(a.getAttribute("href") || a.getAttribute("xlink:href"));
+    if (href) { ev.preventDefault(); openLink(href); }
   });
   DOWNLOAD_BTN.addEventListener("click", download);
   FULLSCREEN_BTN.addEventListener("click", function () {
@@ -1525,6 +1582,7 @@ def _viewer_data() -> dict[str, Any]:
     data: dict[str, Any] = {
         "formats": list(VIEWER_FORMATS),
         "themes": {
+            "plugin:d3": ["light", "dark", "auto"],
             "plantuml": plantuml,
             "mermaid": list(dict.fromkeys(MERMAID_LIGHT_BG + MERMAID_DARK_BG)),
             "d2": ["default", "dark"],
@@ -1540,9 +1598,15 @@ def _viewer_data() -> dict[str, Any]:
             backend = str(cfg.backend)
             data["types"][name] = {
                 "theme_family": families.get(backend, backend)
-                if backend in {"plantuml", "c4plantuml", "mermaid", "d2"}
+                if backend in {"plantuml", "c4plantuml", "mermaid", "d2", "plugin:d3"}
                 else "",
-                "formats": [f for f in VIEWER_FORMATS if f in cfg.formats],
+                "native_formats": list(cfg.formats),
+                "formats": [
+                    f
+                    for f in VIEWER_FORMATS
+                    if f in cfg.formats
+                    or (backend == "plugin:d3" and f in {"svg", "png"})
+                ],
             }
     except Exception as exc:  # noqa: BLE001 - the viewer still works with generic options
         logger.debug("Diagram viewer: per-type options unavailable: %s", exc)

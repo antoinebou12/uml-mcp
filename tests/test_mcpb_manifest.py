@@ -164,6 +164,8 @@ def test_generated_bundle_pyproject_copies_dependencies_verbatim(
 def test_staging_copies_only_runtime_files(tmp_path: Path, pyproject: dict) -> None:
     stage_dir = tmp_path / "mcpb-stage"
     build_mcpb.stage(stage_dir, pyproject)
+    assert (stage_dir / "mcp_core/assets/fonts/NotoSans-Regular.ttf").is_file()
+    assert (stage_dir / "mcp_core/assets/fonts/OFL.txt").is_file()
 
     assert build_mcpb.audit(stage_dir) == []
 

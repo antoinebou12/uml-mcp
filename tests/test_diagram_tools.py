@@ -45,6 +45,7 @@ class TestDiagramTools:
             "generate_uml_image",
             "validate_uml",
             "rerender_diagram",
+            "download_diagram",
         ]
 
         for tool_name in expected_tools:
