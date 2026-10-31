@@ -253,3 +253,14 @@ def test_tool_result_schema_has_inline_limits() -> None:
     inline = props["content_base64"]
     assert any(v.get("maxLength") == 48_000 for v in inline.get("anyOf", [inline]))
     assert props["code"]["maxLength"] == 12_000
+
+
+def test_html_backed_mermaid_labels_become_portable_svg_text():
+    from mcp_core.apps.svg_sanitize import flatten_svg_labels
+
+    svg = '<svg xmlns="http://www.w3.org/2000/svg"><g transform="translate(20,30)"><foreignObject width="120" height="48"><div xmlns="http://www.w3.org/1999/xhtml"><p>Processing</p><p>Ready</p><script>alert(1)</script></div></foreignObject></g></svg>'
+    clean = flatten_svg_labels(svg)
+    assert "foreignObject" not in clean
+    assert "Processing" in clean and "Ready" in clean and "alert" not in clean
+    assert 'transform="translate(20,30)"' in clean
+    assert "tspan" in clean

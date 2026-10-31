@@ -100,3 +100,9 @@ Overall PASS requires all conditions from the main stress-test prompt plus:
 If any of those conditions fail, finish with:
 
 `MCP_KROKI_TOOL_ONLY_STRESS_TEST: FAIL - <short reason>`
+
+## App and plugin acceptance
+
+Run [MCP App and plugin acceptance](mcp_apps_plugin_acceptance_test.md) separately
+from the baseline tool-count phases. Tool success and valid SVG XML do not prove
+visible labels or working downloads. Uninspected cases remain UNVERIFIED.

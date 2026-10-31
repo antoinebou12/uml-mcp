@@ -34,3 +34,8 @@ the raster. Inspect the new result after changing format or theme. Use the
 returned Mermaid Live playground link; never fabricate its encoded state.
 In plain clients, provide one image and the returned links. In Apps, keep the
 chat confirmation short and use the viewer's source and download controls.
+
+State diagrams and mindmaps need explicit label checks. Mermaid may encode labels
+as HTML-backed foreignObject elements. The server and viewer convert these to
+inert SVG text for portability. Check label strings in the displayed result and
+exported SVG/PNG; visible shapes without text fail acceptance.

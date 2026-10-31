@@ -1026,3 +1026,9 @@ MCP_KROKI_TOOL_ONLY_STRESS_TEST: FAIL - <short reason>
 ## Why this version exists
 
 Some ChatGPT MCP surfaces expose tools but do not expose arbitrary MCP resource reads to the assistant. This fixture deliberately treats the four UML tools as the complete execution surface and embeds the full catalog fixtures directly, so a client can run the test immediately instead of stopping on `uml://*` resource access.
+
+## App and plugin acceptance
+
+Run [MCP App and plugin acceptance](mcp_apps_plugin_acceptance_test.md) separately
+from the baseline tool-count phases. Tool success and valid SVG XML do not prove
+visible labels or working downloads. Uninspected cases remain UNVERIFIED.

@@ -272,7 +272,7 @@
       "type": "context",
       "description": "Render readable complex Mermaid flowcharts and sequences, preserving labels, themes and playground links.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-mermaid/SKILL.md",
-      "sha256": "cb264676e7f1ae8772e36e7cfff7fa926b02c2eb9b7361fb7ca9c76b86c57a3a"
+      "sha256": "351a69b9f9ca40acec1f336a8036f3fd03d2963d7c4c79bc18699ae45e091b3e"
     },
     {
       "name": "uml-mcp-navigation",

@@ -523,6 +523,20 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     if (doc.querySelector("parsererror")) return "";
     var root = doc.documentElement;
     if (!root || localName(root) !== "svg") return "";
+    Array.from(root.querySelectorAll("foreignObject")).forEach(function(node) {
+      node.querySelectorAll("script,style,iframe,object,embed").forEach(function(n) { n.remove(); });
+      var lines = Array.from(node.querySelectorAll("p")).map(function(p) {return p.textContent.trim();}).filter(Boolean);
+      if (!lines.length) lines = [node.textContent.replace(/\s+/g, " ").trim()];
+      var x = parseFloat(node.getAttribute("x")) || 0, y = parseFloat(node.getAttribute("y")) || 0;
+      var w = parseFloat(node.getAttribute("width")) || 80, h = parseFloat(node.getAttribute("height")) || 24;
+      var size = Math.min(16, Math.max(10, h / lines.length / 1.5));
+      var label = doc.createElementNS("http://www.w3.org/2000/svg", "text");
+      var color = String(svgText).match(/color:\s*(#[0-9a-fA-F]{3,8}|black|white)\b/);
+      var attrs = {x:x+w/2,y:y+h/2-(lines.length-1)*size*.6,"text-anchor":"middle","dominant-baseline":"central","font-size":size,"font-family":"sans-serif",fill:color?color[1]:"#111827"};
+      Object.keys(attrs).forEach(function(k) {label.setAttribute(k, attrs[k]);});
+      lines.forEach(function(line,i) { var span=doc.createElementNS(label.namespaceURI,"tspan"); span.setAttribute("x",x+w/2); span.setAttribute("dy",i?size*1.2:0); span.textContent=line; label.appendChild(span); });
+      node.replaceWith(label);
+    });
     var walk = [root].concat(Array.from(root.querySelectorAll("*")));
     for (var i = walk.length - 1; i >= 0; i--) {
       var node = walk[i];

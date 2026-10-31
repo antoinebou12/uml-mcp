@@ -620,3 +620,14 @@ def test_plugin_html_is_isolated_and_exports_live_svg_png_and_html(browser, d3_p
                 data.startswith(b"<!doctype html>") and b"cdn.jsdelivr.net" not in data
             )
     assert not outer.locator('#exportFormat option[value="pdf"]').is_disabled()
+
+
+def test_mermaid_foreignobject_labels_survive_app_sanitization(browser):
+    raw = '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100"><foreignObject width="120" height="24"><div xmlns="http://www.w3.org/1999/xhtml"><span class="nodeLabel"><p>Processing</p></span><script>window.injected=true</script></div></foreignObject></svg>'
+    host = Host(browser, {}, {})
+    host.send(
+        "ui/notifications/tool-result",
+        _svg_result("unused", content_base64=base64.b64encode(raw.encode()).decode()),
+    )
+    host.expect(host.frame.locator("#frame svg text")).to_have_text("Processing")
+    host.expect(host.frame.locator("#frame foreignObject")).to_have_count(0)

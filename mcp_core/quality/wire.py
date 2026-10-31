@@ -12,6 +12,7 @@ import json
 import re
 from dataclasses import dataclass, field
 from typing import Any
+from urllib.parse import urlsplit
 
 from .lint import LintIssue
 
@@ -39,6 +40,12 @@ EXTENDED_RULES = (
     "skill-no-uri",
     "skill-no-name",
     "skill-no-description",
+    "server-metadata-incomplete",
+    "tool-invocation-metadata-missing",
+    "tool-inline-image-unbounded",
+    "view-domain-invalid",
+    "view-mimetype-invalid",
+    "view-domains-inconsistent",
 )
 MIN_DESCRIPTION, MAX_DESCRIPTION = 10, 500
 
@@ -49,6 +56,7 @@ class Surface:
 
     server_name: str | None = None
     server_version: str | None = None
+    server_info: dict[str, Any] = field(default_factory=dict)
     tools: list[dict[str, Any]] = field(default_factory=list)
     resources: list[dict[str, Any]] = field(default_factory=list)
     resource_templates: list[dict[str, Any]] = field(default_factory=list)
@@ -142,6 +150,30 @@ def lint_tool(tool: dict[str, Any]) -> list[LintIssue]:
     name = str(tool.get("name") or "")
     target = f"tool:{name}"
     issues = _description_issues("tool", target, name, tool.get("description") or "")
+    meta = tool.get("_meta") or {}
+    if (meta.get("ui") or {}).get("resourceUri"):
+        labels = meta.get("openai/toolInvocation") or {}
+        if any(
+            not isinstance(labels.get(k), str) or not labels[k].strip()
+            for k in ("invoking", "invoked")
+        ):
+            issues.append(
+                _issue(
+                    "warning",
+                    "tool-invocation-metadata-missing",
+                    target,
+                    "UI tools need invoking and invoked labels in openai/toolInvocation",
+                )
+            )
+        if _unbounded_inline(tool.get("outputSchema") or {}):
+            issues.append(
+                _issue(
+                    "error",
+                    "tool-inline-image-unbounded",
+                    target,
+                    "content_base64 needs a finite maxLength of at most 48000; verify total runtime result size separately",
+                )
+            )
     if not NAME_RE.match(name):
         issues.append(
             _issue(
@@ -290,10 +322,65 @@ def lint_tool(tool: dict[str, Any]) -> list[LintIssue]:
     return issues
 
 
+def _unbounded_inline(schema: Any) -> bool:
+    if isinstance(schema, list):
+        return any(_unbounded_inline(s) for s in schema)
+    if not isinstance(schema, dict):
+        return False
+    prop = (schema.get("properties") or {}).get("content_base64")
+    if isinstance(prop, dict):
+        variants = [prop, *prop.get("anyOf", []), *prop.get("oneOf", [])]
+        if not any(
+            isinstance(v.get("maxLength"), int) and 0 < v["maxLength"] <= 48000
+            for v in variants
+        ):
+            return True
+    return any(_unbounded_inline(v) for v in schema.values())
+
+
+def _https_origin(value: Any) -> bool:
+    if not isinstance(value, str):
+        return False
+    try:
+        p = urlsplit(value)
+        return bool(
+            p.scheme == "https"
+            and p.hostname
+            and p.username is None
+            and p.password is None
+            and p.path in ("", "/")
+            and not p.query
+            and not p.fragment
+            and p.port != 0
+        )
+    except ValueError:
+        return False
+
+
 def lint_resource(res: dict[str, Any]) -> list[LintIssue]:
     ident = res.get("uri") or res.get("uriTemplate") or res.get("name") or "?"
     target = f"resource:{ident}"
     issues = []
+    if str(ident).startswith("ui://"):
+        ui = (res.get("_meta") or {}).get("ui") or {}
+        if not _https_origin(ui.get("domain")):
+            issues.append(
+                _issue(
+                    "error",
+                    "view-domain-invalid",
+                    target,
+                    "UI resources need one exact HTTPS origin in _meta.ui.domain",
+                )
+            )
+        if res.get("mimeType") != "text/html;profile=mcp-app":
+            issues.append(
+                _issue(
+                    "error",
+                    "view-mimetype-invalid",
+                    target,
+                    "UI resources require text/html;profile=mcp-app",
+                )
+            )
     if not str(res.get("name") or "").strip():
         issues.append(
             _issue("warning", "resource-no-name", target, "missing resource name")
@@ -351,6 +438,31 @@ def lint_skill(skill: dict[str, Any]) -> list[LintIssue]:
 
 def lint_server(s: Surface) -> list[LintIssue]:
     issues = []
+    if s.server_info:
+        for key in ("title", "description", "websiteUrl", "icons"):
+            if not s.server_info.get(key):
+                issues.append(
+                    _issue(
+                        "warning",
+                        "server-metadata-incomplete",
+                        "server",
+                        f"initialize serverInfo is missing {key}",
+                    )
+                )
+    domains = {
+        (r.get("_meta", {}).get("ui", {}).get("domain") or "").rstrip("/")
+        for r in s.resources
+        if str(r.get("uri", "")).startswith("ui://")
+    }
+    if len(domains) > 1:
+        issues.append(
+            _issue(
+                "error",
+                "view-domains-inconsistent",
+                "server",
+                "All UI resources must use the same HTTPS origin",
+            )
+        )
     if not (s.tools or s.resources or s.resource_templates or s.prompts or s.skills):
         issues.append(
             _issue(
@@ -551,6 +663,9 @@ async def fetch_surface(url: str | None = None, token: str | None = None) -> Sur
                 if meta.get("lint_ignore"):
                     ignores[f"tool:{name}"] = dict(meta["lint_ignore"])
         return Surface(
+            server_info=info.model_dump(by_alias=True, exclude_none=True, mode="json")
+            if info
+            else {},
             server_name=getattr(info, "name", None),
             server_version=getattr(info, "version", None),
             instructions=client.instructions,

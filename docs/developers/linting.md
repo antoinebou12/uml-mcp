@@ -148,3 +148,17 @@ mcp-tester tools http://127.0.0.1:8000/mcp
 prompt or resource introduces an error or warning. Fix the definition rather than
 relaxing the test. The fix is usually a longer description, the four annotations,
 an `output_schema`, or an `Args:` entry.
+
+## MCP Apps readiness checks
+
+The protocol linter checks initialize title, description, website and icon
+metadata, UI resource MIME and exact HTTPS domain, consistent view origins,
+invocation labels and bounded inline-image schema fields. Standard v2 resource
+descriptions are valid. The external checker that only reads v1 description
+metadata has a compatibility gap; fabricated widget fields are not a fix.
+
+A static pass does not verify startup, visible diagram labels, downloaded files
+or platform policy approval. Run `tests/prompts/mcp_apps_plugin_acceptance_test.md`
+for those checks. Mark cases that cannot be inspected UNVERIFIED. Historical
+deployment failures need their original runtime traceback; a currently running
+server does not supply that missing evidence.
