@@ -74,7 +74,7 @@ def test_vendored_d3_is_the_published_file() -> None:
 
 
 @pytest.mark.parametrize(
-    "name", ["common.js", "router.js", "arch.js", "force.js", html.D3_FILE]
+    "name", ["common.js", "router.js", "bounds.js", "arch.js", "force.js", html.D3_FILE]
 )
 def test_scripts_are_safe_to_inline(name: str) -> None:
     """A ``</script``, ``<script`` or ``<!--`` inside an inline script would end or confuse it."""

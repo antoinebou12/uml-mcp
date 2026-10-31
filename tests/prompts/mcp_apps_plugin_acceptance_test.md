@@ -51,6 +51,13 @@ claim access to Manufact unless a connected tool actually returned live data.
     and group titles, export HTML and reopen it offline. Verify the containers,
     labels and moved positions survive. Repeat with `group_by: "category"` and
     no explicit groups; describe these as logical category containers.
+12. In D3 HTML, enable Physics and drag a card toward another container. Verify
+    it stays inside its original container and the borders remain fixed. Wait
+    for settling and check card collisions and routed connections. Click a card
+    and a nested container to trace connections; verify Focus, double-click zoom,
+    Enter/Space activation and Escape. Export while selected, reopen HTML, and
+    verify settled positions without selection overlays. Test reduced motion
+    and a narrow toolbar. Physics must not start automatically on reopen.
 
 ## Report
 

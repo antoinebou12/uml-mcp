@@ -75,12 +75,16 @@ def browser():
 
 
 @pytest.fixture
-def open_page(browser, mcp_report):
+def open_page(browser, request):
     """Open a page the MCP client received (or any file path) and collect its errors."""
     contexts = []
 
     def open_(name: str | Path):
-        path = name if isinstance(name, Path) else Path(mcp_report["pages_dir"]) / name
+        path = (
+            name
+            if isinstance(name, Path)
+            else Path(request.getfixturevalue("mcp_report")["pages_dir"]) / name
+        )
         context = browser.new_context(
             viewport={"width": 1280, "height": 720}, accept_downloads=True
         )
@@ -161,6 +165,152 @@ def test_commerce_containers_route_and_survive_html_export(
 
 def measure(page) -> dict:
     return page.evaluate(MEASURE)
+
+
+@pytest.fixture
+def commerce_page(open_page, tmp_path):
+    from uml_mcp_plugin_d3 import D3Renderer
+
+    from tests.fixtures_d3 import D3_SRC
+
+    renderer = D3Renderer()
+    renderer.configure({"d3_source": "inline"})
+    source = (D3_SRC.parent / "examples/commerce-containers.json").read_text(
+        encoding="utf-8"
+    )
+    path = tmp_path / "commerce.html"
+    path.write_bytes(renderer.render("d3_architecture", source, "html").content)
+    return open_page(path)
+
+
+def assert_contained(page, original_groups):
+    now = measure(page)
+    assert now["groups"] == original_groups
+    groups = {g["id"]: g for g in now["groups"]}
+    for node in spec_of(page.content())["nodes"]:
+        if not node["group"]:
+            continue
+        box = next(r for r in now["rects"] if r["id"] == node["id"])
+        group = groups[node["group"]]
+        assert group["x"] <= box["x"] <= group["x"] + group["w"] - box["w"]
+        assert group["y"] <= box["y"] <= group["y"] + group["h"] - box["h"]
+
+
+def test_click_selection_traces_nodes_nested_containers_and_keyboard(commerce_page):
+    page, errors = commerce_page
+    assert (
+        page.get_by_role("button", name="Select node: Commerce API", exact=True).count()
+        == 1
+    )
+    page.locator('g.node[data-id="api"] rect.card').click()
+    page.mouse.move(2, 2)
+    assert page.locator("g.node.selected").count() == 1
+    assert page.locator(".connection-overlay path").count() == 9
+    assert page.locator("g.edge.on").count() == 9
+    assert "9 connections" in page.inner_text("#selection-status")
+    page.locator('g.group[data-id="data"]').focus()
+    page.keyboard.press("Enter")
+    assert page.locator(".connection-overlay path").count() == 5
+    page.locator('g.group[data-id="commerce"]').focus()
+    page.keyboard.press("Space")
+    assert page.locator(".connection-overlay path").count() == 10
+    page.keyboard.press("Escape")
+    assert page.locator(".connection-overlay path").count() == 0
+    assert page.locator("#focus").is_disabled()
+    assert page.locator("svg.hl").count() == 0
+    assert errors == []
+
+
+def test_focus_selection_zoom_and_background_clear(commerce_page):
+    page, errors = commerce_page
+    page.locator('g.node[data-id="api"] rect.card').click()
+    page.click("#focus")
+    page.wait_for_timeout(350)
+    assert viewport_transform(page)[2] > 1.5
+    box = page.locator('g.node[data-id="api"] rect.card').bounding_box()
+    canvas = page.locator("#diagram").bounding_box()
+    assert canvas["x"] < box["x"] < canvas["x"] + canvas["width"]
+    assert canvas["y"] < box["y"] < canvas["y"] + canvas["height"]
+    page.click("#fit")
+    page.wait_for_timeout(350)
+    page.locator("#diagram").click(position={"x": 4, "y": 4})
+    assert page.locator(".connection-overlay path").count() == 0
+    page.locator('g.group[data-id="data"] text').dblclick()
+    page.wait_for_timeout(350)
+    assert page.get_attribute('g.group[data-id="data"]', "aria-pressed") == "true"
+    assert page.locator(".connection-overlay path").count() == 5
+    assert errors == []
+
+
+def test_physics_keeps_nodes_inside_fixed_containers_and_resets(commerce_page):
+    page, errors = commerce_page
+    before = measure(page)
+    page.click("#physics")
+    assert page.get_attribute("#physics", "aria-pressed") == "true"
+    page.wait_for_function(
+        "() => document.body.dataset.physics === 'settled'", timeout=15000
+    )
+    assert_contained(page, before["groups"])
+    assert not measure(page)["overlaps"] and not measure(page)["through"]
+    x, y = centre(page, 'g.node[data-id="database"] rect.card')
+    page.mouse.move(x, y)
+    page.mouse.down()
+    page.mouse.move(x - 500, y + 350, steps=10)
+    assert_contained(page, before["groups"])
+    page.mouse.up()
+    page.wait_for_function(
+        "() => document.body.dataset.physics === 'settled'", timeout=15000
+    )
+    assert_contained(page, before["groups"])
+    assert not measure(page)["overlaps"] and not measure(page)["through"]
+    page.click("#reset")
+    page.wait_for_timeout(350)
+    assert page.get_attribute("#physics", "aria-pressed") == "false"
+    assert sorted(measure(page)["rects"], key=lambda n: n["id"]) == sorted(
+        before["rects"], key=lambda n: n["id"]
+    )
+    assert errors == []
+
+
+def test_selected_physics_export_reopens_without_transient_overlay(
+    commerce_page, open_page, tmp_path
+):
+    page, errors = commerce_page
+    page.click("#physics")
+    page.locator('g.group[data-id="data"]').focus()
+    page.keyboard.press("Enter")
+    with page.expect_download() as download:
+        choose_export(page, "#html")
+    saved = tmp_path / "physics.html"
+    download.value.save_as(saved)
+    live = measure(page)
+    again, reopen_errors = open_page(saved)
+    assert measure(again) == live
+    assert again.get_attribute("#physics", "aria-pressed") == "false"
+    assert again.locator(".connection-overlay path").count() == 0
+    assert again.locator("svg.hl,.selected").count() == 0
+    assert again.locator("#focus").is_disabled()
+    with page.expect_download() as svg_download:
+        choose_export(page, "#save")
+    svg_path = tmp_path / "physics.svg"
+    svg_download.value.save_as(svg_path)
+    svg = ET.fromstring(svg_path.read_text(encoding="utf-8"))
+    assert "hl" not in svg.attrib.get("class", "").split()
+    assert "connection-overlay" not in svg_path.read_text(encoding="utf-8")
+    assert errors == reopen_errors == []
+
+
+def test_physics_reduced_motion_and_narrow_toolbar(commerce_page):
+    page, errors = commerce_page
+    page.set_viewport_size({"width": 390, "height": 700})
+    page.emulate_media(reduced_motion="reduce")
+    page.click("#physics")
+    assert page.get_attribute("body", "data-physics") == "settled"
+    drag(page, 'g.node[data-id="database"] rect.card', -50, 60)
+    assert page.get_attribute("body", "data-physics") == "settled"
+    assert page.evaluate("document.documentElement.scrollWidth <= innerWidth")
+    assert not measure(page)["overlaps"]
+    assert errors == []
 
 
 def centre(page, selector: str) -> tuple[float, float]:
