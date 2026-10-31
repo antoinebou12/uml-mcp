@@ -74,7 +74,7 @@ compose file ships a self-hosted copy behind its own opt-in profile:
 MCP_DIAGRAM_FALLBACK=true USE_LOCAL_MERMAID_INK=true docker compose --profile mermaid-ink up -d
 ```
 
-That adds `ghcr.io/jihchi/mermaid.ink:v16.0.0`, published on host port `8003`. With
+That adds `ghcr.io/jihchi/mermaid.ink:v17.0.0`, published on host port `8003`. With
 `USE_LOCAL_MERMAID_INK=true`, UML-MCP sends Mermaid fallback renders to
 `http://mermaid-ink:3000` instead of the public `https://mermaid.ink`; set
 `MERMAID_INK_SERVER` to point somewhere else. Left unset, the public instance is used as

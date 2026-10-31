@@ -14,7 +14,7 @@ yaml = pytest.importorskip("yaml")
 
 ROOT = Path(__file__).resolve().parents[1]
 PLANTUML_IMAGE = "plantuml/plantuml-server:jetty-v1.2026.6"
-MERMAID_INK_IMAGE = "ghcr.io/jihchi/mermaid.ink:v16.0.0"
+MERMAID_INK_IMAGE = "ghcr.io/jihchi/mermaid.ink:v17.0.0"
 
 
 @pytest.fixture(scope="module")
