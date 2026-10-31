@@ -1,0 +1,1 @@
+Brand artwork from @lobehub/icons-static-svg 1.101.0 (MIT). Source: https://github.com/lobehub/lobe-icons. Brand names and logos remain trademarks of their respective owners. These icons identify diagram components and do not imply endorsement.

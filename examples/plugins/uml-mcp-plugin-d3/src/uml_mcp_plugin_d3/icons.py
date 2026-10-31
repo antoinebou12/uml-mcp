@@ -511,6 +511,25 @@ def resolve_service(
     return Resolved(provider, "service", _title(key) if key else "Service")
 
 
+BRANDS.update(
+    {
+        "openai": ("AI", "#10a37f"),
+        "chatgpt": ("AI", "#10a37f"),
+        "anthropic": ("An", "#d97757"),
+        "claude": ("Cl", "#d97757"),
+    }
+)
+
+SERVICES.update(
+    {
+        "tech:openai": ("ai", "OpenAI"),
+        "tech:chatgpt": ("ai", "ChatGPT"),
+        "tech:anthropic": ("ai", "Anthropic"),
+        "tech:claude": ("ai", "Claude"),
+    }
+)
+
+
 def catalog(provider: str | None = None) -> dict[str, Any]:
     """What a model can use: providers, services (``provider:service``), kinds, categories."""
     services: dict[str, str] = {}

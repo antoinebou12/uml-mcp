@@ -120,11 +120,16 @@ def _glyph(kind: str) -> str:
 
 
 def _icon(b: Box) -> str:
+    from .brand_icons import brand_svg
+
     if b.logo:
         return (
             f'<image class="logo" href="{_a(b.logo)}" x="10" y="8" width="20" height="20" '
             'preserveAspectRatio="xMidYMid meet"/>'
         )
+    brand = brand_svg(b.provider, b.sub or b.label)
+    if brand:
+        return brand
     if b.mono and b.color:
         return (
             f'<rect x="10" y="9" width="26" height="16" rx="4" fill="{_a(b.color)}"/>'

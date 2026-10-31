@@ -139,7 +139,7 @@ def diagram_css() -> str:
         f".d3d .prov-{name}{{fill:{color}}}" for name, color in PROVIDER_COLORS.items()
     )
     return (
-        f".d3d{{{_vars(LIGHT)};font-family:{MONO}}}"
+        f".d3d{{{_vars(LIGHT)};font-family:{MONO};color:var(--text)}}"
         f".d3d.dark{{{_vars(DARK)}}}"
         f"@media (prefers-color-scheme:dark){{.d3d.auto{{{_vars(DARK)}}}}}"
         + categories
@@ -213,7 +213,7 @@ def static_diagram_css(theme: str) -> str:
     def resolve(body: str, values: dict[str, str]) -> str:
         return re.sub(r"var\(--([\w-]+)\)", lambda m: values[m[1]], body)
 
-    out = [f".d3d{{font-family:{MONO}}}"]
+    out = [f".d3d{{font-family:{MONO};color:{palette['text']}}}"]
     for selector, body in rules:
         out.append(f"{selector}{{{resolve(body, palette)}}}")
         for category in CATEGORIES:

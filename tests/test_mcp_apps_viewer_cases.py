@@ -389,3 +389,142 @@ def test_responsive_keyboard_tabs(
         "() => document.documentElement.scrollWidth <= innerWidth"
     )
     host.page.screenshot(path=str(tmp_path / f"viewer-{width}-{theme}.png"))
+
+
+def test_export_and_link_buttons_without_duplicate_rows(browser):
+    encoded = base64.b64encode(b"<!doctype html><title>Export</title>").decode()
+    response = {
+        "structuredContent": {
+            "chunk": encoded,
+            "offset": 0,
+            "next_offset": len(encoded),
+            "total": len(encoded),
+            "sha256": "test",
+            "mime_type": "text/html",
+            "filename": "diagram.html",
+        }
+    }
+    host = Host(
+        browser,
+        {**TOOLS, "downloadFile": {}, "openLinks": {}},
+        {"download_diagram": response},
+    )
+    host.send(
+        "ui/notifications/tool-result",
+        _svg_result(
+            "Diagram",
+            url="https://example.com/render.svg",
+            playground="https://mermaid.live/edit#test",
+        ),
+    )
+    f = host.frame
+    host.expect(f.locator("#meta .row")).to_have_count(0)
+    f.locator("#openPlay").click()
+    assert (
+        host.wait_calls("ui/open-link")[0]["params"]["url"]
+        == "https://mermaid.live/edit#test"
+    )
+    f.locator("#exportFormat").select_option("html")
+    f.locator("#downloadBtn").click()
+    resource = host.wait_calls("ui/download-file")[0]["params"]["contents"][0][
+        "resource"
+    ]
+    assert base64.b64decode(resource["blob"]).startswith(b"<!doctype html>")
+    assert host.tool_calls("download_diagram")[0]["output_format"] == "html"
+
+
+def test_compact_preview_loads_full_vector_on_demand(browser):
+    encoded = _svg("Full resolution")
+    response = {
+        "structuredContent": {
+            "chunk": encoded,
+            "offset": 0,
+            "next_offset": len(encoded),
+            "total": len(encoded),
+            "sha256": "test",
+            "mime_type": "image/svg+xml",
+            "filename": "diagram.svg",
+        }
+    }
+    host = Host(browser, TOOLS, {"download_diagram": response})
+    host.send(
+        "ui/notifications/tool-result",
+        _svg_result("Small preview", preview_resized=True),
+    )
+    host.expect(host.frame.locator("#frame svg text")).to_have_text("Full resolution")
+    host.expect(host.frame.locator("#status")).to_contain_text("Diagram ready")
+
+
+def test_png_to_svg_rerender_keeps_labels_and_new_link(browser):
+    from io import BytesIO
+
+    from PIL import Image
+
+    buffer = BytesIO()
+    Image.new("RGB", (300, 120), "white").save(buffer, format="PNG")
+    initial = _svg_result(
+        "unused",
+        mime_type="image/png",
+        content_base64=base64.b64encode(buffer.getvalue()).decode(),
+        output_format="png",
+        url="https://example.com/old.png",
+    )
+    result = _svg_result("New vector labels", url="https://example.com/new.svg")
+    host = Host(browser, TOOLS, {"rerender_diagram": result})
+    host.send("ui/notifications/tool-result", initial)
+    host.expect(host.frame.locator("#frame > img")).to_be_visible()
+    host.frame.locator("#formatSelect").select_option("svg")
+    host.frame.locator("#rerenderBtn").click()
+    host.expect(host.frame.locator("#frame > svg text")).to_have_text(
+        "New vector labels"
+    )
+    host.expect(host.frame.locator("#openUrl")).to_have_attribute(
+        "href", "https://example.com/new.svg"
+    )
+    host.expect(host.frame.locator("#formatSelect")).to_have_value("svg")
+
+
+def test_current_svg_download_works_without_host_download_capability(browser):
+    host = Host(browser, {}, {})
+    host.send("ui/notifications/tool-result", _svg_result("Standalone download"))
+    host.expect(host.frame.locator("#downloadBtn")).to_be_visible()
+    host.expect(host.frame.locator("#exportFormat")).to_have_value("current")
+    with host.page.expect_download() as pending:
+        host.frame.locator("#downloadBtn").click()
+    raw = Path(pending.value.path()).read_text(encoding="utf-8")
+    assert "Standalone download" in raw and "<svg" in raw
+    assert not host.tool_calls("download_diagram")
+
+
+def test_explicit_png_preview_is_not_overridden_by_svg_hydration(browser):
+    from io import BytesIO
+
+    from PIL import Image
+
+    buf = BytesIO()
+    Image.new("RGB", (300, 120), "white").save(buf, format="PNG")
+    encoded = base64.b64encode(buf.getvalue()).decode()
+    png_result = _svg_result(
+        "unused", mime_type="image/png", content_base64=encoded, output_format="png"
+    )
+    chunk = {
+        "structuredContent": {
+            "chunk": encoded,
+            "offset": 0,
+            "next_offset": len(encoded),
+            "total": len(encoded),
+            "sha256": "test",
+            "mime_type": "image/png",
+            "filename": "diagram.png",
+        }
+    }
+    host = Host(
+        browser, TOOLS, {"rerender_diagram": png_result, "download_diagram": chunk}
+    )
+    host.send("ui/notifications/tool-result", _svg_result("Initial SVG"))
+    host.frame.locator("#formatSelect").select_option("png")
+    host.frame.locator("#rerenderBtn").click()
+    host.expect(host.frame.locator("#frame > img")).to_be_visible()
+    host.expect(host.frame.locator("#formatSelect")).to_have_value("png")
+    host.wait_calls("tools/call", 2)
+    assert host.tool_calls("download_diagram")[0]["output_format"] == "png"

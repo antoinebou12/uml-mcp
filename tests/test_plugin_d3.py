@@ -1400,7 +1400,7 @@ def test_software_nodes_get_a_monogram_tile_and_cloud_nodes_a_glyph() -> None:
         and ">Pg</text>" in svg
         and 'fill="#336791"' in svg
     )
-    assert svg.count('class="glyph"') == 1
+    assert svg.count('class="brand-logo"') == 1
 
 
 def test_the_legend_counts_what_is_drawn() -> None:

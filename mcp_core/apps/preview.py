@@ -7,7 +7,9 @@ from io import BytesIO
 from PIL import Image, UnidentifiedImageError
 
 
-def compact_preview(data: str, mime_type: str, limit: int) -> str | None:
+def compact_preview(
+    data: str, mime_type: str, limit: int, *, max_dimension: int = 1200
+) -> str | None:
     """Return a complete PNG thumbnail, or None for unsupported/invalid input."""
     if mime_type not in {"image/png", "image/jpeg", "image/svg+xml"}:
         return None
@@ -25,6 +27,14 @@ def compact_preview(data: str, mime_type: str, limit: int) -> str | None:
             # Previews must not resolve files, URLs or XML entities on the host.
             if re.search(r"<!\s*(?:DOCTYPE|ENTITY)\b", svg, re.IGNORECASE):
                 return None
+            # Navigation links cannot load resources during rasterization.
+            # Strip only anchor hrefs, retaining the image/use resource checks.
+            svg = re.sub(
+                r"""(<a\b[^>]*?)\s(?:xlink:)?href\s*=\s*["'][^"']*["']""",
+                r"\1",
+                svg,
+                flags=re.IGNORECASE,
+            )
             if re.search(
                 r"""(?:href\s*=\s*["']\s*(?!\#)|url\(\s*["']?(?!\#))""",
                 svg,
@@ -38,7 +48,9 @@ def compact_preview(data: str, mime_type: str, limit: int) -> str | None:
             if original.width * original.height > 16_000_000:
                 return None
             preview = original.convert("RGBA")
-        for size in (1200, 960, 720, 480, 320, 160):
+        for size in (1200, 960, 720, 480, 320, 160, 96):
+            if size > max_dimension:
+                continue
             preview.thumbnail((size, size), Image.Resampling.LANCZOS)
             buffer = BytesIO()
             preview.save(buffer, format="PNG", optimize=True)

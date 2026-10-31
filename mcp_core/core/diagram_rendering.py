@@ -9,6 +9,7 @@ from __future__ import annotations
 import base64
 import datetime
 import logging
+import re
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -21,7 +22,7 @@ from tools.kroki.kroki import plantuml_playground_path_segment
 from .config import MCP_SETTINGS
 from .engine_health import EngineHealth, EngineUnavailable
 from .kroki_diagnostics import clean_kroki_error_body
-from .mermaid_source import prepare_mermaid_source
+from .mermaid_source import mermaid_theme_from_source, prepare_mermaid_source
 
 logger = logging.getLogger(__name__)
 
@@ -81,13 +82,24 @@ def _verify_kroki_link(url: str, timeout: float | None) -> None:
 
 def _prepare_plantuml_family(code: str, theme: str | None) -> str:
     """Wrap ``@startuml`` / ``@enduml`` and inject ``!theme`` when missing."""
-    prepared = code.strip()
+    aliases = {"light": "plain", "white": "plain", "dark": "cyborg", "black": "cyborg"}
+    theme = aliases.get(theme or "", theme)
+    prepared = re.sub(
+        r"(?m)^(\s*!theme\s+)(light|white|dark|black)\b",
+        lambda m: m[1] + aliases[m[2]],
+        code.strip(),
+    )
     if "@startuml" not in prepared:
         prepared = f"@startuml\n{prepared}"
     if "@enduml" not in prepared:
         prepared = f"{prepared}\n@enduml"
     if theme and "!theme" not in prepared:
-        prepared = prepared.replace("@startuml", f"@startuml\n!theme {theme}", 1)
+        prepared = re.sub(
+            r"(?m)^([ \t]*@startuml[^\r\n]*)",
+            lambda match: match[1] + f"\n!theme {theme}",
+            prepared,
+            count=1,
+        )
     return prepared
 
 
@@ -348,7 +360,7 @@ def _generate_diagram_mermaid_fallback(
 
     urls = generate_mermaid_urls(
         diagram_text=code,
-        theme="default",
+        theme=mermaid_theme_from_source(code),
         image_format=output_format.lower(),
         ink_base=mermaid_ink_server,
     )

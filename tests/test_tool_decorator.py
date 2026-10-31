@@ -26,7 +26,7 @@ class TestGetToolRegistry:
         assert "generate_uml" in registry
         assert "generate_uml_image" in registry
         assert "validate_uml" in registry
-        assert len(registry) == 6
+        assert len(registry) == 7
 
     def test_registry_tool_has_metadata(self):
         """Each registry entry has function, name, description, category, parameters."""
@@ -131,7 +131,7 @@ class TestRegisterToolsWithServer:
         assert "generate_uml" in result
         assert "validate_uml" in result
         assert "generate_uml_image" in result
-        assert len(result) == 6
+        assert len(result) == 7
 
     def test_register_tools_typeerror_fallback_chain(self):
         """When server.tool rejects kwargs styles, fall back to bare tool(func)."""

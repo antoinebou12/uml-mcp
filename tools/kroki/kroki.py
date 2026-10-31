@@ -206,6 +206,8 @@ class Kroki:
         Returns:
             A URL to an online playground or None if not available
         """
+        if diagram_type == "c4plantuml":
+            diagram_type = "plantuml"
         if diagram_type == "tikz":
             from .tikz import generate_tikz_urls
 
@@ -231,9 +233,13 @@ class Kroki:
             # Standard PlantUML URL: /plantuml/uml/<encoded> (see plantuml.com/text-encoding)
             return f"{base_playground}{encoded}"
         elif diagram_type == "mermaid":
+            from mcp_core.core.mermaid_source import mermaid_theme_from_source
+
             from .mermaid import generate_diagram_state, serialize_state
 
-            state = generate_diagram_state(diagram_text, theme="default")
+            state = generate_diagram_state(
+                diagram_text, theme=mermaid_theme_from_source(diagram_text)
+            )
             serialized_state = serialize_state(state)
             return f"{base_playground}{serialized_state}"
         else:

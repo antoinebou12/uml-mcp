@@ -18,7 +18,7 @@
   "tools": [
     {
       "name": "list_diagram_types",
-      "description": "Find diagram types by text, renderer, or output format. Returns a map keyed by diagram_type, with each type\u2019s backend, description, and supported formats.",
+      "description": "Find types by text, backend or format. Returns diagram_type keys with backend, description and formats.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -234,6 +234,50 @@
         "idempotentHint": true,
         "openWorldHint": true,
         "title": "Re-render Diagram"
+      }
+    },
+    {
+      "name": "download_diagram",
+      "description": "Download source, SVG, PNG, PDF or HTML chunks. Repeat sha256 on follow-ups.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "diagram_type": {
+            "type": "string",
+            "description": "Diagram Type"
+          },
+          "code": {
+            "type": "string",
+            "description": "Code"
+          },
+          "output_format": {
+            "type": "string",
+            "description": "Output Format"
+          },
+          "theme": {
+            "type": "string",
+            "description": "Theme"
+          },
+          "offset": {
+            "type": "integer",
+            "description": "Offset"
+          },
+          "sha256": {
+            "type": "string",
+            "description": "Sha256"
+          }
+        },
+        "required": [
+          "diagram_type",
+          "code"
+        ]
+      },
+      "annotations": {
+        "title": "Download Diagram",
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "openWorldHint": true,
+        "idempotentHint": true
       }
     }
   ],

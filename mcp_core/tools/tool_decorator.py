@@ -5,6 +5,7 @@ from __future__ import annotations
 import inspect
 import json
 import logging
+import re
 from collections.abc import Callable
 from functools import wraps
 from typing import Any, TypeVar, cast
@@ -96,6 +97,14 @@ def _bounded_batch_result(result: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(rows, list):
         return result
     image_budget = MAX_VIEWER_BASE64_CHARS
+    needs_thumbnails = (
+        sum(
+            len(row.get("content_base64") or "")
+            for row in rows
+            if isinstance(row, dict)
+        )
+        > image_budget
+    )
     source_budget = MAX_VIEWER_SOURCE_CHARS * 2
     bounded: list[Any] = []
     for row in rows:
@@ -104,6 +113,23 @@ def _bounded_batch_result(result: dict[str, Any]) -> dict[str, Any]:
             continue
         item = dict(row)
         data = item.get("content_base64")
+        if (
+            needs_thumbnails
+            and isinstance(data, str)
+            and len(data) > MAX_VIEWER_BASE64_CHARS // max(1, len(rows))
+        ):
+            from mcp_core.apps.preview import compact_preview
+
+            thumbnail = compact_preview(
+                data,
+                str(item.get("mime_type") or ""),
+                MAX_VIEWER_BASE64_CHARS // max(1, len(rows)),
+                max_dimension=160,
+            )
+            if thumbnail:
+                data = item["content_base64"] = thumbnail
+                item["mime_type"] = "image/png"
+                item["preview_resized"] = True
         if isinstance(data, str) and data:
             if len(data) <= image_budget:
                 image_budget -= len(data)
@@ -233,7 +259,12 @@ def _summarize_tool_result(tool_name: str, result: dict[str, Any]) -> str:
         return summary
     if tool_name == "generate_uml_batch":
         rows = result.get("results") or []
-        failures = sum(1 for row in rows if isinstance(row, dict) and row.get("error"))
+        failures = sum(
+            1
+            for row in rows
+            if isinstance(row, dict)
+            and (row.get("error") or row.get("success") is False)
+        )
         return f"Processed {len(rows)} diagrams; {failures} failed."
     if tool_name == "validate_uml":
         state = "valid" if result.get("valid") else "invalid"
@@ -242,6 +273,19 @@ def _summarize_tool_result(tool_name: str, result: dict[str, Any]) -> str:
     if tool_name == "list_diagram_types":
         return f"Returned {len(result)} supported diagram type(s)."
     return "Tool completed successfully."
+
+
+def _client_uses_apps() -> bool:
+    try:
+        from fastmcp.apps import UI_EXTENSION_ID
+        from fastmcp.server.dependencies import get_context
+
+        capabilities = get_context().session.client_capabilities
+        return capabilities is not None and UI_EXTENSION_ID in (
+            capabilities.extensions or {}
+        )
+    except (ImportError, RuntimeError, AttributeError):
+        return False
 
 
 def _as_mcp_tool_result(tool_name: str, result: Any) -> Any:
@@ -284,14 +328,36 @@ def _as_mcp_tool_result(tool_name: str, result: Any) -> Any:
         # The mock server used in unit tests does not need protocol result objects.
         return result
 
-    content: list[Any] = [
-        TextContent(type="text", text=_summarize_tool_result(tool_name, result))
-    ]
+    apps = _client_uses_apps() and tool_name in (
+        _VIEWER_TOOL_NAMES | {"generate_uml_batch"}
+    )
+    summary = _summarize_tool_result(tool_name, result)
+    if apps:
+        status = (
+            summary
+            if tool_name == "generate_uml_batch"
+            else "Render response prepared for the MCP App."
+        )
+        summary = (
+            f"{status} Check the viewer for the result, source, links and downloads. "
+            "Confirm briefly; repeat the diagram or source only if requested."
+        )
+    content: list[Any] = [TextContent(type="text", text=summary)]
     mime_type = str(result.get("mime_type") or "").lower()
     image_data = result.get("content_base64")
     # Prefer raster ImageContent for chat UIs (Cursor/Copilot/Claude); SVG blocks
     # are still attached when present for clients that support image/svg+xml.
-    if image_data and mime_type in IMAGE_CONTENT_MIMES:
+    if image_data and mime_type == "image/svg+xml" and not apps:
+        from mcp_core.apps.preview import compact_preview
+
+        image_data = compact_preview(
+            str(image_data), mime_type, MAX_VIEWER_BASE64_CHARS
+        )
+        mime_type = "image/png"
+    if image_data and mime_type in IMAGE_CONTENT_MIMES and not apps:
+        content[0].text = re.sub(
+            r"!\[[^\]]*\]\([^\n]+?\)\s*", "", content[0].text
+        ).strip()
         content.append(
             ImageContent(type="image", data=str(image_data), mime_type=mime_type)
         )

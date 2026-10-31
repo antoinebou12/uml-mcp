@@ -135,7 +135,9 @@ def test_agent_uses_the_server_end_to_end(tier_stack):
     assert render["url"].startswith(tier.url) and render["source"] == "kroki"
     assert render["playground"]  # mermaid.live link for the chat
     check_svg(_svg(render), ("Alice", "Bob"))
-    assert "![" in seen["render_text"]  # markdown image for the chat
+    assert (
+        render["url"] in seen["render_text"]
+    )  # image is emitted once, with readable links
     assert "image" in seen["image_types"]  # inline PNG for chat UIs
     width, height = check_png(seen["image_png"][0])
     assert width * height > 20 * 20

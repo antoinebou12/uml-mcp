@@ -62,3 +62,14 @@ def prepare_mermaid_source(code: str, theme: str | None = None) -> str:
     if "\n" not in text and _ESCAPED_NEWLINE.match(text):
         text = text.replace("\\n", "\n")
     return _apply_theme(text, theme)
+
+
+def mermaid_theme_from_source(code: str) -> str:
+    """Read the effective theme from the source's configuration header."""
+    front = _FRONTMATTER.match(code)
+    init = re.search(r"%%\{\s*(?:init|initialize)\s*:(.*?)\}%%", code, re.DOTALL)
+    config = front[0] if front else (init[1] if init else "")
+    match = re.search(
+        r"""["']?theme["']?\s*:\s*["']?(default|dark|forest|neutral|base)\b""", config
+    )
+    return match[1] if match else "default"

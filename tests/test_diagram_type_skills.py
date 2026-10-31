@@ -21,6 +21,10 @@ NON_TYPE_SKILLS = frozenset(
         "uml-diagramming",
         "uml-mcp-diagrams",
         "uml-mcp-navigation",
+        "uml-mcp-d3-plugins",
+        "uml-mcp-mermaid",
+        "uml-mcp-plantuml-c4",
+        "uml-mcp-batch",
     }
 )
 

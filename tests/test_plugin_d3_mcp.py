@@ -51,7 +51,7 @@ def test_svg_comes_back_as_an_image_a_chat_can_show(mcp_report, dtype: str) -> N
     assert got["mime_type"] == "image/svg+xml" and got["output_format"] == "svg"
     assert got["attempts"] == [{"backend": "plugin:d3", "ok": True}]
     assert [b["type"] for b in got["blocks"]] == ["text", "image"]
-    assert got["blocks"][1]["mime"] == "image/svg+xml"
+    assert got["blocks"][1]["mime"] == "image/png"
     assert got["summary"].startswith(f"Generated {dtype} successfully")
     svg = (Path(mcp_report["pages_dir"]) / f"{dtype}.svg").read_text(encoding="utf-8")
     assert svg.startswith("<svg") and "<title>" in svg
@@ -140,7 +140,7 @@ def test_the_same_server_over_http(mcp_report) -> None:
     http = mcp_report["http"]
     assert "d3_catalog" in http["tools"] and http["is_error"] is False
     assert http["content_types"] == ["text", "image"] and http["image_mime"] == [
-        "image/svg+xml"
+        "image/png"
     ]
     assert http["structured_source"] == "plugin:d3"
 
@@ -156,6 +156,7 @@ def test_the_plugin_package_ships_everything_it_loads() -> None:
         "router.js",
         "d3.v7.9.0.min.js",
         "d3.LICENSE",
+        "brands",
     }
     for name in ("pyproject.toml", "README.md"):
         assert (D3_SRC.parent / name).is_file(), name

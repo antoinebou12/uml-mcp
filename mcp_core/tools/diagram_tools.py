@@ -17,7 +17,11 @@ from ..core.config import MCP_SETTINGS
 from ..core.diagram_catalog import get_diagram_types_dict
 from ..core.diagram_service import DiagramRequest, generate_from_request
 from ..core.diagram_validation import validate_uml_inputs
-from . import mrtr, notifications
+from . import (
+    diagram_export,  # noqa: F401 - registers app-only download helper
+    mrtr,
+    notifications,
+)
 from .schemas import (
     BatchDiagramResult,
     DiagramResult,
@@ -64,8 +68,8 @@ def _bounded_limit(limit: int | None) -> int | None:
 
 @mcp_tool(
     description=(
-        "Find diagram types by text, renderer, or output format. Returns a map keyed "
-        "by diagram_type, with each type’s backend, description, and supported formats."
+        "Find types by text, backend or format. Returns diagram_type keys with "
+        "backend, description and formats."
     ),
     category="uml",
     example="list_diagram_types(query='sequence', output_format='svg')",
@@ -168,7 +172,8 @@ def _render_batch_item(
             "error": f"items[{index}] must be an object with diagram_type and code",
         }
     try:
-        validated = GenerateUMLInput.model_validate({**raw, "output_dir": output_dir})
+        item = {k: v for k, v in raw.items() if k != "user_intent"}
+        validated = GenerateUMLInput.model_validate({**item, "output_dir": output_dir})
     except ValidationError as exc:
         return {
             "index": index,
@@ -477,6 +482,9 @@ def rerender_diagram(
         return theme_resolved
     theme = cast(str | None, theme_resolved)
 
+    from ..core.viewer_theme import apply_viewer_theme
+
+    code = apply_viewer_theme(code, diagram_type, theme)
     out = generate_from_request(
         DiagramRequest(
             diagram_type=diagram_type,

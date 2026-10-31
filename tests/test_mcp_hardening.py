@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import base64
 import os
 import time
 from unittest.mock import patch
@@ -80,7 +81,7 @@ def test_protocol_adapter_returns_structured_content_and_image():
     assert result.meta["render_ms"] == 9.5
 
 
-def test_protocol_adapter_emits_svg_image_content_block():
+def test_protocol_adapter_rasterizes_svg_for_plain_clients():
     """SVG results now attach an inline image content block so SVG renders in clients."""
     from fastmcp.tools import ToolResult
     from mcp.types import ImageContent
@@ -91,7 +92,9 @@ def test_protocol_adapter_emits_svg_image_content_block():
         "diagram_type": "class",
         "output_format": "svg",
         "url": "https://example.test/class.svg",
-        "content_base64": "c3ZnLWJ5dGVz",
+        "content_base64": base64.b64encode(
+            b'<svg xmlns="http://www.w3.org/2000/svg" width="80" height="40"><text x="2" y="20">Label</text></svg>'
+        ).decode(),
         "source": "kroki",
         "render_ms": 3.0,
         "cache_hit": False,
@@ -102,8 +105,8 @@ def test_protocol_adapter_emits_svg_image_content_block():
     assert isinstance(result, ToolResult)
     assert any(isinstance(block, ImageContent) for block in result.content)
     image = next(block for block in result.content if isinstance(block, ImageContent))
-    assert image.mime_type == "image/svg+xml"
-    assert image.data == "c3ZnLWJ5dGVz"
+    assert image.mime_type == "image/png"
+    assert base64.b64decode(image.data).startswith(b"\x89PNG")
 
 
 def test_protocol_adapter_raises_tool_error_for_execution_failure():
