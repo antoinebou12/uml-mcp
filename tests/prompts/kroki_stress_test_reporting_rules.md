@@ -23,6 +23,13 @@ Controlled-error calls still count. In particular:
 
 Do not infer counts from successful artifacts. Count actual tool invocations.
 
+Keep a phase ledger before starting: mark each negative probe complete after
+its first call. Extra attempts still count and must be explained. Copy embedded
+fixtures exactly, including C4 directives; normalization performed by the server
+is separate from editing the submitted fixture. Report backend-render outcomes,
+test-procedure deviations and unverified UI behavior separately so a duplicated
+negative probe is not misreported as a rendering failure.
+
 For the current full stress-test specification, if every phase executes exactly once, the expected totals are:
 
 - `list_diagram_types_calls = 2`

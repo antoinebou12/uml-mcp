@@ -5,6 +5,12 @@ test; count these calls separately from its 28-call baseline. Record server URL,
 client, revision when available, each tool call and each returned error. Do not
 claim access to Manufact unless a connected tool actually returned live data.
 
+Before calling tools, separate tool-only checks from browser/host checks. If this
+client cannot inspect the App or download files, mark those cases UNAVAILABLE
+or UNVERIFIED and run the tool-only cases once. A local exported chat can be
+inspected with `scripts/replay_mcp_chat.py`; replay is recorded evidence, not a
+live host check. Do not rerun negative probes merely to compensate for missing UI access.
+
 ## Required cases
 
 1. Inspect initialize metadata: title, description, website and icon. Inspect UI
@@ -26,6 +32,8 @@ claim access to Manufact unless a connected tool actually returned live data.
    If present, build one frontend/backend inventory with labelled edges, React,
    API, authentication, cache, database, queue, storage and a payment provider.
    Include AWS, GCP, ChatGPT and Claude marks supported by the plugin catalog.
+   Read `d3_catalog.source_format` when available and validate the source first.
+   Node providers belong in `service` keys, not a node-level `provider` field.
 6. Render D3 SVG, then HTML. Select HTML in the App and verify interactive zoom,
    pan, node dragging, theme and fit. Large HTML must load on demand. A message
    saying HTML rendered without bytes, a URL or a working App is not a pass.
@@ -37,6 +45,9 @@ claim access to Manufact unless a connected tool actually returned live data.
 8. Start with PNG, re-render as SVG, then HTML and back to SVG. Check labels,
    fresh links, format selectors and other gallery items after each transition.
    Check narrow and wide App panels. The diagram must fit without clipped text.
+   Include a small native-size class SVG: it should open at a readable fit;
+   1:1 must remain available. Simulate one failed full-preview request and use
+   Retry full preview. Do not treat a 60x96 PNG thumbnail as a readable SVG result.
 9. Deny a host download. Verify an error rather than "download ready". Probe a
    host whose download handler exists without an advertised capability. Hosts
    lacking the download API are an explicit platform limitation. Standalone HTML

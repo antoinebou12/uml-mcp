@@ -1,6 +1,23 @@
 # Testing
 
-How the test suite is laid out and how to run it locally.
+## Replay a chat export locally
+
+```bash
+uv run python scripts/replay_mcp_chat.py "path/to/chat-raw.json" --out .cache/chat-replay
+```
+
+Open `.cache/chat-replay/replay.html` to select recorded tool results, navigate
+their batch galleries and switch between 390, 640 and 1000 pixel panels.
+`report.json` counts actual calls, preserves tool and per-item errors, and flags
+tiny raster previews, SVG requests returned as PNG, and HTML omitted from the
+initial response. Multiple chat files can be passed to one command.
+
+Replay displays recorded bytes without executing recorded prompts or tools.
+Network access is blocked. Full-resolution recovery, omitted HTML, live host
+downloads and publishing checks remain unverified. Use the connected MCP App
+and the [acceptance prompt](https://github.com/antoinebou12/uml-mcp/blob/main/tests/prompts/mcp_apps_plugin_acceptance_test.md)
+for those checks. Do not interpret a successful backend render as a readable
+preview or a verified download.
 
 ## How the suite is organized
 

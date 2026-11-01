@@ -21,6 +21,7 @@ playwright = pytest.importorskip("playwright.sync_api")
 
 HOST = """([html, caps, responses]) => {
     window.calls = [];
+    window.responses = responses;
     window.addEventListener('message', event => {
         const m = event.data;
         if (!m || m.id == null || !m.method) return;
@@ -32,7 +33,7 @@ HOST = """([html, caps, responses]) => {
         window.calls.push({method: m.method, params: m.params});
         if (m.method === 'tools/call') {
             const args = m.params.arguments || {};
-            const res = responses[m.params.name + ':' + args.output_format + ':' + (args.offset || 0)] || responses[m.params.name];
+            const res = window.responses[m.params.name + ':' + args.output_format + ':' + (args.offset || 0)] || window.responses[m.params.name];
             return res ? reply({result: res})
                        : reply({error: {code: -32603, message: 'no stub'}});
         }
@@ -119,6 +120,132 @@ class Host:
 
 
 TOOLS = {"serverTools": {}}
+
+
+def test_small_vectors_fit_on_open_and_resize_without_overriding_manual_zoom(browser):
+    host = Host(browser, {}, {})
+    host.send("ui/notifications/tool-result", _svg_result("Customer owns Account"))
+    label = host.frame.locator("#zoomLabel")
+    host.expect(label).not_to_have_text("100%")
+    first = int(label.inner_text().removesuffix("%"))
+    assert first > 100
+    host.page.locator("iframe").evaluate("el => el.style.width = '420px'")
+    host.expect(label).not_to_have_text(str(first) + "%")
+    assert int(label.inner_text().removesuffix("%")) < first
+    host.frame.locator("#zoomIn").click()
+    manual = label.inner_text()
+    host.page.locator("iframe").evaluate("el => el.style.width = '860px'")
+    host.page.wait_for_timeout(150)
+    host.expect(label).to_have_text(manual)
+    host.frame.locator("#zoomReset").click()
+    host.expect(label).to_have_text("100%")
+    host.frame.locator("#zoomFit").click()
+    host.expect(label).not_to_have_text("100%")
+
+
+def test_result_arriving_while_source_tab_is_open_fits_when_shown(browser):
+    host = Host(browser, {}, {})
+    host.send("ui/notifications/tool-result", _svg_result("Old diagram"))
+    host.frame.locator("#tabSource").click()
+    host.send("ui/notifications/tool-result", _svg_result("Updated diagram"))
+    host.expect(host.frame.locator("#status")).to_contain_text("Diagram ready")
+    host.frame.locator("#tabDiagram").click()
+    host.expect(host.frame.locator("#frame svg text")).to_have_text("Updated diagram")
+    assert int(host.frame.locator("#zoomLabel").inner_text().removesuffix("%")) > 100
+
+
+def test_recorded_thumbnail_failure_is_retryable_and_upgrades_to_readable_svg(browser):
+    from io import BytesIO
+
+    from PIL import Image
+
+    buffer = BytesIO()
+    Image.new("RGB", (60, 96), "white").save(buffer, format="PNG")
+    host = Host(browser, TOOLS, {})
+    host.send(
+        "ui/notifications/tool-result",
+        _svg_result(
+            "unused",
+            diagram_type="class",
+            output_format="svg",
+            mime_type="image/png",
+            content_base64=base64.b64encode(buffer.getvalue()).decode(),
+            preview_resized=True,
+        ),
+    )
+    host.expect(host.frame.locator("#retryPreview")).to_be_visible()
+    host.expect(host.frame.locator("#status")).to_contain_text(
+        "Full preview unavailable"
+    )
+    host.expect(host.frame.locator("#zoomLabel")).to_have_text("100%")
+    encoded = _svg("Customer owns Account")
+    host.page.evaluate(
+        "r => window.responses.download_diagram = r",
+        {
+            "structuredContent": {
+                "chunk": encoded,
+                "offset": 0,
+                "next_offset": len(encoded),
+                "total": len(encoded),
+                "sha256": "fixture",
+                "mime_type": "image/svg+xml",
+                "filename": "class.svg",
+            }
+        },
+    )
+    host.frame.locator("#retryPreview").click()
+    host.expect(host.frame.locator("#frame svg text")).to_have_text(
+        "Customer owns Account"
+    )
+    host.expect(host.frame.locator("#retryPreview")).to_be_hidden()
+    host.expect(host.frame.locator("#status")).to_contain_text("Diagram ready")
+    assert len(host.tool_calls("download_diagram")) == 2
+    assert all(c["output_format"] == "svg" for c in host.tool_calls("download_diagram"))
+    assert int(host.frame.locator("#zoomLabel").inner_text().removesuffix("%")) > 100
+
+
+def test_offline_trace_replay_shows_recorded_errors_without_network(browser, tmp_path):
+    from scripts.replay_mcp_chat import write_replay
+    from tests.test_chat_trace import trace_with_result
+
+    path = tmp_path / "recorded.json"
+    trace = trace_with_result(_svg_result("Recorded Customer diagram"), "generate_uml")
+    trace["turns"].append(
+        trace_with_result(
+            {
+                "isError": True,
+                "content": [
+                    {"type": "text", "text": "nodes[0].provider: unknown field"}
+                ],
+            },
+            "generate_uml",
+        )["turns"][0]
+    )
+    path.write_text(json.dumps(trace), encoding="utf-8")
+    write_replay([path], tmp_path / "replay")
+    page = browser.new_page()
+    requests = []
+    page.on(
+        "request",
+        lambda request: (
+            requests.append(request.url)
+            if request.url.startswith(("http:", "https:"))
+            else None
+        ),
+    )
+    page.goto((tmp_path / "replay/replay.html").as_uri())
+    frame = page.frame_locator("iframe")
+    playwright.expect(frame.locator("#frame svg text")).to_have_text(
+        "Recorded Customer diagram"
+    )
+    page.locator("#width").select_option("390")
+    page.locator("#next").click()
+    playwright.expect(frame.locator("#status")).to_contain_text(
+        "provider: unknown field"
+    )
+    assert requests == []
+    assert page.evaluate("window.traceExecuted") is None
+    page.close()
 
 
 def test_tool_error_offers_edit_retry_and_ask_to_fix(browser: Any) -> None:

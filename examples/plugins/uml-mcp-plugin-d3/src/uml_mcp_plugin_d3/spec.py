@@ -172,6 +172,15 @@ def _pydantic_problems(exc: ValidationError) -> list[str]:
             problems.append(f"{where}: required")
         else:
             problems.append(f"{where}: {err.get('msg', 'invalid')}")
+    if exc.title == "ArchSpec" and any(
+        err.get("type") == "extra_forbidden"
+        and tuple(err.get("loc", ()))[:1] == ("nodes",)
+        and tuple(err.get("loc", ()))[-1:] == ("provider",)
+        for err in exc.errors()
+    ):
+        problems.append(
+            "Use a top-level provider or node service keys such as aws:s3 or tech:claude; node.provider is unsupported"
+        )
     return problems
 
 

@@ -1136,6 +1136,23 @@ def test_plugin_tools_can_document_a_lint_exception(d3_plugin) -> None:
     }
 
 
+def test_catalog_teaches_valid_service_fields_and_parseable_examples(d3_plugin):
+    from mcp_core.tools.tool_decorator import get_tool_registry
+
+    d3_plugin()
+    guide = get_tool_registry()["d3_catalog"]["function"]()["source_format"]
+    assert "service" in guide["node_fields"] and "provider" not in guide["node_fields"]
+    assert {"from", "to", "label"} <= set(guide["link_fields"])
+    spec.parse_arch("d3_architecture", json.dumps(guide["architecture_example"]))
+    spec.parse_force(json.dumps(guide["force_example"]))
+    errors = problems(
+        "d3_architecture",
+        arch(nodes=[{"id": "a", "provider": "aws"}, {"id": "b", "provider": "gcp"}]),
+    )
+    assert sum("node.provider is unsupported" in error for error in errors) == 1
+    assert "nodes[0].provider: unknown field" in errors
+
+
 # ------------------------------------------------------------ arrow label placement
 def test_a_label_goes_on_the_longest_run_that_fits() -> None:
     corners = [
