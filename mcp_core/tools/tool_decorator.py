@@ -55,7 +55,10 @@ def _bounded_viewer_result(result: dict[str, Any]) -> dict[str, Any]:
         else:
             out["inline_omitted"] = True
             out["inline_note"] = (
-                "Inline preview unavailable. Open the render link when available."
+                "Interactive HTML loads on demand in the MCP App. Select HTML or Download there; "
+                "HTML bytes are omitted from this initial text result."
+                if str(out.get("mime_type") or "").startswith("text/html")
+                else "Inline preview unavailable. Open the render link when available."
             )
     code = out.get("code")
     if isinstance(code, str) and len(code) > MAX_VIEWER_SOURCE_CHARS:

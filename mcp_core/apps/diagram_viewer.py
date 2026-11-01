@@ -373,6 +373,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       <span id="status" role="status" aria-live="polite">Waiting for diagram…</span>
     </div>
     <div id="actions">
+      <button type="button" class="btn" id="retryPreview" hidden>Retry full preview</button>
       <a class="btn" id="openUrl" href="#" target="_blank" rel="noopener" hidden>Open image ↗</a>
       <a class="btn" id="openPlay" href="#" target="_blank" rel="noopener" hidden>Playground ↗</a>
       <select id="exportFormat" aria-label="Download format"><option value="current">Current preview</option><option value="source">Source</option><option value="svg" selected>SVG</option><option value="png">PNG</option><option value="html">HTML</option><option value="pdf">PDF</option></select>
@@ -440,7 +441,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   var CHECKS = $("checks"), ISSUE_COUNT = $("issueCount"), RERENDER_BTN = $("rerenderBtn");
   var MIN_ZOOM = 0.1, MAX_ZOOM = 8;
   var MAX_CONTEXT_SOURCE = 4000;
-  var zoom = 1, fitZoom = 1;
+  var zoom = 1, fitZoom = 1, fitMode = "auto";
   var panX = 0, panY = 0, panStart = null;
   var nextId = 1;
   var pending = Object.create(null);
@@ -651,21 +652,24 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   }
 
   function fitDiagram() {
+    fitMode = "fit";
     fitZoom = computeFit();
     zoom = fitZoom;
     panX = panY = 0;
     applyZoom();
   }
 
-  /** Shrink oversized diagrams to fit on first paint; never upscale small ones. */
+  /** Fit vectors for readable labels; preserve raster resolution on first paint. */
   function autoFit() {
+    if (!FRAME.clientWidth || !FRAME.clientHeight) return;
     fitZoom = computeFit();
-    zoom = Math.min(1, fitZoom);
+    zoom = Math.min(media() && media().tagName.toLowerCase() === "svg" ? 4 : 1, fitZoom);
     panX = panY = 0;
     applyZoom();
   }
 
   function zoomBy(factor) {
+    fitMode = "manual";
     zoom = clampZoom(Math.round(zoom * factor * 100) / 100);
     applyZoom();
   }
@@ -851,7 +855,9 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   function renderItem() {
     var item = items[current];
     pluginFrame = null;
+    $("retryPreview").hidden = true;
     zoom = 1;
+    fitMode = "auto";
     panX = panY = 0;
     FRAME.classList.remove("paper-dark");
     if (!item) {
@@ -861,6 +867,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       return;
     }
     loadFullPreview(item);
+    $("retryPreview").hidden = !item._fullError || !can("serverTools");
     if (item.diagram_type) {
       TYPE_BADGE.textContent = String(item.diagram_type);
       TYPE_BADGE.hidden = false;
@@ -885,7 +892,9 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       showEmpty(item.output_format === "html" ? "Loading interactive HTML…" : "Loading full preview…");
       setStatus("Loading preview…", "busy"); showLinks(item); return;
     }
-    var ready = item.preview_resized ? "Compact preview" : "Diagram ready";
+    var ready = item._fullLoading ? "Loading full preview…" :
+      (item._fullError ? "Thumbnail only · full preview unavailable" :
+      (item.preview_resized ? "Compact preview" : "Diagram ready"));
     if (items.length > 1) {
       var failed = items.filter(isFailed).length;
       ready += " · " + (current + 1) + " of " + items.length + (failed ? " · " + failed + " failed" : "");
@@ -896,7 +905,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       img.addEventListener("load", autoFit);
       img.src = "data:" + (mime || "image/png") + ";base64," + b64;
       mount(img);
-      setStatus(ready, "ok");
+      setStatus(ready, item._fullLoading ? "busy" : (item._fullError ? "err" : "ok"));
       showLinks(item);
       applyZoom();
       return;
@@ -907,7 +916,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
         FRAME.classList.remove("static");
         FRAME.innerHTML = clean;
         TOOLBAR.hidden = false;
-        setStatus(ready, "ok");
+        setStatus(ready, item._fullLoading ? "busy" : (item._fullError ? "err" : "ok"));
         showLinks(item);
         autoFit();
         return;
@@ -1066,10 +1075,12 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     readExport(item, format, item.code, item.theme).then(function(result) {
       item.content_base64 = result.encoded; item.mime_type = result.file.mime_type; item.output_format = format;
       item._fullLoading = false;
+      item._fullError = "";
       item.preview_resized = false; item.inline_omitted = false; item.inline_note = "";
       if (items[current] === item) renderItem();
     }).catch(function(err) {
       item._fullLoading = false;
+      item._fullError = errorText(err);
       item.inline_note = "Full preview unavailable: " + errorText(err);
       if (items[current] === item) { renderItem(); setStatus(item.inline_note, true); }
     });
@@ -1164,6 +1175,9 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     TAB_SOURCE.tabIndex = view === "source" ? 0 : -1;
     STAGE.hidden = view !== "diagram";
     SOURCE_PANE.hidden = view !== "source";
+    if (view === "diagram" && media() && fitMode !== "manual") {
+      if (fitMode === "fit") fitDiagram(); else autoFit();
+    }
     if (view === "source") SOURCE_EDIT.focus();
     notifySize();
   }
@@ -1513,10 +1527,23 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   $("zoomOut").addEventListener("click", function () { zoomBy(0.8); });
   $("zoomFit").addEventListener("click", fitDiagram);
   $("zoomReset").addEventListener("click", function () {
+    fitMode = "manual";
     zoom = 1;
     panX = panY = 0;
     applyZoom();
   });
+  $("retryPreview").addEventListener("click", function () {
+    var item = items[current];
+    if (!item) return;
+    item._fullTried = false; item._fullError = "";
+    renderItem();
+  });
+  if (typeof ResizeObserver !== "undefined") {
+    new ResizeObserver(function () {
+      if (!media() || !FRAME.clientWidth || !FRAME.clientHeight || fitMode === "manual") return;
+      if (fitMode === "fit") fitDiagram(); else autoFit();
+    }).observe(FRAME);
+  }
   TAB_DIAGRAM.addEventListener("click", function () { setView("diagram"); });
   TAB_SOURCE.addEventListener("click", function () { setView("source"); });
   TABS.addEventListener("keydown", function (event) {
@@ -1576,6 +1603,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   });
   FRAME.addEventListener("pointermove", function (event) {
     if (!panStart) return;
+    fitMode = "manual";
     panX = panStart.panX + event.clientX - panStart.x;
     panY = panStart.panY + event.clientY - panStart.y;
     applyZoom();
@@ -1595,7 +1623,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
         /INPUT|TEXTAREA|SELECT|BUTTON/.test(document.activeElement.tagName) || view !== "diagram") return;
     if (event.key === "+" || event.key === "=") { zoomBy(1.25); }
     else if (event.key === "-") { zoomBy(0.8); }
-    else if (event.key === "0") { zoom = 1; panX = panY = 0; applyZoom(); }
+    else if (event.key === "0") { fitMode = "manual"; zoom = 1; panX = panY = 0; applyZoom(); }
     else if (event.key.toLowerCase() === "f") { fitDiagram(); }
     else if (event.key === "ArrowRight" && items.length > 1) { current = (current + 1) % items.length; renderItem(); }
     else if (event.key === "ArrowLeft" && items.length > 1) { current = (current + items.length - 1) % items.length; renderItem(); }

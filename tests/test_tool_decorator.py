@@ -230,6 +230,23 @@ class TestChatCriticalToolOrder:
 
 
 class TestBoundedMcpAppResults:
+    def test_omitted_html_points_to_the_app_without_promising_a_missing_url(self):
+        from mcp_core.tools.tool_decorator import _bounded_viewer_result
+
+        result = _bounded_viewer_result(
+            {
+                "diagram_type": "d3_architecture",
+                "output_format": "html",
+                "code": "{}",
+                "mime_type": "text/html; charset=utf-8",
+                "content_base64": "A" * 60000,
+            }
+        )
+        assert result["inline_omitted"] is True
+        assert result["content_base64"] is None
+        assert "MCP App" in result["inline_note"]
+        assert "render link" not in result["inline_note"]
+
     def test_large_image_and_source_become_compact_first_result(self):
         from mcp_core.tools.tool_decorator import _bounded_viewer_result
 

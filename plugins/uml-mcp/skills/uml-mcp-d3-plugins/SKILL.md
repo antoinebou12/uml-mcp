@@ -13,6 +13,10 @@ enabled it; code availability in a repository does not prove runtime availabilit
 
 Read `uml://templates`, the plugin's registered resources and `d3_catalog` when
 that tool is exposed. Check its supported services before assigning logos.
+Use its `source_format` node/link fields and examples when present. `provider`
+belongs at the top level; each node identifies its provider through `service`.
+Validate before the first render rather than retrying unknown fields by removing
+the requested logos.
 Cloud services use keys such as `aws:s3` and `gcp:run`; AI services include
 `tech:chatgpt`, `tech:openai`, `tech:claude` and `tech:anthropic`. AWS/GCP marks
 identify the provider; do not describe a provider mark as a specific service icon.

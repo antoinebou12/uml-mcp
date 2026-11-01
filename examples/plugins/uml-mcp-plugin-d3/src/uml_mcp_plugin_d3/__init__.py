@@ -12,6 +12,7 @@ The source is JSON; call ``d3_catalog`` or read ``uml://examples`` for the forma
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from mcp_core.plugins import DiagramTypeSpec, PluginContext, RenderOutput
@@ -19,7 +20,16 @@ from mcp_core.plugins import DiagramTypeSpec, PluginContext, RenderOutput
 from . import force, html, layout
 from .icons import PROVIDERS, catalog
 from .samples import SAMPLES
-from .spec import DEFAULT_DIRECTION, MAX_NODES, ArchSpec, ForceSpec, SpecError, parse
+from .spec import (
+    DEFAULT_DIRECTION,
+    MAX_NODES,
+    ArchLink,
+    ArchNode,
+    ArchSpec,
+    ForceSpec,
+    SpecError,
+    parse,
+)
 from .svg import architecture_svg
 
 __all__ = ["D3Renderer", "register"]
@@ -127,9 +137,8 @@ def register(ctx: PluginContext) -> None:
 
     @ctx.tool(
         "catalog",
-        "List the providers, cloud service names (provider:service, for example aws:s3) and "
-        "icon kinds that d3_architecture and d3_topology diagrams accept, and the diagram "
-        "types of the d3 plugin. Read it before writing a diagram source.",
+        "List D3 types, providers, services (e.g. aws:s3), icon kinds and valid JSON examples. "
+        "Read before writing D3 source; node provider fields are unsupported.",
         annotations={
             "readOnlyHint": True,
             "destructiveHint": False,
@@ -144,6 +153,7 @@ def register(ctx: PluginContext) -> None:
                 "kinds": {"type": "array", "items": {"type": "string"}},
                 "categories": {"type": "object"},
                 "diagram_types": {"type": "object"},
+                "source_format": {"type": "object"},
             },
             "required": [
                 "providers",
@@ -170,4 +180,13 @@ def register(ctx: PluginContext) -> None:
         return {
             **catalog(provider or None),
             "diagram_types": dict(_DESCRIPTIONS),
+            "source_format": {
+                "node_fields": list(ArchNode.model_fields),
+                "link_fields": [
+                    f.alias or name for name, f in ArchLink.model_fields.items()
+                ],
+                "note": "Use node service keys such as aws:s3, gcp:run or tech:claude. provider is a top-level field, not a node field.",
+                "architecture_example": json.loads(SAMPLES["d3_architecture"][0]),
+                "force_example": json.loads(SAMPLES["d3_force"][0]),
+            },
         }
