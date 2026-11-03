@@ -785,7 +785,7 @@ wheels = [
 
 [[package]]
 name = "fastmcp-slim"
-version = "4.1.4"
+version = "4.1.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mcp-types" },
@@ -796,9 +796,9 @@ dependencies = [
     { name = "rich" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/9d/a0/475de742162be2b75b9ac0a7d3e1396f797ca97789a8373ed60581a222ee/fastmcp_slim-4.1.4.tar.gz", hash = "sha256:d1034317e4e2960dd619930c01baabbc77e60825f55c09f93471afa427a68cd7", size = 753435, upload-time = "2026-10-26T06:23:55.282Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c7/78/4657d53630643a378afa487b46a1dae1ea90ba9078d722f150b033f495fb/fastmcp_slim-4.1.5.tar.gz", hash = "sha256:63baf382bdd35a423ee4ec15a4ec166716f5029a211df0d4748555a62fd1d1b2", size = 754892, upload-time = "2026-11-01T20:52:24.224Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4a/d2/bbbf9cb1a92e7f98c34845c8f06f21516fd38efdcd579ecbc0131bb6d4d5/fastmcp_slim-4.1.4-py3-none-any.whl", hash = "sha256:0f611b246504ff0d0ee7ab77123f529b5c9aed68670eaee9c6f960a59bb024da", size = 935728, upload-time = "2026-10-26T06:23:53.486Z" },
+    { url = "https://files.pythonhosted.org/packages/18/df/9056c71c0d8c83d6d76a7f712832c47ad36eac398081fa0eff74f812e895/fastmcp_slim-4.1.5-py3-none-any.whl", hash = "sha256:4bf9afa09f76dd89b96f8bf8f971b8a1b33cfda371fa693f52ef6219a1adcee1", size = 937272, upload-time = "2026-11-01T20:52:22.899Z" },
 ]
 
 [package.optional-dependencies]
@@ -2891,7 +2891,7 @@ requires-dist = [
     { name = "click", specifier = "==8.5.0" },
     { name = "cryptography", specifier = ">=44.0.0,<51" },
     { name = "fastapi", specifier = ">=0.141.1,<0.200.0" },
-    { name = "fastmcp-slim", extras = ["server"], specifier = "==4.1.4" },
+    { name = "fastmcp-slim", extras = ["server"], specifier = "==4.1.5" },
     { name = "graphviz", specifier = ">=0.21,<0.22" },
     { name = "httpx", specifier = ">=0.28.0,<0.29" },
     { name = "jinja2", specifier = ">=3.1.2,<4" },
