@@ -264,3 +264,12 @@ def test_html_backed_mermaid_labels_become_portable_svg_text():
     assert "Processing" in clean and "Ready" in clean and "alert" not in clean
     assert 'transform="translate(20,30)"' in clean
     assert "tspan" in clean
+
+
+def test_source_editor_shows_arrows_as_typed() -> None:
+    """Coding-font ligatures must not turn --> or ==> into arrow glyphs."""
+    html = diagram_viewer_html()
+    editor = html[html.index("#sourceEdit {") :]
+    editor = editor[: editor.index("}")]
+    assert "font-variant-ligatures: none" in editor
+    assert '"liga" 0' in editor and '"calt" 0' in editor
