@@ -229,7 +229,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     touch-action: none; cursor: grab;
   }
   #frame.panning { cursor: grabbing; }
-  #frame.static { cursor: default; touch-action: auto; overflow: auto; align-items: flex-start; }
+  #frame.static { cursor: default; touch-action: auto; overflow: auto; height: auto; min-height: 220px; }
   #frame > img, #frame > svg {
     flex: none; max-width: none; height: auto; display: block;
     transform-origin: center center;
@@ -242,6 +242,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   #frame pre.ascii {
     margin: 16px; padding: 14px; border-radius: 10px; background: #ffffff; color: #161a23;
     box-shadow: var(--shadow); font: 12px/1.35 var(--mono); white-space: pre; overflow: auto; max-width: 100%;
+    font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0;
   }
   body.fullscreen { --frame-h: calc(100vh - 170px); }
 
@@ -306,6 +307,8 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     width: 100%; height: var(--frame-h); min-height: 220px; resize: vertical;
     padding: 12px; border-radius: var(--radius); border: 1px solid var(--border);
     background: var(--surface); color: var(--fg); font: 12.5px/1.5 var(--mono); tab-size: 2;
+    /* Coding fonts turn --> and ==> into arrows; show the characters as typed. */
+    font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0;
   }
   #sourceBar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   #sourceBar .grow { flex: 1; }
