@@ -405,6 +405,9 @@ def test_renders_inside_the_mcp_app_viewer(which, tmp_path):
         frame.locator("#theme").click()
         assert frame.locator("html").get_attribute("data-theme") != before
         assert frame.locator("svg.diagram g[id^=node-]").count() >= 3
+        # inside the App the page knows it is embedded and keeps a slim header
+        assert frame.locator("html").get_attribute("data-embedded") == "1"
+        assert frame.locator(".meta").is_hidden()
         assert not errors
         page.screenshot(path=str(tmp_path / f"{which}-viewer.png"))
         browser.close()

@@ -34,7 +34,11 @@ _PAGE_CSS = (
     ".node,.gwrap{transition:opacity .15s}.edge{transition:opacity .15s}.node{cursor:pointer}"
     ".node.sel .card,.node.sel .tile{stroke-width:2.6}"
     ".node.sel{filter:drop-shadow(0 0 7px var(--accent))}"
-    "#passport{position:absolute;left:14px;top:14px;width:290px;max-height:calc(100% - 28px);overflow:auto;"
+    # a traced path: its nodes and edges take the accent colour, everything else dims
+    ".node.on .card,.node.on .tile{stroke:var(--accent);stroke-width:2.4}"
+    ".edge.on .line{stroke:var(--accent);stroke-width:2.8}"
+    # the panel docks on the right; the diagram re-fits into the space left of it
+    "#passport{position:absolute;right:14px;top:14px;width:272px;max-height:calc(100% - 28px);overflow:auto;"
     "padding:14px;border:1px solid var(--edge);border-radius:12px;background:var(--panel);"
     "box-shadow:0 10px 30px rgba(0,0,0,.25);cursor:default}"
     "#passport[hidden]{display:none}"
@@ -48,11 +52,24 @@ _PAGE_CSS = (
     "#passport li button{width:100%;text-align:left;border:0;padding:4px 6px;background:none;border-radius:6px}"
     "#passport li button:hover{background:var(--bg)}"
     "#passport .close{float:right;padding:0 8px}"
+    "#passport .chips{display:flex;flex-wrap:wrap;gap:4px;margin:0 0 8px}"
+    ".chip{display:inline-block;padding:1px 8px;border:1px solid var(--edge);border-radius:999px;"
+    "background:var(--bg);font-size:12px;color:var(--ink)}"
+    "#passport ol.steps{list-style:none;margin:6px 0 0;padding:0;display:grid;gap:6px}"
+    "#passport ol.steps li{display:flex;align-items:center;gap:6px;flex-wrap:wrap}"
+    "#passport ol.steps .n{width:18px;height:18px;border-radius:50%;background:var(--accent);"
+    "color:var(--bg);font-size:11px;font-weight:700;display:inline-grid;place-items:center}"
+    "#passport .via{color:var(--muted);font-size:12px}"
     ".hint{position:absolute;right:14px;bottom:10px;color:var(--muted);font-size:12px;pointer-events:none}"
     ".live .line{stroke-dasharray:7 7;animation:flow 1.1s linear infinite}"
     "@keyframes flow{to{stroke-dashoffset:-14}}"
     "@media (prefers-reduced-motion:reduce){.live .line{animation:none}}"
     "@media (max-width:640px){#passport{width:calc(100% - 28px)}.hint{display:none}}"
+    # inside the MCP App the viewer already has a header: keep only a slim title and toolbar
+    ':root[data-embedded="1"] header{padding:6px 10px}'
+    ':root[data-embedded="1"] h1{font-size:14px}'
+    ':root[data-embedded="1"] .meta{display:none}'
+    ':root[data-embedded="1"] button,:root[data-embedded="1"] select{padding:3px 9px;font-size:13px}'
 )
 
 _SCRIPT = """(() => {
@@ -61,18 +78,22 @@ _SCRIPT = """(() => {
   const svg = stage.querySelector("svg"), root = document.documentElement;
   const graph = JSON.parse(document.getElementById("graph").textContent);
   const W = svg.viewBox.baseVal.width, H = svg.viewBox.baseVal.height;
-  let k = 1, x = 0, y = 0, drag = null, moved = 0;
+  let k = 1, x = 0, y = 0, drag = null, moved = 0, fitted = true;
+  if (window.self !== window.top) root.dataset.embedded = "1";
   const readout = document.getElementById("zoomval");
   const apply = () => { stage.style.transform = `translate(${x}px,${y}px) scale(${k})`; readout.textContent = Math.round(k * 100) + "%"; };
-  const fit = () => {
-    const r = main.getBoundingClientRect();
-    k = Math.min(r.width / W, r.height / H, 1.6) * 0.96;
-    x = (r.width - W * k) / 2; y = (r.height - H * k) / 2; apply();
+  const PANEL = 300;  // room kept for the detail panel on the right while it is open
+  const fit = (inset = 0) => {
+    const r = main.getBoundingClientRect(), w = Math.max(160, r.width - inset);
+    k = Math.min(w / W, r.height / H, 1.6) * 0.96;
+    x = (w - W * k) / 2; y = (r.height - H * k) / 2; fitted = true; apply();
   };
+  // Re-fit around the panel, unless the reader has zoomed or panned on purpose.
+  const refit = () => { if (fitted) fit(passport.hidden || main.clientWidth < 640 ? 0 : PANEL); };
   const zoom = (f, px, py) => {
     const r = main.getBoundingClientRect(), cx = px ?? r.width / 2, cy = py ?? r.height / 2;
     const nk = Math.max(0.1, Math.min(6, k * f));
-    x = cx - ((cx - x) / k) * nk; y = cy - ((cy - y) / k) * nk; k = nk; apply();
+    x = cx - ((cx - x) / k) * nk; y = cy - ((cy - y) / k) * nk; k = nk; fitted = false; apply();
   };
 
   // ---- graph: reach, focus and shortest path -----------------------------------------
@@ -106,9 +127,16 @@ _SCRIPT = """(() => {
   };
   let selected = null;
   const passport = document.getElementById("passport");
-  const show = (keepNodes, keepEdge) => {
-    nodeEls.forEach((el, id) => { el.classList.toggle("dim", !keepNodes.has(id)); el.classList.toggle("sel", id === selected); });
-    edgeEls.forEach((el) => el.classList.toggle("dim", !keepEdge(el.dataset.from, el.dataset.to)));
+  const show = (keepNodes, keepEdge, onNodes = new Set(), onEdge = () => false) => {
+    nodeEls.forEach((el, id) => {
+      el.classList.toggle("dim", !keepNodes.has(id));
+      el.classList.toggle("sel", id === selected);
+      el.classList.toggle("on", onNodes.has(id));
+    });
+    edgeEls.forEach((el) => {
+      el.classList.toggle("dim", !keepEdge(el.dataset.from, el.dataset.to));
+      el.classList.toggle("on", onEdge(el.dataset.from, el.dataset.to));
+    });
     groupEls.forEach((el) => {
       const g = graph.groups.find((q) => q.id === el.dataset.id);
       el.classList.toggle("dim", !(g && g.nodes.some((id) => keepNodes.has(id))));
@@ -116,8 +144,9 @@ _SCRIPT = """(() => {
   };
   const clear = () => {
     selected = null;
-    [...nodeEls.values(), ...edgeEls, ...groupEls].forEach((el) => el.classList.remove("dim", "sel"));
+    [...nodeEls.values(), ...edgeEls, ...groupEls].forEach((el) => el.classList.remove("dim", "sel", "on"));
     passport.hidden = true;
+    refit();
   };
   const el = (tag, text, cls) => { const e = document.createElement(tag); if (text !== undefined) e.textContent = text; if (cls) e.className = cls; return e; };
   const list = (title, edges, pick) => {
@@ -141,29 +170,42 @@ _SCRIPT = """(() => {
     show(keep, (a, b) => keep.has(a) && keep.has(b));
     passport.replaceChildren(closer(), el("div", n.kind || "Node", "kicker"), el("h2", n.name));
     if (n.role) passport.append(el("p", n.role, "sub"));
-    if (n.path) passport.append(el("p", n.path, "sub"));
-    if (n.tag) passport.append(el("p", n.tag, "sub"));
+    const chips = el("div", undefined, "chips");
+    (n.path ? n.path.split(" › ") : []).forEach((g) => chips.append(el("span", g, "chip")));
+    if (n.tag) chips.append(el("span", n.tag, "chip"));
+    if (chips.childNodes.length) passport.append(chips);
     const r = el("div", undefined, "reach"), a = el("div", "Upstream"), d = el("div", "Downstream");
     a.append(el("b", String(up.size))); d.append(el("b", String(down.size))); r.append(a, d);
     passport.append(r, list("Outgoing", out.get(id), (e) => e.to), list("Incoming", inn.get(id), (e) => e.from));
     passport.hidden = false;
+    refit();
   }
   function trace(a, b) {
     const route = shortest(a, b, true) || shortest(a, b, false);
     if (!route) { focus(b); return; }
     const keep = new Set(route), pairs = new Set(route.slice(1).map((v, i) => route[i] + ">" + v));
     selected = b;
-    show(keep, (f, t) => pairs.has(f + ">" + t) || pairs.has(t + ">" + f));
-    passport.replaceChildren(closer(), el("div", "Path", "kicker"),
-      el("h2", `${nodes.get(a).name} → ${nodes.get(b).name}`),
-      el("p", route.map((id) => nodes.get(id).name).join(" → "), "sub"),
-      el("p", `${route.length} nodes · ${route.length - 1} steps · shortest path`, "sub"));
+    const onPath = (f, t) => pairs.has(f + ">" + t) || pairs.has(t + ">" + f);
+    show(keep, onPath, keep, onPath);
+    const steps = route.length - 1;
+    const via = (f, t) => (graph.edges.find((e) => (e.from === f && e.to === t) || (e.from === t && e.to === f)) || {}).label;
+    const ol = el("ol", undefined, "steps");
+    route.forEach((id, i) => {
+      const li = el("li");
+      li.append(el("span", String(i + 1), "n"), el("span", nodes.get(id).name, "chip"));
+      const label = i < steps ? via(id, route[i + 1]) : "";
+      if (label) li.append(el("span", `→ ${label}`, "via"));
+      ol.append(li);
+    });
+    passport.replaceChildren(closer(), el("div", `Shortest path · ${steps} step${steps === 1 ? "" : "s"}`, "kicker"),
+      el("h2", `${nodes.get(a).name} → ${nodes.get(b).name}`), ol);
     passport.hidden = false;
+    refit();
   }
 
   // ---- pointer: pan, zoom, click ----------------------------------------------------
   main.addEventListener("pointerdown", (e) => { if (passport.contains(e.target)) return; main.setPointerCapture(e.pointerId); main.classList.add("drag"); drag = [e.clientX, e.clientY]; moved = 0; });
-  main.addEventListener("pointermove", (e) => { if (!drag) return; const dx = e.clientX - drag[0], dy = e.clientY - drag[1]; moved += Math.abs(dx) + Math.abs(dy); x += dx; y += dy; drag = [e.clientX, e.clientY]; apply(); });
+  main.addEventListener("pointermove", (e) => { if (!drag) return; const dx = e.clientX - drag[0], dy = e.clientY - drag[1]; moved += Math.abs(dx) + Math.abs(dy); if (moved > 5) fitted = false; x += dx; y += dy; drag = [e.clientX, e.clientY]; apply(); });
   main.addEventListener("pointerup", (e) => {
     const was = drag; drag = null; main.classList.remove("drag");
     if (!was || moved > 5) return;
@@ -177,7 +219,7 @@ _SCRIPT = """(() => {
   window.addEventListener("keydown", (e) => { if (e.key === "Escape") clear(); });
 
   // ---- toolbar -----------------------------------------------------------------------
-  document.getElementById("fit").addEventListener("click", fit);
+  document.getElementById("fit").addEventListener("click", () => { fitted = true; refit(); });
   document.getElementById("zin").addEventListener("click", () => zoom(1.2));
   document.getElementById("zout").addEventListener("click", () => zoom(1 / 1.2));
   const theme = document.getElementById("theme");
@@ -187,7 +229,7 @@ _SCRIPT = """(() => {
   live.addEventListener("click", () => { const on = stage.classList.toggle("live"); live.setAttribute("aria-pressed", String(on)); });
   const preset = document.getElementById("preset");
   if (preset) preset.addEventListener("change", () => { root.dataset.preset = preset.value; });
-  window.addEventListener("resize", fit);
+  window.addEventListener("resize", refit);
   if (root.dataset.auto === "1" && window.matchMedia("(prefers-color-scheme: light)").matches) root.dataset.theme = "light";
   label(); fit();
   window.__diagram = { focus, trace, clear, get selected() { return selected; } };
@@ -286,7 +328,7 @@ def shell(
         '<meta name="viewport" content="width=device-width,initial-scale=1">'
         f'<meta http-equiv="Content-Security-Policy" content="{escape(csp, quote=True)}">'
         f"<title>{escape(title)}</title><style>{style}</style></head><body>"
-        f'<header><div><h1>{escape(title)}</h1><span class="meta">{escape(subtitle or meta)}</span></div>'
+        f'<header><div class="ident"><h1>{escape(title)}</h1><span class="meta">{escape(subtitle or meta)}</span></div>'
         '<div class="toolbar" role="toolbar" aria-label="Viewer controls">'
         f'{picker}<button id="live" type="button" aria-pressed="false">Live</button>'
         '<button id="zout" type="button" aria-label="Zoom out">−</button>'

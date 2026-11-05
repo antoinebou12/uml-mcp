@@ -171,13 +171,24 @@ def test_page_focus_path_live_preset_and_escape():
         page.mouse.click(target["x"] + 20, target["y"] + 20)
         page.keyboard.up("Shift")
         panel = page.inner_text("#passport")
-        assert (
-            "path" in panel.lower()
-            and "Web App → API Service → User Service → PostgreSQL" in panel
+        assert "shortest path · 3 steps" in panel.lower()
+        steps = page.locator("#passport ol.steps .chip").all_inner_texts()
+        assert steps == ["Web App", "API Service", "User Service", "PostgreSQL"]
+        assert "→ HTTPS" in panel  # each step names the edge it follows
+        # the path itself is highlighted: its nodes and edges, nothing else
+        on_nodes = page.evaluate(
+            "[...document.querySelectorAll('.node.on')].map(n => n.dataset.id)"
         )
+        assert on_nodes == ["web", "api", "users", "pg"]
+        assert page.evaluate("document.querySelectorAll('.edge.on').length") == 3
+        # the panel docks on the right and the diagram is re-fitted beside it
+        panel_box = page.locator("#passport").bounding_box()
+        svg_box = page.locator("svg.diagram").bounding_box()
+        assert svg_box["x"] + svg_box["width"] <= panel_box["x"] + 1
         # Esc clears everything
         page.keyboard.press("Escape")
         assert dimmed() == 0 and not page.locator("#passport").is_visible()
+        assert page.evaluate("document.querySelectorAll('.on').length") == 0
         # Live animates the edges; the preset picker switches the look
         page.click("#live")
         assert page.evaluate(
@@ -208,7 +219,9 @@ def test_sequence_page_focus_and_trace():
         assert "Redis" in page.inner_text("#passport")
         assert "participant" in page.inner_text("#passport").lower()
         page.evaluate("window.__diagram.trace('web', 'db')")
-        assert "Web App → API → Postgres" in page.inner_text("#passport")
+        steps = page.locator("#passport ol.steps .chip").all_inner_texts()
+        assert steps == ["Web App", "API", "Postgres"]
+        assert "→ GET /dashboard" in page.inner_text("#passport")
         assert not errors
 
 
