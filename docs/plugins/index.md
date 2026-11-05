@@ -56,18 +56,15 @@ error, with an enable/disable switch.
 
 ## Plugin diagrams open as an MCP App
 
-In clients with MCP Apps, a plugin's HTML page opens in the viewer inside the chat. The same type
-renders to SVG and PNG for clients without them. Example recording of the viewer:
-
-<video controls preload="metadata" poster="../assets/mcp-app-demo.png" width="420">
-  <source src="../assets/mcp-app-demo.mp4" type="video/mp4">
-</video>
+In clients with MCP Apps, a plugin's HTML page opens in the viewer inside the chat; everywhere
+else the same type renders to SVG and PNG. See the [MCP App viewer](../integrations/mcp-app.md)
+for what the pages can do and a recording.
 
 ## Plugins in this repository
 
-Both live under `examples/plugins` and are installed from a checkout with
-`uv pip install -e examples/plugins/<name>`. The d3, stack-diagram, archify and llm-visualizer
-plugins also ship inside the `uml-mcp` package, so `uml-mcp plugins enable <name>` is enough for them.
+All live under `examples/plugins`. The d3, stack-diagram, archify and llm-visualizer plugins ship
+inside the `uml-mcp` package and are on by default (`plugins.bundled`); the hello example is
+installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugin-hello`.
 
 | Plugin | Enable | Adds |
 | --- | --- | --- |
@@ -76,6 +73,36 @@ plugins also ship inside the `uml-mcp` package, so `uml-mcp plugins enable <name
 | `uml-mcp-plugin-stack-diagram` | `stack-diagram` | The auto-laid-out `stack_diagram` type: icon tiles, nested groups, left-right or top-down, dark or light. See the [stack diagram plugin](stack-diagram.md) |
 | `uml-mcp-plugin-archify` | `archify` | `archify_architecture`, `archify_workflow` and `archify_sequence`: dashed colour-coded groups, icon cards, presets and click-to-focus pages, sharing the stack-diagram engine. See the [archify plugin](archify.md) |
 | `uml-mcp-plugin-llm-visualizer` | `llm-visualizer` | Interactive `llm_2d` and `llm_3d` LLM architecture diagrams (HTML or SVG). See the [LLM visualizer plugin](llm-visualizer.md) |
+
+## Shared options
+
+`stack-diagram` and `archify` share one auto-layout engine and source format:
+
+| Option | Values | Notes |
+| --- | --- | --- |
+| `direction` | `LR` · `RL` · `TB` · `BT` | Flow direction; `LR` by default, `archify_workflow` starts top down |
+| `theme` | `auto` · `dark` · `light` | `auto` (default) follows the system in HTML and is dark in static output; the viewer's theme picker sets it |
+| `groups` | nested with `parent` | A group box encloses exactly its members |
+| `icon` | brand, glyph or data URI | 60 real logos (GitHub, Vercel, AWS, Azure, Google Cloud, OpenAI, Claude, Gemini, Qwen, LangGraph, Snowflake...), also guessed from a node's name; 25 line glyphs; or your own image |
+| `step` (edges) | `1` to `999` | A numbered badge for request paths and journeys |
+
+## Try these prompts
+
+| Ask | Type |
+| --- | --- |
+| *"Draw my stack: Next.js and Hono on Vercel, Neon Postgres, Clerk for auth, Stripe for payments. Left to right, light theme."* | `stack_diagram` |
+| *"Show our platform as an archify architecture with security, backend and database groups, blueprint preset."* | `archify_architecture` |
+| *"Numbered sequence diagram of a cache-miss request through web, API, auth, Redis and Postgres."* | `archify_sequence` |
+| *"Our AI app: Cloudflare in front of a Vercel app, a LangChain agent calling Claude, OpenAI and Gemini."* | `d3_architecture` |
+| *"Draw an autoencoder top-down, then the same model as a 3D scene."* | `llm_2d` · `llm_3d` |
+| *"A transformer with encoder and decoder blocks repeated 6 times."* | `llm_2d` with groups |
+
+Each type also has an agent skill with a validated example, at
+`.skill/skills/<diagram_type>/SKILL.md`, and each plugin family a focused guide read over MCP from
+`skill://uml-mcp-guides/{topic}/SKILL.md`. To check a deployment end to end, paste the
+interactive-plugins prompt from
+[`tests/prompts/chatgpt_mcp_smoke_test.md`](https://github.com/antoinebou12/uml-mcp/blob/main/tests/prompts/chatgpt_mcp_smoke_test.md)
+into any MCP client.
 
 ## Safety
 

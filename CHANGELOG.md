@@ -49,6 +49,9 @@ Everything merged to `main` since 1.3.2, plus the plugin work described below.
   `llm-visualizer`) under `skill://uml-mcp-guides/{topic}/SKILL.md`, listed in the workflow skill.
 - Smoke-test prompt for every bundled plugin (logos, steps, presets, autonumber, groups, theme,
   MCP App interactions); its sources are validated and rendered by the test suite.
+- Docs: a new MCP App viewer page (features, plugin pages, clients without MCP Apps,
+  publishing readiness), shared options and example prompts on the plugins page, an updated docs
+  home, and the compatibility page in the nav. The README is shorter and points to these pages.
 - README rewritten: centred header, project stats, both hosted endpoints (primary and the
   `uml-mcp.antoineboucher.info` mirror), contents, contributing and licence sections.
 - D3 draws real brand logos in a white tile on each card for 25 more services (Azure, GitHub,

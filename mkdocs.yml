@@ -133,6 +133,8 @@ nav:
       - Frontend (AG-UI): integrations/frontend.md
       - OpenUI generative UI: integrations/openui.md
       - OI OS (community): integrations/oi_os.md
+      - MCP App viewer: integrations/mcp-app.md
+      - MCP Apps compatibility: integrations/manufact-compatibility.md
       - Fallback strategy: fallback-mechanism.md
   - Enterprise:
       - enterprise/README.md

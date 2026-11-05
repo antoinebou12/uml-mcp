@@ -1,6 +1,6 @@
 ---
 title: UML-MCP
-description: "Diagram generation via Model Context Protocol: UML, Mermaid, D2, TikZ, and 30+ more types from one MCP server."
+description: "Diagram generation via the Model Context Protocol: 46 diagram types, from UML, Mermaid, D2 and C4 to interactive architecture and LLM diagrams, shown inside the chat."
 hide:
   - navigation
   - toc
@@ -8,14 +8,13 @@ hide:
 
 # UML-MCP
 
-UML-MCP gives AI assistants a dependable diagram tool. The assistant chooses the diagram, UML-MCP validates and renders the source, and the client gets back something it can actually show: an inline image, a URL, editable source, or a playground link. It supports UML, Mermaid, D2, TikZ, BPMN, C4, Graphviz, and 30+ other diagram types through [Kroki](https://kroki.io/), [PlantUML](https://plantuml.com/), [Mermaid](https://mermaid.js.org/), and [D2](https://d2lang.com/).
+UML-MCP gives AI assistants a dependable diagram tool. The assistant chooses the diagram, UML-MCP validates and renders the source, and the client gets back something it can actually show: an inline image, a URL, editable source, or a playground link. It supports 46 diagram types: UML, Mermaid, D2, TikZ, BPMN, C4, Graphviz and 30 more through [Kroki](https://kroki.io/), [PlantUML](https://plantuml.com/), [Mermaid](https://mermaid.js.org/) and [D2](https://d2lang.com/), plus 9 interactive types from the bundled plugins. In clients with MCP Apps, diagrams open in an interactive [viewer](integrations/mcp-app.md) inside the chat.
 
 For product UIs, UML-MCP can stay focused on diagrams while the rest of the stack does its own job: **MCP** exposes tools to the agent, **AG-UI** streams agent events to the frontend, and **OpenUI** can turn model output into interactive components owned by your application.
 
 [![Run Tests](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/test.yml)
 [![Build Package](https://github.com/antoinebou12/uml-mcp/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/build.yml)
 [![Deploy docs](https://github.com/antoinebou12/uml-mcp/actions/workflows/docs.yml/badge.svg?branch=main)](https://github.com/antoinebou12/uml-mcp/actions/workflows/docs.yml)
-[![MCP status](https://mcpvitals.com/badge/6cfb821be2.svg)](https://mcpvitals.com/status/6cfb821be2)
 [![GitHub stars](https://img.shields.io/github/stars/antoinebou12/uml-mcp)](https://github.com/antoinebou12/uml-mcp/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Python 3.12+](https://img.shields.io/badge/python-%3E%3D3.12-blue.svg)](https://www.python.org/downloads/)
@@ -46,13 +45,29 @@ sequenceDiagram
 
 <div class="grid cards" markdown>
 
--   :material-shape-plus:{ .lg .middle } **30+ diagram types**
+-   :material-shape-plus:{ .lg .middle } **46 diagram types**
 
     ---
 
-    UML (Class, Sequence, Activity, Use Case, State, Component, Deployment, Object), Mermaid, D2, Graphviz, TikZ, ERD, BlockDiag, BPMN, C4, all in one tool call.
+    UML (Class, Sequence, Activity, Use Case, State, Component, Deployment, Object), Mermaid, D2, Graphviz, TikZ, ERD, BlockDiag, BPMN, C4 and more, all in one tool call.
 
     [:octicons-arrow-right-24: Diagram catalog](diagrams/index.md)
+
+-   :material-application-outline:{ .lg .middle } **MCP App viewer**
+
+    ---
+
+    In clients with MCP Apps, diagrams open inside the chat: zoom, edit the source, switch theme and format, re-render and export SVG, PNG, HTML or PDF. Other clients get an inline PNG and SVG.
+
+    [:octicons-arrow-right-24: MCP App viewer](integrations/mcp-app.md)
+
+-   :material-graph-outline:{ .lg .middle } **Interactive diagrams**
+
+    ---
+
+    Four bundled plugins, on by default: cloud and stack diagrams with 60 real logos, archify architecture, workflow and sequence diagrams with click-to-focus and path tracing, and 2D/3D LLM visualisations.
+
+    [:octicons-arrow-right-24: Plugins](plugins/index.md)
 
 -   :material-tools:{ .lg .middle } **MCP-native tools**
 
@@ -122,7 +137,8 @@ sequenceDiagram
     }
     ```
 
-    The MCP route is `/mcp`, not the domain root.
+    The MCP route is `/mcp`, not the domain root. A mirror runs at
+    `https://uml-mcp.antoineboucher.info/mcp` with the same tools.
 
 === ":material-console: Local stdio"
 
@@ -177,7 +193,6 @@ If UML-MCP helps your research, tooling, or product, please cite the project or 
 }
 ```
 
-[![Star History Chart](https://api.star-history.com/svg?repos=antoinebou12/uml-mcp&type=Date)](https://star-history.com/#antoinebou12/uml-mcp&Date)
 
 ---
 
