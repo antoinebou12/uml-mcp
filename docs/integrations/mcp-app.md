@@ -29,8 +29,9 @@ re-rendered in another format (14 s).*
 
 ## Interactive plugin pages
 
-A plugin's HTML page runs in an `iframe` with `sandbox="allow-scripts"`, under the page's own
-hash-based Content-Security-Policy, with no network access. Inside the viewer the page keeps only
+A plugin's HTML page runs in an `iframe` with `sandbox="allow-scripts"`, loaded through
+`srcdoc` so the view requests no frame domains, under the page's own hash-based
+Content-Security-Policy, with no network access. Inside the viewer the page keeps only
 a slim title and toolbar, since the viewer has its own header. In the archify and stack-diagram
 pages you can:
 

@@ -51,7 +51,7 @@
     },
     {
       "name": "generate_uml",
-      "description": "Render diagram source into an image. Returns url (render link), playground (source editor), display_markdown (chat embed), and content_base64/mime_type when image bytes are fetched. local_path identifies a saved file. Prefer SVG in MCP Apps; generate_uml_image fetches preview bytes.",
+      "description": "Render diagram source into an image. Returns url (render link), playground (source editor), display_markdown (chat embed), content_base64/mime_type when bytes are fetched and local_path for a saved file. Prefer SVG in MCP Apps.",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -171,7 +171,7 @@
     },
     {
       "name": "generate_uml_batch",
-      "description": "Render several diagrams with bounded concurrency. Each item uses the same fields as generate_uml. Partial failures stay isolated per index.",
+      "description": "Render several diagrams in one call; a failed item does not stop the others. Inline previews share one 48k budget; later items load when opened.",
       "inputSchema": {
         "type": "object",
         "properties": {

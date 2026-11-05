@@ -30,6 +30,35 @@ check its deployed Git revision. A failed build leaves the previous version
 running. The D3 package is required during installation, so build contexts must
 include `examples/plugins/uml-mcp-plugin-d3/src/uml_mcp_plugin_d3` and its assets.
 
+## Nested frames
+
+The view requests no `frameDomains`. Interactive plugin pages (D3, stack diagram,
+archify, LLM visualizer) load in a sandboxed `iframe` through `srcdoc`, so the view's
+CSP needs only `resourceDomains: data:, blob:` (images and downloads). The checker's
+"Views do not request nested iframe domains" warning clears on a deployment that
+includes this change.
+
+## Batch limits
+
+`generate_uml_batch` advertises an explicit item schema:
+
+| Field | Required | Constraint |
+| --- | --- | --- |
+| `diagram_type` | yes | a catalog key from `list_diagram_types` |
+| `code` | yes | 1 to `MCP_MAX_CODE_LENGTH` characters (500,000 by default) |
+| `output_format` | no | one of the listed formats, and one the type supports; `svg` by default |
+| `theme` | no | a renderer theme name |
+| `scale` | no | at least 0.1; `1.0` by default; SVG only |
+
+No other item fields are accepted. A call holds 1 to `MCP_BATCH_MAX_ITEMS` items
+(20 by default). Validation runs per item, so a bad item returns a readable error at
+its index and the rest still render. The initial result is bounded: inline previews
+share one 48,000-character budget, earlier items first, and later items return their
+render URL with a note; the viewer loads their preview through `rerender_diagram` when
+the item is opened. Echoed source shares a 24,000-character budget (at most 12,000 per
+item), and the whole result is trimmed to stay under 125,000 characters, below the
+roughly 150,000 characters Claude accepts from one tool call.
+
 ## Resource descriptions and policy review
 
 The resource has a standard MCP Apps description. It also carries

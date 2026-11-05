@@ -62,6 +62,42 @@ def test_generate_uml_batch_schema_describes_parameters_and_required_fields() ->
     assert schema.get("required", []) == ["items"]
 
 
+def test_generate_uml_batch_items_have_an_explicit_bounded_schema() -> None:
+    from mcp_core.core.config import MCP_SETTINGS
+
+    items = _input_schema(diagram_tools.generate_uml_batch)["properties"]["items"]
+    assert items["type"] == "array"
+    assert items["minItems"] == 1
+    assert items["maxItems"] == MCP_SETTINGS.batch_max_items
+    item = items["items"]
+    assert item["type"] == "object"
+    assert item["additionalProperties"] is False
+    assert set(item["required"]) == {"diagram_type", "code"}
+    assert set(item["properties"]) == {
+        "diagram_type",
+        "code",
+        "output_format",
+        "theme",
+        "scale",
+    }
+    assert item["properties"]["code"]["maxLength"] == MCP_SETTINGS.max_code_length
+    assert item["properties"]["scale"]["minimum"] == 0.1
+    assert "svg" in item["properties"]["output_format"]["enum"]
+
+
+def test_batch_item_errors_stay_readable_and_per_index() -> None:
+    out = diagram_tools.generate_uml_batch([{"diagram_type": "mermaid"}])
+    row = out["results"][0]
+    assert row["success"] is False and row["index"] == 0
+    assert "code" in row["error"]
+
+
+def test_rerender_diagram_offers_example_safe_values() -> None:
+    props = _input_schema(diagram_tools.rerender_diagram)["properties"]
+    assert props["diagram_type"]["examples"] == ["mermaid"]
+    assert props["code"]["examples"]
+
+
 def test_list_diagram_types_response_matches_declared_output_schema() -> None:
     result = diagram_tools.list_diagram_types(limit=2)
     parsed = DiagramTypesOutput.model_validate(result)

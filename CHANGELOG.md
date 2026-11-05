@@ -9,6 +9,15 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
 ### Changed
 
+- The MCP App view no longer requests nested frame domains: interactive plugin pages load in
+  their sandboxed frame through `srcdoc` instead of a `blob:` URL, and `frameDomains` is gone
+  from the view's CSP.
+- `generate_uml_batch` advertises an explicit item schema (required `diagram_type` and `code`;
+  optional `output_format`, `theme` and `scale` with their limits; no other fields) and the
+  batch size, 1 to `MCP_BATCH_MAX_ITEMS`. Bad items still get a readable error at their index.
+  The tool description states that inline previews share one 48k budget.
+- `rerender_diagram` gives example values for `diagram_type` and `code`.
+
 - Docs: a new MCP App viewer page (features, plugin pages, clients without MCP Apps,
   publishing readiness), shared options and example prompts on the plugins page, an updated docs
   home, and the compatibility page in the nav. The README is shorter and points to these pages.

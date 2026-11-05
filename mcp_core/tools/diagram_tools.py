@@ -6,9 +6,9 @@ import logging
 import os
 import re
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from typing import Any, cast
+from typing import Annotated, Any, cast
 
-from pydantic import ValidationError
+from pydantic import Field, ValidationError, WithJsonSchema
 
 from ..apps.diagram_viewer import (
     diagram_viewer_app_config,
@@ -24,6 +24,7 @@ from . import (
     notifications,
 )
 from .schemas import (
+    OUTPUT_FORMATS,
     BatchDiagramResult,
     DiagramResult,
     DiagramTypesOutput,
@@ -33,6 +34,38 @@ from .schemas import (
 from .tool_decorator import get_tool_registry, mcp_tool, register_tools_with_server
 
 logger = logging.getLogger(__name__)
+
+#: Advertised schema for one ``generate_uml_batch`` item. Validation itself stays in
+#: ``_render_batch_item`` so a bad item gets a readable error at its index instead of
+#: failing the whole call with a raw schema error.
+_BATCH_ITEM_SCHEMA: dict[str, Any] = {
+    "type": "object",
+    "required": ["diagram_type", "code"],
+    "properties": {
+        "diagram_type": {"type": "string", "minLength": 1},
+        "code": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": MCP_SETTINGS.max_code_length,
+        },
+        "output_format": {"enum": list(OUTPUT_FORMATS)},
+        "theme": {"type": "string"},
+        "scale": {"type": "number", "minimum": 0.1},
+    },
+    "additionalProperties": False,
+}
+BatchItems = Annotated[
+    list[dict[str, Any]],
+    WithJsonSchema(
+        {
+            "type": "array",
+            "items": _BATCH_ITEM_SCHEMA,
+            "minItems": 1,
+            "maxItems": MCP_SETTINGS.batch_max_items,
+            "description": "Diagrams, in result order.",
+        }
+    ),
+]
 
 # Shared MCP Apps link for both render tools (same viewer resource).
 _DIAGRAM_VIEWER_APP = diagram_viewer_app_config()
@@ -208,8 +241,8 @@ def _render_batch_item(
 
 @mcp_tool(
     description=(
-        "Render several diagrams with bounded concurrency. Each item uses the same "
-        "fields as generate_uml. Partial failures stay isolated per index."
+        "Render several diagrams in one call; a failed item does not stop the "
+        "others. Inline previews share one 48k budget; later items load when opened."
     ),
     category="uml",
     example=(
@@ -220,14 +253,14 @@ def _render_batch_item(
     app=_DIAGRAM_VIEWER_APP,
 )
 def generate_uml_batch(
-    items: list[dict[str, Any]],
+    items: BatchItems,
     output_dir: str | None = None,
 ) -> dict[str, Any] | Any:
     """Render multiple diagrams with bounded concurrency and stable ordering.
 
     Args:
-        items: Source diagrams and render options, in the order results should follow.
-        output_dir: Shared local directory for rendered files. Omit for URLs and inline data without file writes.
+        items: Diagrams, in result order.
+        output_dir: Optional local directory for the rendered files; omit on hosted deployments.
     """
     logger.info(
         "Called generate_uml_batch: count=%s, output_dir=%s",
@@ -300,9 +333,8 @@ def _notify_batch_item(index: int, total: int, row: dict[str, Any]) -> None:
 @mcp_tool(
     description=(
         "Render diagram source into an image. Returns url (render link), playground "
-        "(source editor), display_markdown (chat embed), and content_base64/mime_type "
-        "when image bytes are fetched. local_path identifies a saved file. "
-        "Prefer SVG in MCP Apps; generate_uml_image fetches preview bytes."
+        "(source editor), display_markdown (chat embed), content_base64/mime_type "
+        "when bytes are fetched and local_path for a saved file. Prefer SVG in MCP Apps."
     ),
     category="uml",
     example="generate_uml('mermaid', 'graph TD; A-->B;')",
@@ -325,8 +357,7 @@ def generate_uml(
         code: Diagram source code in the syntax required by diagram_type.
         output_dir: Optional local directory for the rendered file; omit on hosted deployments.
         output_format: Image or document encoding to produce; consult the type’s formats from list_diagram_types.
-        theme: Optional theme — PlantUML name (e.g. cerulean), Mermaid default/dark/forest/neutral/base, or D2 default/dark (theme-id).
-            Background aliases (light/dark/bw) elicit a concrete theme when the client supports MRTR.
+        theme: Optional theme: PlantUML name (e.g. cerulean), Mermaid default/dark/forest/neutral/base, D2 default/dark, or light/dark/bw.
         scale: SVG scale factor; ignored for non-SVG output.
     """
     logger.info(
@@ -389,8 +420,7 @@ def generate_uml_image(
         diagram_type: Catalog key selecting the source language and renderer; discover keys with list_diagram_types.
         code: Diagram source code in the syntax required by diagram_type.
         output_format: Output format for the inline image; png (default), svg, or jpeg.
-        theme: Optional theme — PlantUML name (e.g. cerulean), Mermaid default/dark/forest/neutral/base, or D2 default/dark (theme-id).
-            Background aliases (light/dark/bw) elicit a concrete theme when the client supports MRTR.
+        theme: Optional theme: PlantUML name (e.g. cerulean), Mermaid default/dark/forest/neutral/base, D2 default/dark, or light/dark/bw.
         scale: SVG scale factor; ignored unless output_format is svg.
     """
     logger.info(
@@ -448,8 +478,8 @@ def generate_uml_image(
     },
 )
 def rerender_diagram(
-    diagram_type: str,
-    code: str,
+    diagram_type: Annotated[str, Field(examples=["mermaid"])],
+    code: Annotated[str, Field(examples=["graph TD; A-->B;"])],
     output_format: str = "png",
     theme: str | None = None,
     scale: float = 1.0,

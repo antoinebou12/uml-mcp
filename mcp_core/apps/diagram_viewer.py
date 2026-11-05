@@ -930,9 +930,8 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
       pluginFrame = el("iframe", "plugin-frame");
       pluginFrame.title = "Interactive diagram";
       pluginFrame.setAttribute("sandbox", "allow-scripts");
-      var htmlUrl = URL.createObjectURL(new Blob([decodeBase64Text(b64)], {type:"text/html"}));
-      pluginFrame.src = htmlUrl;
-      pluginFrame.addEventListener("load", function() { URL.revokeObjectURL(htmlUrl); });
+      // srcdoc, not a blob: URL, so the view needs no frameDomains in its CSP
+      pluginFrame.srcdoc = decodeBase64Text(b64);
       FRAME.appendChild(pluginFrame); TOOLBAR.hidden = true;
       setStatus("HTML preview · use its controls to interact", "ok");
       showLinks(item);
@@ -1749,7 +1748,6 @@ def diagram_viewer_resource_app_config() -> Any:
         csp=ResourceCSP(
             connect_domains=[],
             resource_domains=["data:", "blob:"],
-            frame_domains=["blob:"],
         ),
         prefers_border=False,
     )

@@ -44,3 +44,15 @@ def test_widget_description_is_read_but_not_listed():
     assert listed["ui"]["domain"].startswith("https://")
     assert all(c["ui"] == listed["ui"] for c in contents)
     assert DIAGRAM_VIEWER_URI.startswith("ui://")
+
+
+def test_view_requests_no_nested_frame_domains():
+    """Plugin pages load through ``srcdoc``, so the CSP asks for no frame domains."""
+    from mcp_core.apps.diagram_viewer import diagram_viewer_html
+
+    listed, contents = _listed_and_read()
+    for ui in [listed["ui"], *(c["ui"] for c in contents)]:
+        assert not ui.get("csp", {}).get("frameDomains")
+    page = diagram_viewer_html()
+    assert "pluginFrame.srcdoc" in page
+    assert "pluginFrame.src =" not in page
