@@ -7,7 +7,7 @@ import re
 from dataclasses import dataclass
 from typing import Any
 
-from mcp_core.plugins.architecture_assets import validate_icon
+from .images import validate_icon
 
 MAX_NODES = 100
 MAX_GROUPS = 40
