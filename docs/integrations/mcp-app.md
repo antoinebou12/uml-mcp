@@ -11,6 +11,7 @@ it inside the chat when `generate_uml`, `generate_uml_image` or `generate_uml_ba
 
 <video controls preload="metadata" poster="../assets/mcp-app-demo.png" width="480">
   <source src="../assets/mcp-app-demo.mp4" type="video/mp4">
+  <img src="../assets/mcp-app-demo.gif" width="420" alt="Recording of the UML-MCP viewer inside a chat">
 </video>
 
 *One `generate_uml_batch` call returns four C4 and class diagrams as tabs, then one is

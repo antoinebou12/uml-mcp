@@ -75,12 +75,10 @@ through a batch, and export SVG, PNG, HTML or PDF. Clients without MCP Apps get 
 as an inline PNG and SVG.
 
 <p align="center">
-  <video src="https://github.com/antoinebou12/uml-mcp/raw/main/docs/assets/mcp-app-demo.mp4" poster="https://github.com/antoinebou12/uml-mcp/raw/main/docs/assets/mcp-app-demo.png" width="420" controls muted playsinline>
-    <a href="docs/assets/mcp-app-demo.mp4"><img src="docs/assets/mcp-app-demo.png" width="420" alt="The UML-MCP viewer inside a chat: four diagram tabs, theme and format pickers, Re-render and Download. Click to play the 14-second recording." /></a>
-  </video>
+  <a href="docs/assets/mcp-app-demo.mp4"><img src="docs/assets/mcp-app-demo.gif" width="420" alt="Recording of the UML-MCP viewer inside a chat: four diagram tabs from one batch call, switching tabs, then re-rendering with another format." /></a>
 </p>
 
-<p align="center"><sub>One <code>generate_uml_batch</code> call returns four diagrams as tabs, then one is re-rendered in another format. <a href="docs/integrations/mcp-app.md">More about the viewer</a>.</sub></p>
+<p align="center"><sub>One <code>generate_uml_batch</code> call returns four diagrams as tabs, then one is re-rendered in another format. <a href="docs/assets/mcp-app-demo.mp4">Full-quality video</a> · <a href="docs/integrations/mcp-app.md">more about the viewer</a>.</sub></p>
 
 ## Interactive diagrams
 

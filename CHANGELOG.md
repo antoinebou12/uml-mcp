@@ -5,9 +5,19 @@ All notable changes to UML-MCP are recorded here, newest first. The format follo
 [semantic versioning](https://semver.org/). Dates are the day the GitHub release was published.
 No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
-## [Unreleased] (1.4.0)
+## [Unreleased]
 
-Everything merged to `main` since 1.3.2, plus the plugin work described below.
+### Changed
+
+- Docs: a new MCP App viewer page (features, plugin pages, clients without MCP Apps,
+  publishing readiness), shared options and example prompts on the plugins page, an updated docs
+  home, and the compatibility page in the nav. The README is shorter and points to these pages.
+- The README shows the MCP App recording as an animated GIF that links to the full video,
+  because GitHub does not play videos referenced from repository files.
+
+## [1.4.0] - 2026-11-05
+
+Everything merged to `main` since 1.3.2, including the plugin work described below.
 
 ### Added
 
@@ -49,9 +59,6 @@ Everything merged to `main` since 1.3.2, plus the plugin work described below.
   `llm-visualizer`) under `skill://uml-mcp-guides/{topic}/SKILL.md`, listed in the workflow skill.
 - Smoke-test prompt for every bundled plugin (logos, steps, presets, autonumber, groups, theme,
   MCP App interactions); its sources are validated and rendered by the test suite.
-- Docs: a new MCP App viewer page (features, plugin pages, clients without MCP Apps,
-  publishing readiness), shared options and example prompts on the plugins page, an updated docs
-  home, and the compatibility page in the nav. The README is shorter and points to these pages.
 - README rewritten: centred header, project stats, both hosted endpoints (primary and the
   `uml-mcp.antoineboucher.info` mirror), contents, contributing and licence sections.
 - D3 draws real brand logos in a white tile on each card for 25 more services (Azure, GitHub,
@@ -197,7 +204,8 @@ First tagged release.
 - GitHub Actions and Docker base images updated, and the docs deploy moved to
   `actions/deploy-pages` v5.
 
-[Unreleased]: https://github.com/antoinebou12/uml-mcp/compare/v1.3.2...HEAD
+[Unreleased]: https://github.com/antoinebou12/uml-mcp/compare/v1.4.0...HEAD
+[1.4.0]: https://github.com/antoinebou12/uml-mcp/compare/v1.3.2...v1.4.0
 [1.3.2]: https://github.com/antoinebou12/uml-mcp/compare/v1.3.1...v1.3.2
 [1.3.1]: https://github.com/antoinebou12/uml-mcp/compare/v1.3.0...v1.3.1
 [1.3.0]: https://github.com/antoinebou12/uml-mcp/compare/v1.0.1...v1.3.0
