@@ -46,6 +46,28 @@ def bearer(token):
     return {"Authorization": f"Bearer {token}"}
 
 
+def test_verified_task_identity_excludes_bearer_secret(client, tokens, monkeypatch):
+    from mcp.server.auth.middleware import bearer_auth
+
+    original = bearer_auth.AuthenticatedUser
+    captured = []
+
+    def capture(identity):
+        captured.append(identity)
+        return original(identity)
+
+    monkeypatch.setattr(bearer_auth, "AuthenticatedUser", capture)
+    response = client.post("/mcp", headers=bearer(tokens["rw"]), json=rpc("ping"))
+    assert response.status_code == 200
+    assert len(captured) == 1
+    identity = captured[0]
+    assert identity.token == ""
+    assert identity.client_id == identity.subject
+    assert len(identity.client_id) == 32
+    assert "write" in identity.scopes
+    assert tokens["rw"] not in identity.model_dump_json()
+
+
 def test_missing_token_401_says_what_is_missing(client):
     r = client.post("/mcp", json=rpc("tools/list"))
     assert r.status_code == 401

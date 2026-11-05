@@ -125,6 +125,20 @@ class AuthMiddleware:
         state = dict(scope.get("state") or {})
         state["auth_principal"] = principal
         new_scope["state"] = state
+        # Give FastMCP's task ownership checks a verified identity without
+        # retaining or forwarding the incoming bearer credential.
+        from fastmcp.server.auth import AccessToken
+        from mcp.server.auth.middleware.bearer_auth import AuthenticatedUser
+
+        new_scope["user"] = AuthenticatedUser(
+            AccessToken(
+                token="",
+                client_id=principal.key,
+                subject=principal.key,
+                scopes=sorted(principal.permissions),
+                expires_at=principal.expires_at,
+            )
+        )
         if surface == "mcp" and path == "/mcp":
             # Match the /mcp mount directly instead of a 307 that re-sends the token
             # (and can downgrade to http:// behind a TLS-terminating ingress).

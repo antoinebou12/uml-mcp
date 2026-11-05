@@ -49,6 +49,40 @@ invalid file, so a typo can't silently disable a control.
 
 ## Sections
 
+### `tasks`
+
+Install `uml-mcp[tasks]` to enable optional MCP background execution for
+`generate_uml`, `generate_uml_image`, and `generate_uml_batch`. The default is off.
+Supported clients receive task handles and can poll for results; legacy clients
+continue to receive foreground results. Tasks require a persistent server process.
+Enabling them on Vercel is rejected at startup.
+
+| Key | Default | Environment override |
+| --- | --- | --- |
+| `tasks.enabled` | `false` | `MCP_TASKS_ENABLED` |
+| `tasks.url` | `memory://` | `FASTMCP_DOCKET_URL` |
+| `tasks.name` | `uml-mcp` | `FASTMCP_DOCKET_NAME` |
+| `tasks.concurrency` | `4` | `FASTMCP_DOCKET_CONCURRENCY` |
+
+```yaml
+tasks:
+  enabled: true
+  url: memory://
+  concurrency: 4
+```
+
+The memory backend loses tasks on process restart and serves one process only.
+For shared workers use Redis or Valkey, with the same queue name and backend URL.
+Set backend credentials through the environment. Redis backends require
+`FASTMCP_TASKS_ENCRYPTION_KEY` to encrypt stored caller context. Keep that key in
+the environment, with the same value on each worker. This encryption does not
+cover diagram arguments or results; restrict access to the backend.
+
+Rendering uses blocking libraries in worker threads. Cancelling a task cannot
+interrupt an HTTP request already executing in a rendering thread. Renderer
+timeouts still apply. Lifecycle and cancellation coverage is being expanded in
+the FastMCP adoption work.
+
 ### `server` and `rendering`
 
 These map one-to-one to existing env vars:

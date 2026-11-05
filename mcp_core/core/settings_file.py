@@ -54,6 +54,7 @@ ENV_MAP: dict[tuple[str, str], str] = {
     ("rendering", "batch_concurrency"): "MCP_BATCH_CONCURRENCY",
 }
 SECTIONS = (
+    "tasks",
     "server",
     "rendering",
     "tools",
@@ -283,10 +284,18 @@ class RenderingSettings(_Model):
     batch_concurrency: int | None = _f(None, "Parallel renders per batch.", ge=1)
 
 
+class TasksConfig(_Model):
+    enabled: bool = False
+    url: str = "memory://"
+    name: str = "uml-mcp"
+    concurrency: int = Field(default=4, ge=1, le=64)
+
+
 class AppConfig(_Model):
     """Validated non-auth sections of ``uml-mcp.yaml``."""
 
     server: dict[str, Any] = Field(default_factory=dict)
+    tasks: TasksConfig = Field(default_factory=TasksConfig)
     rendering: dict[str, Any] = Field(default_factory=dict)
     tools: ToolsConfig = Field(default_factory=ToolsConfig)
     rate_limit: RateLimitConfig = Field(default_factory=RateLimitConfig)

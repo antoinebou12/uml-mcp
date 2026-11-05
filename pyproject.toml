@@ -44,6 +44,9 @@ otel = [
     "opentelemetry-sdk>=1.30.0,<2",
     "opentelemetry-exporter-otlp-proto-http>=1.30.0,<2",
 ]
+tasks = [
+    "fastmcp-tasks>=4.1.4,<5",
+]
 
 [project.entry-points."uml_mcp.renderers"]
 d3 = "uml_mcp_plugin_d3:D3Renderer"

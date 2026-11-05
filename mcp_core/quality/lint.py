@@ -121,6 +121,12 @@ def lint_config(
 ) -> list[LintIssue]:
     issues: list[LintIssue] = []
     auth_on = auth is not None and getattr(auth, "enabled", False)
+    from ..tools.background import effective_tasks, validate_tasks
+
+    try:
+        validate_tasks(effective_tasks(app.tasks))
+    except ValueError as exc:
+        issues.append(LintIssue("error", "CFG_TASKS", "tasks", str(exc)))
     if auth_on and not str(auth.resource_url).startswith("https://"):
         issues.append(
             LintIssue(

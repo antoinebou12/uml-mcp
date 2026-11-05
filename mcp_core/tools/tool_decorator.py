@@ -484,6 +484,9 @@ def register_tools_with_server(server: Any) -> list[str]:
     from ..observability.audit import instrument
 
     app_config = get_app_config()
+    from .background import TASK_TOOLS, async_tool, effective_tasks
+
+    tasks_enabled = effective_tasks(app_config.tasks).enabled
     for tool_name, tool_info in iter_tools_in_preferred_order(_registered_tools):
         if not app_config.tool_enabled(tool_name):
             logger.info("Tool '%s' disabled by configuration (tools.*)", tool_name)
@@ -506,6 +509,10 @@ def register_tools_with_server(server: Any) -> list[str]:
             "name": tool_name,
             "description": tool_info["description"],
         }
+        protocol_handler: Callable[..., Any] = protocol_func
+        if tasks_enabled and tool_name in TASK_TOOLS:
+            protocol_handler = async_tool(protocol_func)
+            tool_kwargs["task"] = True
         if annotations:
             tool_kwargs["annotations"] = annotations
         if output_schema is not None:
@@ -525,7 +532,7 @@ def register_tools_with_server(server: Any) -> list[str]:
 
         try:
             dec = server_any.tool(**tool_kwargs)
-            dec(protocol_func)
+            dec(protocol_handler)
         except TypeError:
             # Compatibility path for older/mock server APIs. The project is pinned to
             # FastMCP 4 in production, but tests intentionally exercise a minimal mock.
@@ -533,20 +540,20 @@ def register_tools_with_server(server: Any) -> list[str]:
             tool_kwargs.pop("app", None)
             try:
                 dec = server_any.tool(**tool_kwargs)
-                dec(protocol_func)
+                dec(protocol_handler)
             except TypeError:
                 try:
                     dec = server_any.tool(
                         name=tool_name,
                         description=tool_info["description"],
                     )
-                    dec(protocol_func)
+                    dec(protocol_handler)
                 except TypeError:
                     try:
                         dec = server_any.tool(tool_info["description"])
-                        dec(protocol_func)
+                        dec(protocol_handler)
                     except TypeError:
-                        server_any.tool(protocol_func)
+                        server_any.tool(protocol_handler)
 
                     if tool_name != protocol_func.__name__:
                         if hasattr(server, "_tools"):

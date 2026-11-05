@@ -177,6 +177,10 @@ def create_mcp_server():
     from ..plugins.loader import load_plugins
 
     load_plugins()  # before registration: plugin tools/diagram types join the catalog
+    from ..tools.background import install_tasks
+    from .settings_file import get_app_config
+
+    install_tasks(server, get_app_config().tasks)
     tool_names = register_diagram_tools(server)
     resource_names = register_diagram_resources(server)
     resource_names += register_diagram_viewer(server)
