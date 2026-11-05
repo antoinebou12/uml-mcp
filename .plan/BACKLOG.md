@@ -4,6 +4,7 @@ Priorities: **P1** next release · **P2** soon · **P3** nice to have. Size: S <
 
 | # | Item | Pri | Size | Status |
 | --- | --- | --- | --- | --- |
+| 22 | [FastMCP feature adoption: long tasks, sampling and Apps](in-progress/P1-fastmcp-feature-adoption.md) | P1 | L | in progress |
 | 1 | [MCP 2026-07-28 conformance gaps (41 failing scenarios)](blocked/P1-mcp-2026-conformance.md) | P1 | L | blocked |
 | 2 | [Linter: mcpx rule set, score, grade, token budget](done/2026-09-lint-score-grade.md) | P1 | M | done |
 | 3 | [OpenTelemetry traces (optional)](done/2026-09-opentelemetry.md) | P1 | M | done |
@@ -36,5 +37,6 @@ Shipped: see [`done/`](done/).
 | **Done** | Skills (+ `directoryRead`), MCP Apps viewer (zoom/links), server card, completions, resource templates, MRTR elicitation, structured progress trailers, Streamable HTTP, OTEL |
 | **P3 backlog** | [Tasks](backlog/P3-mcp-tasks-extension.md) (SEP-2663), [partial/streaming results](backlog/P3-mcp-partial-tool-results.md) (SEP-2998 watch) |
 | **Blocked** | Full [2026 conformance](blocked/P1-mcp-2026-conformance.md) (FastMCP routing headers / suite gaps) |
-| **Skip** | Roots, Sampling, Logging ([SEP-2577](https://modelcontextprotocol.io/specification/2026-07-28/changelog) deprecated) |
+| **Under audit** | Caller-model sampling through multi-round results; roots applicability. See [FastMCP feature adoption](in-progress/P1-fastmcp-feature-adoption.md). |
+| **Implemented; verification pending** | Client logging in `mcp_core/tools/notifications.py`; FastMCP 4 retains notification logging. |
 | **Auth** | CIMD / hardening under [OAuth follow-ups](backlog/P3-oauth-followups.md) |

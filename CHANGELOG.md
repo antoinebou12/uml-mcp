@@ -7,6 +7,17 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
 ## [Unreleased]
 
+### Added
+
+- Optional MCP background tasks for `generate_uml`, `generate_uml_image` and
+  `generate_uml_batch` (`uml-mcp[tasks]`, `tasks.enabled`, off by default). Supported clients get
+  a task handle to poll; others still get foreground results. `uml-mcp lint` rejects tasks on
+  Vercel and Redis backends without `FASTMCP_TASKS_ENCRYPTION_KEY`. With enterprise auth on, the
+  verified caller (hashed key, no bearer token) becomes the task owner.
+- An experimental `architecture` renderer, off by default: tiles at explicit positions, vendor
+  groups and orthogonal edges with optional `via` corridors, exported as HTML or React TSX
+  (`tsx` output format). Embedded SVG icons are checked for active content.
+
 ### Changed
 
 - The MCP App view no longer requests nested frame domains: interactive plugin pages load in
