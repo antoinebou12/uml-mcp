@@ -52,10 +52,12 @@ re-render, step through a batch, and download SVG, PNG, HTML or PDF. In the reco
 different format.
 
 <p align="center">
-  <a href="docs/assets/mcp-app-demo.mp4"><img src="docs/assets/mcp-app-demo.png" width="420" alt="The UML-MCP viewer open inside a chat: four diagram tabs, theme and format pickers, a Re-render button and a Download button. Click to play the 14-second recording." /></a>
+  <video src="https://github.com/antoinebou12/uml-mcp/raw/main/docs/assets/mcp-app-demo.mp4" poster="https://github.com/antoinebou12/uml-mcp/raw/main/docs/assets/mcp-app-demo.png" width="420" controls muted playsinline>
+    <a href="docs/assets/mcp-app-demo.mp4"><img src="docs/assets/mcp-app-demo.png" width="420" alt="The UML-MCP viewer open inside a chat: four diagram tabs, theme and format pickers, a Re-render button and a Download button. Click to play the 14-second recording." /></a>
+  </video>
 </p>
 
-<p align="center"><sub>Example recording (14 s, click to play): <a href="docs/assets/mcp-app-demo.mp4">docs/assets/mcp-app-demo.mp4</a>. The viewer is served as <code>ui://uml-mcp/diagram-viewer</code>.</sub></p>
+<p align="center"><sub>Example recording (14 s): <a href="docs/assets/mcp-app-demo.mp4">docs/assets/mcp-app-demo.mp4</a>. The viewer is served as <code>ui://uml-mcp/diagram-viewer</code>.</sub></p>
 
 Clients **without** MCP Apps still get the diagram: `generate_uml_image` returns an inline PNG,
 `generate_uml` returns SVG, and the result carries image and playground links. Nothing in this
