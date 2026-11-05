@@ -43,6 +43,7 @@ class SeqSpec:
     preset: str
     participants: tuple[base.Node, ...]
     messages: tuple[Message, ...]
+    autonumber: bool = False  # prefix every message label with its position
 
 
 def parse(
@@ -92,6 +93,7 @@ def parse(
             if value not in seen:
                 raise SpecError(
                     f"messages[{i}].{end} references unknown participant {value!r}"
+                    f"{base._known(seen)}"
                 )
             ends.append(value)
         style = base._text(
@@ -120,6 +122,7 @@ def parse(
         preset,
         tuple(people),
         tuple(messages),
+        root.get("autonumber") is True,
     )
 
 
@@ -181,7 +184,7 @@ def build(
             f'{act}<path class="glow e-{tone}" d="{d}"/>'
             f'<path class="line e-{tone}{dash}" d="{d}" {marker}/>'
             f'<text class="elabel seq l-{tone}" x="{lx:.0f}" y="{ly}" text-anchor="{anchor}">'
-            f"{escape(m.label)}</text>{note}</g>"
+            f"{escape(f'{i + 1}. {m.label}' if spec.autonumber else m.label)}</text>{note}</g>"
         )
 
     chrome = skin.header(spec, width, theme) if top else ""  # type: ignore[arg-type]

@@ -16,6 +16,27 @@
       "sha256": "aacd6edbcd591b2024cf0607310245e56745a5f950a5fa4f79a3819634847213"
     },
     {
+      "name": "archify_architecture",
+      "type": "context",
+      "description": "Writes valid archify_architecture JSON for uml-mcp (diagram_type=archify_architecture, bundled plugin archify). Use when the user asks for an architecture overview with colour-coded dashed groups, legend and presets; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/archify_architecture/SKILL.md",
+      "sha256": "50cec98c4018a841b514dd9935146b365649cb6f5906a60126ed265a04cb5b4d"
+    },
+    {
+      "name": "archify_sequence",
+      "type": "context",
+      "description": "Writes valid archify_sequence JSON for uml-mcp (diagram_type=archify_sequence, bundled plugin archify). Use when the user asks for a sequence diagram of calls and replies between participants; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/archify_sequence/SKILL.md",
+      "sha256": "3f2d126b26070a4bb10f90289d9ea121269864732ec6082a2ccc4d9e746ac5ba"
+    },
+    {
+      "name": "archify_workflow",
+      "type": "context",
+      "description": "Writes valid archify_workflow JSON for uml-mcp (diagram_type=archify_workflow, bundled plugin archify). Use when the user asks for a workflow or process with steps grouped into stages, top to bottom; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/archify_workflow/SKILL.md",
+      "sha256": "d2e8818fe91d9f58230cb473b6b815fa7db829cb5812d37dc3c567f31d4e1be8"
+    },
+    {
       "name": "blockdiag",
       "type": "context",
       "description": "Writes valid blockdiag diagram source for uml-mcp (diagram_type=blockdiag). Simple block diagram images Use when the user asks for blockdiag or that notation; then call validate_uml / generate_uml / generate_uml_image.",
@@ -65,6 +86,27 @@
       "sha256": "354d11ff3bbe0e75c06b58497139508c39f4062a6e1a33729603809c6a362328"
     },
     {
+      "name": "d3_architecture",
+      "type": "context",
+      "description": "Writes valid d3_architecture JSON for uml-mcp (diagram_type=d3_architecture, bundled plugin d3). Use when the user asks for a cloud or system architecture with provider and brand logos; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/d3_architecture/SKILL.md",
+      "sha256": "f75382490e631fb670b361b7ee4aeae4d6eb019bdc139dc4631602038def03d4"
+    },
+    {
+      "name": "d3_force",
+      "type": "context",
+      "description": "Writes valid d3_force JSON for uml-mcp (diagram_type=d3_force, bundled plugin d3). Use when the user asks for a force-directed network or dependency graph; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/d3_force/SKILL.md",
+      "sha256": "97e4ef8fe6f1acb1ccbf11034cdc20fb835b48a9c62394f2cef864ed4fca6b47"
+    },
+    {
+      "name": "d3_topology",
+      "type": "context",
+      "description": "Writes valid d3_topology JSON for uml-mcp (diagram_type=d3_topology, bundled plugin d3). Use when the user asks for a deployment or network topology flowing top to bottom; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/d3_topology/SKILL.md",
+      "sha256": "e81872cb355e941c799bac4a8b7bb09e1a6a596874caf686f7fd1b17c28648de"
+    },
+    {
       "name": "dbml",
       "type": "context",
       "description": "Writes valid dbml diagram source for uml-mcp (diagram_type=dbml). Database Markup Language schema diagrams Use when the user asks for dbml or that notation; then call validate_uml / generate_uml / generate_uml_image.",
@@ -112,6 +154,20 @@
       "description": "Writes valid graphviz diagram source for uml-mcp (diagram_type=graphviz). Graph visualization software Use when the user asks for graphviz or that notation; then call validate_uml / generate_uml / generate_uml_image.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/graphviz/SKILL.md",
       "sha256": "2bce2ed20e2723cbdb0f5d06551e437aada828c58b90ff3d36d372d2e517557e"
+    },
+    {
+      "name": "llm_2d",
+      "type": "context",
+      "description": "Writes valid llm_2d JSON for uml-mcp (diagram_type=llm_2d, bundled plugin llm-visualizer). Use when the user asks for a neural network or LLM architecture as a 2D map, or an autoencoder, VAE or GAN; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/llm_2d/SKILL.md",
+      "sha256": "748c782a4eefc74e053441614efe1fcc0793dbd242ba3604b66b73a7b15e3c0b"
+    },
+    {
+      "name": "llm_3d",
+      "type": "context",
+      "description": "Writes valid llm_3d JSON for uml-mcp (diagram_type=llm_3d, bundled plugin llm-visualizer). Use when the user asks for the same model as a rotatable 3D scene of glass layer panels; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/llm_3d/SKILL.md",
+      "sha256": "6ee9357bb175d0f6aa1bc4b80868e1d5a9de65607b759ee78983250de6a7a44d"
     },
     {
       "name": "mcp-python",
@@ -205,6 +261,13 @@
       "sha256": "bccc58119520979882b89114de306b57f8dad0e55d2ff0961d75b8d075f5b2e0"
     },
     {
+      "name": "stack_diagram",
+      "type": "context",
+      "description": "Writes valid stack_diagram JSON for uml-mcp (diagram_type=stack_diagram, bundled plugin stack-diagram). Use when the user asks for a stack or cloud diagram with icon tiles, nested vendor and region groups; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/stack_diagram/SKILL.md",
+      "sha256": "5af978a13942aeedf0e7064fe13d2e4c3042a5a176acf9f525de1e46819f4bf2"
+    },
+    {
       "name": "state",
       "type": "context",
       "description": "Writes valid state diagram source for uml-mcp (diagram_type=state). Shows states of an object during its lifecycle Use when the user asks for state or that notation; then call validate_uml / generate_uml / generate_uml_image.",
@@ -247,6 +310,13 @@
       "sha256": "9ac3914865bbc4dbeb07026f05d87289babb7f13d2b5e1c6a22f8e73180d3147"
     },
     {
+      "name": "uml-mcp-archify",
+      "type": "context",
+      "description": "Draw archify architecture, workflow and sequence diagrams with colour-coded groups.",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-archify/SKILL.md",
+      "sha256": "c75f733d12f34fbe3a1bfea40204324e10222ce1ae180618bff8c188ce821c13"
+    },
+    {
       "name": "uml-mcp-batch",
       "type": "context",
       "description": "Render and verify diagram batches and consistent multi-format architecture conversions, including four C4 levels.",
@@ -265,7 +335,14 @@
       "type": "context",
       "description": "Render and verify UML, C4, Mermaid, D2 and D3 diagrams.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "bf423469c1b58c35716ea29d632c89882335db681da57056f7ec4a3b9a5e4883"
+      "sha256": "9a8784017e4ea7e8124144c1cd9baf7b8e50fc003f92c7c400a5cc1a36c3e2bd"
+    },
+    {
+      "name": "uml-mcp-llm-visualizer",
+      "type": "context",
+      "description": "Draw LLM and neural-network architectures in 2D and 3D (llm_2d, llm_3d).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-llm-visualizer/SKILL.md",
+      "sha256": "a7f99a498cb96abb5ea04bc794948322f2e77f1cd820193f09ed381667924f89"
     },
     {
       "name": "uml-mcp-mermaid",
@@ -287,6 +364,13 @@
       "description": "Build and verify PlantUML and all four C4 levels with readable SVG labels, valid themes and usable previews.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-plantuml-c4/SKILL.md",
       "sha256": "69c1b5f126d8a1df951a2900963d16235cda60b24efe7806e1fdf5bd5f8073c8"
+    },
+    {
+      "name": "uml-mcp-stack-diagram",
+      "type": "context",
+      "description": "Draw auto-laid-out stack and cloud architecture diagrams with real logos (stack_diagram).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-stack-diagram/SKILL.md",
+      "sha256": "16a7da925e7407f01b3f6a9a0a2a6227f496bba268561380a222ab7daf4e9540"
     },
     {
       "name": "umlet",

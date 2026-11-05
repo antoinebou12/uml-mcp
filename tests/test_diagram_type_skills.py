@@ -25,6 +25,24 @@ NON_TYPE_SKILLS = frozenset(
         "uml-mcp-mermaid",
         "uml-mcp-plantuml-c4",
         "uml-mcp-batch",
+        "uml-mcp-stack-diagram",
+        "uml-mcp-archify",
+        "uml-mcp-llm-visualizer",
+    }
+)
+
+# Bundled plugin diagram types (scripts/build_plugin_skills.py); also in the catalog by default.
+PLUGIN_TYPE_SKILLS = frozenset(
+    {
+        "d3_force",
+        "d3_architecture",
+        "d3_topology",
+        "stack_diagram",
+        "archify_architecture",
+        "archify_workflow",
+        "archify_sequence",
+        "llm_2d",
+        "llm_3d",
     }
 )
 
@@ -68,7 +86,7 @@ def test_no_extra_type_skill_directories():
         for p in SKILLS.iterdir()
         if p.is_dir() and (p / "SKILL.md").is_file() and p.name not in NON_TYPE_SKILLS
     }
-    assert type_dirs == set(DIAGRAM_TYPES)
+    assert type_dirs == set(DIAGRAM_TYPES) | PLUGIN_TYPE_SKILLS
 
 
 def test_generator_is_idempotent():

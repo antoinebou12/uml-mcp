@@ -69,6 +69,14 @@ live host check. Do not rerun negative probes merely to compensate for missing U
     Enter/Space activation and Escape. Export while selected, reopen HTML, and
     verify settled positions without selection overlays. Test reduced motion
     and a narrow toolbar. Physics must not start automatically on reopen.
+13. Render the sources from the interactive-plugins smoke prompt in
+    `tests/prompts/chatgpt_mcp_smoke_test.md` as HTML in the App: stack_diagram,
+    archify_architecture, archify_sequence, llm_2d and llm_3d. In archify, click a
+    node (detail panel), shift-click another (shortest path), press Escape, switch
+    the preset (classic, blueprint, flow) and toggle Live. In stack_diagram, check
+    the step badges and the GitHub and Vercel logos in both themes. In llm, switch
+    2D/3D and drag to orbit. Then change the App theme picker to light and dark and
+    re-render each one: the diagram itself must follow, not only the App chrome.
 
 ## Report
 

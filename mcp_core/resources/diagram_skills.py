@@ -19,7 +19,15 @@ from pydantic import StrictStr
 
 SKILL_ROOT_URI = "skill://uml-mcp-diagrams"
 SKILL_URI = f"{SKILL_ROOT_URI}/SKILL.md"
-GUIDE_TOPICS = ("d3-plugins", "mermaid", "plantuml-c4", "batch")
+GUIDE_TOPICS = (
+    "d3-plugins",
+    "stack-diagram",
+    "archify",
+    "llm-visualizer",
+    "mermaid",
+    "plantuml-c4",
+    "batch",
+)
 GUIDE_URI = "skill://uml-mcp-guides/{topic}/SKILL.md"
 
 
@@ -157,7 +165,7 @@ def register_diagram_skills(server: Any, *, cache_scope: str) -> list[str]:
 
     server.resource(
         GUIDE_URI,
-        description="D3, Mermaid, C4 and batch guides.",
+        description="D3, stack, archify, LLM, Mermaid, C4 and batch guides.",
         mime_type="text/markdown",
     )(read_guide)
     if callable(getattr(server, "add_extension", None)):

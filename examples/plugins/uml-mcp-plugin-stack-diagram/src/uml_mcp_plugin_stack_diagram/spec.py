@@ -55,6 +55,14 @@ class Edge:
     label: str
     dashed: bool
     tone: str
+    step: int | None = None  # a numbered badge for request flows and journeys
+
+
+def _known(ids: set[str] | list[str], limit: int = 12) -> str:
+    """``; known: a, b, c`` so a model can fix a bad reference in one retry."""
+    names = sorted(ids)
+    shown = ", ".join(names[:limit]) + (", ..." if len(names) > limit else "")
+    return f"; known: {shown}" if names else ""
 
 
 @dataclass(frozen=True)
@@ -186,7 +194,9 @@ def parse(
         )
     for group in groups:
         if group.parent is not None and group.parent not in group_ids:
-            raise SpecError(f"group {group.id!r} has unknown parent {group.parent!r}")
+            raise SpecError(
+                f"group {group.id!r} has unknown parent {group.parent!r}{_known(group_ids)}"
+            )
     by_id = {g.id: g for g in groups}
     for group in groups:
         seen: set[str] = set()
@@ -211,7 +221,9 @@ def parse(
         if group is not None:
             group = _ident(group, f"nodes[{i}].group")
             if group not in group_ids:
-                raise SpecError(f"nodes[{i}].group references unknown group {group!r}")
+                raise SpecError(
+                    f"nodes[{i}].group references unknown group {group!r}{_known(group_ids)}"
+                )
         nodes.append(
             Node(
                 nid,
@@ -232,7 +244,9 @@ def parse(
         target_id = _ident(target_id, f"edges[{i}].to")
         for end, value in (("from", source_id), ("to", target_id)):
             if value not in node_ids:
-                raise SpecError(f"edges[{i}].{end} references unknown node {value!r}")
+                raise SpecError(
+                    f"edges[{i}].{end} references unknown node {value!r}{_known(node_ids)}"
+                )
         if source_id == target_id:
             raise SpecError(f"edges[{i}] cannot connect a node to itself")
         style = _text(
@@ -241,6 +255,9 @@ def parse(
         if style not in {"solid", "dashed"}:
             raise SpecError(f"edges[{i}].style must be 'solid' or 'dashed'")
         tone = _tone(item.get("tone"), f"edges[{i}].tone", EDGE_TONES)
+        step = item.get("step")
+        if step is not None and (type(step) is not int or not 1 <= step <= 999):
+            raise SpecError(f"edges[{i}].step must be an integer from 1 to 999")
         edges.append(
             Edge(
                 source_id,
@@ -248,6 +265,7 @@ def parse(
                 _text(item.get("label"), f"edges[{i}].label", maximum=32),
                 style == "dashed",
                 tone or ("neutral" if style == "dashed" else "accent"),
+                step,
             )
         )
     return Spec(

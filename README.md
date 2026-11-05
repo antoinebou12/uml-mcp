@@ -191,9 +191,9 @@ renderers add none. `uml-mcp plugins list` shows what is installed and loaded.
 
 | Plugin | Diagram types | Look |
 | --- | --- | --- |
-| [`d3`](docs/plugins/d3.md) | `d3_force` · `d3_architecture` · `d3_topology` | Force graphs and cloud boxes with real provider and brand logos, ports, A\*-routed edges |
+| [`d3`](docs/plugins/d3.md) | `d3_force` · `d3_architecture` · `d3_topology` | Force graphs and cloud boxes with real provider and brand logos, ports, A\*-routed edges that keep a lane apart |
 | [`stack-diagram`](docs/plugins/stack-diagram.md) | `stack_diagram` | Icon tiles on engineered paper, nested vendor and region groups, labelled right-angled edges |
-| [`archify`](docs/plugins/archify.md) | `archify_architecture` · `archify_workflow` · `archify_sequence` | Dashed colour-coded containers, icon cards, legend, `classic` / `blueprint` / `flow` presets, click-to-focus and shortest path |
+| [`archify`](docs/plugins/archify.md) | `archify_architecture` · `archify_workflow` · `archify_sequence` | Dashed colour-coded containers, icon cards, legend, `classic` / `blueprint` / `flow` presets, click-to-focus and shortest path, numbered sequences |
 | [`llm-visualizer`](docs/plugins/llm-visualizer.md) | `llm_2d` · `llm_3d` | Layer maps and a rotatable 3D scene; autoencoder and GAN shapes, grouped `N×` blocks |
 
 `stack-diagram` and `archify` share one auto-layout engine:
@@ -203,7 +203,8 @@ renderers add none. `uml-mcp plugins list` shows what is installed and loaded.
 | `direction` | `LR` · `RL` · `TB` · `BT` | Left to right, right to left, top down, bottom up. `LR` by default; `archify_workflow` starts top down |
 | `theme` | `auto` · `dark` · `light` | `auto` (the default) follows the system in HTML and is dark in static output. The viewer's theme picker sets it for every plugin |
 | `groups` | nested, `parent` | A group box always encloses exactly its members; nodes are packed so a pipeline stays on one line |
-| `icon` | brand, glyph or data URI | Real logos for 28 brands (GitHub, Vercel, Cloudflare, AWS, Azure, Google Cloud, OpenAI, Claude, Gemini, LangChain...), also guessed from a node's name; 25 line glyphs; or your own image |
+| `icon` | brand, glyph or data URI | Real logos for 60 brands (GitHub, Vercel, Cloudflare, AWS, Azure, Google Cloud, OpenAI, Claude, Gemini, Qwen, LangGraph, Snowflake...), also guessed from a node's name; 25 line glyphs; or your own image |
+| `step` (edges) | `1` to `999` | A numbered badge on the edge, for request paths and journeys |
 
 ```json
 {
@@ -229,7 +230,7 @@ renderers add none. `uml-mcp plugins list` shows what is installed and loaded.
 | --- | --- |
 | *"Draw my stack: Next.js and Hono on Vercel, Neon Postgres, Clerk for auth, Stripe for payments. Left to right, light theme."* | `stack_diagram` |
 | *"Show our platform as an archify architecture with security, backend and database groups, blueprint preset."* | `archify_architecture` |
-| *"Sequence diagram of a cache-miss request through web, API, auth, Redis and Postgres."* | `archify_sequence` |
+| *"Numbered sequence diagram of a cache-miss request through web, API, auth, Redis and Postgres."* | `archify_sequence` |
 | *"Our AI app: Cloudflare in front of a Vercel app, a LangChain agent calling Claude, OpenAI and Gemini."* | `d3_architecture` |
 | *"Draw an autoencoder top-down, then the same model as a 3D scene."* | `llm_2d` · `llm_3d` |
 | *"A transformer with encoder and decoder blocks repeated 6 times."* | `llm_2d` with groups |
@@ -243,7 +244,9 @@ tools with no further wiring.
 ## Capabilities
 
 Compatible clients discover the diagram workflow with `skills/list` and load
-`skill://uml-mcp-diagrams/SKILL.md` through `resources/read`. Notation for each diagram type is in
+`skill://uml-mcp-diagrams/SKILL.md` through `resources/read`. Focused guides (D3, stack diagrams,
+archify, LLM visualizer, Mermaid, PlantUML/C4, batch) are read on demand from
+`skill://uml-mcp-guides/{topic}/SKILL.md`, so they add nothing at connect time. Notation for each diagram type is in
 `.skill/skills/<diagram_type>/SKILL.md` via the [agent-skills index](docs/reference/resources.md#per-type-agent-skills).
 See [Skills over MCP](docs/reference/resources.md#diagram-skill-over-mcp).
 
@@ -276,7 +279,7 @@ See [Skills over MCP](docs/reference/resources.md#diagram-skill-over-mcp).
 | `generate_uml_batch` | Many diagrams (`MCP_BATCH_MAX_ITEMS`, `MCP_BATCH_CONCURRENCY`) |
 | `rerender_diagram` · `download_diagram` | Viewer-only (hidden from the model): re-render with a new theme or format, and export files |
 
-Smoke prompts: [`tests/prompts/chatgpt_mcp_smoke_test.md`](tests/prompts/chatgpt_mcp_smoke_test.md)
+Smoke prompts, including one for every bundled plugin: [`tests/prompts/chatgpt_mcp_smoke_test.md`](tests/prompts/chatgpt_mcp_smoke_test.md)
 
 </details>
 
@@ -425,8 +428,9 @@ Details and the deployment notes are in [MCP Apps compatibility](docs/integratio
 | Diagram types | 46 (37 Kroki-backed, 9 interactive plugin types) |
 | MCP surface | 5 model tools + 2 viewer helpers · 10 resources · 5 prompts · 1 skill |
 | Bundled plugins | 4, on by default (d3, stack-diagram, archify, llm-visualizer) |
-| Brand logos | 28, MIT-licensed, drawn offline |
-| Tests | About 1,700, plus browser tests of every interactive page in the MCP App viewer |
+| Brand logos | 60, MIT-licensed, drawn offline locally and when hosted ([sources](examples/plugins/uml-mcp-plugin-d3/src/uml_mcp_plugin_d3/assets/brands/README.md)) |
+| Skills | 1 workflow skill on `skills/list`, 7 focused guides through `skill://uml-mcp-guides/{topic}/SKILL.md`, and a per-type skill for all 46 diagram types |
+| Tests | About 1,800, plus browser tests of every interactive page in the MCP App viewer |
 | Publishing checklist | 95/100 (Manufact) |
 | Python | 3.12 to 3.15 |
 

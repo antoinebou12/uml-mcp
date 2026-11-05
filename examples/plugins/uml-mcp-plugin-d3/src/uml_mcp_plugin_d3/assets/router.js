@@ -9,7 +9,7 @@
 var UmlRouter = (function () {
   'use strict';
 
-  var STEP = 10, TURN = 30, OVERLAP = 40, CROSS = 16, MAX_EXPANSIONS = 60000, LABEL_MARGIN = 3;
+  var STEP = 10, TURN = 30, OVERLAP = 40, CROSS = 16, NEAR = 8, MAX_EXPANSIONS = 60000, LABEL_MARGIN = 3;
   var DIRS = [[1, 0], [0, 1], [-1, 0], [0, -1]]; // E, S, W, N
 
   function snap(value, origin, cell) {
@@ -149,6 +149,13 @@ var UmlRouter = (function () {
         var cost = base + STEP + (nd !== d ? TURN : 0);
         var used = grid.usage.get(nidx) || 0;
         if (used) cost += (used & (nd % 2 === 0 ? 1 : 2)) ? OVERLAP : CROSS;
+        else if (nd % 2 === 0) {  // horizontal: a horizontal arrow in the lane above or below
+          if ((ny > 0 && ((grid.usage.get(nidx - cols) || 0) & 1)) ||
+              (ny < grid.rows - 1 && ((grid.usage.get(nidx + cols) || 0) & 1))) cost += NEAR;
+        } else if ((nx > 0 && ((grid.usage.get(nidx - 1) || 0) & 2)) ||
+                   (nx < cols - 1 && ((grid.usage.get(nidx + 1) || 0) & 2))) {
+          cost += NEAR;  // vertical: a vertical arrow in the lane to the left or right
+        }
         var nstate = nidx * 4 + nd;
         var known = gCost.get(nstate);
         if (known === undefined || cost < known) {

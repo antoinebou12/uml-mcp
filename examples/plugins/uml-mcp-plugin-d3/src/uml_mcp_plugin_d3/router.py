@@ -23,6 +23,9 @@ Rect = tuple[float, float, float, float]  # x, y, width, height
 # arrow costs four steps and crossing one a step and a half, so arrows spread
 # apart instead of piling up, and cross rarely.
 STEP, TURN, OVERLAP, CROSS = 10, 30, 40, 16
+# Running in the lane right next to a parallel arrow reads as one thick line, so it costs
+# a little more than open space: bundles of arrows spread out by a lane where there is room.
+NEAR = 8
 LABEL_MARGIN = 3  # clear space kept between a label and a box
 MAX_EXPANSIONS = 60000
 #: E, S, W, N: the order in which neighbours are tried (part of the contract with the JS)
@@ -153,6 +156,17 @@ def _astar(grid: Grid, start: int, goal: int, start_dir: int) -> list[int] | Non
             used = grid.usage.get(nidx, 0)
             if used:
                 cost += OVERLAP if used & (1 if nd % 2 == 0 else 2) else CROSS
+            elif (
+                nd % 2 == 0
+            ):  # horizontal: a horizontal arrow in the lane above or below
+                if (ny > 0 and grid.usage.get(nidx - cols, 0) & 1) or (
+                    ny < grid.rows - 1 and grid.usage.get(nidx + cols, 0) & 1
+                ):
+                    cost += NEAR
+            elif (nx > 0 and grid.usage.get(nidx - 1, 0) & 2) or (
+                nx < cols - 1 and grid.usage.get(nidx + 1, 0) & 2
+            ):  # vertical: a vertical arrow in the lane to the left or right
+                cost += NEAR
             nstate = nidx * 4 + nd
             if cost < g_cost.get(nstate, 1 << 60):
                 g_cost[nstate] = cost

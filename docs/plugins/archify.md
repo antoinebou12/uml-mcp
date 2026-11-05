@@ -58,7 +58,7 @@ edges (off for reduced motion), zoom and fit, and the theme toggle.
 ```
 
 `style: "dashed"` marks a reply; a message from a participant to itself draws a loop; `note`
-adds a line under the label. At most 12 participants and 100 messages.
+adds a line under the label; `"autonumber": true` numbers every message. At most 12 participants and 100 messages.
 
 ## Group styles
 

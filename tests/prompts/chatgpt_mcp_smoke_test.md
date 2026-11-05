@@ -86,6 +86,45 @@ If either result fails, finish with:
 MCP_BATCH_TEST: FAIL - <short reason>
 ```
 
+## Interactive plugins smoke-test prompt
+
+Checks the four bundled plugins (on by default): real logos, step numbers, presets,
+sequence autonumbering, grouped `N×` blocks and flow direction, through both the chat image
+path (clients without MCP Apps) and the interactive HTML page (MCP App viewer).
+
+```text
+Use the connected UML MCP server for this entire test. Do not draw any diagram yourself.
+
+1. Call `list_diagram_types`. Confirm these types are listed: stack_diagram, archify_architecture,
+   archify_sequence, d3_architecture, llm_2d, llm_3d. If any is missing, report it and continue
+   with the rest; do not invent a renderer.
+2. For each source below, call `validate_uml` (output_format `svg`), then `generate_uml_image`
+   with the same diagram_type and code. Keep each source exactly as written:
+   - stack_diagram: {"title":"SaaS stack","groups":[{"id":"vercel","name":"Vercel","icon":"vercel"}],"nodes":[{"id":"user","name":"User","role":"browser","icon":"user"},{"id":"web","name":"Next.js","role":"frontend","icon":"browser","group":"vercel"},{"id":"db","name":"Neon","role":"postgres","icon":"database"},{"id":"ci","name":"GitHub Actions","role":"ci"}],"edges":[{"from":"user","to":"web","label":"HTTPS","step":1},{"from":"web","to":"db","label":"SQL","step":2},{"from":"ci","to":"web","label":"deploy","style":"dashed"}]}
+   - archify_architecture: {"title":"Platform","preset":"blueprint","groups":[{"id":"sec","name":"Security","style":"security","icon":"shield"},{"id":"be","name":"Backend","style":"backend","icon":"server"}],"nodes":[{"id":"auth","name":"Auth","role":"OIDC","group":"sec","tag":"platform"},{"id":"api","name":"API","role":"REST","group":"be","tag":"app team"},{"id":"llm","name":"Claude","role":"reasoning"}],"edges":[{"from":"auth","to":"api","label":"token","style":"dashed"},{"from":"api","to":"llm","label":"prompt"}]}
+   - archify_sequence: {"title":"Cache miss","autonumber":true,"participants":[{"id":"web","name":"Web","icon":"browser"},{"id":"api","name":"API","icon":"api"},{"id":"db","name":"Postgres","icon":"database"}],"messages":[{"from":"web","to":"api","label":"GET /dashboard"},{"from":"api","to":"db","label":"SELECT"},{"from":"db","to":"api","label":"rows","style":"dashed"},{"from":"api","to":"web","label":"200 OK","style":"dashed"}]}
+   - d3_architecture: {"title":"AI app","nodes":[{"id":"edge","label":"Edge","service":"tech:cloudflare"},{"id":"app","label":"App","service":"tech:vercel"},{"id":"agent","label":"Agent","service":"tech:langgraph"},{"id":"claude","label":"Claude","service":"tech:claude"},{"id":"gpt","label":"GPT","service":"tech:openai"}],"links":[{"from":"edge","to":"app","label":"HTTPS"},{"from":"app","to":"agent"},{"from":"agent","to":"claude"},{"from":"agent","to":"gpt"}]}
+   - llm_2d: {"title":"Autoencoder","layout":"flow","direction":"TB","layers":[{"id":"x","label":"x","kind":"vector","shape":[784]},{"id":"enc","label":"Encoder","kind":"encoder"},{"id":"z","label":"z","kind":"bottleneck","shape":[32]},{"id":"dec","label":"Decoder","kind":"decoder"},{"id":"xr","label":"x'","kind":"vector","shape":[784]}]}
+   - llm_3d: {"title":"Transformer","groups":[{"id":"blk","label":"Block","repeat":12,"color":"#818cf8"}],"layers":[{"id":"emb","label":"Embedding","kind":"embedding"},{"id":"att","label":"Attention","kind":"attention","group":"blk"},{"id":"ffn","label":"Feed forward","kind":"feedforward","group":"blk"},{"id":"out","label":"Logits","kind":"output"}]}
+3. Show each returned image. For stack_diagram, d3_architecture and archify_architecture, state
+   which brand logos are visible (expected: GitHub and Vercel; Cloudflare, Vercel, LangGraph, Claude
+   and OpenAI; Claude). For stack_diagram, confirm the numbered step badges 1 and 2. For
+   archify_sequence, confirm the labels start with 1. to 4.
+4. Call `generate_uml` for archify_architecture with `output_format: html`. If this client shows
+   MCP Apps, open it: click the API node (the detail panel opens), shift-click Claude (a path
+   appears), switch the preset to flow and the theme to light. Otherwise say MCP App: UNAVAILABLE.
+5. Call `generate_uml_image` for stack_diagram again with `theme: light` and confirm the
+   background is light.
+6. Report a table: diagram_type | validate | image | logos/badges seen | notes.
+7. End with exactly one of these lines:
+
+PLUGIN_SMOKE_TEST: PASS
+PLUGIN_SMOKE_TEST: FAIL - <short reason>
+```
+
+`tests/test_chatgpt_mcp_smoke_prompt.py` validates and renders every source in this prompt, so
+a passing test suite means a failure here is the client or the deployment, not the prompt.
+
 ## What this catches
 
 This manual fixture is intentionally stricter than a health check. It catches cases where `/health` works but the MCP client cannot discover tools, cannot validate inputs, cannot invoke Kroki-backed rendering, cannot show an inline image, omits playground/URL links, uses local file paths in markdown, or silently answers without using the MCP server.

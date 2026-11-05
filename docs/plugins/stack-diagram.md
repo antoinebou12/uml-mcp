@@ -21,12 +21,15 @@ plugin](archify.md) reuses its layout engine.
 | `theme` | `auto` (default: follows the system in HTML, dark in static output), `dark` or `light` |
 | `nodes[]` | `id`, `name`, `role`, `icon`, `group`, `tone` |
 | `groups[]` | `id`, `name`, `parent` (for nesting), `style`, `tone`, `icon` |
-| `edges[]` | `from`, `to`, `label`, `style` (`solid` or `dashed`), `tone`. `source` and `target` also work |
+| `edges[]` | `from`, `to`, `label`, `style` (`solid` or `dashed`), `tone`, `step` (1-999, a numbered badge). `source` and `target` also work |
 
 * **Group styles:** `plain` (default), `vendor`, `aws` (square corners), `gcp`, `azure`, `dashed`.
 * **Tones:** `blue`, `orange`, `green`, `purple`, `red`, `teal`, `yellow`, `gray`. Edges also take
   `accent` (the default for solid edges) and `neutral` (the default for dashed ones).
 * **Limits:** 100 nodes (`plugins.settings.stack-diagram.max_nodes` can lower it), 40 groups, 240 edges.
+
+Errors name the field and, for a bad reference, list the known ids (`edges[0].to references
+unknown node 'dbb'; known: api, db`), so a model can fix its source in one retry.
 
 ## Layout
 

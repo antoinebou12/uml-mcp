@@ -68,7 +68,12 @@ class Skin:
 
 
 def tone_css(pal: dict[str, str]) -> str:
-    rules = [".ico{fill:none}", ".e-dash{stroke-dasharray:6 5}", ".dim{opacity:.16}"]
+    rules = [
+        ".ico{fill:none}",
+        ".e-dash{stroke-dasharray:6 5}",
+        ".dim{opacity:.16}",
+        ".step-n{fill:#fff;font:700 10px system-ui,sans-serif}",
+    ]
     for key in EDGE_TONES:
         color = pal[key]
         rules.append(
@@ -111,6 +116,18 @@ def rounded_path(points: list[tuple[float, float]], radius: float = 8) -> str:
     return "".join(parts)
 
 
+def _step_badge(route: Route, step: int, tone: str) -> str:
+    """A numbered circle a little way along the first segment of an edge."""
+    (x1, y1), (x2, y2) = route.points[0], route.points[1]
+    length = abs(x2 - x1) + abs(y2 - y1) or 1
+    t = min(18.0, length / 2) / length
+    x, y = x1 + (x2 - x1) * t, y1 + (y2 - y1) * t
+    return (
+        f'<circle class="step f-{tone}" cx="{x:.1f}" cy="{y:.1f}" r="9"/>'
+        f'<text class="step-n" x="{x:.1f}" y="{y + 3.5:.1f}" text-anchor="middle">{step}</text>'
+    )
+
+
 def edge_svg(route: Route, skin: Skin) -> str:
     edge = route.edge
     d = rounded_path(route.points)
@@ -120,6 +137,8 @@ def edge_svg(route: Route, skin: Skin) -> str:
         f'<g class="edge" data-from="{escape(edge.source, quote=True)}" data-to="{escape(edge.target, quote=True)}">'
         f'{glow}<path class="line e-{edge.tone}{dash}" d="{d}" marker-end="url(#ar-{edge.tone})"/>'
     )
+    if edge.step is not None:
+        out += _step_badge(route, edge.step, edge.tone)
     if route.label:
         x, y, anchor = route.label
         out += (

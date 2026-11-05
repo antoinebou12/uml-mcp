@@ -36,6 +36,19 @@ Everything merged to `main` since 1.3.2, plus the plugin work described below.
   renderers add no connect-time tokens.
 - stack-diagram and archify draw the same 28 real brand logos as D3, from an `icon` name or a
   word of the node's name.
+- D3's A\* router adds a small cost for running in the lane next to a parallel arrow (in Python
+  and in the page's JS router, which stay identical): on a dense 10-node graph, arrows running a
+  lane apart fell from about 5,400 px to 630 px with no extra crossings.
+- 32 more brand logos (60 in all: Qwen, OpenRouter, LangGraph, LangSmith, LlamaIndex, CrewAI,
+  Snowflake, Claude Code, Codex, xAI...), each linked to its exact source file, checked on every
+  test run and drawn offline. `tech:anthropic` now draws the Anthropic mark.
+- stack-diagram and archify: numbered `step` badges on edges, `autonumber` for sequences, and
+  errors that list the known ids for a bad reference.
+- Skills: a per-type agent skill for all nine plugin diagram types (example prompt, notation
+  tips, a validated example source) and three MCP guides (`stack-diagram`, `archify`,
+  `llm-visualizer`) under `skill://uml-mcp-guides/{topic}/SKILL.md`, listed in the workflow skill.
+- Smoke-test prompt for every bundled plugin (logos, steps, presets, autonumber, groups, theme,
+  MCP App interactions); its sources are validated and rendered by the test suite.
 - README rewritten: centred header, project stats, both hosted endpoints (primary and the
   `uml-mcp.antoineboucher.info` mirror), contents, contributing and licence sections.
 - D3 draws real brand logos in a white tile on each card for 25 more services (Azure, GitHub,

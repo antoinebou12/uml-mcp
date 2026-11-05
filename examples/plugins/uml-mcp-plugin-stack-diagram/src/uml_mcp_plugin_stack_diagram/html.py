@@ -28,6 +28,8 @@ _PAGE_CSS = (
     ".zoom{min-width:46px;text-align:center;color:var(--muted);font-size:12px}"
     "main{flex:1;min-height:0;position:relative;overflow:hidden;cursor:grab;touch-action:none}"
     "main.drag{cursor:grabbing}"
+    # clicking or dragging nodes must not select their text; the detail panel stays selectable
+    "#stage{user-select:none;-webkit-user-select:none}"
     "#stage{position:absolute;left:0;top:0;transform-origin:0 0}#stage svg{display:block}"
     ".node,.gwrap{transition:opacity .15s}.edge{transition:opacity .15s}.node{cursor:pointer}"
     ".node.sel .card,.node.sel .tile{stroke-width:2.6}"
@@ -236,7 +238,8 @@ def graph_of(spec: Spec, skin: Skin) -> dict[str, Any]:
             for n in spec.nodes
         ],
         "edges": [
-            {"from": e.source, "to": e.target, "label": e.label} for e in spec.edges
+            {"from": e.source, "to": e.target, "label": e.label, "step": e.step}
+            for e in spec.edges
         ],
         "groups": [
             {"id": g.id, "nodes": [n.id for n in spec.nodes if descends(n.group, g.id)]}

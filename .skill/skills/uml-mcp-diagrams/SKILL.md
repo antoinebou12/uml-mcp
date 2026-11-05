@@ -18,11 +18,14 @@ Read the relevant guide through `resources/read` when needed:
 | Request | Resource | Local skill |
 | --- | --- | --- |
 | D3, cloud logos, custom plugins | `skill://uml-mcp-guides/d3-plugins/SKILL.md` | `.skill/skills/uml-mcp-d3-plugins/SKILL.md` |
+| Stack and cloud diagrams with logos | `skill://uml-mcp-guides/stack-diagram/SKILL.md` | `.skill/skills/uml-mcp-stack-diagram/SKILL.md` |
+| Archify architecture, workflow, sequence | `skill://uml-mcp-guides/archify/SKILL.md` | `.skill/skills/uml-mcp-archify/SKILL.md` |
+| LLM and neural-network diagrams, 2D and 3D | `skill://uml-mcp-guides/llm-visualizer/SKILL.md` | `.skill/skills/uml-mcp-llm-visualizer/SKILL.md` |
 | Complex Mermaid | `skill://uml-mcp-guides/mermaid/SKILL.md` | `.skill/skills/uml-mcp-mermaid/SKILL.md` |
 | PlantUML and C4 levels | `skill://uml-mcp-guides/plantuml-c4/SKILL.md` | `.skill/skills/uml-mcp-plantuml-c4/SKILL.md` |
 | Several views or format conversions | `skill://uml-mcp-guides/batch/SKILL.md` | `.skill/skills/uml-mcp-batch/SKILL.md` |
 
-MCP `skills/list` exposes this entry point. The four focused skills are available
+MCP `skills/list` exposes this entry point. The seven focused skills are available
 on demand through the resource template and the agent-skills index. For other
 notations, read `uml://templates`, `uml://examples`, or the per-type local skill
 at `.skill/skills/<diagram_type>/SKILL.md`.
