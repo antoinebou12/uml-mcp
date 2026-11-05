@@ -17,7 +17,7 @@ from pydantic import (
 
 #: Every output format a request may name. Each diagram type still lists the ones it
 #: supports (``html`` is only accepted by plugin types that declare it).
-OUTPUT_FORMATS = ("svg", "png", "pdf", "jpeg", "txt", "base64", "html")
+OUTPUT_FORMATS = ("svg", "png", "pdf", "jpeg", "txt", "base64", "html", "tsx")
 
 
 def _env_bool(name: str, default: bool = False) -> bool:

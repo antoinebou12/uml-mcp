@@ -49,6 +49,7 @@ tasks = [
 ]
 
 [project.entry-points."uml_mcp.renderers"]
+architecture = "mcp_core.plugins.architecture:ArchitectureRenderer"
 d3 = "uml_mcp_plugin_d3:D3Renderer"
 stack-diagram = "uml_mcp_plugin_stack_diagram:StackDiagramRenderer"
 archify = "uml_mcp_plugin_archify:ArchifyRenderer"
@@ -89,7 +90,7 @@ markers = [
 [tool.ruff]
 target-version = "py312"
 line-length = 88
-exclude = [".venv", "build", "dist"]
+exclude = [".venv", "build", "dist", "scripts/architecture/fetch_icons.py"] # Unmodified upstream source; see adjacent MIT notice.
 
 [tool.ruff.format]
 quote-style = "double"
