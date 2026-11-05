@@ -1,12 +1,16 @@
-"""A small built-in glyph set (24x24, stroke based) so diagrams need no logo downloads.
+"""Node icons: real brand logos, a built-in glyph set (24x24, stroke based), monograms.
 
-Brand logos are trademarks, so none ship here: pass ``icon`` as a base64 image data URI to
-use a real logo, or pick a glyph name such as ``database`` or ``cloud``.
+Real logos come from the vetted, MIT-licensed set bundled with the D3 plugin (AWS, Google
+Cloud, Azure, GitHub, Vercel, Cloudflare, OpenAI, Claude, Gemini and more), drawn without
+network access. Other names fall back to a glyph such as ``database`` or ``cloud``, then to
+a monogram. Any other logo can be passed as a base64 image data URI.
 """
 
 from __future__ import annotations
 
 import hashlib
+import re
+from functools import lru_cache
 from html import escape
 
 GLYPHS: dict[str, str] = {
@@ -126,6 +130,57 @@ def monogram_svg(name: str, x: float, y: float, size: float) -> str:
     )
 
 
+#: Brand names that map to a provider mark rather than a software logo.
+_PROVIDER_NAMES = {"aws": "aws", "amazon": "aws", "gcp": "gcp", "googlecloud": "gcp"}
+
+
+@lru_cache(maxsize=128)
+def _logo_file(name: str) -> str | None:
+    """The bundled logo SVG for a brand name, from the D3 plugin's vetted set, if any."""
+    try:
+        from importlib.resources import files
+
+        from uml_mcp_plugin_d3.brand_icons import logo_key
+    except ImportError:  # D3 not installed: glyphs and monograms only
+        return None
+    key = name.lower().replace(" ", "").replace("-", "")
+    provider = _PROVIDER_NAMES.get(key)
+    file = logo_key(provider, key) if provider else logo_key("tech", key)
+    if not file:
+        return None
+    path = files("uml_mcp_plugin_d3").joinpath("assets", "brands", f"{file}.svg")
+    return path.read_text(encoding="utf-8")
+
+
+def logo_svg(
+    name: str, x: float, y: float, size: float, *, backing: bool
+) -> str | None:
+    """A real brand logo, nested and positioned, or ``None`` when there is none.
+
+    ``backing`` draws a white rounded tile behind it so dark logos read on dark cards.
+    """
+    raw = _logo_file(name)
+    if raw is None:
+        return None
+    body = re.sub(r'\sstyle="[^"]*"', "", raw)
+
+    def root(match: re.Match[str]) -> str:
+        attrs = re.sub(r'\s(?:width|height|class|x|y)="[^"]*"', "", match[1])
+        return (
+            f'<svg class="logo" x="{x:.1f}" y="{y:.1f}" width="{size:.1f}" '
+            f'height="{size:.1f}"{attrs}>'
+        )
+
+    logo = re.sub(r"<svg([^>]*)>", root, body, count=1)
+    if not backing:
+        return logo
+    pad = size * 0.18
+    return (
+        f'<rect x="{x - pad:.1f}" y="{y - pad:.1f}" width="{size + 2 * pad:.1f}" '
+        f'height="{size + 2 * pad:.1f}" rx="{pad * 1.6:.1f}" fill="#ffffff"/>{logo}'
+    )
+
+
 def icon_svg(
     icon: str,
     fallback_names: tuple[str, ...],
@@ -134,16 +189,33 @@ def icon_svg(
     size: float,
     tone: str | None,
     label: str | None = None,
+    *,
+    backing: bool = False,
 ) -> str:
-    """Markup for a node icon: a data URI image, a glyph, or a monogram badge.
+    """Markup for a node icon: an image, a real logo, a glyph, or a monogram badge.
 
-    ``label`` is what the monogram spells (the node's name) when no glyph matches.
+    A brand name (``github``, ``vercel``, ``claude``...) as ``icon``, or as a word of the
+    node's name when ``icon`` is empty, draws the real logo. ``label`` is what the
+    monogram spells when nothing else matches.
     """
     if icon.startswith("data:"):
         return (
             f'<image href="{escape(icon, quote=True)}" x="{x:.1f}" y="{y:.1f}" '
             f'width="{size:.1f}" height="{size:.1f}" preserveAspectRatio="xMidYMid meet"/>'
         )
+    words = (
+        [icon]
+        if icon
+        else [
+            word
+            for name in fallback_names
+            for word in name.lower().replace("/", " ").replace("-", " ").split()
+        ]
+    )
+    for word in words:
+        logo = logo_svg(word, x, y, size, backing=backing)
+        if logo:
+            return logo
     key = resolve(icon) if icon else guess(*fallback_names)
     tone_class = f"s-{tone}" if tone else "s-ink"
     if key:

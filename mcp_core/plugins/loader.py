@@ -30,6 +30,13 @@ class PluginStatus:
         return asdict(self)
 
 
+#: Diagram renderers that ship inside the ``uml-mcp`` distribution. With
+#: ``plugins.bundled`` (the default) they load without being listed. Only entry points
+#: published by ``uml-mcp`` itself qualify, so another package cannot borrow a name,
+#: and only renderers: plugin tools add connect-time tokens, so they stay opt-in.
+BUNDLED_RENDERERS = frozenset({"d3", "stack-diagram", "archify", "llm-visualizer"})
+BUNDLED_DISTRIBUTION = "uml-mcp"
+
 #: Loaded renderers by diagram type, and the status of every discovered plugin.
 RENDERERS: dict[str, Renderer] = {}
 STATUS: list[PluginStatus] = []
@@ -43,19 +50,27 @@ def discover() -> list[PluginStatus]:
     """Installed plugins (not loaded), for listings and lint."""
     from ..core.settings_file import get_app_config
 
-    enabled = set(get_app_config().plugins.enabled)
+    cfg = get_app_config().plugins
+    enabled = set(cfg.enabled)
     out = []
     for group, label in ((TOOLS_GROUP, "tools"), (RENDERERS_GROUP, "renderers")):
         for ep in entry_points(group):
             dist = getattr(ep, "dist", None)
+            distribution = getattr(dist, "name", None)
+            bundled = (
+                cfg.bundled
+                and label == "renderers"
+                and ep.name in BUNDLED_RENDERERS
+                and distribution == BUNDLED_DISTRIBUTION
+            )
             out.append(
                 PluginStatus(
                     name=ep.name,
                     group=label,
                     target=ep.value,
-                    distribution=getattr(dist, "name", None),
+                    distribution=distribution,
                     version=getattr(dist, "version", None),
-                    enabled=ep.name in enabled,
+                    enabled=ep.name in enabled or bundled,
                 )
             )
     return out

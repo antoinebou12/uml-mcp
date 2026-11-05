@@ -47,9 +47,16 @@ Icons are built-in line glyphs (`user`, `browser`, `server`, `database`, `cache`
 as `postgres`, `redis`, `s3` or `kafka`. A name that is not a glyph shows a monogram badge
 built from the node's name.
 
-Brand logos are trademarks of their owners and are **not** bundled. To use one, pass the
-node's `icon` as a base64 image data URI (SVG, PNG, JPEG or WebP, under 1 MB). SVGs are
-checked and rejected if they contain scripts, event handlers or external references.
+**Real logos.** A brand name as `icon` (`github`, `vercel`, `cloudflare`, `aws`, `azure`,
+`gcp`, `openai`, `claude`, `gemini`, `mistral`, `langchain`, `huggingface`, `mcp`...), or as a word
+of the node's name when `icon` is empty ("GitHub Actions"), draws the real logo. The 28 logos are
+the MIT-licensed LobeHub set bundled with the D3 plugin, checked for scripts and external
+references and drawn without network access; archify backs them with a white tile on dark
+cards. They remain trademarks of their owners.
+
+For any other logo, pass the node's `icon` as a base64 image data URI (SVG, PNG, JPEG or WebP,
+under 1 MB). SVGs are checked and rejected if they contain scripts, event handlers or external
+references.
 
 ## Themes and the viewer
 

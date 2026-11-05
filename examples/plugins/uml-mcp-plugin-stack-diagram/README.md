@@ -35,5 +35,6 @@ See [`docs/plugins/stack-diagram.md`](../../../docs/plugins/stack-diagram.md) fo
 reference, layout rules and icons. The [archify plugin](../uml-mcp-plugin-archify) builds on this
 package's layout engine.
 
-Brand logos are trademarks and are not bundled: use the built-in glyphs, or pass a logo as an
+Brand names such as `github`, `vercel` or `claude` draw real logos from the D3 plugin's vetted
+MIT-licensed set (trademarks of their owners). Otherwise use the built-in glyphs, or pass a logo as an
 `icon` data URI.

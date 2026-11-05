@@ -16,8 +16,14 @@ EXAMPLE = _dump(
         "direction": "LR",
         "theme": "dark",
         "groups": [
-            {"id": "vercel", "name": "Vercel", "style": "plain"},
-            {"id": "github", "name": "GitHub", "style": "vendor", "tone": "blue"},
+            {"id": "vercel", "name": "Vercel", "style": "plain", "icon": "vercel"},
+            {
+                "id": "github",
+                "name": "GitHub",
+                "style": "vendor",
+                "tone": "blue",
+                "icon": "github",
+            },
         ],
         "nodes": [
             {"id": "user", "name": "User", "role": "browser", "icon": "user"},
@@ -47,7 +53,7 @@ EXAMPLE = _dump(
                 "id": "ci",
                 "name": "GitHub Actions",
                 "role": "ci",
-                "icon": "git",
+                "icon": "github",
                 "group": "github",
             },
         ],

@@ -35,7 +35,13 @@ uml-mcp plugins enable ascii        # the renderer plugin
 
 Then restart the server. Installed plugins are **not** loaded until they are listed in
 `plugins.enabled`: an explicit allow-list. One name can serve both kinds: enabling `d3` loads its
-tool and its renderer.
+tool and its renderer. The exception is the four diagram renderers bundled with uml-mcp (`d3`,
+`stack-diagram`, `archify`, `llm-visualizer`): `plugins.bundled` (on by default) loads them
+without listing them. Their extra tools still need `plugins.enabled`, and `bundled: false`
+restores a strict allow-list. The exception is the four diagram renderers bundled with uml-mcp (`d3`,
+`stack-diagram`, `archify`, `llm-visualizer`): `plugins.bundled` (on by default) loads them
+without listing them. Their extra tools still need `plugins.enabled`, and `bundled: false`
+restores a strict allow-list.
 
 ```yaml
 # uml-mcp.yaml
@@ -75,7 +81,8 @@ plugins also ship inside the `uml-mcp` package, so `uml-mcp plugins enable <name
 
 - **Trusted code:** plugins run in the server process with its permissions. Install only
   packages you trust, and pin their versions.
-- **Opt-in loading:** nothing loads unless allow-listed. A plugin that fails to load is
+- **Opt-in loading:** nothing loads unless allow-listed, except the bundled first-party
+  renderers (only from the `uml-mcp` distribution itself; `plugins.bundled: false` turns them off). A plugin that fails to load is
   marked with its error, and the server still starts.
 - **Collisions:** built-in diagram types can't be overridden, and duplicate tool names
   are rejected.

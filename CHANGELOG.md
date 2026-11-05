@@ -30,9 +30,14 @@ Everything merged to `main` since 1.3.2, plus the plugin work described below.
   type; see [Plugin author guide](docs/plugins/authoring.md). A plugin capability manifest and a
   common graph interchange model describe what each type can do.
 - The d3, stack-diagram, archify and llm-visualizer plugins ship inside the `uml-mcp`
-  package (entry points, Docker and Vercel build contexts) and Vercel enables all four, so
-  `uml-mcp plugins enable <name>` is enough on any other server. Enabling them adds no
-  connect-time tokens.
+  package and are **on by default**: the new `plugins.bundled` setting (default `true`) loads
+  these four renderers from the `uml-mcp` distribution without configuration. Plugin tools
+  such as `d3_catalog` stay opt-in, and `bundled: false` restores a strict allow-list. The
+  renderers add no connect-time tokens.
+- stack-diagram and archify draw the same 28 real brand logos as D3, from an `icon` name or a
+  word of the node's name.
+- README rewritten: centred header, project stats, both hosted endpoints (primary and the
+  `uml-mcp.antoineboucher.info` mirror), contents, contributing and licence sections.
 - D3 draws real brand logos in a white tile on each card for 25 more services (Azure, GitHub,
   Copilot, Vercel, Cloudflare, Microsoft, Gemini, Mistral, DeepSeek, Meta and Llama, Ollama,
   Hugging Face, Groq, Cohere, Perplexity, Bedrock, Vertex AI, LangChain, n8n, MCP, Cursor,

@@ -183,7 +183,9 @@ class ArchifySkin(Skin):
         label_x = x + 16
         icon = ""
         if g.icon:
-            icon = icon_svg(g.icon, (g.name,), x + 14, y + 11, 18, tone, g.name)
+            icon = icon_svg(
+                g.icon, (g.name,), x + 14, y + 11, 18, tone, g.name, backing=True
+            )
             label_x = x + 40
         return (
             f'<g class="gwrap" data-id="{escape(g.id, quote=True)}">'
@@ -197,7 +199,14 @@ class ArchifySkin(Skin):
         n = placed.node
         tone = tone or "blue"
         icon = icon_svg(
-            n.icon, (n.icon, n.name, n.role), x + 15, y + 15, 22, tone, n.name
+            n.icon,
+            (n.icon, n.name, n.role),
+            x + 15,
+            y + 15,
+            22,
+            tone,
+            n.name,
+            backing=True,
         )
         text_x = x + 50
         lines = 1 + bool(n.role) + bool(n.tag)

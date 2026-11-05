@@ -108,7 +108,7 @@ class StackSkin(Skin):
         label_x = x + 16
         icon = ""
         if g.icon:
-            icon = icon_svg(g.icon, (g.name,), x + 14, y + 9, 18, tone)
+            icon = icon_svg(g.icon, (g.name,), x + 14, y + 9, 18, tone, backing=True)
             label_x = x + 40
         return (
             f'<g class="gwrap" data-id="{escape(g.id, quote=True)}">'

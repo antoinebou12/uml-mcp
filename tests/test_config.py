@@ -150,8 +150,15 @@ class TestMCPModuleLevel:
         assert "erd" in DIAGRAM_TYPES
 
     def test_mcp_settings_has_diagram_types(self):
-        """MCP_SETTINGS.diagram_types is populated from DIAGRAM_TYPES."""
-        assert len(MCP_SETTINGS.diagram_types) == 37
+        """MCP_SETTINGS.diagram_types is populated from DIAGRAM_TYPES (plus loaded plugins)."""
+        builtin = {
+            name: cfg
+            for name, cfg in MCP_SETTINGS.diagram_types.items()
+            if not cfg.backend.startswith("plugin:")
+        }
+        assert len(builtin) == 37
+        # bundled plugin renderers (on by default) only ever add types, never replace one
+        assert set(builtin) <= set(DIAGRAM_TYPES)
         assert "class" in MCP_SETTINGS.diagram_types
         assert MCP_SETTINGS.diagram_types["class"].backend == "plantuml"
         assert MCP_SETTINGS.diagram_types["mermaid"].backend == "mermaid"
