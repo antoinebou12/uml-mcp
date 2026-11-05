@@ -1,0 +1,35 @@
+:root{--bg:#08111f;--panel:#111c2f;--text:#e5eefb;--muted:#9fb0c8;--line:#8da2bf;--border:#2a3a52;--accent:#38bdf8;color-scheme:dark}
+html.light{--bg:#f8fafc;--panel:#ffffff;--text:#0f172a;--muted:#475569;--line:#64748b;--border:#cbd5e1;--accent:#0369a1;color-scheme:light}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:14px 20px;border-bottom:1px solid var(--border)}
+h1{margin:0;font-size:20px}
+h2{margin:4px 0 10px;font-size:16px}
+.eyebrow{font-size:10px;font-weight:700;letter-spacing:.16em;color:var(--muted)}
+.subtitle{margin:2px 0 0;color:var(--muted)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;color:var(--text);background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,canvas:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#04121f}
+.segmented{display:flex}
+.segmented button:first-child{border-radius:8px 0 0 8px}
+.segmented button:last-child{border-radius:0 8px 8px 0;margin-left:-1px}
+main{flex:1;display:flex;min-height:0}
+.stage{position:relative;flex:1;min-width:0}
+canvas{display:block;width:100%;height:100%;cursor:grab;touch-action:none}
+canvas.dragging{cursor:grabbing}
+.hint{position:absolute;left:14px;bottom:10px;margin:0;color:var(--muted);font-size:12px;pointer-events:none}
+aside{width:280px;flex:none;overflow:auto;padding:14px 16px;border-left:1px solid var(--border);display:flex;flex-direction:column;gap:18px}
+nav{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+nav button{display:flex;align-items:center;gap:8px;text-align:left;width:100%}
+nav .dot{width:10px;height:10px;border-radius:50%;flex:none}
+dl{margin:0;display:grid;gap:6px}
+dl div{display:flex;justify-content:space-between;gap:12px}
+dt{color:var(--muted)}
+dd{margin:0;text-align:right}
+#inspect-note{color:var(--muted);margin:10px 0 0}
+footer{display:flex;justify-content:space-between;gap:12px;padding:8px 20px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
+output{display:block}
+@media (max-width:760px){main{flex-direction:column}aside{width:auto;max-height:40%;border-left:0;border-top:1px solid var(--border)}footer span{display:none}}

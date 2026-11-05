@@ -48,6 +48,15 @@ plugins:
 The console's **Tools & plugins** page lists installed plugins, their status, and any load
 error, with an enable/disable switch.
 
+## Plugin diagrams open as an MCP App
+
+In clients with MCP Apps, a plugin's HTML page opens in the viewer inside the chat. The same type
+renders to SVG and PNG for clients without them. Example recording of the viewer:
+
+<video controls preload="metadata" poster="../assets/mcp-app-demo.png" width="420">
+  <source src="../assets/mcp-app-demo.mp4" type="video/mp4">
+</video>
+
 ## Plugins in this repository
 
 Both live under `examples/plugins` and are installed from a checkout with
@@ -57,6 +66,9 @@ Both live under `examples/plugins` and are installed from a checkout with
 | --- | --- | --- |
 | `uml-mcp-plugin-hello` | `hello`, `ascii` | The `hello_echo` tool and an `ascii` diagram type: the smallest complete example |
 | `uml-mcp-plugin-d3` | `d3` | Interactive `d3_force`, `d3_architecture` and `d3_topology` diagrams (HTML or SVG), and the `d3_catalog` tool. See the [D3 diagrams plugin](d3.md) |
+| `uml-mcp-plugin-stack-diagram` | `stack-diagram` | The auto-laid-out `stack_diagram` type: icon tiles, nested groups, left-right or top-down, dark or light. See the [stack diagram plugin](stack-diagram.md) |
+| `uml-mcp-plugin-archify` | `archify` | `archify_architecture`, `archify_workflow` and `archify_sequence`: dashed colour-coded groups, icon cards, presets and click-to-focus pages, sharing the stack-diagram engine. See the [archify plugin](archify.md) |
+| `uml-mcp-plugin-llm-visualizer` | `llm-visualizer` | Interactive `llm_2d` and `llm_3d` LLM architecture diagrams (HTML or SVG). See the [LLM visualizer plugin](llm-visualizer.md) |
 
 ## Safety
 

@@ -91,7 +91,12 @@ exclude = ["examples/**"]
 
 # The D3 example plugin is imported by its tests (it is not installed).
 [tool.ty.environment]
-extra-paths = ["examples/plugins/uml-mcp-plugin-d3/src"]
+extra-paths = [
+    "examples/plugins/uml-mcp-plugin-d3/src",
+    "examples/plugins/uml-mcp-plugin-llm-visualizer/src",
+    "examples/plugins/uml-mcp-plugin-stack-diagram/src",
+    "examples/plugins/uml-mcp-plugin-archify/src",
+]
 
 # FastMCP / Starlette typing is often stricter than runtime; relax in integration tests.
 [[tool.ty.overrides]]

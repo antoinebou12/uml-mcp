@@ -1674,7 +1674,7 @@ def _viewer_data() -> dict[str, Any]:
     data: dict[str, Any] = {
         "formats": list(VIEWER_FORMATS),
         "themes": {
-            "plugin:d3": ["light", "dark", "auto"],
+            "plugin": ["light", "dark", "auto"],
             "plantuml": plantuml,
             "mermaid": list(dict.fromkeys(MERMAID_LIGHT_BG + MERMAID_DARK_BG)),
             "d2": ["default", "dark"],
@@ -1688,18 +1688,22 @@ def _viewer_data() -> dict[str, Any]:
         families = {"plantuml": "plantuml", "c4plantuml": "plantuml"}
         for name, cfg in MCP_SETTINGS.diagram_types.items():
             backend = str(cfg.backend)
+            is_plugin = backend.startswith("plugin:")
+            # Plugin types that can draw SVG can also be rasterised to PNG and PDF.
+            raster = is_plugin and "svg" in cfg.formats
             data["types"][name] = {
-                "theme_family": families.get(backend, backend)
-                if backend in {"plantuml", "c4plantuml", "mermaid", "d2", "plugin:d3"}
+                "theme_family": "plugin"
+                if is_plugin
+                else families.get(backend, backend)
+                if backend in {"plantuml", "c4plantuml", "mermaid", "d2"}
                 else "",
                 "native_formats": list(cfg.formats),
                 "export_formats": list(cfg.formats)
-                + (["png", "pdf"] if backend == "plugin:d3" else []),
+                + [f for f in ("png", "pdf") if raster and f not in cfg.formats],
                 "formats": [
                     f
                     for f in VIEWER_FORMATS
-                    if f in cfg.formats
-                    or (backend == "plugin:d3" and f in {"svg", "png"})
+                    if f in cfg.formats or (raster and f in {"svg", "png"})
                 ],
             }
     except Exception as exc:  # noqa: BLE001 - the viewer still works with generic options

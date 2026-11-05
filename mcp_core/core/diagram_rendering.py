@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import base64
 import datetime
+import json
 import logging
 import re
 import time
@@ -114,6 +115,29 @@ def _prepare_d2_theme(code: str, theme: str | None) -> str:
     return f"vars: {{\n  d2-config: {{\n    theme-id: {theme_id}\n  }}\n}}\n{prepared}"
 
 
+PLUGIN_THEMES = ("light", "dark", "auto")
+
+
+def _prepare_plugin_theme(code: str, theme: str | None) -> str:
+    """Apply ``light``/``dark``/``auto`` to a plugin source that is a JSON object.
+
+    Plugin sources keep their theme in a top-level ``theme`` field, so the viewer's theme
+    picker and the ``theme`` argument work for every plugin without each one parsing it.
+    Anything that is not a JSON object, or any other theme name, is left untouched.
+    """
+    choice = (theme or "").strip().lower()
+    if choice not in PLUGIN_THEMES:
+        return code
+    try:
+        data = json.loads(code)
+    except ValueError:
+        return code
+    if not isinstance(data, dict):
+        return code
+    data["theme"] = choice
+    return json.dumps(data, indent=2)
+
+
 def prepare_diagram_code(code: str, backend_type: str, theme: str | None) -> str:
     """Strip and wrap PlantUML when needed; TikZ snippets get standalone wrap; Mermaid gets
     fence/escape cleanup and an optional theme; else strip only."""
@@ -124,6 +148,8 @@ def prepare_diagram_code(code: str, backend_type: str, theme: str | None) -> str
         prepared_code = _prepare_plantuml_family(prepared_code, theme)
     elif backend_type == "d2":
         prepared_code = _prepare_d2_theme(prepared_code, theme)
+    elif backend_type.startswith("plugin:"):
+        prepared_code = _prepare_plugin_theme(prepared_code, theme)
     elif backend_type == "tikz" and "\\documentclass" not in prepared_code:
         from tools.kroki.tikz import wrap_tikz_standalone
 

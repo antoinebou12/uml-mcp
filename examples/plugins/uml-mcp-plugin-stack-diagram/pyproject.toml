@@ -1,0 +1,17 @@
+[project]
+name = "uml-mcp-plugin-stack-diagram"
+version = "0.1.0"
+description = "UML-MCP plugin: auto-laid-out stack and cloud architecture diagrams with nested groups, left-right or top-down flow, and light and dark themes."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["uml-mcp>=1.4.0"]
+
+[project.entry-points."uml_mcp.renderers"]
+stack-diagram = "uml_mcp_plugin_stack_diagram:StackDiagramRenderer"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/uml_mcp_plugin_stack_diagram"]

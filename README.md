@@ -31,6 +31,8 @@ For application development, MCP exposes diagram tools to agents, AG-UI provides
 | Live MCP | [https://uml-mcp.vercel.app/mcp](https://uml-mcp.vercel.app/mcp) |
 | Docs | [antoinebou12.github.io/uml-mcp](https://antoinebou12.github.io/uml-mcp/) |
 | Catalog | ~37 Kroki-backed diagram types · 5 MCP tools · URL + playground + chat PNG |
+| Interactive | Plugins add interactive diagrams (zoom, focus, shortest path, light/dark) that open as an **MCP App** in the chat, and you can [write your own](docs/plugins/authoring.md) · [plugins](#interactive-and-custom-diagrams-plugins) |
+| Releases | [CHANGELOG.md](CHANGELOG.md) |
 | Agent UI | MCP `/mcp` · canonical AG-UI `/ag-ui` · [OpenUI integration guide](docs/integrations/openui.md) |
 | Install | `python scripts/install.py` · `uv tool install uml-mcp && uml-mcp setup` · [Installation](docs/installation.md) |
 | Console | `uml-mcp admin`: setup form, settings, live logs, charts, Kroki playground ([install](docs/admin/install.md) · [user guide](docs/admin/user-guide.md) · [tour](docs/admin/index.md)) |
@@ -40,6 +42,24 @@ For application development, MCP exposes diagram tools to agents, AG-UI provides
 </p>
 
 <p align="center"><sub>A diagram preview with links to the rendered image and editable playground (mermaid.live).</sub></p>
+
+### It works as an MCP App
+
+In clients that support [MCP Apps](https://modelcontextprotocol.io/), a diagram opens in an interactive
+viewer **inside the chat**: pan and zoom, view and edit the source, switch theme and format and
+re-render, step through a batch, and download SVG, PNG, HTML or PDF. In the recording below, one
+`generate_uml_batch` call returns four C4 and class diagrams as tabs, then re-renders one with a
+different format.
+
+<p align="center">
+  <a href="docs/assets/mcp-app-demo.mp4"><img src="docs/assets/mcp-app-demo.png" width="420" alt="The UML-MCP viewer open inside a chat: four diagram tabs, theme and format pickers, a Re-render button and a Download button. Click to play the 14-second recording." /></a>
+</p>
+
+<p align="center"><sub>Example recording (14 s, click to play): <a href="docs/assets/mcp-app-demo.mp4">docs/assets/mcp-app-demo.mp4</a>. The viewer is served as <code>ui://uml-mcp/diagram-viewer</code>.</sub></p>
+
+Clients **without** MCP Apps still get the diagram: `generate_uml_image` returns an inline PNG,
+`generate_uml` returns SVG, and the result carries image and playground links. Nothing in this
+README needs MCP Apps to work.
 
 ## Quick start
 
@@ -137,7 +157,7 @@ See [Skills over MCP](docs/reference/resources.md#diagram-skill-over-mcp).
 | Quality | `uml-mcp lint --strict --min-grade A`: mcpx-style grade, token budget, MXCP-style config checks ([rules](docs/developers/linting.md)) |
 | Admin console | Setup form, schema-driven settings (save, reset, live apply), activity, live logs, charts, Kroki playground and Docker stack, Stop; local token or `MCP.Admin` ([tour](docs/admin/index.md)) |
 | Local Kroki | `uml-mcp kroki up --use`: Kroki + mermaid, blockdiag, bpmn, excalidraw in Docker on `127.0.0.1` ([guide](docs/admin/install.md#4-run-kroki-with-every-companion-docker)) |
-| Plugins | Extra MCP tools and diagram renderers from Python packages, allow-listed in `plugins.enabled` ([guide](docs/plugins/index.md) · [author](docs/plugins/authoring.md)). Includes interactive D3 force, cloud architecture and topology diagrams ([D3 plugin](docs/plugins/d3.md)) |
+| Plugins | Extra MCP tools and diagram renderers from Python packages, allow-listed in `plugins.enabled` ([guide](docs/plugins/index.md) · [author](docs/plugins/authoring.md)). Four are included: D3, stack-diagram, archify and the LLM visualizer ([see below](#interactive-and-custom-diagrams-plugins)) |
 | Tracing | Optional OpenTelemetry spans per request and MCP call (`uml-mcp[otel]`) |
 | Frontend | Canonical AG-UI SSE for agent UIs; OpenUI can consume AG-UI and render generated components in your app |
 
@@ -288,6 +308,66 @@ Enterprise SSO is optional and disabled by default (`MCP_AUTH_MODE=none`). The p
 
 </details>
 
+## Interactive and custom diagrams (plugins)
+
+Plugins add **interactive** diagram types that Kroki cannot draw, and they are how you add
+**custom** ones. Each type renders to a standalone **HTML** page, which the MCP App viewer
+shows inside the chat, with pan, zoom, a light/dark toggle and, for archify, focus, shortest
+path and live edges. The same type also renders to a static **SVG** (previewed as PNG), so it
+works in clients without MCP Apps. Plugins load only when listed in `plugins.enabled`.
+Install one next to uml-mcp, enable it and restart:
+
+```bash
+uv pip install -e examples/plugins/uml-mcp-plugin-stack-diagram
+uml-mcp plugins enable stack-diagram
+```
+
+| Plugin | Enable | Diagram types | Look |
+| --- | --- | --- | --- |
+| [`d3`](docs/plugins/d3.md) | `d3` | `d3_force` · `d3_architecture` · `d3_topology` | D3 force graphs and cloud boxes with provider icons; adds `d3_catalog` |
+| [`stack-diagram`](docs/plugins/stack-diagram.md) | `stack-diagram` | `stack_diagram` | Icon tiles on engineered paper, nested vendor / region groups, labelled right-angled edges |
+| [`archify`](docs/plugins/archify.md) | `archify` | `archify_architecture` · `archify_workflow` | Dashed colour-coded containers (security, frontend, backend, bus, workers, database, cloud) and icon cards |
+| [`llm-visualizer`](docs/plugins/llm-visualizer.md) | `llm-visualizer` | `llm_2d` · `llm_3d` | Layer maps and a rotatable 3D scene; autoencoder shapes, grouped `N×` blocks |
+
+`stack-diagram` and `archify` share one auto-layout engine, so every diagram supports:
+
+| Option | Values | Notes |
+| --- | --- | --- |
+| `direction` | `LR` · `RL` · `TB` · `BT` | Left to right, right to left, top down, bottom up. `LR` by default; `archify_workflow` starts top down |
+| `theme` | `dark` · `light` · `auto` | `auto` follows the system in HTML and is dark in static output. The viewer's theme picker sets it for every plugin |
+| `groups` | nested, `parent` | A group box always encloses exactly its members; nodes are packed so a pipeline stays on one line |
+| `icon` | glyph name or image data URI | 25 built-in line glyphs; no brand logos are bundled (they are trademarks), so pass your own as a data URI |
+
+```json
+{
+  "title": "SaaS stack", "direction": "LR", "theme": "dark",
+  "groups": [{"id": "vercel", "name": "Vercel"}],
+  "nodes": [
+    {"id": "user", "name": "User", "role": "browser", "icon": "user"},
+    {"id": "web", "name": "Next.js", "role": "frontend", "icon": "browser", "group": "vercel"},
+    {"id": "db", "name": "Neon", "role": "postgres", "icon": "database"}
+  ],
+  "edges": [{"from": "user", "to": "web", "label": "HTTPS"}, {"from": "web", "to": "db", "label": "SQL"}]
+}
+```
+
+**Try these prompts** once a plugin is enabled (`list_diagram_types` shows its types):
+
+| Ask | Type used |
+| --- | --- |
+| *"Draw my stack: Next.js and Hono on Vercel, Neon Postgres, Clerk for auth, Stripe for payments. Left to right, light theme."* | `stack_diagram` |
+| *"Show our platform as an archify architecture with security, backend and database groups, blueprint preset."* | `archify_architecture` |
+| *"Sequence diagram of a cache-miss request through web, API, auth, Redis and Postgres."* | `archify_sequence` |
+| *"Draw an autoencoder top-down, then the same model as a 3D scene."* | `llm_2d` · `llm_3d` |
+| *"A transformer with encoder and decoder blocks repeated 6 times."* | `llm_2d` with groups |
+
+**Write your own:** a plugin is a small Python package with a `uml_mcp.renderers` entry point,
+a JSON source format, `html` and `svg` outputs and an example per type. The four plugins above
+are working references (the two newest share one auto-layout engine). See the
+[plugin author guide](docs/plugins/authoring.md); a custom type then appears in
+`list_diagram_types`, `uml://examples`, the MCP App viewer's theme picker and batch tools with
+no further wiring.
+
 ## Community
 
 > If this survives a real production repo, it beats a lot of polished launch demos.
@@ -302,6 +382,7 @@ Daily and monthly activity (stars, forks, merged PRs, issues): [trendshift.io/re
 | --- | --- |
 | Docs | [Site](https://antoinebou12.github.io/uml-mcp/) · [Cursor](docs/integrations/cursor.md) · [Claude Code](docs/integrations/claude_code.md) · [Frontend](docs/integrations/frontend.md) · [Enterprise SSO](docs/enterprise/README.md) · [OpenUI](docs/integrations/openui.md) |
 | Contribute | [CONTRIBUTING.md](CONTRIBUTING.md) · [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) · [SECURITY.md](SECURITY.md) |
+| Releases | [CHANGELOG.md](CHANGELOG.md) · [GitHub releases](https://github.com/antoinebou12/uml-mcp/releases) |
 | License | [MIT](LICENSE) |
 
 Maintained by [Antoine Boucher](https://github.com/antoinebou12). Built on [PlantUML](https://plantuml.com/), [Kroki](https://kroki.io/), [Mermaid](https://mermaid.js.org/), and [D2](https://d2lang.com/).

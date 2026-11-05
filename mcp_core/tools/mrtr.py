@@ -192,7 +192,7 @@ def resolve_theme(
     raw = str(theme).strip()
     lower = raw.lower()
     cfg = MCP_SETTINGS.diagram_types.get(diagram_type)
-    if cfg and cfg.backend == "plugin:d3" and lower in {"light", "dark", "auto"}:
+    if cfg and cfg.backend.startswith("plugin:") and lower in {"light", "dark", "auto"}:
         return lower
 
     answered = elicit_content(PICK_THEME_KEY)
