@@ -63,6 +63,22 @@ Clients **without** MCP Apps still get the diagram: `generate_uml_image` returns
 `generate_uml` returns SVG, and the result carries image and playground links. Nothing in this
 README needs MCP Apps to work.
 
+### Publishing readiness
+
+The production server (`https://uml-mcp.antoineboucher.info/mcp`) was checked with the
+[Manufact](https://manufact.com) publishing checklist on October 30, 2026: **95/100**, 30 checks
+passed and 1 warning, ready for ChatGPT and Claude.
+
+| Area | Result | What was checked |
+| --- | --- | --- |
+| Protocol | 4/4 | MCP negotiation (v1 and v2), `tools/list` (7 tools), `resources/list` (10 resources), tools capability |
+| Tools | 12/12 | Descriptions and titles, name length and characters, OpenAI behaviour hints, input and output schemas, readable tool-linked `ui://` resource, invocation metadata |
+| MCP Apps | 6/7 | `ui://uml-mcp/diagram-viewer` is readable as `text/html;profile=mcp-app`, declares one HTTPS domain, CSP covers every external origin, no nested iframes. The warning asked for a view description in `_meta`; the resource now also sends `_meta["openai/widgetDescription"]`, to be confirmed on the next run |
+| Client compatibility | 8/8 | Skills over MCP, Claude Code 2 KB fields, Claude 64-character names and behaviour hints, Cursor name budget, ChatGPT unique names, file parameter schemas |
+| Policy review | partial | The platform's review agent did not finish; it is a platform step, not a server setting |
+
+Details and the deployment notes are in [MCP Apps compatibility](docs/integrations/manufact-compatibility.md).
+
 ## Quick start
 
 ### Connect to the hosted server
@@ -316,13 +332,20 @@ Plugins add **interactive** diagram types that Kroki cannot draw, and they are h
 **custom** ones. Each type renders to a standalone **HTML** page, which the MCP App viewer
 shows inside the chat, with pan, zoom, a light/dark toggle and, for archify, focus, shortest
 path and live edges. The same type also renders to a static **SVG** (previewed as PNG), so it
-works in clients without MCP Apps. Plugins load only when listed in `plugins.enabled`.
-Install one next to uml-mcp, enable it and restart:
+works in clients without MCP Apps. All four ship inside the `uml-mcp` package and load only
+when listed in `plugins.enabled`. The hosted servers enable them already; on your own server,
+enable them and restart:
 
 ```bash
-uv pip install -e examples/plugins/uml-mcp-plugin-stack-diagram
+uml-mcp plugins enable d3
 uml-mcp plugins enable stack-diagram
+uml-mcp plugins enable archify
+uml-mcp plugins enable llm-visualizer
 ```
+
+`uml-mcp plugins list` shows what is installed and enabled. D3 nodes that name a known service
+draw its real logo (AWS, Google Cloud, Azure, GitHub, Vercel, Cloudflare, OpenAI, Claude, Gemini,
+Mistral, Hugging Face, LangChain and more) in a tile on the card.
 
 | Plugin | Enable | Diagram types | Look |
 | --- | --- | --- | --- |

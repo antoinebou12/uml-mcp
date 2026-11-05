@@ -10,7 +10,14 @@ def test_poetry_packages_surface() -> None:
     data = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
     packages = data["tool"]["poetry"]["packages"]
     includes = {p["include"] for p in packages}
-    assert includes == {"mcp_core", "tools", "uml_mcp_plugin_d3"}
+    assert includes == {
+        "mcp_core",
+        "tools",
+        "uml_mcp_plugin_d3",
+        "uml_mcp_plugin_stack_diagram",
+        "uml_mcp_plugin_archify",
+        "uml_mcp_plugin_llm_visualizer",
+    }
 
 
 def test_hosted_build_contexts_include_declared_runtime_packages() -> None:

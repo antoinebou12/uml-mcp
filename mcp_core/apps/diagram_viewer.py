@@ -1759,13 +1759,34 @@ def register_diagram_viewer(server: Any) -> list[str]:
     """Register ``ui://uml-mcp/diagram-viewer`` on a FastMCP server."""
     from fastmcp.apps import UI_MIME_TYPE
 
-    def read_viewer() -> str:
-        return diagram_viewer_html()
+    app_config = diagram_viewer_resource_app_config()
+
+    def read_viewer() -> Any:
+        """The page, with the view description on the read contents only.
+
+        ChatGPT (and the Manufact publishing check) read the description from
+        ``_meta["openai/widgetDescription"]`` on the contents. Keeping it off the
+        resource definition keeps it out of ``resources/list``, so it costs nothing at
+        connect time. Content-level ``_meta`` replaces FastMCP's own, so the MCP Apps
+        ``ui`` block (domain and CSP) is sent alongside it unchanged.
+        """
+        page = diagram_viewer_html()
+        try:
+            from fastmcp.resources import ResourceContent, ResourceResult
+        except ImportError:  # mock or older FastMCP
+            return page
+        meta = {
+            "ui": app_config.model_dump(by_alias=True, exclude_none=True),
+            "openai/widgetDescription": DIAGRAM_VIEWER_DESCRIPTION,
+        }
+        return ResourceResult(
+            [ResourceContent(page, mime_type=UI_MIME_TYPE, meta=meta)]
+        )
 
     resource_kwargs: dict[str, Any] = {
         "description": DIAGRAM_VIEWER_DESCRIPTION,
         "mime_type": UI_MIME_TYPE,
-        "app": diagram_viewer_resource_app_config(),
+        "app": app_config,
     }
     try:
         server.resource(DIAGRAM_VIEWER_URI, **resource_kwargs)(read_viewer)

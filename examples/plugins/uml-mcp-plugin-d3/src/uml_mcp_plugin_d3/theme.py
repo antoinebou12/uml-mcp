@@ -160,6 +160,7 @@ def diagram_css() -> str:
         ".d3d .t-legend-head{fill:var(--text);font-size:12px;font-weight:700}"
         ".d3d .t-count{fill:var(--dim);font-size:10px}"
         ".d3d .card{fill:var(--c-fill);stroke:var(--c-stroke);stroke-width:2}"
+        ".d3d .icon-tile{fill:#fff;stroke:var(--c-stroke);stroke-opacity:.45;stroke-width:1}"
         ".d3d .mask{fill:var(--mask)}"
         ".d3d .glyph{fill:none;stroke:var(--c-stroke);stroke-width:1.8;"
         "stroke-linecap:round;stroke-linejoin:round}"

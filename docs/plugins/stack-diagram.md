@@ -6,8 +6,7 @@ and region groups, and labelled right-angled edges on a grid. You describe nodes
 edges; the plugin lays them out, so there are no coordinates to write.
 
 ```bash
-uv pip install -e examples/plugins/uml-mcp-plugin-stack-diagram
-uml-mcp plugins enable stack-diagram
+uml-mcp plugins enable stack-diagram   # ships with uml-mcp; restart the server after
 ```
 
 It adds one diagram type, `stack_diagram`, rendered as `html` or `svg`. The [archify

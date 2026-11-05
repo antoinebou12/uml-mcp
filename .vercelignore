@@ -4,6 +4,9 @@ examples/*
 !examples/plugins/
 examples/plugins/*
 !examples/plugins/uml-mcp-plugin-d3/
+!examples/plugins/uml-mcp-plugin-stack-diagram/
+!examples/plugins/uml-mcp-plugin-archify/
+!examples/plugins/uml-mcp-plugin-llm-visualizer/
 docs/
 tests/
 .github/

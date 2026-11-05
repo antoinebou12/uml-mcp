@@ -29,6 +29,17 @@ Everything merged to `main` since 1.3.2, plus the plugin work described below.
   `html` and `svg` outputs, an example and template per type) so you can add your own diagram
   type; see [Plugin author guide](docs/plugins/authoring.md). A plugin capability manifest and a
   common graph interchange model describe what each type can do.
+- The d3, stack-diagram, archify and llm-visualizer plugins ship inside the `uml-mcp`
+  package (entry points, Docker and Vercel build contexts) and Vercel enables all four, so
+  `uml-mcp plugins enable <name>` is enough on any other server. Enabling them adds no
+  connect-time tokens.
+- D3 draws real brand logos in a white tile on each card for 25 more services (Azure, GitHub,
+  Copilot, Vercel, Cloudflare, Microsoft, Gemini, Mistral, DeepSeek, Meta and Llama, Ollama,
+  Hugging Face, Groq, Cohere, Perplexity, Bedrock, Vertex AI, LangChain, n8n, MCP, Cursor,
+  NVIDIA, Notion), from the MIT-licensed LobeHub icon set, plus a soft card shadow.
+- The `ui://uml-mcp/diagram-viewer` resource also sends `_meta["openai/widgetDescription"]`
+  on its read contents, which ChatGPT and the Manufact publishing checklist read as the view
+  description. It is kept off `resources/list`, so connect-time tokens do not change.
 - `architecture` renderer for positioned architecture tiles with vendor groups, as HTML or TSX.
 - Interactive MCP App viewer: fit and pan, editable source, batch results with a gallery, theme
   and format re-render, bounded exports, and a self-hosted ChatGPT app submission path.

@@ -7,8 +7,7 @@ JSON as the [stack-diagram plugin](stack-diagram.md) and shares its layout engin
 support `LR`, `RL`, `TB` and `BT` flows and `dark`, `light` and `auto` themes.
 
 ```bash
-uv pip install -e examples/plugins/uml-mcp-plugin-archify   # also installs stack-diagram
-uml-mcp plugins enable archify
+uml-mcp plugins enable archify   # ships with uml-mcp; restart the server after
 ```
 
 | Type | Starts as | For |

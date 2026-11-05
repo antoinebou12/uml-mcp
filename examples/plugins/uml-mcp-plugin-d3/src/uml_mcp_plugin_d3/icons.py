@@ -511,22 +511,43 @@ def resolve_service(
     return Resolved(provider, "service", _title(key) if key else "Service")
 
 
-BRANDS.update(
-    {
-        "openai": ("AI", "#10a37f"),
-        "chatgpt": ("AI", "#10a37f"),
-        "anthropic": ("An", "#d97757"),
-        "claude": ("Cl", "#d97757"),
-    }
-)
+#: Software with a bundled logo (``brand_icons.TECH_LOGOS``): kind, name, monogram, colour.
+#: The monogram and colour are the fallback and tint; the logo is what is drawn.
+_LOGO_SERVICES: dict[str, tuple[str, str, str, str]] = {
+    "openai": ("ai", "OpenAI", "AI", "#10a37f"),
+    "chatgpt": ("ai", "ChatGPT", "AI", "#10a37f"),
+    "anthropic": ("ai", "Anthropic", "An", "#d97757"),
+    "claude": ("ai", "Claude", "Cl", "#d97757"),
+    "copilot": ("ai", "GitHub Copilot", "Co", "#24292f"),
+    "vercel": ("cloud", "Vercel", "Ve", "#000000"),
+    "cloudflare": ("cdn", "Cloudflare", "Cf", "#f38020"),
+    "azure": ("cloud", "Microsoft Azure", "Az", "#0078d4"),
+    "microsoft": ("cloud", "Microsoft", "Ms", "#00a4ef"),
+    "gemini": ("ai", "Gemini", "Ge", "#4285f4"),
+    "mistral": ("ai", "Mistral AI", "Mi", "#fa520f"),
+    "ollama": ("ai", "Ollama", "Ol", "#000000"),
+    "huggingface": ("ai", "Hugging Face", "Hf", "#ffd21e"),
+    "langchain": ("workflow", "LangChain", "Lc", "#1c3c3c"),
+    "meta": ("ai", "Meta", "Me", "#0866ff"),
+    "llama": ("ai", "Llama", "Ll", "#0866ff"),
+    "nvidia": ("compute", "NVIDIA", "Nv", "#76b900"),
+    "deepseek": ("ai", "DeepSeek", "Ds", "#4d6bfe"),
+    "cursor": ("ai", "Cursor", "Cu", "#000000"),
+    "mcp": ("api", "Model Context Protocol", "Mc", "#000000"),
+    "bedrock": ("ai", "Amazon Bedrock", "Br", "#01a88d"),
+    "vertexai": ("ai", "Vertex AI", "Vx", "#4285f4"),
+    "perplexity": ("ai", "Perplexity", "Px", "#22b8cd"),
+    "cohere": ("ai", "Cohere", "Ch", "#39594d"),
+    "groq": ("ai", "Groq", "Gq", "#f55036"),
+    "n8n": ("workflow", "n8n", "n8", "#ea4b71"),
+    "notion": ("document", "Notion", "No", "#000000"),
+}
 
+BRANDS.update(
+    {key: (mono, color) for key, (_, _, mono, color) in _LOGO_SERVICES.items()}
+)
 SERVICES.update(
-    {
-        "tech:openai": ("ai", "OpenAI"),
-        "tech:chatgpt": ("ai", "ChatGPT"),
-        "tech:anthropic": ("ai", "Anthropic"),
-        "tech:claude": ("ai", "Claude"),
-    }
+    {f"tech:{key}": (kind, name) for key, (kind, name, _, _) in _LOGO_SERVICES.items()}
 )
 
 

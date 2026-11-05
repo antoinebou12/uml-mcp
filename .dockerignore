@@ -13,11 +13,14 @@ site
 output
 logs
 docs
-# D3 is a runtime package declared in pyproject.toml. Keep its sources/assets.
+# The bundled plugins are runtime packages declared in pyproject.toml. Keep their sources/assets.
 examples/*
 !examples/plugins/
 examples/plugins/*
 !examples/plugins/uml-mcp-plugin-d3/
+!examples/plugins/uml-mcp-plugin-stack-diagram/
+!examples/plugins/uml-mcp-plugin-archify/
+!examples/plugins/uml-mcp-plugin-llm-visualizer/
 tests
 deploy
 .env

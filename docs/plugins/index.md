@@ -60,7 +60,8 @@ renders to SVG and PNG for clients without them. Example recording of the viewer
 ## Plugins in this repository
 
 Both live under `examples/plugins` and are installed from a checkout with
-`uv pip install -e examples/plugins/<name>`.
+`uv pip install -e examples/plugins/<name>`. The d3, stack-diagram, archify and llm-visualizer
+plugins also ship inside the `uml-mcp` package, so `uml-mcp plugins enable <name>` is enough for them.
 
 | Plugin | Enable | Adds |
 | --- | --- | --- |

@@ -32,10 +32,13 @@ include `examples/plugins/uml-mcp-plugin-d3/src/uml_mcp_plugin_d3` and its asset
 
 ## Resource descriptions and policy review
 
-The resource has a standard MCP Apps description. The reported checker reads
-`_meta.ui.widgetDescription` or `_meta["openai/widgetDescription"]` instead of
-`resource.description`. That warning is a checker compatibility gap; unsupported
-v1 metadata is not added to silence it. A complete policy review remains a
+The resource has a standard MCP Apps description. It also carries
+`_meta["openai/widgetDescription"]`, the ChatGPT Apps SDK field that ChatGPT reads
+when it shows the view, on the read contents next to the unchanged `ui` block. It is
+kept off `resources/list` so it adds nothing to the connect-time surface. The read
+contents are where the publishing checker looks for a view description; `_meta.ui.widgetDescription`
+is not part of the MCP Apps specification and is not added. Re-run the checker on
+a deployment that includes this change to confirm the warning clears. A complete policy review remains a
 platform action. No SOC 2 or ISO 27001 certification is claimed for this project.
 
 The saved production review completed on October 30, 2026 with a score of 95/100,

@@ -1,2 +1,2 @@
 plugins:
-  enabled: [d3]
+  enabled: [d3, stack-diagram, archify, llm-visualizer]

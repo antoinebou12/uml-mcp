@@ -1,1 +1,3 @@
 Brand artwork from @lobehub/icons-static-svg 1.101.0 (MIT). Source: https://github.com/lobehub/lobe-icons. Brand names and logos remain trademarks of their respective owners. These icons identify diagram components and do not imply endorsement.
+
+Files: aws-color, googlecloud-color, azure-color, microsoft-color, claude-color, anthropic, openai, gemini-color, mistral-color, deepseek-color, meta-color, ollama, huggingface-color, groq, cohere-color, perplexity-color, bedrock-color, vertexai-color, langchain-color, n8n-color, mcp, github, githubcopilot, cursor, vercel, cloudflare-color, nvidia-color, notion. Each SVG is checked on import (no scripts, event handlers or external references) and drawn without network access.

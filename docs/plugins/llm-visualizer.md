@@ -11,8 +11,7 @@ The HTML viewer has a 2D/3D switch, so either type can show both views. It runs 
 with no CDN or network access, in the sandboxed plugin frame, under a hash-based CSP.
 
 ```bash
-uv pip install -e examples/plugins/uml-mcp-plugin-llm-visualizer
-uml-mcp plugins enable llm-visualizer
+uml-mcp plugins enable llm-visualizer   # ships with uml-mcp; restart the server after
 ```
 
 ## Source format

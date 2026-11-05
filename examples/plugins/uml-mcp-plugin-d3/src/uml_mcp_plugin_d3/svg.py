@@ -60,7 +60,11 @@ def defs_svg() -> str:
     return (
         f"<defs>{heads}"
         '<pattern id="dots" width="20" height="20" patternUnits="userSpaceOnUse">'
-        '<circle cx="2" cy="2" r="1" class="dot"/></pattern></defs>'
+        '<circle cx="2" cy="2" r="1" class="dot"/></pattern>'
+        # A soft shadow under cards; static renderers that skip filters just draw flat.
+        '<filter id="lift" x="-10%" y="-10%" width="120%" height="140%">'
+        '<feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="#0f172a" '
+        'flood-opacity=".14"/></filter></defs>'
     )
 
 
@@ -116,7 +120,7 @@ def root_open(
 
 def _glyph(kind: str) -> str:
     fragment = KINDS.get(kind, KINDS["service"])
-    return f'<g class="glyph" transform="translate(10 8) scale(0.667)">{fragment}</g>'
+    return f'<g class="glyph" transform="translate(12 8) scale(0.667)">{fragment}</g>'
 
 
 def _icon(b: Box) -> str:
@@ -124,7 +128,7 @@ def _icon(b: Box) -> str:
 
     if b.logo:
         return (
-            f'<image class="logo" href="{_a(b.logo)}" x="10" y="8" width="20" height="20" '
+            f'<image class="logo" href="{_a(b.logo)}" x="10" y="6" width="20" height="20" '
             'preserveAspectRatio="xMidYMid meet"/>'
         )
     brand = brand_svg(b.provider, b.sub or b.label)
@@ -132,8 +136,8 @@ def _icon(b: Box) -> str:
         return brand
     if b.mono and b.color:
         return (
-            f'<rect x="10" y="9" width="26" height="16" rx="4" fill="{_a(b.color)}"/>'
-            f'<text class="t-mono" x="23" y="20.5">{escape(b.mono)}</text>'
+            f'<rect x="10" y="8" width="26" height="16" rx="4" fill="{_a(b.color)}"/>'
+            f'<text class="t-mono" x="23" y="19.5">{escape(b.mono)}</text>'
         )
     return _glyph(b.kind)
 
@@ -155,9 +159,15 @@ def node_svg(b: Box) -> str:
             f'<g class="node cat-{b.category}" data-id="{_a(b.id)}" data-kind="{_a(b.kind)}" '
             f'data-note="{_a(b.note)}" transform="translate({_num(b.x)} {_num(b.y)})">'
         ),
-        f'<rect class="card" width="{b.w}" height="{b.h}" rx="8"/>',
-        _icon(b),
+        f'<rect class="card" width="{b.w}" height="{b.h}" rx="8" filter="url(#lift)"/>',
     ]
+    icon = _icon(b)
+    if "t-mono" not in icon:
+        # A small tile behind the mark keeps logos and glyphs legible on any card or theme.
+        out.append(
+            '<rect class="icon-tile" x="8" y="4" width="24" height="24" rx="6"/>'
+        )
+    out.append(icon)
     badge = BADGES.get(b.provider)
     if badge:
         out.append(
