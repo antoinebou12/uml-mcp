@@ -9,6 +9,11 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
 ### Added
 
+- LLM visualizer: encoders and decoders are funnels in 3D too, narrowing and widening along the
+  flow in the interactive scene and in a new static oblique SVG with one label row. Sources may use
+  `name`/`type` for `label`/`kind`, a missing kind is inferred from the layer's id and label, and a
+  source with encoder, decoder, latent or vector layers gets the flow layout by default. The
+  `llm_2d`/`llm_3d` skills and guide gained a recipes table (autoencoder, VAE, GAN, transformers).
 - Optional MCP background tasks for `generate_uml`, `generate_uml_image` and
   `generate_uml_batch` (`uml-mcp[tasks]`, `tasks.enabled`, off by default). Supported clients get
   a task handle to poll; others still get foreground results. `uml-mcp lint` rejects tasks on

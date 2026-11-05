@@ -1,7 +1,7 @@
 ---
 name: llm_3d
 description: >-
-  Writes valid llm_3d JSON for uml-mcp (diagram_type=llm_3d, bundled plugin llm-visualizer). Use when the user asks for the same model as a rotatable 3D scene of glass layer panels; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).
+  Writes valid llm_3d JSON for uml-mcp (diagram_type=llm_3d, bundled plugin llm-visualizer). Use when the user asks for the same model as a rotatable 3D scene: layer panels, with encoder and decoder funnels; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).
 ---
 
 # llm_3d diagram (uml-mcp plugin `llm-visualizer`)
@@ -16,12 +16,13 @@ Load the workflow skill [uml-mcp-diagrams](../uml-mcp-diagrams/SKILL.md) and the
 
 ## Example prompt
 
-> Show the transformer as a 3D scene I can rotate.
+> Show the VAE as a 3D scene I can rotate, encoder narrowing to the latent and decoder widening back.
 
 ## Notation tips
 
 - Same JSON as `llm_2d`; the page switches between 2D and 3D.
-- `repeat` stacks panels; groups become tinted slabs on the floor.
+- `encoder` and `decoder` layers become frustums that narrow and widen along the flow; other kinds are glass panels, `repeat` stacks them and groups become tinted slabs on the floor.
+- The static SVG/PNG is an oblique view with every label on one row under the solids.
 
 ## Styling
 

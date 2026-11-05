@@ -60,6 +60,68 @@ KIND_COLORS = {
     "generic": "#94a3b8",
 }
 
+#: Words agents often send as ``type`` instead of a ``kind``. ``None`` means "infer the
+#: kind from the layer's id and label" (``block`` and ``layer`` say nothing on their own).
+TYPE_ALIASES: dict[str, str | None] = {
+    "block": None,
+    "layer": None,
+    "module": None,
+    "tensor": "vector",
+    "latent": "bottleneck",
+    "code": "bottleneck",
+    "sampler": "decision",
+    "sample": "decision",
+    "classifier": "decision",
+    "discriminator": "decision",
+    "generator": "decoder",
+    "mlp": "feedforward",
+    "ffn": "feedforward",
+    "dense": "feedforward",
+    "linear": "feedforward",
+    "norm": "normalization",
+    "layernorm": "normalization",
+    "rmsnorm": "normalization",
+    "attn": "attention",
+    "self-attention": "attention",
+    "embed": "embedding",
+    "moe": "router",
+    "gate": "router",
+}
+
+#: Keywords in a layer's id or label, checked in order, when no kind is given.
+_INFER = (
+    ("encoder", "encoder"),
+    ("decoder", "decoder"),
+    ("generator", "decoder"),
+    ("discriminator", "decision"),
+    ("latent", "bottleneck"),
+    ("bottleneck", "bottleneck"),
+    ("reconstruction", "output"),
+    ("logits", "output"),
+    ("output", "output"),
+    ("input", "input"),
+    ("embed", "embedding"),
+    ("attention", "attention"),
+    ("norm", "normalization"),
+    ("feed-forward", "feedforward"),
+    ("feedforward", "feedforward"),
+    ("mlp", "feedforward"),
+    ("router", "router"),
+    ("expert", "expert"),
+    ("memory", "memory"),
+)
+
+#: Kinds whose presence switches a source without ``layout`` to the flow layout, where
+#: encoders and decoders are drawn as trapezoids.
+FLOW_KINDS = ("encoder", "decoder", "bottleneck", "vector")
+
+
+def infer_kind(layer_id: str, label: str) -> str:
+    """The kind a layer's id and label suggest, or ``generic``."""
+    text = f"{layer_id} {label}".lower()
+    return next((kind for word, kind in _INFER if word in text), "generic")
+
+
 _ID = re.compile(r"^[A-Za-z0-9_.-]{1,48}$")
 _COLOR = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
@@ -191,8 +253,8 @@ def parse(source: str, *, max_layers: int = MAX_LAYERS) -> LLMSpec:
         raise SpecError("theme must be 'light', 'dark' or 'auto'")
     if theme == "auto":  # static output is dark; the viewer has its own toggle
         theme = "dark"
-    layout = _text(root.get("layout"), "layout", 4, default="grid")
-    if layout not in LAYOUTS:
+    layout = _text(root.get("layout"), "layout", 4)
+    if layout and layout not in LAYOUTS:
         raise SpecError("layout must be 'grid' or 'flow'")
     direction = _text(root.get("direction"), "direction", 2, default="LR")
     if direction not in {"LR", "TB"}:
@@ -253,14 +315,23 @@ def parse(source: str, *, max_layers: int = MAX_LAYERS) -> LLMSpec:
             raise SpecError(f"duplicate layer id: {layer_id}")
         ids.add(layer_id)
 
+        # ``name`` and ``type`` are accepted as aliases: agents reach for them often.
         label = _text(
-            obj.get("label"), f"layers[{index}].label", MAX_LABEL, default=layer_id
+            obj.get("label", obj.get("name")),
+            f"layers[{index}].label",
+            MAX_LABEL,
+            default=layer_id,
         )
-        kind = _text(obj.get("kind"), f"layers[{index}].kind", 20, default="generic")
-        if kind not in LAYER_KINDS:
-            raise SpecError(
-                f"layers[{index}].kind must be one of: {', '.join(LAYER_KINDS)}"
-            )
+        if "kind" in obj:
+            kind = _text(obj.get("kind"), f"layers[{index}].kind", 20)
+            if kind not in LAYER_KINDS:
+                raise SpecError(
+                    f"layers[{index}].kind must be one of: {', '.join(LAYER_KINDS)}"
+                )
+        else:
+            alias = _text(obj.get("type"), f"layers[{index}].type", 20).lower()
+            mapped = alias if alias in LAYER_KINDS else TYPE_ALIASES.get(alias)
+            kind = mapped or infer_kind(layer_id, label)
 
         raw_shape = obj.get("shape", [])
         if not isinstance(raw_shape, list) or len(raw_shape) > 4:
@@ -326,6 +397,10 @@ def parse(source: str, *, max_layers: int = MAX_LAYERS) -> LLMSpec:
         if style not in {"solid", "dashed"}:
             raise SpecError(f"connections[{index}].style must be 'solid' or 'dashed'")
         connections.append(Connection(source_id, target_id, label, style))
+
+    if not layout:
+        # Encoder/decoder style models read best as a left-to-right flow of shapes.
+        layout = "flow" if any(layer.kind in FLOW_KINDS for layer in layers) else "grid"
 
     return LLMSpec(
         title,

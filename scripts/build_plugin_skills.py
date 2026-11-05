@@ -132,21 +132,29 @@ TYPES: dict[str, tuple[str, str, str, str, str]] = {
         "llm-visualizer",
         "llm-visualizer",
         "a neural network or LLM architecture as a 2D map, or an autoencoder, VAE or GAN",
-        "Draw a transformer with encoder and decoder blocks repeated 6 times, top to bottom.",
+        "Draw a VAE: input image, encoder, 2D latent z, decoder, reconstruction.",
         (
-            "- `layers` (`id`, `label`, `kind`, `shape`, `repeat`, `group`) and `connections` (`from`, `to`, `label`, `style`).\n"
-            '- `layout: "flow"` draws shaped kinds: `encoder`/`decoder` trapezoids, `bottleneck`, `vector`, `decision`, `token`.\n'
-            "- `groups` (`id`, `label`, `repeat`) draw `N×` containers; `direction`: `LR` or `TB`."
+            "- Each layer: `id`, `label`, `kind`, optional `shape` (e.g. `[784]`), `repeat`, `note`, `group`. "
+            "`connections`: `from`, `to`, `label`, `style` (`solid`, `dashed`); omit them for a straight chain.\n"
+            "- Set `kind` on every layer. Encoders are `encoder` (a trapezoid that narrows), decoders `decoder` "
+            "(one that widens), a latent code `vector` (a bar) or `bottleneck` (a square), a sampler or "
+            "classifier `decision` (a circle).\n"
+            "- With an encoder, decoder, vector or bottleneck the layout switches to `flow` (shapes left to "
+            'right); set `layout: "grid"` for cards, `direction: "TB"` for top down.\n'
+            '- Give `shape` so each layer shows its size; label the encoder-to-latent edge (`"μ, σ → sample z"`).\n'
+            "- `groups` (`id`, `label`, `repeat`) draw `N×` containers around repeated blocks."
         ),
     ),
     "llm_3d": (
         "llm-visualizer",
         "llm-visualizer",
-        "the same model as a rotatable 3D scene of glass layer panels",
-        "Show the transformer as a 3D scene I can rotate.",
+        "the same model as a rotatable 3D scene: layer panels, with encoder and decoder funnels",
+        "Show the VAE as a 3D scene I can rotate, encoder narrowing to the latent and decoder widening back.",
         (
             "- Same JSON as `llm_2d`; the page switches between 2D and 3D.\n"
-            "- `repeat` stacks panels; groups become tinted slabs on the floor."
+            "- `encoder` and `decoder` layers become frustums that narrow and widen along the flow; other "
+            "kinds are glass panels, `repeat` stacks them and groups become tinted slabs on the floor.\n"
+            "- The static SVG/PNG is an oblique view with every label on one row under the solids."
         ),
     ),
 }
@@ -176,6 +184,37 @@ GUIDES: dict[str, tuple[str, str, str]] = {
             "Layer maps, autoencoder and GAN shapes, grouped N× blocks, and a rotatable 3D scene from "
             "one JSON source."
         ),
+    ),
+}
+
+
+#: Extra guide sections, appended before the example.
+GUIDE_EXTRAS: dict[str, str] = {
+    "llm-visualizer": (
+        "## Recipes\n\n"
+        "| Model | Layers (`kind`) |\n"
+        "| --- | --- |\n"
+        "| Autoencoder | `input` → `encoder` → `bottleneck` → `decoder` → `output` |\n"
+        "| VAE | `input` → `encoder` → `vector` (latent z, edge label `μ, σ → sample z`) → `decoder` → `output` |\n"
+        "| GAN | `token` (noise) → `decoder` (generator) → `vector` (fake sample) → `decision` (discriminator); "
+        "a `dashed` edge for real data |\n"
+        "| Decoder-only LLM | `input` → `embedding` → `attention` and `feedforward` (`repeat: 32`) → "
+        "`normalization` → `output`; a `dashed` residual edge |\n"
+        "| Encoder-decoder transformer | two `groups` with `repeat: 6`: `encoder` and `decoder` layers inside, "
+        "a cross-attention edge between them |\n\n"
+        "Use `label` and `kind`. The parser also accepts `name` and `type` and infers a missing kind from "
+        "the id and label (`encoder`, `decoder`, `latent`, `input`, `output`...), but explicit kinds give "
+        "the shapes you expect.\n\n"
+        "```json\n"
+        '{"title":"VAE","layers":['
+        '{"id":"x","label":"Input x","kind":"input","shape":[784]},'
+        '{"id":"enc","label":"Encoder qφ(z|x)","kind":"encoder","shape":[784,256]},'
+        '{"id":"z","label":"Latent z","kind":"vector","shape":[2]},'
+        '{"id":"dec","label":"Decoder pθ(x|z)","kind":"decoder","shape":[256,784]},'
+        '{"id":"xr","label":"Reconstruction x̂","kind":"output","shape":[784]}],'
+        '"connections":[{"from":"x","to":"enc"},{"from":"enc","to":"z","label":"μ, σ → sample z"},'
+        '{"from":"z","to":"dec"},{"from":"dec","to":"xr"}]}\n'
+        "```\n\n"
     ),
 }
 
@@ -249,6 +288,7 @@ def guide(topic: str, specs: dict[str, Any]) -> str:
         '`output_format: "html"` for the interactive page in the MCP App viewer. Clients without '
         "MCP Apps still get the PNG and SVG.\n"
         "5. Pass `theme` (`auto`, `dark`, `light`) rather than editing colours.\n\n"
+        f"{GUIDE_EXTRAS.get(topic, '')}"
         "## Example\n\n"
         "```json\n"
         f"{_compact(specs[first].example)}\n"

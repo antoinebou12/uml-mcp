@@ -8,11 +8,15 @@ from .model import Group, Layer, LLMSpec
 
 
 def _shape(layer: Layer) -> str:
-    return (
-        " × ".join(str(part) for part in layer.shape)
-        if layer.shape
-        else "shape not set"
-    )
+    return " × ".join(str(part) for part in layer.shape)
+
+
+def _sub(layer: Layer) -> str:
+    """Shape and repeat on one line, or nothing when neither is set."""
+    parts = [_shape(layer)] if layer.shape else []
+    if layer.repeat > 1:
+        parts.append(f"×{layer.repeat}")
+    return " · ".join(parts)
 
 
 def _theme(spec: LLMSpec) -> dict[str, str]:
@@ -93,6 +97,17 @@ _PER, _CW, _CH, _GX, _GY = 6, 236, 108, 280, 128
 Box = tuple[float, float, float, float]  # x, y, width, height
 
 
+def _gap_after(spec: LLMSpec, i: int) -> float:
+    """Room after layer ``i`` for the label of the edge to its neighbour."""
+    if i + 1 >= len(spec.layers):
+        return _FLOW_GAP
+    pair = {spec.layers[i].id, spec.layers[i + 1].id}
+    labels = [
+        c.label for c in spec.connections if c.label and {c.source, c.target} == pair
+    ]
+    return max([_FLOW_GAP, *(len(text) * 6.6 + 34 for text in labels)])
+
+
 def _apex(span: int) -> int:
     return 34 + 22 * span
 
@@ -119,7 +134,7 @@ def _place(
             base = _KIND_DIMS.get(layer.kind)
             w, h = (base if horiz else base[::-1]) if base else (190, 108)
             pos[layer.id] = [m if horiz else -w / 2, -h / 2 if horiz else m, w, h, i]
-            m += (w if horiz else h) + _FLOW_GAP
+            m += (w if horiz else h) + (_gap_after(spec, i) if horiz else _FLOW_GAP)
     else:
         for i, layer in enumerate(spec.layers):
             pos[layer.id] = [(i // _PER) * _GX, (i % _PER) * _GY, _CW, _CH, i]
@@ -200,7 +215,7 @@ def _flow_shape(
     else:
         shape = f'<rect x="{x}" y="{y}" width="{w}" height="{h}" {style}/>'
 
-    sub = _shape(layer) + (f" · ×{layer.repeat}" if layer.repeat > 1 else "")
+    sub = _sub(layer)
     label = escape(layer.label)
     cx = x + w / 2
     if kind in {"encoder", "decoder"}:
@@ -221,7 +236,6 @@ def _flow_shape(
 def _card(
     layer: Layer, x: float, y: float, w: float, h: float, colors: dict[str, str]
 ) -> str:
-    repeat = f" · ×{layer.repeat}" if layer.repeat > 1 else ""
     note = (
         f'<text class="meta" x="{x + 18}" y="{y + 94}">{escape(layer.note)}</text>'
         if layer.note
@@ -237,7 +251,7 @@ def _card(
         f"{escape(layer.kind.upper())}</text>"
         f'<text class="label" x="{x + 18}" y="{y + 57}">{escape(layer.label)}</text>'
         f'<text class="meta" x="{x + 18}" y="{y + 78}">'
-        f"{escape(_shape(layer) + repeat)}</text>{note}</g>"
+        f"{escape(_sub(layer))}</text>{note}</g>"
     )
 
 
@@ -333,78 +347,181 @@ def render_2d(spec: LLMSpec) -> str:
     )
 
 
+#: 3D solids per kind: (length along the flow, (half height, half depth) at the input
+#: end, (half height, half depth) at the output end). Encoders narrow and decoders widen,
+#: the funnel shape of autoencoder diagrams; other layers are thin activation slabs.
+_SOLIDS: dict[str, tuple[float, tuple[float, float], tuple[float, float]]] = {
+    "encoder": (150, (95, 70), (40, 28)),
+    "decoder": (150, (40, 28), (95, 70)),
+    "vector": (22, (60, 18), (60, 18)),
+    "bottleneck": (56, (30, 30), (30, 30)),
+    "decision": (60, (30, 30), (30, 30)),
+    "token": (80, (24, 40), (24, 40)),
+}
+_SLAB: tuple[float, tuple[float, float], tuple[float, float]] = (26, (95, 70), (95, 70))
+_DEPTH_X, _DEPTH_Y = 0.55, 0.32  # oblique projection: depth recedes up and to the right
+
+Solid = tuple[float, float, tuple[float, float], tuple[float, float]]
+
+
 def _project(x: float, y: float, z: float) -> tuple[float, float]:
-    return (x - z) * 0.82, y + (x + z) * 0.34
+    return x + z * _DEPTH_X, -y - z * _DEPTH_Y
 
 
-def _points(points: list[tuple[float, float, float]], ox: float, oy: float) -> str:
-    return " ".join(
-        f"{_project(x, y, z)[0] + ox:.1f},{_project(x, y, z)[1] + oy:.1f}"
-        for x, y, z in points
+def _poly(points: list[tuple[float, float, float]], ox: float, oy: float) -> str:
+    out = []
+    for point in points:
+        px, py = _project(*point)
+        out.append(f"{px + ox:.1f},{py + oy:.1f}")
+    return " ".join(out)
+
+
+def _text_width(text: str, size: float) -> float:
+    return len(text) * size * 0.56
+
+
+def _solid_svg(layer: Layer, solid: Solid, ox: float, oy: float) -> str:
+    x0, x1, (a0, p0), (a1, p1) = solid
+    left = [(x0, -a0, -p0), (x0, a0, -p0), (x0, a0, p0), (x0, -a0, p0)]
+    right = [(x1, -a1, -p1), (x1, a1, -p1), (x1, a1, p1), (x1, -a1, p1)]
+    front = [left[0], right[0], right[1], left[1]]
+    top_face = [left[1], right[1], right[2], left[2]]
+    ghosts = "".join(
+        f'<polygon points="{_poly(front, ox + 9 * k, oy - 9 * k)}" fill="none" '
+        f'stroke="{layer.color}" stroke-opacity="{0.5 - 0.12 * k:.2f}"/>'
+        for k in range(min(layer.repeat, 4) - 1, 0, -1)
+    )
+    face = f'stroke="{layer.color}" stroke-width="1.5"'
+    return (
+        f'<g id="layer-{escape(layer.id, quote=True)}" filter="url(#shadow)">{ghosts}'
+        f'<polygon points="{_poly(top_face, ox, oy)}" fill="{layer.color}" '
+        f'fill-opacity=".55" {face}/>'
+        f'<polygon points="{_poly(right, ox, oy)}" fill="{layer.color}" '
+        f'fill-opacity=".38" {face}/>'
+        f'<polygon points="{_poly(front, ox, oy)}" fill="{layer.color}" '
+        f'fill-opacity=".22" stroke="{layer.color}" stroke-width="2"/></g>'
     )
 
 
-def render_3d(spec: LLMSpec) -> str:
-    """Render a static isometric view of the interactive scene."""
-    colors = _theme(spec)
-    width = max(1080, 360 + len(spec.layers) * 155)
-    header, top = _header(spec, width)
-    height = 640
-    ox, oy = 155.0, top + 125.0
-    boxes: list[str] = []
-    centers: dict[str, tuple[float, float]] = {}
+#: Every label sits on one row under the tallest slab's front edge.
+_LABEL_ROW = _project(0, -95, -70)[1] + 30
 
-    for index, layer in enumerate(spec.layers):
-        x = index * 185.0
-        z = (index % 3 - 1) * 48.0
-        box_width, box_height, depth = 128.0, 105.0, 72.0
-        lift = min(56.0, (layer.repeat - 1) * 2.0)
-        y = 130.0 - lift
-        top_face = [
-            (x, y, z),
-            (x + box_width, y, z),
-            (x + box_width, y, z + depth),
-            (x, y, z + depth),
-        ]
-        front = [
-            (x, y, z),
-            (x + box_width, y, z),
-            (x + box_width, y + box_height, z),
-            (x, y + box_height, z),
-        ]
-        side = [
-            (x + box_width, y, z),
-            (x + box_width, y, z + depth),
-            (x + box_width, y + box_height, z + depth),
-            (x + box_width, y + box_height, z),
-        ]
-        cx, cy = _project(x + box_width / 2, y + box_height / 2, z)
-        centers[layer.id] = (cx + ox, cy + oy)
-        repeat = f"×{layer.repeat}" if layer.repeat > 1 else escape(_shape(layer))
-        boxes.append(
-            f'<g id="layer-{escape(layer.id, quote=True)}" filter="url(#shadow)">'
-            f'<polygon points="{_points(front, ox, oy)}" fill="{colors["panel"]}" '
-            f'stroke="{layer.color}" stroke-width="2"/>'
-            f'<polygon points="{_points(side, ox, oy)}" fill="{layer.color}" opacity=".52"/>'
-            f'<polygon points="{_points(top_face, ox, oy)}" fill="{layer.color}" opacity=".82"/>'
-            f'<text class="label" x="{cx + ox:.1f}" y="{cy + oy - 5:.1f}" text-anchor="middle">'
-            f"{escape(layer.label)}</text>"
-            f'<text class="meta" x="{cx + ox:.1f}" y="{cy + oy + 17:.1f}" text-anchor="middle">'
-            f"{repeat}</text></g>"
+
+def _labels_3d(layer: Layer, solid: Solid, ox: float, oy: float) -> str:
+    x0, x1, (a0, p0), (a1, p1) = solid
+    cx, base, depth = (x0 + x1) / 2, max(a0, a1), max(p0, p1)
+    kx, ky = _project(cx, base, depth)  # above the back edge of the top face
+    lx = _project(cx, -base, -depth)[0]
+    out = (
+        f'<text class="kind3d" x="{kx + ox:.1f}" y="{ky + oy - 10:.1f}" '
+        f'fill="{layer.color}">{escape(layer.kind.upper())}</text>'
+        f'<text class="label" x="{lx + ox:.1f}" y="{_LABEL_ROW + oy:.1f}" '
+        f'text-anchor="middle">{escape(layer.label)}</text>'
+    )
+    if _sub(layer):
+        out += (
+            f'<text class="meta" x="{lx + ox:.1f}" y="{_LABEL_ROW + oy + 18:.1f}" '
+            f'text-anchor="middle">{escape(_sub(layer))}</text>'
         )
+    return out
+
+
+def render_3d(spec: LLMSpec) -> str:
+    """Render a static oblique view: one solid per layer along a left-to-right flow.
+
+    Encoders are frustums that narrow along the flow and decoders frustums that widen,
+    so an autoencoder reads as the familiar funnel; other layers are activation slabs.
+    """
+    colors = _theme(spec)
+    solids: dict[str, Solid] = {}
+    cursor = 0.0
+    for layer in spec.layers:
+        length, near, far = _SOLIDS.get(layer.kind, _SLAB)
+        slot = max(
+            length + 80,
+            _text_width(layer.label, 15) + 28,
+            _text_width(_sub(layer), 12) + 28,
+        )
+        x0 = cursor + (slot - length) / 2
+        solids[layer.id] = (x0, x0 + length, near, far)
+        cursor += slot
+
+    index = {layer.id: i for i, layer in enumerate(spec.layers)}
+    longest = max(
+        (abs(index[c.target] - index[c.source]) for c in spec.connections), default=1
+    )
+    arch = 60 + 26 * longest if longest > 1 else 0
+    reach = 95 + 70 * _DEPTH_Y  # tallest solid plus its receding top
+    width = int(max(980, cursor + 70 * _DEPTH_X + 80))
+    header, top = _header(spec, width)
+    oy = top + 40 + arch + reach
+    height = int(oy + _LABEL_ROW + 40)
+    ox = (width - cursor - 70 * _DEPTH_X) / 2
+
+    floor: list[str] = []
+    for group in spec.groups:
+        members = [solids[layer.id] for layer in spec.layers if layer.group == group.id]
+        if not members:
+            continue
+        gx0 = min(m[0] for m in members) - 24
+        gx1 = max(m[1] for m in members) + 24
+        plate = [(gx0, -105, -80), (gx1, -105, -80), (gx1, -105, 80), (gx0, -105, 80)]
+        lx, ly = _project(gx0, -105, -80)
+        repeat = f" ×{group.repeat}" if group.repeat > 1 else ""
+        floor.append(
+            f'<polygon points="{_poly(plate, ox, oy)}" fill="{group.color}" '
+            f'fill-opacity=".12" stroke="{group.color}" stroke-dasharray="6 5"/>'
+            f'<text class="glabel" x="{lx + ox + 6:.1f}" y="{ly + oy + 18:.1f}" '
+            f'fill="{group.color}">{escape(group.label + repeat)}</text>'
+        )
+
+    bodies = [_solid_svg(layer, solids[layer.id], ox, oy) for layer in spec.layers]
+    labels = [_labels_3d(layer, solids[layer.id], ox, oy) for layer in spec.layers]
 
     edges: list[str] = []
     for edge in spec.connections:
-        sx, sy = centers[edge.source]
-        tx, ty = centers[edge.target]
+        sx0, sx1, (_, sp0), (_, sp1) = solids[edge.source]
+        tx0, tx1, (_, tp0), (_, tp1) = solids[edge.target]
         dash = ' stroke-dasharray="7 6"' if edge.style == "dashed" else ""
-        edges.append(
-            f'<path class="edge" d="M{sx:.1f},{sy:.1f} L{tx:.1f},{ty:.1f}"{dash}/>'
+        n = abs(index[edge.target] - index[edge.source])
+        if n > 1:
+            a = _project((sx0 + sx1) / 2, 95, 0)
+            c = _project((tx0 + tx1) / 2, 95, 0)
+            lift = 60 + 26 * n
+            ax, ay, cx, cy = a[0] + ox, a[1] + oy, c[0] + ox, c[1] + oy
+            path = (
+                f"M{ax:.1f},{ay:.1f} C{ax:.1f},{ay - lift:.1f} "
+                f"{cx:.1f},{cy - lift:.1f} {cx:.1f},{cy:.1f}"
+            )
+            mx, my = (ax + cx) / 2, min(ay, cy) - lift * 0.75 - 6
+        else:
+            # Along the front plane, from the source's front edge to the target's, so
+            # the arrow never starts or ends inside a solid.
+            forward = index[edge.target] > index[edge.source]
+            a = _project(sx1, 0, -sp1) if forward else _project(sx0, 0, -sp0)
+            c = _project(tx0, 0, -tp0) if forward else _project(tx1, 0, -tp1)
+            ax, ay, cx, cy = a[0] + ox, a[1] + oy, c[0] + ox, c[1] + oy
+            path = f"M{ax:.1f},{ay:.1f} L{cx:.1f},{cy:.1f}"
+            mx, my = (ax + cx) / 2, (ay + cy) / 2 - 10
+        label = (
+            f'<text class="edge-label" x="{mx:.1f}" y="{my:.1f}">{escape(edge.label)}</text>'
+            if edge.label
+            else ""
         )
+        edges.append(f'<path class="edge" d="{path}"{dash}/>{label}')
 
+    style = _style(colors).replace(
+        "</style>",
+        ".kind3d{font:700 10px system-ui,sans-serif;letter-spacing:1px;text-anchor:middle}"
+        f".edge-label{{paint-order:stroke;stroke:{colors['bg']};stroke-width:4px}}"
+        "</style>",
+    )
+    # Solids first, then edges and labels, so arrow heads and text stay readable.
     return (
         f'<svg xmlns="http://www.w3.org/2000/svg" width="{width}" height="{height}" '
-        f'viewBox="0 0 {width} {height}" role="img" aria-label="{escape(spec.title, quote=True)}">'
+        f'viewBox="0 0 {width} {height}" role="img" '
+        f'aria-label="{escape(spec.title, quote=True)}">'
         f'<rect width="100%" height="100%" fill="{colors["bg"]}"/>'
-        f"{_defs(colors)}{_style(colors)}{header}{''.join(edges)}{''.join(boxes)}</svg>"
+        f"{_defs(colors)}{style}{header}{''.join(floor)}{''.join(bodies)}"
+        f"{''.join(edges)}{''.join(labels)}</svg>"
     )

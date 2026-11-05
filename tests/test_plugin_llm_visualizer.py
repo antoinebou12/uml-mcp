@@ -240,3 +240,96 @@ def test_viewer_switches_modes_and_inspects(dtype, tmp_path):
         page.screenshot(path=str(tmp_path / f"{dtype}.png"))
         assert not errors
         browser.close()
+
+
+# The VAE an agent actually sent: ``name``/``type`` instead of ``label``/``kind``.
+VAE_AS_SENT = json.dumps(
+    {
+        "title": "VAE",
+        "layers": [
+            {"id": "input", "name": "Input x", "type": "input"},
+            {"id": "encoder", "name": "Encoder qφ(z|x)", "type": "block"},
+            {"id": "latent", "name": "Latent z", "type": "tensor"},
+            {"id": "decoder", "name": "Decoder pθ(x|z)", "type": "block"},
+            {"id": "output", "name": "Reconstruction x̂", "type": "output"},
+        ],
+        "connections": [
+            {"from": "input", "to": "encoder"},
+            {"from": "encoder", "to": "latent", "label": "μ, σ → sample z"},
+            {"from": "latent", "to": "decoder"},
+            {"from": "decoder", "to": "output"},
+        ],
+    },
+    ensure_ascii=False,
+)
+
+
+def test_name_and_type_aliases_and_inferred_kinds():
+    spec = parse(VAE_AS_SENT)
+    assert [layer.label for layer in spec.layers][1] == "Encoder qφ(z|x)"
+    assert [layer.kind for layer in spec.layers] == [
+        "input",
+        "encoder",
+        "vector",
+        "decoder",
+        "output",
+    ]
+    # encoder/decoder shapes switch an unspecified layout to the flow of shapes
+    assert spec.layout == "flow"
+
+
+def test_explicit_kind_and_layout_win_over_inference():
+    spec = parse(
+        json.dumps(
+            {
+                "layout": "grid",
+                "layers": [{"id": "encoder", "kind": "attention"}, {"id": "b"}],
+            }
+        )
+    )
+    assert spec.layers[0].kind == "attention"
+    assert spec.layout == "grid"
+    assert parse(src()).layout == "grid"  # nothing shaped: cards stay the default
+
+
+def test_vae_draws_trapezoids_in_2d_and_funnels_in_3d():
+    renderer = LLMVisualizerRenderer()
+    flat = renderer.render("llm_2d", VAE_AS_SENT, "svg").content.decode()
+    assert flat.count("<polygon") == 2  # encoder and decoder trapezoids
+    assert "shape not set" not in flat
+    solid = renderer.render("llm_3d", VAE_AS_SENT, "svg").content.decode()
+    root = ET.fromstring(solid)
+    ns = "{http://www.w3.org/2000/svg}"
+
+    def front(layer_id):  # the last polygon of a solid is its front face
+        group = root.find(f".//{ns}g[@id='layer-{layer_id}']")
+        assert group is not None
+        points = group.findall(f"{ns}polygon")[-1].get("points") or ""
+        pts = [tuple(map(float, p.split(","))) for p in points.split()]
+        left = [y for x, y in pts if x == min(px for px, _ in pts)]
+        right = [y for x, y in pts if x == max(px for px, _ in pts)]
+        return max(left) - min(left), max(right) - min(right)
+
+    enc_in, enc_out = front("encoder")
+    dec_in, dec_out = front("decoder")
+    assert enc_in > 2 * enc_out  # narrows along the flow
+    assert dec_out > 2 * dec_in  # widens back
+    assert "shape not set" not in solid
+
+
+def test_3d_page_draws_the_vae_funnel_without_errors():
+    page_html = (
+        LLMVisualizerRenderer().render("llm_3d", VAE_AS_SENT, "html").content.decode()
+    )
+    with playwright.sync_playwright() as pw:
+        browser = pw.chromium.launch()
+        page = browser.new_page(viewport={"width": 1200, "height": 800})
+        errors = []
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.set_content(page_html)
+        page.click("#layers button:nth-child(2)")
+        assert page.inner_text("#inspect-title") == "Encoder qφ(z|x)"
+        assert page.inner_text("#inspect-kind") == "encoder"
+        assert page.inner_text("#inspect-shape") == "not set"
+        assert not errors
+        browser.close()

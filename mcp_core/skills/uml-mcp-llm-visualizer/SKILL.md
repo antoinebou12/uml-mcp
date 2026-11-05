@@ -11,8 +11,8 @@ Follow `skill://uml-mcp-diagrams/SKILL.md`. Layer maps, autoencoder and GAN shap
 
 | Type | Use for | Example prompt |
 | --- | --- | --- |
-| `llm_2d` | a neural network or LLM architecture as a 2D map, or an autoencoder, VAE or GAN | Draw a transformer with encoder and decoder blocks repeated 6 times, top to bottom. |
-| `llm_3d` | the same model as a rotatable 3D scene of glass layer panels | Show the transformer as a 3D scene I can rotate. |
+| `llm_2d` | a neural network or LLM architecture as a 2D map, or an autoencoder, VAE or GAN | Draw a VAE: input image, encoder, 2D latent z, decoder, reconstruction. |
+| `llm_3d` | the same model as a rotatable 3D scene: layer panels, with encoder and decoder funnels | Show the VAE as a 3D scene I can rotate, encoder narrowing to the latent and decoder widening back. |
 
 ## Steps
 
@@ -21,6 +21,22 @@ Follow `skill://uml-mcp-diagrams/SKILL.md`. Layer maps, autoencoder and GAN shap
 3. Call `validate_uml`; an error names the field and, for a bad reference, lists the known ids, so fix it and validate again.
 4. Render with `generate_uml_image` for a chat image, or `generate_uml` with `output_format: "html"` for the interactive page in the MCP App viewer. Clients without MCP Apps still get the PNG and SVG.
 5. Pass `theme` (`auto`, `dark`, `light`) rather than editing colours.
+
+## Recipes
+
+| Model | Layers (`kind`) |
+| --- | --- |
+| Autoencoder | `input` → `encoder` → `bottleneck` → `decoder` → `output` |
+| VAE | `input` → `encoder` → `vector` (latent z, edge label `μ, σ → sample z`) → `decoder` → `output` |
+| GAN | `token` (noise) → `decoder` (generator) → `vector` (fake sample) → `decision` (discriminator); a `dashed` edge for real data |
+| Decoder-only LLM | `input` → `embedding` → `attention` and `feedforward` (`repeat: 32`) → `normalization` → `output`; a `dashed` residual edge |
+| Encoder-decoder transformer | two `groups` with `repeat: 6`: `encoder` and `decoder` layers inside, a cross-attention edge between them |
+
+Use `label` and `kind`. The parser also accepts `name` and `type` and infers a missing kind from the id and label (`encoder`, `decoder`, `latent`, `input`, `output`...), but explicit kinds give the shapes you expect.
+
+```json
+{"title":"VAE","layers":[{"id":"x","label":"Input x","kind":"input","shape":[784]},{"id":"enc","label":"Encoder qφ(z|x)","kind":"encoder","shape":[784,256]},{"id":"z","label":"Latent z","kind":"vector","shape":[2]},{"id":"dec","label":"Decoder pθ(x|z)","kind":"decoder","shape":[256,784]},{"id":"xr","label":"Reconstruction x̂","kind":"output","shape":[784]}],"connections":[{"from":"x","to":"enc"},{"from":"enc","to":"z","label":"μ, σ → sample z"},{"from":"z","to":"dec"},{"from":"dec","to":"xr"}]}
+```
 
 ## Example
 

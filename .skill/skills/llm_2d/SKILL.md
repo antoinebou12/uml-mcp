@@ -16,13 +16,15 @@ Load the workflow skill [uml-mcp-diagrams](../uml-mcp-diagrams/SKILL.md) and the
 
 ## Example prompt
 
-> Draw a transformer with encoder and decoder blocks repeated 6 times, top to bottom.
+> Draw a VAE: input image, encoder, 2D latent z, decoder, reconstruction.
 
 ## Notation tips
 
-- `layers` (`id`, `label`, `kind`, `shape`, `repeat`, `group`) and `connections` (`from`, `to`, `label`, `style`).
-- `layout: "flow"` draws shaped kinds: `encoder`/`decoder` trapezoids, `bottleneck`, `vector`, `decision`, `token`.
-- `groups` (`id`, `label`, `repeat`) draw `N×` containers; `direction`: `LR` or `TB`.
+- Each layer: `id`, `label`, `kind`, optional `shape` (e.g. `[784]`), `repeat`, `note`, `group`. `connections`: `from`, `to`, `label`, `style` (`solid`, `dashed`); omit them for a straight chain.
+- Set `kind` on every layer. Encoders are `encoder` (a trapezoid that narrows), decoders `decoder` (one that widens), a latent code `vector` (a bar) or `bottleneck` (a square), a sampler or classifier `decision` (a circle).
+- With an encoder, decoder, vector or bottleneck the layout switches to `flow` (shapes left to right); set `layout: "grid"` for cards, `direction: "TB"` for top down.
+- Give `shape` so each layer shows its size; label the encoder-to-latent edge (`"μ, σ → sample z"`).
+- `groups` (`id`, `label`, `repeat`) draw `N×` containers around repeated blocks.
 
 ## Styling
 

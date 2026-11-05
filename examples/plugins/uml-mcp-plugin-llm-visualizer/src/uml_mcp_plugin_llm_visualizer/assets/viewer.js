@@ -21,6 +21,12 @@
   const apex = (n) => 34 + 22 * n;
   const maxSpan = FLOW ? Math.max(0, ...spec.connections.map((e) => (span(e) > 1 ? span(e) : 0))) : 0;
   const FLOW_GAP = 90, PADG = 16, HEADG = spec.groups.length ? 26 : 0;
+  // Room after layer i for the label of the edge to its neighbour (left-right flow only).
+  const gapAfter = (i) => {
+    const a = layers[i].id, b = layers[i + 1] && layers[i + 1].id;
+    const e = spec.connections.find((c) => c.label && ((c.from === a && c.to === b) || (c.from === b && c.to === a)));
+    return HORIZ && e ? Math.max(FLOW_GAP, e.label.length * 6.6 + 34) : FLOW_GAP;
+  };
   const pos2d = new Map(), groupBoxes = [];
   let bounds2d;
   (function layout2d() {
@@ -30,7 +36,7 @@
         const base = KIND_DIMS[l.kind];
         const [w, h] = base ? (HORIZ ? base : [base[1], base[0]]) : [190, 108];
         pos2d.set(l.id, { x: HORIZ ? m : -w / 2, y: HORIZ ? -h / 2 : m, w, h, i });
-        m += (HORIZ ? w : h) + FLOW_GAP;
+        m += (HORIZ ? w : h) + gapAfter(i);
       });
     } else {
       layers.forEach((l, i) => pos2d.set(l.id, { x: Math.floor(i / PER) * GX, y: (i % PER) * GY, w: CW, h: CH, i }));
@@ -55,9 +61,16 @@
   const SPACING = 150, STACK = 12, GRID_X = 10, GRID_Y = 6;
   layers.forEach((l, i) => {
     const [hx, hy] = { vector: [30, 85], bottleneck: [32, 32], decision: [38, 38], token: [55, 22] }[l.kind] || [135, 85];
+    // Encoders narrow and decoders widen along the flow: the autoencoder funnel.
     const taper = l.kind === "encoder" ? "narrow" : l.kind === "decoder" ? "wide" : "";
     box3d.set(l.id, { x: 0, y: hy, z: (i - (layers.length - 1) / 2) * SPACING, hx, hy, hz: 2, index: i, taper });
   });
+  const FUNNEL = 0.42, FLEN = SPACING * 0.62;
+  // Where a layer's input and output faces sit along the flow.
+  const zIn = (b) => (b.taper ? b.z - FLEN / 2 : b.z);
+  const zOut = (b, l) => (b.taper ? b.z + FLEN / 2 : b.z + copies(l) * STACK);
+  // Half sizes of a frustum's input (end 0) and output (end 1) faces.
+  const ends = (b) => (b.taper === "narrow" ? [1, FUNNEL] : [FUNNEL, 1]).map((f) => [b.hx * f, b.hy * f]);
   const copies = (l) => Math.min(l.repeat, 5);
   // Deterministic pseudo activations so a layer always looks the same.
   const activation = (i, cx, cy) => {
@@ -72,7 +85,8 @@
     const c = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => Math.max(0, Math.min(255, Math.round(v * f))));
     return `rgb(${c[0]},${c[1]},${c[2]})`;
   };
-  const shapeText = (l) => (l.shape.length ? l.shape.join(" × ") : "shape not set");
+  const shapeText = (l) => l.shape.join(" × ");
+  const subText = (l) => [shapeText(l), l.repeat > 1 ? `×${l.repeat}` : ""].filter(Boolean).join(" · ");
   const fit = (text, max) => {
     if (ctx.measureText(text).width <= max) return text;
     while (text.length > 1 && ctx.measureText(text + "…").width > max) text = text.slice(0, -1);
@@ -108,7 +122,7 @@
       view.zoom = Math.max(0.2, Math.min((W - 80) / bounds2d.w, (H - 80) / bounds2d.h, 1.6));
       return;
     }
-    view.yaw = -0.75; view.pitch = 0.38; view.zoom = 1;
+    view.yaw = 0.95; view.pitch = 0.32; view.zoom = 1;
     const pts = [];
     layers.forEach((l) => {
       const b = box3d.get(l.id);
@@ -157,7 +171,7 @@
     else ctx.rect(x, y, w, h);
     ctx.fill(); ctx.stroke();
     ctx.textAlign = "center"; ctx.textBaseline = "middle";
-    const sub = shapeText(l) + (l.repeat > 1 ? ` · ×${l.repeat}` : "");
+    const sub = subText(l);
     ctx.fillStyle = css("--text"); ctx.font = `700 ${(l.kind === "token" ? 14 : 16) * z}px system-ui,sans-serif`;
     if (l.kind === "encoder" || l.kind === "decoder") {
       ctx.fillText(fit(l.label, Math.min(w, h) * 0.8), x + w / 2, y + h / 2 - 8 * z);
@@ -252,7 +266,7 @@
       ctx.textAlign = "left"; ctx.fillStyle = css("--text"); ctx.font = `700 ${15 * z}px system-ui,sans-serif`;
       ctx.fillText(fit(l.label, room), x + 18 * z, y + 57 * z);
       ctx.fillStyle = css("--muted"); ctx.font = `${12 * z}px system-ui,sans-serif`;
-      ctx.fillText(fit(shapeText(l) + (l.repeat > 1 ? ` · ×${l.repeat}` : ""), room), x + 18 * z, y + 78 * z);
+      ctx.fillText(fit(subText(l), room), x + 18 * z, y + 78 * z);
       if (l.note) ctx.fillText(fit(l.note, room), x + 18 * z, y + 94 * z);
       hits.push({ id: l.id, poly: [[x, y], [x + w, y], [x + w, y + h], [x, y + h]] });
     }
@@ -262,11 +276,32 @@
     const n = parseInt(hex.slice(1), 16);
     return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`;
   }
-  const inset = (b, side) => ((side === 0 ? b.taper === "wide" : b.taper === "narrow") ? b.hy * 0.5 : 0);
-  const quad = (b, z, x0, x1, y0, y1) => {
-    const il = inset(b, 0) , ir = inset(b, 1);
-    return [proj(b.x + x0, y0 + il, z), proj(b.x + x1, y0 + ir, z), proj(b.x + x1, y1 - ir, z), proj(b.x + x0, y1 - il, z)];
-  };
+  const quad = (b, z, x0, x1, y0, y1) => [proj(b.x + x0, y0, z), proj(b.x + x1, y0, z), proj(b.x + x1, y1, z), proj(b.x + x0, y1, z)];
+
+  // A frustum from the input face to the output face, faces painted back to front.
+  function drawFunnel(l, b) {
+    const sel = l.id === selected, [[w0, h0], [w1, h1]] = ends(b), z0 = zIn(b), z1 = zOut(b, l);
+    const face = (w, h, z) => [[-w, b.hy - h, z], [w, b.hy - h, z], [w, b.hy + h, z], [-w, b.hy + h, z]];
+    const A = face(w0, h0, z0), B = face(w1, h1, z1);
+    const faces = [A, B, ...[0, 1, 2, 3].map((k) => [A[k], A[(k + 1) % 4], B[(k + 1) % 4], B[k]])];
+    const shapes = faces.map((f) => ({ pts: f.map(([x, y, z]) => proj(b.x + x, y, z)), depth: f.reduce((s, [x, y, z]) => s + rot(b.x + x, y, z)[2], 0) / 4 }));
+    shapes.sort((p, q) => q.depth - p.depth);
+    for (const s of shapes) {
+      trace(s.pts);
+      ctx.fillStyle = rgba(l.color, sel ? 0.3 : 0.16); ctx.fill();
+      ctx.strokeStyle = sel ? css("--accent") : rgba(l.color, 0.9); ctx.lineWidth = sel ? 3 : 1.6; ctx.stroke();
+      hits.push({ id: l.id, poly: s.pts.map((p) => [p[0], p[1]]) });
+    }
+    // activation dots on the larger face
+    const [w, h, z] = w0 >= w1 ? [w0, h0, z0] : [w1, h1, z1];
+    for (let gy = 0; gy < GRID_Y; gy++) for (let gx = 0; gx < GRID_X; gx++) {
+      const v = activation(b.index, gx, gy);
+      const px = -w + ((gx + 0.5) * 2 * w) / GRID_X, py = b.hy - h + ((gy + 0.5) * 2 * h) / GRID_Y;
+      const p = proj(b.x + px, py, z), r = Math.max(1.2, (1.5 + v * 3.5) * view.zoom * (D / (D + p[2])));
+      ctx.fillStyle = rgba(v > 0.93 ? "#facc15" : l.color, 0.3 + v * 0.6);
+      ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, Math.PI * 2); ctx.fill();
+    }
+  }
   const trace = (poly) => { ctx.beginPath(); poly.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath(); };
 
   function draw3d() {
@@ -298,7 +333,7 @@
     const color = css("--line");
     for (const e of spec.connections) {
       const s = box3d.get(e.from), t = box3d.get(e.to);
-      const a = proj(s.x, s.y, s.z + copies(byId.get(e.from)) * STACK), c = proj(t.x, t.y, t.z);
+      const a = proj(s.x, s.y, zOut(s, byId.get(e.from))), c = proj(t.x, t.y, zIn(t));
       ctx.strokeStyle = ctx.fillStyle = color; ctx.lineWidth = 2; ctx.setLineDash(e.style === "dashed" ? [7, 6] : []);
       ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]); ctx.stroke(); ctx.setLineDash([]);
       arrowHead(c[0], c[1], Math.atan2(c[1] - a[1], c[0] - a[0]));
@@ -308,10 +343,12 @@
     const items = [];
     layers.forEach((l) => {
       const b = box3d.get(l.id);
+      if (b.taper) { items.push({ l, b, z: b.z, front: true, funnel: true, depth: rot(b.x, b.y, b.z)[2] }); return; }
       for (let i = copies(l) - 1; i >= 0; i--) items.push({ l, b, z: b.z + i * STACK, front: i === 0, depth: rot(b.x, b.y, b.z + i * STACK)[2] });
     });
     items.sort((p, q) => q.depth - p.depth);
-    for (const { l, b, z, front } of items) {
+    for (const { l, b, z, front, funnel } of items) {
+      if (funnel) { drawFunnel(l, b); continue; }
       const sel = l.id === selected, panel = quad(b, z, -b.hx, b.hx, 0, b.hy * 2);
       trace(panel);
       ctx.fillStyle = rgba(l.color, sel ? 0.28 : front ? 0.14 : 0.07); ctx.fill();
@@ -323,8 +360,6 @@
         for (let gy = 0; gy < GRID_Y; gy++) for (let gx = 0; gx < GRID_X; gx++) {
           const v = activation(idx, gx, gy);
           const px = -b.hx + ((gx + 0.5) * 2 * b.hx) / GRID_X, py = ((gy + 0.5) * 2 * b.hy) / GRID_Y;
-          const f = (px + b.hx) / (2 * b.hx), cut = b.taper === "narrow" ? f : b.taper === "wide" ? 1 - f : 0;
-          if (Math.abs(py - b.hy) > b.hy * (1 - 0.5 * cut)) continue;
           const p = proj(b.x + px, py, z), r = Math.max(1.2, (1.5 + v * 3.5) * view.zoom * (D / (D + p[2])));
           ctx.fillStyle = rgba(v > 0.93 ? "#facc15" : l.color, 0.3 + v * 0.6);
           ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, Math.PI * 2); ctx.fill();
@@ -366,7 +401,7 @@
     buttons.forEach((b, key) => b.setAttribute("aria-pressed", String(key === id)));
     $("inspect-title").textContent = l ? l.label : "Select a layer";
     $("inspect-kind").textContent = l ? l.kind : "—";
-    $("inspect-shape").textContent = l ? shapeText(l) : "—";
+    $("inspect-shape").textContent = l ? shapeText(l) || "not set" : "—";
     $("inspect-repeat").textContent = l ? `×${l.repeat}` : "—";
     $("inspect-note").textContent = l ? l.note || "No notes for this layer." : "Click a layer in the scene or the list.";
     $("status").textContent = l ? `Selected ${l.label}` : "";

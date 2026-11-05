@@ -160,14 +160,14 @@
       "type": "context",
       "description": "Writes valid llm_2d JSON for uml-mcp (diagram_type=llm_2d, bundled plugin llm-visualizer). Use when the user asks for a neural network or LLM architecture as a 2D map, or an autoencoder, VAE or GAN; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/llm_2d/SKILL.md",
-      "sha256": "748c782a4eefc74e053441614efe1fcc0793dbd242ba3604b66b73a7b15e3c0b"
+      "sha256": "c78a35ab19538b6859d1f7637e81d239cd316784e91d4f30cac3e897edacae89"
     },
     {
       "name": "llm_3d",
       "type": "context",
-      "description": "Writes valid llm_3d JSON for uml-mcp (diagram_type=llm_3d, bundled plugin llm-visualizer). Use when the user asks for the same model as a rotatable 3D scene of glass layer panels; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "description": "Writes valid llm_3d JSON for uml-mcp (diagram_type=llm_3d, bundled plugin llm-visualizer). Use when the user asks for the same model as a rotatable 3D scene: layer panels, with encoder and decoder funnels; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/llm_3d/SKILL.md",
-      "sha256": "6ee9357bb175d0f6aa1bc4b80868e1d5a9de65607b759ee78983250de6a7a44d"
+      "sha256": "19c6721cea571e2a8aba7cfd7db227e5f47fd861b289778665d8f070d7cd0f54"
     },
     {
       "name": "mcp-python",
@@ -342,7 +342,7 @@
       "type": "context",
       "description": "Draw LLM and neural-network architectures in 2D and 3D (llm_2d, llm_3d).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-llm-visualizer/SKILL.md",
-      "sha256": "a7f99a498cb96abb5ea04bc794948322f2e77f1cd820193f09ed381667924f89"
+      "sha256": "77301d37a7668dd354fec637f68602c1839bbf902b76402add4267350f15ab99"
     },
     {
       "name": "uml-mcp-mermaid",
