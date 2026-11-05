@@ -24,6 +24,25 @@ that turns a description or diagram source into a rendered diagram, inside the c
 
 </div>
 
+## It works as an MCP App
+
+In clients that support MCP Apps, diagrams open in a viewer inside the chat
+(`ui://uml-mcp/diagram-viewer`): zoom, edit the source, switch theme and format, re-render, step
+through a batch, and export SVG, PNG, HTML or PDF. Clients without MCP Apps get the same diagram
+as an inline PNG and SVG.
+
+<p align="center">
+  <a href="docs/assets/mcp-app-demo.mp4"><img src="docs/assets/mcp-app-demo.gif" width="420" alt="Recording of the UML-MCP viewer inside a chat: four diagram tabs from one batch call, switching tabs, then re-rendering with another format." /></a>
+</p>
+
+<p align="center"><sub>One <code>generate_uml_batch</code> call returns four diagrams as tabs, then one is re-rendered in another format. <a href="docs/assets/mcp-app-demo.mp4">Full-quality video</a> · <a href="docs/integrations/mcp-app.md">more about the viewer</a>.</sub></p>
+
+<p align="center">
+  <img src="docs/assets/diagrams/client-server-chat.png" width="680" alt="UML-MCP in chat: a Client/Server Mermaid sequence diagram with URL and Playground links" />
+</p>
+
+<p align="center"><sub>In any other chat client: the inline image with links to the rendered file and an editable playground.</sub></p>
+
 ## Why UML-MCP
 
 - **46 diagram types.** 37 through [Kroki](https://kroki.io/) (UML, Mermaid, D2, Graphviz, C4, BPMN,
@@ -62,23 +81,6 @@ uv tool install uml-mcp && uml-mcp setup
 ```
 
 The [installation guide](docs/installation.md) covers Docker, Helm and running from source.
-
-<p align="center">
-  <img src="docs/assets/diagrams/client-server-chat.png" width="680" alt="UML-MCP in chat: a Client/Server Mermaid sequence diagram with URL and Playground links" />
-</p>
-
-## It works as an MCP App
-
-In clients that support MCP Apps, diagrams open in a viewer inside the chat
-(`ui://uml-mcp/diagram-viewer`): zoom, edit the source, switch theme and format, re-render, step
-through a batch, and export SVG, PNG, HTML or PDF. Clients without MCP Apps get the same diagram
-as an inline PNG and SVG.
-
-<p align="center">
-  <a href="docs/assets/mcp-app-demo.mp4"><img src="docs/assets/mcp-app-demo.gif" width="420" alt="Recording of the UML-MCP viewer inside a chat: four diagram tabs from one batch call, switching tabs, then re-rendering with another format." /></a>
-</p>
-
-<p align="center"><sub>One <code>generate_uml_batch</code> call returns four diagrams as tabs, then one is re-rendered in another format. <a href="docs/assets/mcp-app-demo.mp4">Full-quality video</a> · <a href="docs/integrations/mcp-app.md">more about the viewer</a>.</sub></p>
 
 ## Interactive diagrams
 
