@@ -116,9 +116,32 @@ _INFER = (
 FLOW_KINDS = ("encoder", "decoder", "bottleneck", "vector")
 
 
+#: Whole words (or Greek letters) that mark a small statistics vector: the mean and
+#: (log) variance heads of a VAE encoder, for example. Matched as tokens, so ``mu`` does
+#: not fire inside ``multi-head``.
+_VECTOR_TOKENS = frozenset(
+    {"mu", "μ", "sigma", "σ", "σ²", "logvar", "mean", "variance", "std", "stddev"}
+)
+
+#: Kinds that describe a layer's role in the model. When the id or label names one, it
+#: wins over a generic operation ``type`` such as ``dense`` or ``linear``: a dense layer
+#: called "Encoder" is drawn as an encoder.
+_WEAK_TYPES = frozenset({"dense", "linear", "block", "layer", "module"})
+_ROLE_KINDS = frozenset({"encoder", "decoder", "bottleneck", "vector", "decision"})
+
+
 def infer_kind(layer_id: str, label: str) -> str:
     """The kind a layer's id and label suggest, or ``generic``."""
     text = f"{layer_id} {label}".lower()
+    tokens = set(re.findall(r"[a-zα-ω²]+", text))
+    for word, kind in _INFER:
+        if word in text:
+            # a sampled latent ("z = μ + σ ⊙ ε") is the bottleneck, not a stats head
+            return kind
+        if kind == "embedding":
+            break
+    if tokens & _VECTOR_TOKENS:
+        return "vector"
     return next((kind for word, kind in _INFER if word in text), "generic")
 
 
@@ -171,7 +194,29 @@ class LLMSpec:
     direction: str = "LR"
     groups: tuple[Group, ...] = ()
 
+    def ranks(self) -> dict[str, int]:
+        """Column of each layer in the flow layout: the longest path from an input.
+
+        Only forward connections (to a later layer in the list) count, so a feedback or
+        residual edge never reorders the model. Layers on parallel branches, such as a
+        VAE's mean and log-variance heads, share a rank and are drawn side by side.
+        """
+        index = {layer.id: i for i, layer in enumerate(self.layers)}
+        rank = {layer.id: 0 for layer in self.layers}
+        incoming: dict[str, list[str]] = {layer.id: [] for layer in self.layers}
+        for edge in self.connections:
+            if index[edge.source] < index[edge.target]:
+                incoming[edge.target].append(edge.source)
+        for layer in self.layers:  # list order is a topological order of forward edges
+            if incoming[layer.id]:
+                rank[layer.id] = 1 + max(rank[s] for s in incoming[layer.id])
+        # close gaps left by layers that skip ahead (keep columns contiguous)
+        used = sorted(set(rank.values()))
+        compact = {r: i for i, r in enumerate(used)}
+        return {key: compact[r] for key, r in rank.items()}
+
     def as_dict(self) -> dict[str, Any]:
+        ranks = self.ranks()
         return {
             "layout": self.layout,
             "direction": self.direction,
@@ -192,6 +237,7 @@ class LLMSpec:
                     "color": layer.color,
                     "note": layer.note,
                     "group": layer.group,
+                    "rank": ranks[layer.id],
                 }
                 for layer in self.layers
             ],
@@ -246,7 +292,7 @@ def parse(source: str, *, max_layers: int = MAX_LAYERS) -> LLMSpec:
         ) from exc
     root = _object(raw, "source")
 
-    title = _text(root.get("title"), "title", MAX_LABEL, default="LLM architecture")
+    title = _text(root.get("title"), "title", MAX_LABEL, default="Model architecture")
     subtitle = _text(root.get("subtitle"), "subtitle", MAX_NOTE)
     theme = _text(root.get("theme"), "theme", 5, default="dark")
     if theme not in {"light", "dark", "auto"}:
@@ -331,7 +377,13 @@ def parse(source: str, *, max_layers: int = MAX_LAYERS) -> LLMSpec:
         else:
             alias = _text(obj.get("type"), f"layers[{index}].type", 20).lower()
             mapped = alias if alias in LAYER_KINDS else TYPE_ALIASES.get(alias)
-            kind = mapped or infer_kind(layer_id, label)
+            inferred = infer_kind(layer_id, label)
+            # the name wins over a vague type ("dense", "block"), and a role in the
+            # name (encoder, latent, mean...) wins unless the type names a role too
+            strong = (alias in _WEAK_TYPES and inferred != "generic") or (
+                inferred in _ROLE_KINDS and mapped not in _ROLE_KINDS
+            )
+            kind = inferred if strong or not mapped else mapped
 
         raw_shape = obj.get("shape", [])
         if not isinstance(raw_shape, list) or len(raw_shape) > 4:

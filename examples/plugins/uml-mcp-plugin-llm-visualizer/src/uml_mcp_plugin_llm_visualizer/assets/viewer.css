@@ -32,4 +32,4 @@ dd{margin:0;text-align:right}
 #inspect-note{color:var(--muted);margin:10px 0 0}
 footer{display:flex;justify-content:space-between;gap:12px;padding:8px 20px;border-top:1px solid var(--border);color:var(--muted);font-size:12px}
 output{display:block}
-@media (max-width:760px){main{flex-direction:column}aside{width:auto;max-height:40%;border-left:0;border-top:1px solid var(--border)}footer span{display:none}}
+@media (max-width:760px){main{flex-direction:column}aside{display:none}header{padding:8px 12px;gap:8px}h1{font-size:16px}.eyebrow,.subtitle{display:none}button{padding:4px 9px;font-size:13px}footer{padding:4px 12px}footer span{display:none}}

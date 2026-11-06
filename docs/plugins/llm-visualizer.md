@@ -36,7 +36,21 @@ along the flow, so an autoencoder reads as a funnel in the interactive scene and
 Without a `kind`, the layer's `type` is used when it names a kind or a common alias
 (`tensor` is a `vector`, `latent` a `bottleneck`, `mlp` a `feedforward`...), and otherwise the
 kind is inferred from the id and label: `Encoder qφ(z|x)` is an `encoder`, `Reconstruction x̂`
-an `output`. An explicit `kind` always wins.
+an `output`. An explicit `kind` always wins, and a role in the name (encoder, decoder, latent,
+mean μ, log σ²) wins over a vague `type` such as `dense` or `block`.
+
+Every card carries a glyph for its kind, the pictogram an ML reader expects: token chips
+(`input`, `token`), a lookup matrix (`embedding`), a causal attention mask (`attention`), the
+expand-and-contract FFN (`feedforward`), a bell curve (`normalization`), ⊕ (`residual`), a
+diamond (`router`), a pool of experts (`expert`), a cylinder (`memory`) and a softmax bar
+chart (`output`). In the grid, a connection that skips rows (a residual path) loops around
+the right of the stack instead of hiding behind the cards.
+
+In the `flow` layout each layer's column is its depth in the graph (the longest path from an
+input), so parallel branches share a column: a VAE encoder that feeds a mean head and a
+log-variance head, both merging into the sampled z, draws the two heads stacked, with curved
+edges fanning out and back in. The 3D views place them side by side. In a narrow frame, such as
+the chat's MCP App viewer, the layer list hides and labels scale with the zoom.
 Limits: 64 layers
 (`plugins.settings.llm-visualizer.max_layers` can lower it) and 160 connections.
 

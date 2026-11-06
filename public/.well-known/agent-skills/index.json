@@ -160,7 +160,7 @@
       "type": "context",
       "description": "Writes valid llm_2d JSON for uml-mcp (diagram_type=llm_2d, bundled plugin llm-visualizer). Use when the user asks for a neural network or LLM architecture as a 2D map, or an autoencoder, VAE or GAN; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/llm_2d/SKILL.md",
-      "sha256": "c78a35ab19538b6859d1f7637e81d239cd316784e91d4f30cac3e897edacae89"
+      "sha256": "f5fbc52dafe0f542a7daae99f6e14f4fc06a703fd7cb1bd73c811adb5545bad1"
     },
     {
       "name": "llm_3d",
@@ -342,7 +342,7 @@
       "type": "context",
       "description": "Draw LLM and neural-network architectures in 2D and 3D (llm_2d, llm_3d).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-llm-visualizer/SKILL.md",
-      "sha256": "77301d37a7668dd354fec637f68602c1839bbf902b76402add4267350f15ab99"
+      "sha256": "2f57f04e38adeccfadb4cb48ea594222ca6850974e3754e1a5f3137beb6b5ed9"
     },
     {
       "name": "uml-mcp-mermaid",

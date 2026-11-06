@@ -27,15 +27,15 @@ Follow `skill://uml-mcp-diagrams/SKILL.md`. Layer maps, autoencoder and GAN shap
 | Model | Layers (`kind`) |
 | --- | --- |
 | Autoencoder | `input` → `encoder` → `bottleneck` → `decoder` → `output` |
-| VAE | `input` → `encoder` → `vector` (latent z, edge label `μ, σ → sample z`) → `decoder` → `output` |
+| VAE | `input` → `encoder` → two `vector` heads (μ, log σ²) → `bottleneck` (z = μ + σ ⊙ ε) → `decoder` → `output` |
 | GAN | `token` (noise) → `decoder` (generator) → `vector` (fake sample) → `decision` (discriminator); a `dashed` edge for real data |
 | Decoder-only LLM | `input` → `embedding` → `attention` and `feedforward` (`repeat: 32`) → `normalization` → `output`; a `dashed` residual edge |
 | Encoder-decoder transformer | two `groups` with `repeat: 6`: `encoder` and `decoder` layers inside, a cross-attention edge between them |
 
-Use `label` and `kind`. The parser also accepts `name` and `type` and infers a missing kind from the id and label (`encoder`, `decoder`, `latent`, `input`, `output`...), but explicit kinds give the shapes you expect.
+Use `label` and `kind`. The parser also accepts `name` and `type` and infers a missing kind from the id and label (`encoder`, `decoder`, `latent`, `input`, `output`...), but explicit kinds give the shapes you expect. Give a `title` (the default is "Model architecture").
 
 ```json
-{"title":"VAE","layers":[{"id":"x","label":"Input x","kind":"input","shape":[784]},{"id":"enc","label":"Encoder qφ(z|x)","kind":"encoder","shape":[784,256]},{"id":"z","label":"Latent z","kind":"vector","shape":[2]},{"id":"dec","label":"Decoder pθ(x|z)","kind":"decoder","shape":[256,784]},{"id":"xr","label":"Reconstruction x̂","kind":"output","shape":[784]}],"connections":[{"from":"x","to":"enc"},{"from":"enc","to":"z","label":"μ, σ → sample z"},{"from":"z","to":"dec"},{"from":"dec","to":"xr"}]}
+{"title":"Variational autoencoder","layers":[{"id":"x","label":"Input x","kind":"input","shape":[784]},{"id":"enc","label":"Encoder qφ(z|x)","kind":"encoder","shape":[256]},{"id":"mu","label":"Mean μ","kind":"vector","shape":[2]},{"id":"logvar","label":"Log variance log σ²","kind":"vector","shape":[2]},{"id":"z","label":"z = μ + σ ⊙ ε","kind":"bottleneck","shape":[2]},{"id":"dec","label":"Decoder pθ(x|z)","kind":"decoder","shape":[256]},{"id":"xr","label":"Reconstruction x̂","kind":"output","shape":[784]}],"connections":[{"from":"x","to":"enc"},{"from":"enc","to":"mu","label":"predict μ"},{"from":"enc","to":"logvar","label":"predict log σ²"},{"from":"mu","to":"z","label":"reparameterize"},{"from":"logvar","to":"z","label":"σ = exp(½ log σ²)"},{"from":"z","to":"dec"},{"from":"dec","to":"xr"}]}
 ```
 
 ## Example

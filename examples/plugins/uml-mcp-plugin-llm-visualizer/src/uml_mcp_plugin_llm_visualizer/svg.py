@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from html import escape
 
-from .model import Group, Layer, LLMSpec
+from .glyphs import glyph_svg
+from .model import Connection, Group, Layer, LLMSpec
 
 
 def _shape(layer: Layer) -> str:
@@ -75,7 +76,8 @@ def _style(colors: dict[str, str]) -> str:
         f".label{{fill:{colors['text']};font:700 15px system-ui,sans-serif}}"
         f".meta{{fill:{colors['muted']};font:12px system-ui,sans-serif}}"
         f".edge{{fill:none;stroke:{colors['line']};stroke-width:2;marker-end:url(#arrow)}}"
-        f".edge-label{{fill:{colors['muted']};font:11px system-ui,sans-serif;text-anchor:middle}}"
+        f".edge-label{{fill:{colors['muted']};font:11px system-ui,sans-serif;text-anchor:middle;"
+        f"paint-order:stroke;stroke:{colors['bg']};stroke-width:4px;stroke-linejoin:round}}"
         ".glabel{font:700 13px system-ui,sans-serif}"
         ".kind{fill:#fff;font:700 9px system-ui,sans-serif;letter-spacing:.8px}"
         "</style>"
@@ -92,20 +94,57 @@ _KIND_DIMS = {
 }
 _FLOW_GAP = 90
 _PADG = 16
-_PER, _CW, _CH, _GX, _GY = 6, 236, 108, 280, 128
+_PER, _CW, _CH, _GX, _GY = 6, 300, 108, 344, 128
+_FLOW_CARD = (236, 108)
+_GLYPH = 52  # pictogram size on a card
 
 Box = tuple[float, float, float, float]  # x, y, width, height
 
 
-def _gap_after(spec: LLMSpec, i: int) -> float:
-    """Room after layer ``i`` for the label of the edge to its neighbour."""
-    if i + 1 >= len(spec.layers):
-        return _FLOW_GAP
-    pair = {spec.layers[i].id, spec.layers[i + 1].id}
+_STACK_GAP = 34  # between layers that share a column (parallel branches)
+#: Small shapes carry their name underneath instead of inside.
+_LABEL_BELOW = frozenset({"vector", "bottleneck", "decision"})
+
+
+def _label_room(layer: Layer) -> float:
+    """Width a below-shape label needs, so neighbouring columns keep clear of it."""
+    if layer.kind not in _LABEL_BELOW:
+        return 0
+    return max(len(layer.label) * 8.6, len(_sub(layer)) * 6.8) + 16
+
+
+def _gap_after(spec: LLMSpec, ranks: dict[str, int], column: int) -> float:
+    """Room after a column for the labels of the edges into the next one."""
     labels = [
-        c.label for c in spec.connections if c.label and {c.source, c.target} == pair
+        c.label
+        for c in spec.connections
+        if c.label and ranks[c.source] == column and ranks[c.target] == column + 1
     ]
     return max([_FLOW_GAP, *(len(text) * 6.6 + 34 for text in labels)])
+
+
+def _flow_dims(layer: Layer, horiz: bool, stacked: int) -> tuple[float, float]:
+    """Width and height of a layer in the flow layout; tall shapes shrink when stacked."""
+    base = _KIND_DIMS.get(layer.kind)
+    if not base:
+        return _FLOW_CARD  # cards keep their size in both directions
+    along, across = base
+    if stacked > 1 and across > 120:
+        across = max(108.0, (260 - _STACK_GAP * (stacked - 1)) / stacked)
+    return (along, across) if horiz else (across, along)
+
+
+def _loop(
+    pos: dict[str, tuple[float, float, float, float, int]], edge: Connection
+) -> tuple[float, int]:
+    """How far a grid edge between non-adjacent cards of one column loops out to the
+    right (0 when it is not such an edge), and how many rows it skips."""
+    sx, sy, *_ = pos[edge.source]
+    tx, ty, *_ = pos[edge.target]
+    rows = round(abs(ty - sy) / _GY)
+    if abs(tx - sx) >= 10 or rows <= 1:
+        return 0, rows
+    return 36 + 14 * rows, rows
 
 
 def _apex(span: int) -> int:
@@ -126,15 +165,34 @@ def _place(
     """
     flow = spec.layout == "flow"
     horiz = spec.direction != "TB"
-    index = {layer.id: i for i, layer in enumerate(spec.layers)}
+    ranks = spec.ranks()
     pos: dict[str, list[float]] = {}
     if flow:
-        m = 0.0
+        columns: dict[int, list[tuple[int, Layer]]] = {}
         for i, layer in enumerate(spec.layers):
-            base = _KIND_DIMS.get(layer.kind)
-            w, h = (base if horiz else base[::-1]) if base else (190, 108)
-            pos[layer.id] = [m if horiz else -w / 2, -h / 2 if horiz else m, w, h, i]
-            m += (w if horiz else h) + (_gap_after(spec, i) if horiz else _FLOW_GAP)
+            columns.setdefault(ranks[layer.id], []).append((i, layer))
+        m = 0.0
+        for column in sorted(columns):
+            members = columns[column]
+            dims = [_flow_dims(layer, horiz, len(members)) for _, layer in members]
+            along = max((w if horiz else h) for w, h in dims)
+            if horiz:  # below-shape labels widen the column, not the shape
+                along = max([along, *(_label_room(layer) for _, layer in members)])
+            # leave room under a shape for its label before the next one in the column
+            gaps = [
+                _STACK_GAP + (40 if horiz and layer.kind in _LABEL_BELOW else 0)
+                for _, layer in members
+            ]
+            across = sum((h if horiz else w) for w, h in dims) + sum(gaps[:-1])
+            c = -across / 2
+            for (i, layer), (w, h), gap in zip(members, dims, gaps, strict=True):
+                if horiz:
+                    pos[layer.id] = [m + (along - w) / 2, c, w, h, i]
+                    c += h + gap
+                else:
+                    pos[layer.id] = [c, m + (along - h) / 2, w, h, i]
+                    c += w + gap
+            m += along + (_gap_after(spec, ranks, column) if horiz else _FLOW_GAP)
     else:
         for i, layer in enumerate(spec.layers):
             pos[layer.id] = [(i // _PER) * _GX, (i % _PER) * _GY, _CW, _CH, i]
@@ -170,9 +228,9 @@ def _place(
     max_y = max(r[1] + r[3] for r in rects) + (46 if flow else 0)
     max_span = max(
         (
-            abs(index[c.target] - index[c.source])
+            abs(ranks[c.target] - ranks[c.source])
             for c in spec.connections
-            if abs(index[c.target] - index[c.source]) > 1
+            if abs(ranks[c.target] - ranks[c.source]) > 1
         ),
         default=0,
     )
@@ -223,7 +281,7 @@ def _flow_shape(
             f'<text class="label" x="{cx}" y="{y + h / 2 - 4}" text-anchor="middle">{label}</text>'
             f'<text class="meta" x="{cx}" y="{y + h / 2 + 16}" text-anchor="middle">{escape(sub)}</text>'
         )
-    elif kind == "vector":
+    elif kind in _LABEL_BELOW:
         text = (
             f'<text class="label" x="{cx}" y="{y + h + 20}" text-anchor="middle">{label}</text>'
             f'<text class="meta" x="{cx}" y="{y + h + 36}" text-anchor="middle">{escape(sub)}</text>'
@@ -236,6 +294,7 @@ def _flow_shape(
 def _card(
     layer: Layer, x: float, y: float, w: float, h: float, colors: dict[str, str]
 ) -> str:
+    chip = max(86, len(layer.kind) * 7.4 + 18)  # the kind badge fits its text
     note = (
         f'<text class="meta" x="{x + 18}" y="{y + 94}">{escape(layer.note)}</text>'
         if layer.note
@@ -246,9 +305,10 @@ def _card(
         f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="14" '
         f'fill="{colors["panel"]}" stroke="{colors["border"]}"/>'
         f'<rect x="{x}" y="{y}" width="7" height="{h}" rx="4" fill="{layer.color}"/>'
-        f'<rect x="{x + 18}" y="{y + 14}" width="86" height="19" rx="9" fill="{layer.color}"/>'
-        f'<text class="kind" x="{x + 61}" y="{y + 27}" text-anchor="middle">'
+        f'<rect x="{x + 18}" y="{y + 14}" width="{chip}" height="19" rx="9" fill="{layer.color}"/>'
+        f'<text class="kind" x="{x + 18 + chip / 2}" y="{y + 27}" text-anchor="middle">'
         f"{escape(layer.kind.upper())}</text>"
+        f"{glyph_svg(layer.kind, layer.color, x + w - 16 - _GLYPH, y + (h - _GLYPH) / 2, _GLYPH)}"
         f'<text class="label" x="{x + 18}" y="{y + 57}">{escape(layer.label)}</text>'
         f'<text class="meta" x="{x + 18}" y="{y + 78}">'
         f"{escape(_sub(layer))}</text>{note}</g>"
@@ -261,10 +321,19 @@ def render_2d(spec: LLMSpec) -> str:
     flow = spec.layout == "flow"
     horiz = spec.direction != "TB"
     pos, boxes, content_w, content_h = _place(spec)
-    width = int(max(980, content_w + 88))
+    # grid skip edges loop out to the right of their column, with the label beyond
+    loop = max(
+        (
+            _loop(pos, edge)[0] + len(edge.label) * 6.6 + 16
+            for edge in spec.connections
+            if not flow and _loop(pos, edge)[0]
+        ),
+        default=0,
+    )
+    width = int(max(980, content_w + 88 + loop))
     header, top = _header(spec, width)
     height = int(top + content_h + 40)
-    ox = 44 + (width - 88 - content_w) / 2
+    ox = 44 + (width - 88 - content_w - loop) / 2
     oy = top + 10
 
     groups: list[str] = []
@@ -284,46 +353,71 @@ def render_2d(spec: LLMSpec) -> str:
             f"{escape(group.label)}</text>{badge}"
         )
 
+    ranks = spec.ranks()
     edges: list[str] = []
     for edge in spec.connections:
-        sx, sy, sw, sh, si = pos[edge.source]
-        tx, ty, tw, th, ti = pos[edge.target]
+        sx, sy, sw, sh, _ = pos[edge.source]
+        tx, ty, tw, th, _ = pos[edge.target]
         sx, sy, tx, ty = sx + ox, sy + oy, tx + ox, ty + oy
-        n = abs(ti - si)
+        rs, rt = ranks[edge.source], ranks[edge.target]
+        n = abs(rt - rs)
         dash = ' stroke-dasharray="7 6"' if edge.style == "dashed" else ""
         if flow and n > 1:
+            # arch over every column in between, measured from the highest of them
+            span = [
+                pos[layer.id]
+                for layer in spec.layers
+                if min(rs, rt) <= ranks[layer.id] <= max(rs, rt)
+            ]
             lift = _apex(n) * 4 / 3
             if horiz:
+                top = min(p[1] for p in span) + oy
                 ax, ay, cx, cy = sx + sw / 2, sy, tx + tw / 2, ty
-                path = f"M{ax},{ay} C{ax},{ay - lift} {cx},{cy - lift} {cx},{cy}"
-                lx, ly = (ax + cx) / 2, min(ay, cy) - _apex(n) - 8
+                path = f"M{ax},{ay} C{ax},{top - lift} {cx},{top - lift} {cx},{cy}"
+                lx, ly = (ax + cx) / 2, top - _apex(n) - 8
             else:
+                left = min(p[0] for p in span) + ox
                 ax, ay, cx, cy = sx, sy + sh / 2, tx, ty + th / 2
-                path = f"M{ax},{ay} C{ax - lift},{ay} {cx - lift},{cy} {cx},{cy}"
-                lx, ly = min(ax, cx) - _apex(n) - 8, (ay + cy) / 2
+                path = f"M{ax},{ay} C{left - lift},{ay} {left - lift},{cy} {cx},{cy}"
+                lx, ly = left - _apex(n) - 8, (ay + cy) / 2
         elif flow:
-            fwd = ti > si
+            # neighbouring columns: an S-curve from the out side to the in side, so
+            # branches fan out and merge cleanly
+            fwd = rt >= rs
             if horiz:
                 ax, ay = sx + (sw if fwd else 0), sy + sh / 2
                 cx, cy = tx + (0 if fwd else tw), ty + th / 2
+                bend = (ax + cx) / 2
+                path = f"M{ax},{ay} C{bend},{ay} {bend},{cy} {cx},{cy}"
             else:
                 ax, ay = sx + sw / 2, sy + (sh if fwd else 0)
                 cx, cy = tx + tw / 2, ty + (0 if fwd else th)
-            path = f"M{ax},{ay} L{cx},{cy}"
+                bend = (ay + cy) / 2
+                path = f"M{ax},{ay} C{ax},{bend} {cx},{bend} {cx},{cy}"
             lx, ly = (ax + cx) / 2, (ay + cy) / 2 - 7
         else:
             ax, ay, cx, cy = sx + sw, sy + sh / 2, tx, ty + th / 2
-            if abs(tx - sx) < 10:
+            bulge, _ = _loop(pos, edge)
+            anchor = ' style="text-anchor:start"'
+            if bulge:
+                # a skip connection (a residual path): out of the right side and back
+                cx = tx + tw
+                path = f"M{ax},{ay} C{ax + bulge},{ay} {cx + bulge},{cy} {cx},{cy}"
+                lx, ly = ax + bulge * 0.75 + 8, (ay + cy) / 2 + 4
+            elif abs(tx - sx) < 10:
                 ax, cx = sx + sw / 2, tx + tw / 2
-                ay, cy = sy + sh, ty
+                down = ty >= sy
+                ay, cy = (sy + sh, ty) if down else (sy, ty + th)
                 path = f"M{ax},{ay} L{cx},{cy}"
-                lx, ly = ax, (ay + cy) / 2 - 7
+                lx, ly = ax + 10, (ay + cy) / 2 + 4  # beside the arrow, not on it
             else:
                 bend = (ax + cx) / 2
                 path = f"M{ax},{ay} C{bend},{ay} {bend},{cy} {cx},{cy}"
                 lx, ly = bend, (ay + cy) / 2 - 7
+                anchor = ""
         label = (
-            f'<text class="edge-label" x="{lx}" y="{ly}">{escape(edge.label)}</text>'
+            f'<text class="edge-label" x="{lx}" y="{ly}"{"" if flow else anchor}>'
+            f"{escape(edge.label)}</text>"
             if edge.label
             else ""
         )
@@ -403,70 +497,117 @@ def _solid_svg(layer: Layer, solid: Solid, ox: float, oy: float) -> str:
     )
 
 
-#: Every label sits on one row under the tallest slab's front edge.
+#: Labels of single-layer columns sit on one row under the tallest slab's front edge.
 _LABEL_ROW = _project(0, -95, -70)[1] + 30
 
 
-def _labels_3d(layer: Layer, solid: Solid, ox: float, oy: float) -> str:
+def _labels_3d(
+    layer: Layer, solid: Solid, ox: float, oy: float, row: float | None
+) -> str:
+    """Kind above the solid; name and size on the shared ``row`` or, for a layer
+    stacked with parallel branches, right under its own solid."""
     x0, x1, (a0, p0), (a1, p1) = solid
     cx, base, depth = (x0 + x1) / 2, max(a0, a1), max(p0, p1)
     kx, ky = _project(cx, base, depth)  # above the back edge of the top face
-    lx = _project(cx, -base, -depth)[0]
+    lx, own = _project(cx, -base, -depth)
+    y = (own + 24) if row is None else row
     out = (
         f'<text class="kind3d" x="{kx + ox:.1f}" y="{ky + oy - 10:.1f}" '
         f'fill="{layer.color}">{escape(layer.kind.upper())}</text>'
-        f'<text class="label" x="{lx + ox:.1f}" y="{_LABEL_ROW + oy:.1f}" '
+        f'<text class="label" x="{lx + ox:.1f}" y="{y + oy:.1f}" '
         f'text-anchor="middle">{escape(layer.label)}</text>'
     )
     if _sub(layer):
         out += (
-            f'<text class="meta" x="{lx + ox:.1f}" y="{_LABEL_ROW + oy + 18:.1f}" '
+            f'<text class="meta" x="{lx + ox:.1f}" y="{y + oy + 18:.1f}" '
             f'text-anchor="middle">{escape(_sub(layer))}</text>'
         )
     return out
 
 
 def render_3d(spec: LLMSpec) -> str:
-    """Render a static oblique view: one solid per layer along a left-to-right flow.
+    """Render a static oblique view: one column of solids per rank, left to right.
 
     Encoders are frustums that narrow along the flow and decoders frustums that widen,
     so an autoencoder reads as the familiar funnel; other layers are activation slabs.
+    Parallel branches (a VAE's mean and log-variance heads) stack in one column.
     """
     colors = _theme(spec)
-    solids: dict[str, Solid] = {}
-    cursor = 0.0
+    ranks = spec.ranks()
+    columns: dict[int, list[Layer]] = {}
     for layer in spec.layers:
-        length, near, far = _SOLIDS.get(layer.kind, _SLAB)
+        columns.setdefault(ranks[layer.id], []).append(layer)
+
+    solids: dict[str, Solid] = {}
+    height_of: dict[str, float] = {}  # world y of each solid's centre
+    stacked: set[str] = set()
+    cursor = 0.0
+    for column in sorted(columns):
+        members = columns[column]
+        shapes = [_SOLIDS.get(layer.kind, _SLAB) for layer in members]
+        length = max(s[0] for s in shapes)
         slot = max(
-            length + 80,
-            _text_width(layer.label, 15) + 28,
-            _text_width(_sub(layer), 12) + 28,
+            [
+                length + 80,
+                *(_text_width(layer.label, 15) + 28 for layer in members),
+                *(_text_width(_sub(layer), 12) + 28 for layer in members),
+            ]
         )
-        x0 = cursor + (slot - length) / 2
-        solids[layer.id] = (x0, x0 + length, near, far)
+        # stack parallel members top to bottom, leaving room for each one's label
+        halves = [max(s[1][0], s[2][0]) for s in shapes]
+        pitch = [2 * h + 96 for h in halves]
+        y = (sum(pitch) - 96) / 2
+        for layer, (own, near, far), half, step in zip(
+            members, shapes, halves, pitch, strict=True
+        ):
+            x0 = cursor + (slot - own) / 2
+            solids[layer.id] = (x0, x0 + own, near, far)
+            height_of[layer.id] = y - half
+            y -= step
+            if len(members) > 1:
+                stacked.add(layer.id)
         cursor += slot
 
-    index = {layer.id: i for i, layer in enumerate(spec.layers)}
+    def lowest(layer: Layer) -> float:
+        _, _, (a0, p0), (a1, p1) = solids[layer.id]
+        return _project(0, height_of[layer.id] - max(a0, a1), -max(p0, p1))[1]
+
+    def highest(layer: Layer) -> float:
+        _, _, (a0, p0), (a1, p1) = solids[layer.id]
+        return _project(0, height_of[layer.id] + max(a0, a1), max(p0, p1))[1]
+
+    row = max(
+        [
+            _LABEL_ROW,
+            *(lowest(layer) + 70 for layer in spec.layers if layer.id in stacked),
+        ]
+    )
     longest = max(
-        (abs(index[c.target] - index[c.source]) for c in spec.connections), default=1
+        (abs(ranks[c.target] - ranks[c.source]) for c in spec.connections), default=1
     )
     arch = 60 + 26 * longest if longest > 1 else 0
-    reach = 95 + 70 * _DEPTH_Y  # tallest solid plus its receding top
+    reach = -min(highest(layer) for layer in spec.layers) + 20
     width = int(max(980, cursor + 70 * _DEPTH_X + 80))
     header, top = _header(spec, width)
     oy = top + 40 + arch + reach
-    height = int(oy + _LABEL_ROW + 40)
+    height = int(oy + row + 40)
     ox = (width - cursor - 70 * _DEPTH_X) / 2
 
     floor: list[str] = []
+    base_y = min(height_of[k] - max(s[2][0], s[3][0]) for k, s in solids.items()) - 10
     for group in spec.groups:
         members = [solids[layer.id] for layer in spec.layers if layer.group == group.id]
         if not members:
             continue
         gx0 = min(m[0] for m in members) - 24
         gx1 = max(m[1] for m in members) + 24
-        plate = [(gx0, -105, -80), (gx1, -105, -80), (gx1, -105, 80), (gx0, -105, 80)]
-        lx, ly = _project(gx0, -105, -80)
+        plate = [
+            (gx0, base_y, -80),
+            (gx1, base_y, -80),
+            (gx1, base_y, 80),
+            (gx0, base_y, 80),
+        ]
+        lx, ly = _project(gx0, base_y, -80)
         repeat = f" ×{group.repeat}" if group.repeat > 1 else ""
         floor.append(
             f'<polygon points="{_poly(plate, ox, oy)}" fill="{group.color}" '
@@ -475,18 +616,31 @@ def render_3d(spec: LLMSpec) -> str:
             f'fill="{group.color}">{escape(group.label + repeat)}</text>'
         )
 
-    bodies = [_solid_svg(layer, solids[layer.id], ox, oy) for layer in spec.layers]
-    labels = [_labels_3d(layer, solids[layer.id], ox, oy) for layer in spec.layers]
+    bodies = [
+        _solid_svg(layer, solids[layer.id], ox, oy - height_of[layer.id])
+        for layer in spec.layers
+    ]
+    labels = [
+        _labels_3d(
+            layer,
+            solids[layer.id],
+            ox,
+            oy - height_of[layer.id],
+            None if layer.id in stacked else row + height_of[layer.id],
+        )
+        for layer in spec.layers
+    ]
 
     edges: list[str] = []
     for edge in spec.connections:
-        sx0, sx1, (_, sp0), (_, sp1) = solids[edge.source]
-        tx0, tx1, (_, tp0), (_, tp1) = solids[edge.target]
+        sx0, sx1, (sa0, sp0), (sa1, sp1) = solids[edge.source]
+        tx0, tx1, (ta0, tp0), (ta1, tp1) = solids[edge.target]
+        sy, ty = height_of[edge.source], height_of[edge.target]
         dash = ' stroke-dasharray="7 6"' if edge.style == "dashed" else ""
-        n = abs(index[edge.target] - index[edge.source])
+        n = abs(ranks[edge.target] - ranks[edge.source])
         if n > 1:
-            a = _project((sx0 + sx1) / 2, 95, 0)
-            c = _project((tx0 + tx1) / 2, 95, 0)
+            a = _project((sx0 + sx1) / 2, sy + max(sa0, sa1), 0)
+            c = _project((tx0 + tx1) / 2, ty + max(ta0, ta1), 0)
             lift = 60 + 26 * n
             ax, ay, cx, cy = a[0] + ox, a[1] + oy, c[0] + ox, c[1] + oy
             path = (
@@ -497,11 +651,15 @@ def render_3d(spec: LLMSpec) -> str:
         else:
             # Along the front plane, from the source's front edge to the target's, so
             # the arrow never starts or ends inside a solid.
-            forward = index[edge.target] > index[edge.source]
-            a = _project(sx1, 0, -sp1) if forward else _project(sx0, 0, -sp0)
-            c = _project(tx0, 0, -tp0) if forward else _project(tx1, 0, -tp1)
+            forward = ranks[edge.target] >= ranks[edge.source]
+            a = _project(sx1, sy, -sp1) if forward else _project(sx0, sy, -sp0)
+            c = _project(tx0, ty, -tp0) if forward else _project(tx1, ty, -tp1)
             ax, ay, cx, cy = a[0] + ox, a[1] + oy, c[0] + ox, c[1] + oy
-            path = f"M{ax:.1f},{ay:.1f} L{cx:.1f},{cy:.1f}"
+            bend = (ax + cx) / 2
+            path = (
+                f"M{ax:.1f},{ay:.1f} C{bend:.1f},{ay:.1f} {bend:.1f},{cy:.1f} "
+                f"{cx:.1f},{cy:.1f}"
+            )
             mx, my = (ax + cx) / 2, (ay + cy) / 2 - 10
         label = (
             f'<text class="edge-label" x="{mx:.1f}" y="{my:.1f}">{escape(edge.label)}</text>'
@@ -513,7 +671,6 @@ def render_3d(spec: LLMSpec) -> str:
     style = _style(colors).replace(
         "</style>",
         ".kind3d{font:700 10px system-ui,sans-serif;letter-spacing:1px;text-anchor:middle}"
-        f".edge-label{{paint-order:stroke;stroke:{colors['bg']};stroke-width:4px}}"
         "</style>",
     )
     # Solids first, then edges and labels, so arrow heads and text stay readable.

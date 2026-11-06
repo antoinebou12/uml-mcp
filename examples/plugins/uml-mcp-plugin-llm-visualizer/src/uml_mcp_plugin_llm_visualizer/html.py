@@ -10,6 +10,7 @@ from html import escape
 from importlib.resources import files
 from typing import Any
 
+from .glyphs import GLYPHS
 from .model import LLMSpec
 
 
@@ -45,7 +46,7 @@ def page(spec: LLMSpec, *, initial_mode: str) -> str:
     subtitle = (
         f'<p class="subtitle">{escape(spec.subtitle)}</p>' if spec.subtitle else ""
     )
-    data = spec.as_dict() | {"initialMode": initial_mode}
+    data = spec.as_dict() | {"initialMode": initial_mode, "glyphs": GLYPHS}
     return (
         "<!doctype html>\n"
         f'<html lang="en" class="{spec.theme}"><head><meta charset="utf-8">'

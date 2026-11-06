@@ -9,6 +9,17 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
 ### Added
 
+- LLM visualizer: the flow layout places each layer by its depth in the graph, so parallel
+  branches share a column. A VAE's mean and log-variance heads now stack between the encoder
+  and the sampled z, with curved edges fanning out and merging, in 2D, the static 3D SVG and the
+  interactive 3D scene. A role in a layer's name (encoder, decoder, latent, mean μ, log σ²) wins
+  over a vague `type` such as `dense`; small shapes carry their name underneath; edge labels have
+  a halo; the default title is "Model architecture"; in a narrow chat frame the layer list hides
+  and labels scale with the zoom.
+- LLM visualizer cards carry a glyph for their kind (token chips, embedding matrix, causal
+  attention mask, FFN, norm curve, ⊕, router diamond, experts, memory cylinder, logits bars),
+  shared by the SVG and the interactive page; grid skip edges such as a residual path loop
+  around the stack, and edge labels sit beside their arrows.
 - LLM visualizer: encoders and decoders are funnels in 3D too, narrowing and widening along the
   flow in the interactive scene and in a new static oblique SVG with one label row. Sources may use
   `name`/`type` for `label`/`kind`, a missing kind is inferred from the layer's id and label, and a

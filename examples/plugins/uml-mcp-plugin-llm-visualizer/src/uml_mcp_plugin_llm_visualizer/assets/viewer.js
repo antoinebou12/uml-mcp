@@ -12,34 +12,56 @@
   let W = 0, H = 0, hits = [];
 
   // ---- layout -------------------------------------------------------------
-  const PER = 6, CW = 236, CH = 108, GX = 280, GY = 128;
+  const PER = 6, CW = 300, CH = 108, GX = 344, GY = 128, GLYPH = 52, FLOW_CARD = [236, 108];
   const FLOW = spec.layout === "flow", HORIZ = spec.direction !== "TB";
   // Shape conventions of autoencoder / GAN / VAE diagrams, used by the flow layout.
   const KIND_DIMS = { encoder: [170, 260], decoder: [170, 260], vector: [64, 260], bottleneck: [72, 72], decision: [92, 92], token: [110, 46] };
-  const layerIndex = new Map(layers.map((l, i) => [l.id, i]));
-  const span = (e) => Math.abs(layerIndex.get(e.to) - layerIndex.get(e.from));
+  // Columns come from the server (longest path from an input), so parallel branches
+  // such as a VAE's mean and log-variance heads share one.
+  const rankOf = (id) => byId.get(id).rank || 0;
+  const span = (e) => Math.abs(rankOf(e.to) - rankOf(e.from));
+  const STACK_GAP = 34, LABEL_BELOW = new Set(["vector", "bottleneck", "decision"]);
+  const subLen = (l) => l.shape.join(" × ").length + (l.repeat > 1 ? 6 : 0);
+  // Small shapes carry their name underneath; their column widens to fit it.
+  const labelRoom = (l) => (LABEL_BELOW.has(l.kind) ? Math.max(l.label.length * 8.6, subLen(l) * 6.8) + 16 : 0);
+  const flowDims = (l, stacked) => {
+    const base = KIND_DIMS[l.kind];
+    if (!base) return FLOW_CARD;
+    let [along, across] = base;
+    if (stacked > 1 && across > 120) across = Math.max(108, (260 - STACK_GAP * (stacked - 1)) / stacked);
+    return HORIZ ? [along, across] : [across, along];
+  };
   const apex = (n) => 34 + 22 * n;
   const maxSpan = FLOW ? Math.max(0, ...spec.connections.map((e) => (span(e) > 1 ? span(e) : 0))) : 0;
   const FLOW_GAP = 90, PADG = 16, HEADG = spec.groups.length ? 26 : 0;
-  // Room after layer i for the label of the edge to its neighbour (left-right flow only).
-  const gapAfter = (i) => {
-    const a = layers[i].id, b = layers[i + 1] && layers[i + 1].id;
-    const e = spec.connections.find((c) => c.label && ((c.from === a && c.to === b) || (c.from === b && c.to === a)));
-    return HORIZ && e ? Math.max(FLOW_GAP, e.label.length * 6.6 + 34) : FLOW_GAP;
+  // Room after column r for the labels of the edges into the next column.
+  const gapAfter = (r) => {
+    if (!HORIZ) return FLOW_GAP;
+    const widths = spec.connections.filter((c) => c.label && rankOf(c.from) === r && rankOf(c.to) === r + 1).map((c) => c.label.length * 6.6 + 34);
+    return Math.max(FLOW_GAP, ...widths);
   };
   const pos2d = new Map(), groupBoxes = [];
   let bounds2d;
   (function layout2d() {
     if (FLOW) {
+      const cols = new Map();
+      layers.forEach((l, i) => { if (!cols.has(rankOf(l.id))) cols.set(rankOf(l.id), []); cols.get(rankOf(l.id)).push([i, l]); });
       let m = 0;
-      layers.forEach((l, i) => {
-        const base = KIND_DIMS[l.kind];
-        const [w, h] = base ? (HORIZ ? base : [base[1], base[0]]) : [190, 108];
-        pos2d.set(l.id, { x: HORIZ ? m : -w / 2, y: HORIZ ? -h / 2 : m, w, h, i });
-        m += (HORIZ ? w : h) + gapAfter(i);
+      [...cols.keys()].sort((a, b) => a - b).forEach((r) => {
+        const mem = cols.get(r), dims = mem.map(([, l]) => flowDims(l, mem.length));
+        let along = Math.max(...dims.map(([w, h]) => (HORIZ ? w : h)));
+        if (HORIZ) along = Math.max(along, ...mem.map(([, l]) => labelRoom(l)));
+        const gaps = mem.map(([, l]) => STACK_GAP + (HORIZ && LABEL_BELOW.has(l.kind) ? 40 : 0));
+        let c = -(dims.reduce((s, [w, h]) => s + (HORIZ ? h : w), 0) + gaps.slice(0, -1).reduce((s, g) => s + g, 0)) / 2;
+        mem.forEach(([i, l], k) => {
+          const [w, h] = dims[k];
+          if (HORIZ) { pos2d.set(l.id, { x: m + (along - w) / 2, y: c, w, h, i, r }); c += h + gaps[k]; }
+          else { pos2d.set(l.id, { x: c, y: m + (along - h) / 2, w, h, i, r }); c += w + gaps[k]; }
+        });
+        m += along + gapAfter(r);
       });
     } else {
-      layers.forEach((l, i) => pos2d.set(l.id, { x: Math.floor(i / PER) * GX, y: (i % PER) * GY, w: CW, h: CH, i }));
+      layers.forEach((l, i) => pos2d.set(l.id, { x: Math.floor(i / PER) * GX, y: (i % PER) * GY, w: CW, h: CH, i, r: i }));
     }
     spec.groups.forEach((g) => {
       const mem = layers.filter((l) => l.group === g.id).map((l) => pos2d.get(l.id));
@@ -50,7 +72,12 @@
     });
     const rects = [...pos2d.values(), ...groupBoxes];
     let minX = Math.min(...rects.map((r) => r.x)), minY = Math.min(...rects.map((r) => r.y));
-    const maxX = Math.max(...rects.map((r) => r.x + r.w)), maxY = Math.max(...rects.map((r) => r.y + r.h)) + (FLOW ? 46 : 0);
+    // grid skip edges loop out to the right of their column, with the label beyond
+    const loops = FLOW ? [0] : spec.connections.map((e) => {
+      const s = pos2d.get(e.from), t = pos2d.get(e.to), rows = Math.round(Math.abs(t.y - s.y) / GY);
+      return Math.abs(t.x - s.x) < 10 && rows > 1 ? 36 + 14 * rows + (e.label || "").length * 6.6 + 16 : 0;
+    });
+    const maxX = Math.max(...rects.map((r) => r.x + r.w)) + Math.max(0, ...loops), maxY = Math.max(...rects.map((r) => r.y + r.h)) + (FLOW ? 46 : 0);
     if (maxSpan) { if (HORIZ) minY -= apex(maxSpan) + 24; else minX -= apex(maxSpan) + 24; }
     rects.forEach((r) => { r.x -= minX; r.y -= minY; });
     bounds2d = { w: maxX - minX, h: maxY - minY };
@@ -59,11 +86,18 @@
   const box3d = new Map();
   // Glass panels receding in depth, one per layer, like a stack of activation planes.
   const SPACING = 150, STACK = 12, GRID_X = 10, GRID_Y = 6;
-  layers.forEach((l, i) => {
-    const [hx, hy] = { vector: [30, 85], bottleneck: [32, 32], decision: [38, 38], token: [55, 22] }[l.kind] || [135, 85];
-    // Encoders narrow and decoders widen along the flow: the autoencoder funnel.
-    const taper = l.kind === "encoder" ? "narrow" : l.kind === "decoder" ? "wide" : "";
-    box3d.set(l.id, { x: 0, y: hy, z: (i - (layers.length - 1) / 2) * SPACING, hx, hy, hz: 2, index: i, taper });
+  const columns3d = [...new Set(layers.map((l) => rankOf(l.id)))].sort((a, b) => a - b);
+  const SIZE3D = (l) => ({ vector: [30, 85], bottleneck: [32, 32], decision: [38, 38], token: [55, 22] }[l.kind] || [135, 85]);
+  columns3d.forEach((r, slot) => {
+    const mem = layers.filter((l) => rankOf(l.id) === r);
+    const pitch = 2 * Math.max(...mem.map((l) => SIZE3D(l)[0])) + 50;
+    mem.forEach((l, k) => {
+      const [hx, hy] = SIZE3D(l);
+      // Encoders narrow and decoders widen along the flow: the autoencoder funnel.
+      const taper = l.kind === "encoder" ? "narrow" : l.kind === "decoder" ? "wide" : "";
+      const z = (slot - (columns3d.length - 1) / 2) * SPACING;
+      box3d.set(l.id, { x: (k - (mem.length - 1) / 2) * pitch, y: hy, z, hx, hy, hz: 2, index: layers.indexOf(l), taper, lane: k });
+    });
   });
   const FUNNEL = 0.42, FLEN = SPACING * 0.62;
   // Where a layer's input and output faces sit along the flow.
@@ -145,13 +179,33 @@
     ctx.lineTo(x - 10 * Math.cos(angle + 0.4), y - 10 * Math.sin(angle + 0.4));
     ctx.closePath(); ctx.fill();
   }
-  function tag(text, x, y, color) {
-    ctx.font = "12px system-ui,sans-serif";
-    const w = ctx.measureText(text).width + 12;
+  // size: font px; 2D edge labels pass a zoom-scaled size so they shrink with the diagram
+  // align "left": x is where the label starts (labels set beside an arrow)
+  function tag(text, x, y, color, size = 12, align = "center") {
+    ctx.font = `${size}px system-ui,sans-serif`;
+    const w = ctx.measureText(text).width + size;
+    if (align === "left") x += w / 2;
     ctx.fillStyle = css("--panel"); ctx.globalAlpha = 0.9;
-    ctx.fillRect(x - w / 2, y - 10, w, 20); ctx.globalAlpha = 1;
+    ctx.fillRect(x - w / 2, y - size * 0.85, w, size * 1.7); ctx.globalAlpha = 1;
     ctx.fillStyle = color; ctx.textAlign = "center"; ctx.textBaseline = "middle";
     ctx.fillText(text, x, y);
+  }
+
+  // The kind's pictogram (shared with the static SVG): primitives in a unit box.
+  function drawGlyph(kind, color, x, y, s) {
+    for (const g of spec.glyphs[kind] || spec.glyphs.generic) {
+      ctx.beginPath();
+      if (g.t === "rect") {
+        if (g.r) ctx.roundRect(x + g.x * s, y + g.y * s, g.w * s, g.h * s, g.r * g.w * s);
+        else ctx.rect(x + g.x * s, y + g.y * s, g.w * s, g.h * s);
+      } else if (g.t === "ellipse") ctx.ellipse(x + g.x * s, y + g.y * s, g.rx * s, g.ry * s, 0, 0, Math.PI * 2);
+      else g.p.forEach(([px, py], i) => (i ? ctx.lineTo(x + px * s, y + py * s) : ctx.moveTo(x + px * s, y + py * s)));
+      ctx.strokeStyle = color; ctx.lineWidth = Math.max(1, (2 * s) / GLYPH);
+      if (g.t === "path") { ctx.lineCap = ctx.lineJoin = "round"; ctx.stroke(); continue; }
+      if (g.t === "poly") ctx.closePath();
+      ctx.fillStyle = rgba(color, g.o); ctx.fill();
+      if (g.t !== "rect") { ctx.lineWidth = 1; ctx.stroke(); }
+    }
   }
 
   function drawShape2d(l, x, y, w, h, z, sel) {
@@ -177,13 +231,14 @@
       ctx.fillText(fit(l.label, Math.min(w, h) * 0.8), x + w / 2, y + h / 2 - 8 * z);
       ctx.fillStyle = css("--muted"); ctx.font = `${12 * z}px system-ui,sans-serif`;
       ctx.fillText(fit(sub, Math.min(w, h) * 0.8), x + w / 2, y + h / 2 + 14 * z);
-    } else if (l.kind !== "vector") {
+    } else if (!LABEL_BELOW.has(l.kind)) {
       ctx.fillText(fit(l.label, w - 8 * z), x + w / 2, y + h / 2);
     } else {
+      const room = Math.max(150, labelRoom(l)) * z;
       ctx.textBaseline = "alphabetic";
-      ctx.fillText(fit(l.label, 150 * z), x + w / 2, y + h + 20 * z);
+      ctx.fillText(fit(l.label, room), x + w / 2, y + h + 20 * z);
       ctx.fillStyle = css("--muted"); ctx.font = `${12 * z}px system-ui,sans-serif`;
-      ctx.fillText(fit(sub, 150 * z), x + w / 2, y + h + 36 * z);
+      ctx.fillText(fit(sub, room), x + w / 2, y + h + 36 * z);
     }
   }
 
@@ -208,45 +263,60 @@
     const color = css("--line");
     groupBoxes.forEach((b) => drawGroup2d(b, P, z));
     for (const e of spec.connections) {
-      const s = pos2d.get(e.from), t = pos2d.get(e.to), n = Math.abs(t.i - s.i);
+      const s = pos2d.get(e.from), t = pos2d.get(e.to), n = Math.abs(t.r - s.r);
       const gridVertical = !FLOW && Math.abs(t.x - s.x) < 10, arch = FLOW && n > 1;
-      let a, c, mx, my, angle;
+      let a, c, mx, my, angle, side = false;
       ctx.strokeStyle = ctx.fillStyle = color; ctx.lineWidth = 2; ctx.setLineDash(e.style === "dashed" ? [7, 6] : []);
       ctx.beginPath();
       if (arch) {
-        const lift = (apex(n) * 4 * z) / 3;
+        // arch over every column in between, measured from the highest of them
+        const lift = (apex(n) * 4 * z) / 3, lo = Math.min(s.r, t.r), hi = Math.max(s.r, t.r);
+        const between = [...pos2d.values()].filter((p) => p.r >= lo && p.r <= hi);
         if (HORIZ) {
           a = P(s.x + s.w / 2, s.y); c = P(t.x + t.w / 2, t.y);
-          ctx.moveTo(a[0], a[1]); ctx.bezierCurveTo(a[0], a[1] - lift, c[0], c[1] - lift, c[0], c[1]);
-          mx = (a[0] + c[0]) / 2; my = Math.min(a[1], c[1]) - apex(n) * z - 12; angle = Math.PI / 2;
+          const top = P(0, Math.min(...between.map((p) => p.y)))[1];
+          ctx.moveTo(a[0], a[1]); ctx.bezierCurveTo(a[0], top - lift, c[0], top - lift, c[0], c[1]);
+          mx = (a[0] + c[0]) / 2; my = top - apex(n) * z - 12; angle = Math.PI / 2;
         } else {
           a = P(s.x, s.y + s.h / 2); c = P(t.x, t.y + t.h / 2);
-          ctx.moveTo(a[0], a[1]); ctx.bezierCurveTo(a[0] - lift, a[1], c[0] - lift, c[1], c[0], c[1]);
-          mx = Math.min(a[0], c[0]) - apex(n) * z - 12; my = (a[1] + c[1]) / 2; angle = 0;
+          const left = P(Math.min(...between.map((p) => p.x)), 0)[0];
+          ctx.moveTo(a[0], a[1]); ctx.bezierCurveTo(left - lift, a[1], left - lift, c[1], c[0], c[1]);
+          mx = left - apex(n) * z - 12; my = (a[1] + c[1]) / 2; angle = 0;
         }
       } else if (FLOW) {
-        const fwd = t.i > s.i;
-        if (HORIZ) { a = P(s.x + (fwd ? s.w : 0), s.y + s.h / 2); c = P(t.x + (fwd ? 0 : t.w), t.y + t.h / 2); angle = fwd ? 0 : Math.PI; }
-        else { a = P(s.x + s.w / 2, s.y + (fwd ? s.h : 0)); c = P(t.x + t.w / 2, t.y + (fwd ? 0 : t.h)); angle = fwd ? Math.PI / 2 : -Math.PI / 2; }
+        // neighbouring columns: an S-curve, so branches fan out and merge cleanly
+        const fwd = t.r >= s.r;
+        ctx.moveTo(...(a = HORIZ ? P(s.x + (fwd ? s.w : 0), s.y + s.h / 2) : P(s.x + s.w / 2, s.y + (fwd ? s.h : 0))));
+        c = HORIZ ? P(t.x + (fwd ? 0 : t.w), t.y + t.h / 2) : P(t.x + t.w / 2, t.y + (fwd ? 0 : t.h));
+        if (HORIZ) { const b = (a[0] + c[0]) / 2; ctx.bezierCurveTo(b, a[1], b, c[1], c[0], c[1]); angle = fwd ? 0 : Math.PI; }
+        else { const b = (a[1] + c[1]) / 2; ctx.bezierCurveTo(a[0], b, c[0], b, c[0], c[1]); angle = fwd ? Math.PI / 2 : -Math.PI / 2; }
         mx = (a[0] + c[0]) / 2; my = (a[1] + c[1]) / 2 - 12;
-        ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]);
       } else {
-        if (gridVertical) {
+        const rows = Math.round(Math.abs(t.y - s.y) / GY);
+        if (gridVertical && rows > 1) {
+          // a skip connection (a residual path): out of the right side and back in
+          const bulge = (36 + 14 * rows) * z;
+          a = P(s.x + s.w, s.y + s.h / 2); c = P(t.x + t.w, t.y + t.h / 2);
+          ctx.moveTo(a[0], a[1]); ctx.bezierCurveTo(a[0] + bulge, a[1], c[0] + bulge, c[1], c[0], c[1]);
+          angle = Math.PI; side = true;
+          mx = a[0] + bulge * 0.75 + 8 * z; my = (a[1] + c[1]) / 2;
+        } else if (gridVertical) {
           const down = t.y >= s.y;
           a = P(s.x + s.w / 2, s.y + (down ? s.h : 0)); c = P(t.x + t.w / 2, t.y + (down ? 0 : t.h));
           angle = Math.atan2(c[1] - a[1], 0);
+          ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]);
+          mx = a[0] + 10 * z; my = (a[1] + c[1]) / 2; side = true;  // beside the arrow, not on it
         } else {
           const right = t.x > s.x;
           a = P(s.x + (right ? s.w : 0), s.y + s.h / 2); c = P(t.x + (right ? 0 : t.w), t.y + t.h / 2);
+          mx = (a[0] + c[0]) / 2; my = (a[1] + c[1]) / 2 - 12;
+          ctx.moveTo(a[0], a[1]); ctx.bezierCurveTo(mx, a[1], mx, c[1], c[0], c[1]);
+          angle = c[0] >= mx ? 0 : Math.PI;
         }
-        mx = (a[0] + c[0]) / 2; my = (a[1] + c[1]) / 2 - 12;
-        ctx.moveTo(a[0], a[1]);
-        if (gridVertical) ctx.lineTo(c[0], c[1]); else ctx.bezierCurveTo(mx, a[1], mx, c[1], c[0], c[1]);
-        if (!gridVertical) angle = c[0] >= mx ? 0 : Math.PI;
       }
       ctx.stroke(); ctx.setLineDash([]);
       arrowHead(c[0], c[1], angle);
-      if (e.label) tag(e.label, mx, my, css("--muted"));
+      if (e.label) tag(e.label, mx, my, css("--muted"), Math.max(6.5, Math.min(12, 11.5 * z)), side ? "left" : "center");
     }
     for (const l of layers) {
       const p = pos2d.get(l.id), [x, y] = P(p.x, p.y), w = p.w * z, h = p.h * z, sel = l.id === selected;
@@ -259,10 +329,12 @@
       ctx.lineWidth = sel ? 3 : 1;
       ctx.beginPath(); ctx.roundRect(x, y, w, h, 14 * z); ctx.fill(); ctx.stroke();
       ctx.fillStyle = l.color; ctx.fillRect(x, y + 6 * z, 7 * z, h - 12 * z);
-      ctx.beginPath(); ctx.roundRect(x + 18 * z, y + 14 * z, 86 * z, 19 * z, 9 * z); ctx.fill();
+      const chip = Math.max(86, l.kind.length * 7.4 + 18);  // the kind badge fits its text
+      ctx.beginPath(); ctx.roundRect(x + 18 * z, y + 14 * z, chip * z, 19 * z, 9 * z); ctx.fill();
       ctx.fillStyle = "#fff"; ctx.font = `700 ${9 * z}px system-ui,sans-serif`; ctx.textAlign = "center"; ctx.textBaseline = "alphabetic";
-      ctx.fillText(l.kind.toUpperCase(), x + 61 * z, y + 27 * z);
-      const room = (p.w - 36) * z;
+      ctx.fillText(l.kind.toUpperCase(), x + (18 + chip / 2) * z, y + 27 * z);
+      const room = (p.w - 36 - GLYPH - 12) * z;
+      drawGlyph(l.kind, l.color, x + w - (16 + GLYPH) * z, y + (h - GLYPH * z) / 2, GLYPH * z);
       ctx.textAlign = "left"; ctx.fillStyle = css("--text"); ctx.font = `700 ${15 * z}px system-ui,sans-serif`;
       ctx.fillText(fit(l.label, room), x + 18 * z, y + 57 * z);
       ctx.fillStyle = css("--muted"); ctx.font = `${12 * z}px system-ui,sans-serif`;
@@ -304,10 +376,12 @@
   }
   const trace = (poly) => { ctx.beginPath(); poly.forEach((p, i) => (i ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1]))); ctx.closePath(); };
 
+  const size3d = () => Math.max(8.5, Math.min(12, 13 * view.zoom));
   function draw3d() {
     const first = box3d.get(layers[0].id), last = box3d.get(layers[layers.length - 1].id);
     // floor plate under the whole stack
-    const floorZ0 = first.z - 90, floorZ1 = last.z + 90, fx = first.hx + 30;
+    const floorZ0 = first.z - 90, floorZ1 = last.z + 90;
+    const fx = Math.max(...[...box3d.values()].map((b) => Math.abs(b.x) + b.hx)) + 30;
     const floor = [proj(-fx, 0, floorZ0), proj(fx, 0, floorZ0), proj(fx, 0, floorZ1), proj(-fx, 0, floorZ1)];
     trace(floor); ctx.fillStyle = rgba(css("--accent"), 0.06); ctx.fill();
     ctx.strokeStyle = rgba(css("--accent"), 0.35); ctx.lineWidth = 1.5; ctx.stroke();
@@ -326,7 +400,7 @@
       ctx.fillStyle = rgba(g.color, 0.16); ctx.fill();
       ctx.strokeStyle = rgba(g.color, 0.9); ctx.lineWidth = 1.6; ctx.setLineDash([6, 5]); ctx.stroke(); ctx.setLineDash([]);
       const p = proj(hx - 10, 0, z0);
-      tag(g.label + (g.repeat > 1 ? ` ×${g.repeat}` : ""), p[0] - 30, p[1] + 14, g.color);
+      tag(g.label + (g.repeat > 1 ? ` ×${g.repeat}` : ""), p[0] - 30, p[1] + 14, g.color, size3d());
     });
 
     // data flow: connectors between panel centres, behind the glass
@@ -337,7 +411,10 @@
       ctx.strokeStyle = ctx.fillStyle = color; ctx.lineWidth = 2; ctx.setLineDash(e.style === "dashed" ? [7, 6] : []);
       ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(c[0], c[1]); ctx.stroke(); ctx.setLineDash([]);
       arrowHead(c[0], c[1], Math.atan2(c[1] - a[1], c[0] - a[0]));
-      if (e.label) tag(e.label, (a[0] + c[0]) / 2, (a[1] + c[1]) / 2 - 12, css("--muted"));
+      // edges into or out of parallel branches would share a midpoint: spread their labels
+      const lane = (s.lane || 0) + (t.lane || 0);
+      // zoomed out (a small chat frame) the 2D view carries the edge labels instead
+      if (e.label && view.zoom >= 0.6) tag(e.label, (a[0] + c[0]) / 2, (a[1] + c[1]) / 2 - 12 + lane * 20, css("--muted"), size3d());
     }
 
     const items = [];
@@ -369,8 +446,8 @@
     }
 
     for (const l of layers) {
-      const b = box3d.get(l.id), p = proj(b.x, -18, b.z);
-      tag(l.label + (l.repeat > 1 ? ` ×${l.repeat}` : ""), p[0], p[1], l.id === selected ? css("--accent") : css("--text"));
+      const b = box3d.get(l.id), p = proj(b.x, -18 - 22 * (b.lane || 0), b.z);
+      tag(l.label + (l.repeat > 1 ? ` ×${l.repeat}` : ""), p[0], p[1], l.id === selected ? css("--accent") : css("--text"), size3d());
     }
   }
 

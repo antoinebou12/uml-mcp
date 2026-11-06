@@ -333,3 +333,147 @@ def test_3d_page_draws_the_vae_funnel_without_errors():
         assert page.inner_text("#inspect-shape") == "not set"
         assert not errors
         browser.close()
+
+
+# The VAE with mean and log-variance heads that an agent sent (``dense`` everywhere).
+VAE_HEADS = json.dumps(
+    {
+        "layers": [
+            {"id": "input", "name": "Input x", "type": "input", "shape": [784]},
+            {"id": "enc", "name": "Encoder", "type": "dense", "shape": [256]},
+            {"id": "mu", "name": "Mean μ", "type": "dense", "shape": [2]},
+            {
+                "id": "logvar",
+                "name": "Log variance log σ²",
+                "type": "dense",
+                "shape": [2],
+            },
+            {"id": "z", "name": "Latent z = μ + σ ⊙ ε", "type": "latent", "shape": [2]},
+            {"id": "dec", "name": "Decoder", "type": "dense", "shape": [256]},
+            {"id": "out", "name": "Reconstruction x̂", "type": "output", "shape": [784]},
+        ],
+        "connections": [
+            {"from": "input", "to": "enc", "label": "encode x"},
+            {"from": "enc", "to": "mu", "label": "predict μ"},
+            {"from": "enc", "to": "logvar", "label": "predict log σ²"},
+            {"from": "mu", "to": "z", "label": "sample z = μ + σ ⊙ ε"},
+            {"from": "logvar", "to": "z", "label": "σ = exp(½ log σ²)"},
+            {"from": "z", "to": "dec", "label": "decode z"},
+            {"from": "dec", "to": "out", "label": "reconstruct x̂"},
+        ],
+    },
+    ensure_ascii=False,
+)
+
+
+def test_role_in_the_name_beats_a_vague_type():
+    kinds = [layer.kind for layer in parse(VAE_HEADS).layers]
+    assert kinds == [
+        "input",
+        "encoder",
+        "vector",
+        "vector",
+        "bottleneck",
+        "decoder",
+        "output",
+    ]
+
+    def kind(name, type_):
+        return (
+            parse(json.dumps({"layers": [{"id": "a", "name": name, "type": type_}]}))
+            .layers[0]
+            .kind
+        )
+
+    assert (
+        kind("Multi-head attention", "dense") == "attention"
+    )  # "mu" is not a token here
+    assert kind("Projection", "dense") == "feedforward"
+    assert parse(src()).title == "Model architecture"
+
+
+def test_parallel_branches_share_a_column():
+    spec = parse(VAE_HEADS)
+    assert spec.ranks() == {
+        "input": 0,
+        "enc": 1,
+        "mu": 2,
+        "logvar": 2,
+        "z": 3,
+        "dec": 4,
+        "out": 5,
+    }
+    # residual / feedback edges never reorder a chain
+    assert list(parse(TRANSFORMER).ranks().values()) == sorted(
+        parse(TRANSFORMER).ranks().values()
+    )
+    assert all("rank" in layer for layer in spec.as_dict()["layers"])
+
+
+def _layer_box(svg_text, layer_id):
+    root = ET.fromstring(svg_text)
+    ns = "{http://www.w3.org/2000/svg}"
+    group = root.find(f".//{ns}g[@id='layer-{layer_id}']")
+    assert group is not None
+    rect = group.find(f"{ns}rect")
+    assert rect is not None
+    return float(rect.get("x") or 0), float(rect.get("y") or 0)
+
+
+def test_heads_stack_in_2d_and_3d():
+    renderer = LLMVisualizerRenderer()
+    flat = renderer.render("llm_2d", VAE_HEADS, "svg").content.decode()
+    (mx, my), (lx, ly) = _layer_box(flat, "mu"), _layer_box(flat, "logvar")
+    assert mx == lx and ly > my  # same column, log σ² under μ
+    assert "<polygon" in flat  # encoder and decoder trapezoids
+    solid = renderer.render("llm_3d", VAE_HEADS, "svg").content.decode()
+    assert solid.count('id="layer-') == 7
+    ET.fromstring(solid)
+
+
+def test_heads_page_fits_a_chat_frame():
+    page_html = (
+        LLMVisualizerRenderer().render("llm_2d", VAE_HEADS, "html").content.decode()
+    )
+    with playwright.sync_playwright() as pw:
+        browser = pw.chromium.launch()
+        page = browser.new_page(viewport={"width": 560, "height": 430})
+        errors = []
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.set_content(page_html)
+        assert page.is_hidden("aside")  # the layer list gives way to the canvas
+        canvas = page.locator("#scene").bounding_box()
+        assert canvas and canvas["height"] > 300
+        page.click("#mode-3d")
+        assert not errors
+        browser.close()
+
+
+def test_grid_residual_edge_loops_beside_the_stack():
+    flat = LLMVisualizerRenderer().render("llm_2d", EXAMPLE, "svg").content.decode()
+    root = ET.fromstring(flat)
+    ns = "{http://www.w3.org/2000/svg}"
+    labels = {
+        t.text: t
+        for t in root.iter(f"{ns}text")
+        if "edge-label" in (t.get("class") or "")
+    }
+    card = _layer_box(flat, "embed")
+    # the residual label sits right of the cards, not hidden behind them
+    assert float(labels["residual path"].get("x") or 0) > card[0] + 236
+    # adjacent-row labels start beside their arrow
+    assert labels["hidden states"].get("style") == "text-anchor:start"
+
+
+def test_every_kind_has_a_glyph_on_its_card():
+    from uml_mcp_plugin_llm_visualizer.glyphs import GLYPHS
+    from uml_mcp_plugin_llm_visualizer.model import LAYER_KINDS
+
+    assert set(LAYER_KINDS) <= set(GLYPHS)
+    flat = LLMVisualizerRenderer().render("llm_2d", EXAMPLE, "svg").content.decode()
+    assert flat.count('class="glyph"') == len(parse(EXAMPLE).layers)
+    ET.fromstring(flat)
+    page_html = (
+        LLMVisualizerRenderer().render("llm_2d", EXAMPLE, "html").content.decode()
+    )
+    assert '"glyphs":' in page_html  # the page draws the same primitives
