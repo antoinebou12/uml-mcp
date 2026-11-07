@@ -16,6 +16,13 @@
       "sha256": "aacd6edbcd591b2024cf0607310245e56745a5f950a5fa4f79a3819634847213"
     },
     {
+      "name": "agent_trace",
+      "type": "context",
+      "description": "Writes valid agent_trace JSON for uml-mcp (diagram_type=agent_trace, bundled plugin trace). Use when the user asks for an agent run trace: LLM calls, tool calls, retrievals and sub-agents on a timeline with tokens and cost; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/agent_trace/SKILL.md",
+      "sha256": "667220653426db55e1f0e83dc0b4a99c9a9ce5b4174269d93dd6cf81c41a010f"
+    },
+    {
       "name": "archify_architecture",
       "type": "context",
       "description": "Writes valid archify_architecture JSON for uml-mcp (diagram_type=archify_architecture, bundled plugin archify). Use when the user asks for an architecture overview with colour-coded dashed groups, legend and presets; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
@@ -310,6 +317,13 @@
       "sha256": "9ac3914865bbc4dbeb07026f05d87289babb7f13d2b5e1c6a22f8e73180d3147"
     },
     {
+      "name": "uml-mcp-agent-trace",
+      "type": "context",
+      "description": "Draw agent run traces with LLM, tool, retrieval and sub-agent steps on a timeline (agent_trace).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-agent-trace/SKILL.md",
+      "sha256": "b43cd6c150e4151f69667279665e26dc2686701c9fb579b645f8439b67932ed2"
+    },
+    {
       "name": "uml-mcp-archify",
       "type": "context",
       "description": "Draw archify architecture, workflow and sequence diagrams with colour-coded groups.",
@@ -335,7 +349,7 @@
       "type": "context",
       "description": "Render and verify UML, C4, Mermaid, D2 and D3 diagrams.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "9a8784017e4ea7e8124144c1cd9baf7b8e50fc003f92c7c400a5cc1a36c3e2bd"
+      "sha256": "8d5ea2b8f352bf90a88b90654cce41cf0fe4f19c562d0602bb58b723d6a24a4c"
     },
     {
       "name": "uml-mcp-llm-visualizer",
