@@ -9,6 +9,14 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
 ### Added
 
+- Database schema plugin (`schema`, bundled and on by default): the `db_schema` type draws an
+  ER diagram from SQL DDL (`CREATE TABLE` in Postgres, MySQL or SQLite dialects, read by a small
+  dependency-free parser) or JSON tables. Table cards show keys, links, `null` and `UQ` badges;
+  crow's-foot relationships attach at the exact column rows; tables are layered by foreign-key
+  direction with groups as tinted containers and join tables marked `M:N`. `validate_uml` lists
+  every unknown table or column and duplicate with its line. The HTML page focuses a table and
+  its joins, traces a column's key path on hover, searches tables and columns, and exports SVG,
+  PNG and HTML.
 - D3 plugin redesign. Boxes take the silhouette of their kind (database cylinders, queue pipes,
   slanted functions, chamfered gateways, security shields, user pills), the tile shows the
   service glyph or software logo, and the cloud provider is a corner logo badge (each logo written

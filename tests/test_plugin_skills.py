@@ -48,10 +48,11 @@ def test_type_skill_is_well_formed_and_its_example_validates(dtype):
         "## Example source",
     ):
         assert heading in text, heading
-    example = re.search(r"```json\n(.*?)\n```", text, re.DOTALL)
+    example = re.search(r"```(json|sql)\n(.*?)\n```", text, re.DOTALL)
     assert example, "missing example source"
-    source = example.group(1)
-    json.loads(source)
+    source = example.group(2)
+    if example.group(1) == "json":
+        json.loads(source)
     renderer = BY_TYPE[dtype]
     assert renderer.validate(dtype, source) == []  # type: ignore[attr-defined]
     out = renderer.render(dtype, source, "svg")  # type: ignore[attr-defined]
@@ -65,7 +66,7 @@ def test_guides_point_to_the_workflow_and_render_their_example(topic):
     )
     assert "skill://uml-mcp-diagrams/SKILL.md" in text
     types = [t for t, meta in builder.TYPES.items() if meta[1] == topic]
-    match = re.search(r"```json\n(.*?)\n```", text, re.DOTALL)
+    match = re.search(r"```(?:json|sql)\n(.*?)\n```", text, re.DOTALL)
     assert match, "missing example source"
     source = match.group(1)
     assert BY_TYPE[types[0]].validate(types[0], source) == []  # type: ignore[attr-defined]

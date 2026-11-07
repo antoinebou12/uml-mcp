@@ -17,6 +17,7 @@ def test_poetry_packages_surface() -> None:
         "uml_mcp_plugin_stack_diagram",
         "uml_mcp_plugin_archify",
         "uml_mcp_plugin_llm_visualizer",
+        "uml_mcp_plugin_schema",
     }
 
 

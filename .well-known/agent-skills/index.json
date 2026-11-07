@@ -107,6 +107,13 @@
       "sha256": "e81872cb355e941c799bac4a8b7bb09e1a6a596874caf686f7fd1b17c28648de"
     },
     {
+      "name": "db_schema",
+      "type": "context",
+      "description": "Writes valid db_schema SQL DDL or JSON for uml-mcp (diagram_type=db_schema, bundled plugin schema). Use when the user asks for a database schema or ER diagram from SQL DDL or a list of tables; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/db_schema/SKILL.md",
+      "sha256": "6afc0659856df70edfff676dea427776050e2b756578e32e2a2b8fa41ef6f42e"
+    },
+    {
       "name": "dbml",
       "type": "context",
       "description": "Writes valid dbml diagram source for uml-mcp (diagram_type=dbml). Database Markup Language schema diagrams Use when the user asks for dbml or that notation; then call validate_uml / generate_uml / generate_uml_image.",
@@ -331,11 +338,18 @@
       "sha256": "8fc9a5ed21d20ba47a529ec962c72cf8db43c840bf7a93602f506a50e243cbb0"
     },
     {
+      "name": "uml-mcp-db-schema",
+      "type": "context",
+      "description": "Draw database schema (ER) diagrams from SQL DDL or JSON tables (db_schema).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-db-schema/SKILL.md",
+      "sha256": "149ebf106b487f7453ed7af7a82917fd82d6626ab014f327d622a50dd5eed479"
+    },
+    {
       "name": "uml-mcp-diagrams",
       "type": "context",
       "description": "Render and verify UML, C4, Mermaid, D2 and D3 diagrams.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "9a8784017e4ea7e8124144c1cd9baf7b8e50fc003f92c7c400a5cc1a36c3e2bd"
+      "sha256": "b9703c6f3ac076ba082d2cb2bb57f5aa1264194d6d70b4cb052edeb3083556e0"
     },
     {
       "name": "uml-mcp-llm-visualizer",
