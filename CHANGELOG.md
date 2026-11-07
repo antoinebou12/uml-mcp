@@ -9,6 +9,16 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
 ### Added
 
+- Statechart plugin (`uml-mcp-plugin-statechart`, bundled and on by default): the
+  `state_machine` type draws XState-like JSON as a statechart, with compound states as
+  containers, parallel regions split by dashed lines, initial dots, final double circles, history
+  `H` badges and `EVENT [guard] / actions` labels on orthogonal arrows routed around the states.
+  The HTML page is a simulator: it highlights the active states, offers a button (and a clickable
+  label) for every enabled event, one per guarded alternative, animates each step, enters
+  compound, parallel and history states and fires `onDone`, and keeps a step log with Undo and
+  Reset; a click on a state opens its entry and exit actions, events and description. Validation
+  names the state path of every problem; unreachable states come back from `validate_uml` as
+  warnings, through a new optional `warnings()` renderer hook.
 - D3 plugin redesign. Boxes take the silhouette of their kind (database cylinders, queue pipes,
   slanted functions, chamfered gateways, security shields, user pills), the tile shows the
   service glyph or software logo, and the cloud provider is a corner logo badge (each logo written

@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-for _name in ("d3", "stack-diagram", "archify", "llm-visualizer"):
+for _name in ("d3", "stack-diagram", "archify", "llm-visualizer", "statechart"):
     _src = ROOT / "examples" / "plugins" / f"uml-mcp-plugin-{_name}" / "src"
     if str(_src) not in sys.path:
         sys.path.insert(0, str(_src))
@@ -44,12 +44,14 @@ def renderers() -> dict[str, Any]:
     from uml_mcp_plugin_d3 import D3Renderer
     from uml_mcp_plugin_llm_visualizer import LLMVisualizerRenderer
     from uml_mcp_plugin_stack_diagram import StackDiagramRenderer
+    from uml_mcp_plugin_statechart import StatechartRenderer
 
     return {
         "d3": D3Renderer(),
         "stack-diagram": StackDiagramRenderer(),
         "archify": ArchifyRenderer(),
         "llm-visualizer": LLMVisualizerRenderer(),
+        "statechart": StatechartRenderer(),
     }
 
 
@@ -162,6 +164,28 @@ TYPES: dict[str, tuple[str, str, str, str, str]] = {
             "- The static SVG/PNG is an oblique view with every label on one row under the solids."
         ),
     ),
+    "state_machine": (
+        "statechart",
+        "statechart",
+        "a state machine or statechart (order lifecycle, traffic light, UI flow) to read or step through",
+        (
+            "Model our order lifecycle as a state machine: checkout with address and payment steps, "
+            "packing and invoicing in parallel, cancelled and delivered as final states."
+        ),
+        (
+            "- XState-like JSON: `id`, `title`, `initial`, `context`, `states`. Each state: `on` "
+            "(`EVENT: target` or `{target, guard, actions}`, or a list of guarded alternatives), "
+            "`entry`, `exit`, `type` (`atomic`, `compound`, `parallel`, `final`, `history`), "
+            "`initial`, `states`, `description`, `onDone`.\n"
+            "- Every compound state needs `initial`; a parallel state has none (all regions start).\n"
+            "- Targets: a sibling name, a dotted path (`checkout.payment`), `.child`, or `#id.path`. "
+            "A transition with no target runs its actions and stays (drawn inside the state).\n"
+            '- `{"type": "history"}` in a compound remembers the last step; target it to resume '
+            '(`"history": "deep"` for nested steps).\n'
+            "- Guards are labels: the simulator shows one button per guarded alternative.\n"
+            "- `direction`: `LR` (default) or `TB`. `validate_uml` warns about unreachable states."
+        ),
+    ),
 }
 
 #: topic -> (description, title, short intro). d3-plugins already exists; it is not generated.
@@ -188,6 +212,16 @@ GUIDES: dict[str, tuple[str, str, str]] = {
         (
             "Layer maps, autoencoder and GAN shapes, grouped N× blocks, and a rotatable 3D scene from "
             "one JSON source."
+        ),
+    ),
+    "statechart": (
+        "Draw state machines as statecharts with a step-through simulator (state_machine).",
+        "Statecharts",
+        (
+            "Rounded states, compound containers, parallel regions split by dashed lines, initial, "
+            "final and history pseudo-states and labelled orthogonal transitions. The HTML page is a "
+            "simulator: it highlights the active states and offers a button for every enabled event, "
+            "with a step log, Undo and Reset."
         ),
     ),
 }
