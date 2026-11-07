@@ -17,6 +17,15 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
   every unknown table or column and duplicate with its line. The HTML page focuses a table and
   its joins, traces a column's key path on hover, searches tables and columns, and exports SVG,
   PNG and HTML.
+- Dependency graph plugin (`deps`, bundled and on by default): the `dependency_graph` type reads a
+  `package.json`, `package-lock.json` (v2/v3), `pyproject.toml` (PEP 621, dependency groups,
+  Poetry), `requirements.txt` or `uv.lock`, detected from the text, or a JSON graph, with the
+  standard library only and no network. The SVG is a layered tree from the project to its
+  deepest dependency, coloured by kind (runtime, dev, optional, peer), with licence badges and
+  packages in several versions flagged. The page collapses subtrees, searches, hides dev or
+  optional dependencies, switches to a force graph, highlights the path to the selected package,
+  opens a detail card with **Open documentation** on PyPI or npm, and exports SVG, PNG and HTML.
+  Large lock files are cut to `plugins.settings.deps.max_nodes` (300) with a notice.
 - D3 plugin redesign. Boxes take the silhouette of their kind (database cylinders, queue pipes,
   slanted functions, chamfered gateways, security shields, user pills), the tile shows the
   service glyph or software logo, and the cloud provider is a corner logo badge (each logo written

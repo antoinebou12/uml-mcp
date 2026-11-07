@@ -25,6 +25,7 @@ GUIDE_TOPICS = (
     "archify",
     "llm-visualizer",
     "db-schema",
+    "deps",
     "mermaid",
     "plantuml-c4",
     "batch",

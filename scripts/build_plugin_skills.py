@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-for _name in ("d3", "stack-diagram", "archify", "llm-visualizer", "schema"):
+for _name in ("d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps"):
     _src = ROOT / "examples" / "plugins" / f"uml-mcp-plugin-{_name}" / "src"
     if str(_src) not in sys.path:
         sys.path.insert(0, str(_src))
@@ -42,6 +42,7 @@ MAX_DESCRIPTION = 500
 def renderers() -> dict[str, Any]:
     from uml_mcp_plugin_archify import ArchifyRenderer
     from uml_mcp_plugin_d3 import D3Renderer
+    from uml_mcp_plugin_deps import DepsRenderer
     from uml_mcp_plugin_llm_visualizer import LLMVisualizerRenderer
     from uml_mcp_plugin_schema import SchemaRenderer
     from uml_mcp_plugin_stack_diagram import StackDiagramRenderer
@@ -52,6 +53,7 @@ def renderers() -> dict[str, Any]:
         "archify": ArchifyRenderer(),
         "llm-visualizer": LLMVisualizerRenderer(),
         "schema": SchemaRenderer(),
+        "deps": DepsRenderer(),
     }
 
 
@@ -181,6 +183,22 @@ TYPES: dict[str, tuple[str, str, str, str, str]] = {
             "is marked as an M:N join table. `validate_uml` lists every bad reference with its line."
         ),
     ),
+    "dependency_graph": (
+        "deps",
+        "deps",
+        "the dependency tree of a project from its package.json, pyproject.toml, requirements.txt or a lock file",
+        "Show the dependency tree of this project from its uv.lock, with dev dependencies and duplicate versions.",
+        (
+            "- Paste the file as it is: `package.json`, `package-lock.json` (v2/v3), `pyproject.toml`, "
+            "`requirements.txt` or `uv.lock`; the kind is detected. A lock file adds the transitive levels.\n"
+            "- Or write a graph: `root`, `nodes` (`id`, `version`, `license`, `dev`, `group`) and `edges` "
+            "(`from`, `to`, `range`); a top-level `ecosystem` (`npm`, `pypi`) links each package to its registry.\n"
+            "- Colours: runtime, dev, optional, peer. A dashed amber outline marks a package present in "
+            "several versions.\n"
+            "- Nothing is fetched: licences come from the lock file or the graph. Large locks are capped "
+            "(300 packages by default, `plugins.settings.deps.max_nodes`)."
+        ),
+    ),
 }
 
 #: topic -> (description, title, short intro). d3-plugins already exists; it is not generated.
@@ -218,6 +236,15 @@ GUIDES: dict[str, tuple[str, str, str]] = {
             "containers. The page focuses a table, traces a column's keys and searches."
         ),
     ),
+    "deps": (
+        "Draw dependency graphs from package.json, pyproject.toml, requirements.txt and lock files (dependency_graph).",
+        "Dependency graphs",
+        (
+            "A layered tree from the project to its deepest dependency, coloured by kind (runtime, dev, "
+            "optional, peer), with licences and duplicate versions flagged. The page searches, collapses, "
+            "filters kinds, switches to a force graph and opens each package's PyPI or npm page."
+        ),
+    ),
 }
 
 
@@ -253,6 +280,22 @@ GUIDE_EXTRAS: dict[str, str] = {
         '{"from":"logvar","to":"z","label":"σ = exp(½ log σ²)"},'
         '{"from":"z","to":"dec"},{"from":"dec","to":"xr"}]}\n'
         "```\n\n"
+    ),
+    "deps": (
+        "## Inputs\n\n"
+        "| File | What it adds |\n"
+        "| --- | --- |\n"
+        "| `package.json` | Direct `dependencies`, `devDependencies`, `peerDependencies` and "
+        "`optionalDependencies` with their ranges |\n"
+        "| `package-lock.json` v2/v3 | The installed tree: versions, licences, dev/optional/peer flags |\n"
+        "| `pyproject.toml` | PEP 621 `dependencies`, `optional-dependencies` (extras), "
+        "`dependency-groups`, Poetry tables |\n"
+        "| `requirements.txt` | Pins, ranges, extras and markers (`-r` includes are noted, not read) |\n"
+        "| `uv.lock` | The resolved tree with extras, dev groups and the ranges asked for |\n"
+        '| JSON graph | `{"root", "nodes": [{"id", "version", "license", "dev", "group"}], '
+        '"edges": [{"from", "to", "range"}]}` |\n\n'
+        "Send the file text as `code`. Validation names the file kind it detected and the line or "
+        "field that failed.\n\n"
     ),
 }
 

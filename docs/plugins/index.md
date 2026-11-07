@@ -74,6 +74,7 @@ installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugi
 | `uml-mcp-plugin-archify` | `archify` | `archify_architecture`, `archify_workflow` and `archify_sequence`: dashed colour-coded groups, icon cards, presets and click-to-focus pages, sharing the stack-diagram engine. See the [archify plugin](archify.md) |
 | `uml-mcp-plugin-llm-visualizer` | `llm-visualizer` | Interactive `llm_2d` and `llm_3d` LLM architecture diagrams (HTML or SVG). See the [LLM visualizer plugin](llm-visualizer.md) |
 | `uml-mcp-plugin-schema` | `schema` | `db_schema`: database schema (ER) diagrams from SQL DDL or JSON, with crow's-foot relationships at the column rows (HTML or SVG). See the [database schema plugin](schema.md) |
+| `uml-mcp-plugin-deps` | `deps` | `dependency_graph`: a project's dependency tree from `package.json`, `package-lock.json`, `pyproject.toml`, `requirements.txt` or `uv.lock` (HTML or SVG). See the [dependency graph plugin](deps.md) |
 | built in (`mcp_core.plugins.architecture`) | `architecture` | Experimental, off by default: tiles at explicit positions, exported as HTML or React TSX. See [architecture diagrams](architecture.md) |
 
 ## Shared options
@@ -99,6 +100,7 @@ installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugi
 | *"Draw an autoencoder top-down, then the same model as a 3D scene."* | `llm_2d` · `llm_3d` |
 | *"A transformer with encoder and decoder blocks repeated 6 times."* | `llm_2d` with groups |
 | *"Draw the schema of this CREATE TABLE script, grouped by billing and catalog."* | `db_schema` |
+| *"Show this project's dependency tree from its uv.lock."* | `dependency_graph` |
 
 Each type also has an agent skill with a validated example, at
 `.skill/skills/<diagram_type>/SKILL.md`, and each plugin family a focused guide read over MCP from
