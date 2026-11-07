@@ -35,7 +35,7 @@ function Stepper({ step }: { step: number }) {
         <li key={label} className="flex shrink-0 items-center gap-2">
           <span
             className={cn(
-              "grid size-7 place-items-center rounded-full border text-xs font-medium transition-all duration-300",
+              "grid size-7 place-items-center rounded-full border text-xs font-medium transition-colors",
               i < step && "border-primary bg-primary text-primary-foreground",
               i === step && "border-primary ring-4 ring-primary/15",
             )}
@@ -110,7 +110,7 @@ export default function Setup() {
   if (result) {
     return (
       <Page title="Setup complete">
-        <Card className="mx-auto w-full max-w-2xl text-center animate-in zoom-in-95 fade-in-0 duration-500" data-testid="setup-done">
+        <Card className="mx-auto w-full max-w-2xl text-center" data-testid="setup-done">
           <CardHeader className="items-center">
             <div className="mb-2 grid size-14 place-items-center rounded-full bg-success/15 text-success">
               <PartyPopper className="size-7" />
@@ -148,7 +148,7 @@ export default function Setup() {
         </div>
       )}
       <Stepper step={step} />
-      <div key={step} className="animate-in fade-in-0 slide-in-from-right-4 duration-300">
+      <div key={step}>
         {step === 0 && (
           <div className="grid gap-4 md:grid-cols-3">
             {PROFILES.map(({ key, title, icon: Icon, text }) => (
@@ -157,7 +157,7 @@ export default function Setup() {
                 onClick={() => setProfile(key)}
                 data-profile={key}
                 className={cn(
-                  "rounded-xl border bg-card p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md",
+                  "rounded-lg border bg-card p-5 text-left transition-colors hover:border-primary/50 hover:bg-accent/40",
                   profile === key && "border-primary ring-2 ring-primary/20",
                 )}
               >

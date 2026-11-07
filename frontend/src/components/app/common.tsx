@@ -13,10 +13,10 @@ export function Page({ title, description, actions, children }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 animate-in fade-in-0 slide-in-from-bottom-2 duration-500 sm:p-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight" data-testid="page-title">{title}</h1>
+          <h1 className="text-2xl font-semibold" data-testid="page-title">{title}</h1>
           {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
         </div>
         {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
@@ -40,16 +40,14 @@ export function StatCard({ label, value, hint, icon: Icon, tone }: {
     destructive: "text-destructive-text",
   }[tone ?? "default"];
   return (
-    <Card className="group">
-      <CardContent className="flex items-start justify-between p-5">
-        <div>
-          <div className="text-sm text-muted-foreground">{label}</div>
-          <div className="mt-1 text-2xl font-semibold tabular-nums tracking-tight animate-in fade-in-0 zoom-in-95 duration-500">{value}</div>
-          {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
+    <Card>
+      <CardContent className="p-5">
+        <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+          <Icon className={cn("size-3.5", toneClass)} />
+          {label}
         </div>
-        <div className={cn("rounded-lg bg-muted p-2 transition-transform duration-300 group-hover:scale-110", toneClass)}>
-          <Icon className="size-4" />
-        </div>
+        <div className="mt-2 text-2xl font-semibold tabular-nums">{value}</div>
+        {hint && <div className="mt-0.5 text-xs text-muted-foreground">{hint}</div>}
       </CardContent>
     </Card>
   );

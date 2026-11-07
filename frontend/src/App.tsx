@@ -26,7 +26,7 @@ const Kroki = React.lazy(() => import("@/pages/Kroki"));
 function Stopped() {
   return (
     <div className="grid min-h-[70vh] place-items-center p-6">
-      <Card className="w-full max-w-lg text-center animate-in zoom-in-95 fade-in-0 duration-500" data-testid="stopped">
+      <Card className="w-full max-w-lg text-center" data-testid="stopped">
         <CardHeader className="items-center">
           <div className="mb-2 grid size-14 place-items-center rounded-full bg-destructive/10 text-destructive"><PowerOff className="size-7" /></div>
           <CardTitle>Server stopped</CardTitle>

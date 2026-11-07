@@ -145,7 +145,7 @@ export function TopBar() {
   // The hosted console is read-only: no token to paste, and Stop is always refused (403).
   const hosted = mode === "password";
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur supports-[backdrop-filter]:bg-background/60 sm:px-5">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b bg-background px-3 sm:px-5">
       <Button variant="ghost" size="icon" className="md:hidden" aria-label="Open menu" data-testid="menu-button" onClick={() => setMenu(true)}>
         <Menu />
       </Button>
@@ -159,10 +159,7 @@ export function TopBar() {
         </DialogContent>
       </Dialog>
       <div className="flex min-w-0 items-center gap-2">
-        <span className={`relative flex size-2.5 ${stopped ? "" : ""}`}>
-          {!stopped && <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-60" />}
-          <span className={`relative inline-flex size-2.5 rounded-full ${stopped ? "bg-destructive" : "bg-success"}`} />
-        </span>
+        <span aria-hidden className={`inline-flex size-2 rounded-full ${stopped ? "bg-destructive" : "bg-success"}`} />
         <span className="truncate text-sm font-medium" data-testid="server-status">
           {stopped ? "Stopped" : overview ? "Running" : "Connecting…"}
         </span>

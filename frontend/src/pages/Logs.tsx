@@ -92,7 +92,7 @@ export default function Logs() {
         >
           {records.length === 0 && <div className="text-zinc-400">Waiting for log lines…</div>}
           {records.map((r) => (
-            <div key={r.seq} className="whitespace-pre-wrap break-all animate-in fade-in-0 duration-300">
+            <div key={r.seq} className="whitespace-pre-wrap break-all">
               <span className="text-zinc-400">{r.timestamp.slice(11, 23)} </span>
               <span className={cn("font-semibold", LEVEL_COLOR[r.level])}>{r.level.padEnd(7)}</span>
               <span className="text-zinc-300"> {r.logger} </span>
