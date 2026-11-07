@@ -151,12 +151,13 @@ the model as `plugin renderer <name> failed: <message>`, so make it say what to 
 
 ### Optional hooks
 
-A renderer may define two more methods. Neither is part of the protocol check, so a plain
+A renderer may define three more methods. Neither is part of the protocol check, so a plain
 renderer needs neither.
 
 | Method | Called | Use it to |
 | --- | --- | --- |
 | `validate(diagram_type, code) -> list[str]` | By `validate_uml`, without rendering | Return one message per problem in the source (empty when valid), so a model can fix a custom source in one round trip. A hook that raises is logged and ignored, so it can never turn a good diagram into an error |
+| `warnings(diagram_type, code) -> list[str]` | By `validate_uml`, when `validate` found nothing | Problems that still render, such as unreachable states; they come back under `warnings` and leave `valid` true. A hook that raises is ignored |
 | `configure(settings: dict) -> None` | Once at load, with `plugins.settings.<name>` | Read settings. Raise to refuse a bad value: the plugin then shows as failed with that message, and the server still starts |
 
 ### What the client receives

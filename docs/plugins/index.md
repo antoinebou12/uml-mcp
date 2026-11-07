@@ -35,11 +35,11 @@ uml-mcp plugins enable ascii        # the renderer plugin
 
 Then restart the server. Installed plugins are **not** loaded until they are listed in
 `plugins.enabled`: an explicit allow-list. One name can serve both kinds: enabling `d3` loads its
-tool and its renderer. The exception is the four diagram renderers bundled with uml-mcp (`d3`,
-`stack-diagram`, `archify`, `llm-visualizer`): `plugins.bundled` (on by default) loads them
+tool and its renderer. The exception is the diagram renderers bundled with uml-mcp (`d3`,
+`stack-diagram`, `archify`, `llm-visualizer`, `statechart`): `plugins.bundled` (on by default) loads them
 without listing them. Their extra tools still need `plugins.enabled`, and `bundled: false`
-restores a strict allow-list. The exception is the four diagram renderers bundled with uml-mcp (`d3`,
-`stack-diagram`, `archify`, `llm-visualizer`): `plugins.bundled` (on by default) loads them
+restores a strict allow-list. The exception is the diagram renderers bundled with uml-mcp (`d3`,
+`stack-diagram`, `archify`, `llm-visualizer`, `statechart`): `plugins.bundled` (on by default) loads them
 without listing them. Their extra tools still need `plugins.enabled`, and `bundled: false`
 restores a strict allow-list.
 
@@ -62,7 +62,7 @@ for what the pages can do and a recording.
 
 ## Plugins in this repository
 
-All live under `examples/plugins`. The d3, stack-diagram, archify and llm-visualizer plugins ship
+All live under `examples/plugins`. The d3, stack-diagram, archify, llm-visualizer and statechart plugins ship
 inside the `uml-mcp` package and are on by default (`plugins.bundled`); the hello example is
 installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugin-hello`.
 
@@ -73,6 +73,7 @@ installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugi
 | `uml-mcp-plugin-stack-diagram` | `stack-diagram` | The auto-laid-out `stack_diagram` type: icon tiles, nested groups, left-right or top-down, dark or light. See the [stack diagram plugin](stack-diagram.md) |
 | `uml-mcp-plugin-archify` | `archify` | `archify_architecture`, `archify_workflow` and `archify_sequence`: dashed colour-coded groups, icon cards, presets and click-to-focus pages, sharing the stack-diagram engine. See the [archify plugin](archify.md) |
 | `uml-mcp-plugin-llm-visualizer` | `llm-visualizer` | Interactive `llm_2d` and `llm_3d` LLM architecture diagrams (HTML or SVG). See the [LLM visualizer plugin](llm-visualizer.md) |
+| `uml-mcp-plugin-statechart` | `statechart` | The `state_machine` type: XState-like JSON drawn as a statechart, and an HTML simulator that fires events, highlights the active states and keeps an undoable step log. See the [statechart plugin](statechart.md) |
 | built in (`mcp_core.plugins.architecture`) | `architecture` | Experimental, off by default: tiles at explicit positions, exported as HTML or React TSX. See [architecture diagrams](architecture.md) |
 
 ## Shared options

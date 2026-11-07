@@ -264,6 +264,7 @@ def validate_uml_inputs(
     prepared = prepare_diagram_code(validated.code, cfg.backend, None)
     structural = _structural_errors(cfg.backend, prepared)
     extra: list[str] = []
+    warnings: list[str] = []
     if strict:
         if cfg.backend == "mermaid":
             extra.extend(_structural_errors_strict_mermaid(prepared))
@@ -271,9 +272,11 @@ def validate_uml_inputs(
             extra.extend(_structural_errors_strict_d2(prepared))
     if cfg.backend.startswith("plugin:"):
         # Plugin renderers may define validate(); it knows their own source format.
-        from ..plugins.loader import plugin_validate
+        from ..plugins.loader import plugin_validate, plugin_warnings
 
         extra.extend(plugin_validate(dt_key, prepared) or [])
+        if not extra:
+            warnings.extend(plugin_warnings(dt_key, prepared))
     all_errors = structural + extra
     suggestions = _suggestions_for_errors(all_errors)
     changes = _normalization_changes(validated.code, prepared, cfg.backend)
@@ -283,7 +286,7 @@ def validate_uml_inputs(
         "diagram_type": dt_key,
         "backend": cfg.backend,
         "errors": all_errors,
-        "warnings": [],
+        "warnings": warnings,
         "suggestions": suggestions,
         "diagnostics": _build_diagnostics(all_errors, suggestions),
         "corrected_code": prepared if prepared != validated.code.strip() else None,
