@@ -20,6 +20,7 @@ def test_poetry_packages_surface() -> None:
         "uml_mcp_plugin_schema",
         "uml_mcp_plugin_deps",
         "uml_mcp_plugin_statechart",
+        "uml_mcp_plugin_trace",
     }
 
 

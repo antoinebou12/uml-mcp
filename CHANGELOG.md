@@ -36,6 +36,13 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
   Reset; a click on a state opens its entry and exit actions, events and description. Validation
   names the state path of every problem; unreachable states come back from `validate_uml` as
   warnings, through a new optional `warnings()` renderer hook.
+- Agent trace plugin (`trace`, bundled and on by default): the `agent_trace` type draws an agent
+  run as a waterfall of user, LLM, tool, retrieval, sub-agent, guardrail, memory, reply and error
+  steps on a time axis, nested under their parent, with durations, tokens, cost, errors and
+  retries and a summary header (`svg`). The `html` page adds a flow view, folding sub-agents, a
+  detail card per step (input and output as plain text, retrieved documents with scores, Open
+  documentation for known models and tools), the critical path, light and dark, and SVG, PNG
+  and HTML export. Sources are `steps` JSON or OpenTelemetry spans with GenAI attributes.
 - D3 plugin redesign. Boxes take the silhouette of their kind (database cylinders, queue pipes,
   slanted functions, chamfered gateways, security shields, user pills), the tile shows the
   service glyph or software logo, and the cloud provider is a corner logo badge (each logo written

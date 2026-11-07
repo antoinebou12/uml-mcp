@@ -63,6 +63,7 @@ for what the pages can do and a recording.
 ## Plugins in this repository
 
 All live under `examples/plugins`. The d3, stack-diagram, archify, llm-visualizer and statechart plugins ship
+All live under `examples/plugins`. The d3, stack-diagram, archify, llm-visualizer and trace plugins ship
 inside the `uml-mcp` package and are on by default (`plugins.bundled`); the hello example is
 installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugin-hello`.
 
@@ -76,6 +77,7 @@ installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugi
 | `uml-mcp-plugin-schema` | `schema` | `db_schema`: database schema (ER) diagrams from SQL DDL or JSON, with crow's-foot relationships at the column rows (HTML or SVG). See the [database schema plugin](schema.md) |
 | `uml-mcp-plugin-deps` | `deps` | `dependency_graph`: a project's dependency tree from `package.json`, `package-lock.json`, `pyproject.toml`, `requirements.txt` or `uv.lock` (HTML or SVG). See the [dependency graph plugin](deps.md) |
 | `uml-mcp-plugin-statechart` | `statechart` | The `state_machine` type: XState-like JSON drawn as a statechart, and an HTML simulator that fires events, highlights the active states and keeps an undoable step log. See the [statechart plugin](statechart.md) |
+| `uml-mcp-plugin-trace` | `trace` | The `agent_trace` type: an agent run as a waterfall of LLM, tool, retrieval and sub-agent steps with tokens, cost, errors and retries, plus a flow view and the critical path (HTML or SVG). See the [agent trace plugin](trace.md) |
 | built in (`mcp_core.plugins.architecture`) | `architecture` | Experimental, off by default: tiles at explicit positions, exported as HTML or React TSX. See [architecture diagrams](architecture.md) |
 
 ## Shared options
@@ -102,6 +104,7 @@ installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugi
 | *"A transformer with encoder and decoder blocks repeated 6 times."* | `llm_2d` with groups |
 | *"Draw the schema of this CREATE TABLE script, grouped by billing and catalog."* | `db_schema` |
 | *"Show this project's dependency tree from its uv.lock."* | `dependency_graph` |
+| *"Show this agent run as a trace: a retrieval, two tool calls (one retried) and the reply, with tokens and cost."* | `agent_trace` |
 
 Each type also has an agent skill with a validated example, at
 `.skill/skills/<diagram_type>/SKILL.md`, and each plugin family a focused guide read over MCP from

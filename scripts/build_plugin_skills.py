@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-for _name in ("d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps", "statechart"):
+for _name in ("d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps", "statechart", "trace"):
     _src = ROOT / "examples" / "plugins" / f"uml-mcp-plugin-{_name}" / "src"
     if str(_src) not in sys.path:
         sys.path.insert(0, str(_src))
@@ -47,6 +47,7 @@ def renderers() -> dict[str, Any]:
     from uml_mcp_plugin_schema import SchemaRenderer
     from uml_mcp_plugin_stack_diagram import StackDiagramRenderer
     from uml_mcp_plugin_statechart import StatechartRenderer
+    from uml_mcp_plugin_trace import TraceRenderer
 
     return {
         "d3": D3Renderer(),
@@ -56,6 +57,7 @@ def renderers() -> dict[str, Any]:
         "schema": SchemaRenderer(),
         "deps": DepsRenderer(),
         "statechart": StatechartRenderer(),
+        "trace": TraceRenderer(),
     }
 
 
@@ -223,6 +225,23 @@ TYPES: dict[str, tuple[str, str, str, str, str]] = {
             "- `direction`: `LR` (default) or `TB`. `validate_uml` warns about unreachable states."
         ),
     ),
+    "agent_trace": (
+        "trace",
+        "agent-trace",
+        "an agent run trace: LLM calls, tool calls, retrievals and sub-agents on a timeline with tokens and cost",
+        "Show this agent run as a trace: the user question, a retrieval, two tool calls (one retried), the LLM calls and the reply, with tokens and cost.",
+        (
+            "- `steps`: `id`, `parent`, `kind` (`user`, `llm`, `tool`, `retrieval`, `subagent`, `guardrail`, "
+            "`memory`, `reply`, `error`), `name`, `start_ms`, `end_ms` (relative to the run start).\n"
+            "- Optional per step: `tokens` (`in`, `out`, `cached`), `cost_usd`, `model`, `tool`, `input`, "
+            "`output`, `docs` (`title`, `score`, `source`), `status` (`ok`, `error`, `retry`), `note`.\n"
+            "- Nest steps with `parent` (a sub-agent's calls under it); `end_ms` must not be before `start_ms` and ids are unique.\n"
+            "- OpenTelemetry works too: `spans` with `span_id`, `parent_span_id`, `name`, `start`, `end` "
+            "(ISO 8601 or epoch numbers) and GenAI `attributes` (`gen_ai.operation.name`, "
+            "`gen_ai.request.model`, `gen_ai.usage.input_tokens`, `gen_ai.usage.output_tokens`, `gen_ai.tool.name`).\n"
+            "- `svg` is the waterfall with a summary header; `html` adds a flow view, folding, step details and the critical path."
+        ),
+    ),
 }
 
 #: topic -> (description, title, short intro). d3-plugins already exists; it is not generated.
@@ -277,6 +296,14 @@ GUIDES: dict[str, tuple[str, str, str]] = {
             "final and history pseudo-states and labelled orthogonal transitions. The HTML page is a "
             "simulator: it highlights the active states and offers a button for every enabled event, "
             "with a step log, Undo and Reset."
+        ),
+    ),
+    "agent-trace": (
+        "Draw agent run traces with LLM, tool, retrieval and sub-agent steps on a timeline (agent_trace).",
+        "Agent traces",
+        (
+            "A waterfall of an agent run with tokens, cost, errors and retries, and an interactive "
+            "page with a flow view, folding sub-agents, a detail card per step and the critical path."
         ),
     ),
 }

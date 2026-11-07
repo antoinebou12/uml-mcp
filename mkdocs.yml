@@ -160,6 +160,7 @@ nav:
       - Database schema: plugins/schema.md
       - Dependency graphs: plugins/deps.md
       - Statecharts: plugins/statechart.md
+      - Agent traces: plugins/trace.md
       - Architecture diagrams: plugins/architecture.md
   - Developers:
       - developers/index.md

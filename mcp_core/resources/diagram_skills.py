@@ -27,6 +27,7 @@ GUIDE_TOPICS = (
     "db-schema",
     "deps",
     "statechart",
+    "agent-trace",
     "mermaid",
     "plantuml-c4",
     "batch",

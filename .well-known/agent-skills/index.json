@@ -16,6 +16,13 @@
       "sha256": "aacd6edbcd591b2024cf0607310245e56745a5f950a5fa4f79a3819634847213"
     },
     {
+      "name": "agent_trace",
+      "type": "context",
+      "description": "Writes valid agent_trace JSON for uml-mcp (diagram_type=agent_trace, bundled plugin trace). Use when the user asks for an agent run trace: LLM calls, tool calls, retrievals and sub-agents on a timeline with tokens and cost; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/agent_trace/SKILL.md",
+      "sha256": "667220653426db55e1f0e83dc0b4a99c9a9ce5b4174269d93dd6cf81c41a010f"
+    },
+    {
       "name": "archify_architecture",
       "type": "context",
       "description": "Writes valid archify_architecture JSON for uml-mcp (diagram_type=archify_architecture, bundled plugin archify). Use when the user asks for an architecture overview with colour-coded dashed groups, legend and presets; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
@@ -331,6 +338,13 @@
       "sha256": "9ac3914865bbc4dbeb07026f05d87289babb7f13d2b5e1c6a22f8e73180d3147"
     },
     {
+      "name": "uml-mcp-agent-trace",
+      "type": "context",
+      "description": "Draw agent run traces with LLM, tool, retrieval and sub-agent steps on a timeline (agent_trace).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-agent-trace/SKILL.md",
+      "sha256": "b43cd6c150e4151f69667279665e26dc2686701c9fb579b645f8439b67932ed2"
+    },
+    {
       "name": "uml-mcp-archify",
       "type": "context",
       "description": "Draw archify architecture, workflow and sequence diagrams with colour-coded groups.",
@@ -371,6 +385,7 @@
       "sha256": "b9703c6f3ac076ba082d2cb2bb57f5aa1264194d6d70b4cb052edeb3083556e0"
       "sha256": "0eac9e15ed2c7ac0ded7919754a3e5f481b8b54fe6ba0d5aa4f5373f3427e4be"
       "sha256": "dd1740a2895cfffd723ed90a19d1604343e0eea42406a1e48525943c5d59e914"
+      "sha256": "8d5ea2b8f352bf90a88b90654cce41cf0fe4f19c562d0602bb58b723d6a24a4c"
     },
     {
       "name": "uml-mcp-llm-visualizer",

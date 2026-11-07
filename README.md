@@ -85,6 +85,7 @@ The [installation guide](docs/installation.md) covers Docker, Helm and running f
 ## Interactive diagrams
 
 These plugins ship with UML-MCP and are on by default. Each type renders to an interactive HTML
+The plugins below ship with UML-MCP and are on by default. Each type renders to an interactive HTML
 page in the viewer and to a static SVG and PNG everywhere else.
 
 | Plugin | Types | What you get |
@@ -96,6 +97,7 @@ page in the viewer and to a static SVG and PNG everywhere else.
 | [Database schema](docs/plugins/schema.md) | `db_schema` | ER diagrams from SQL DDL or JSON: column cards, crow's-foot keys at the column rows, search |
 | [Dependency graphs](docs/plugins/deps.md) | `dependency_graph` | A project's dependency tree from `package.json`, `pyproject.toml`, `requirements.txt` or a lock file |
 | [Statechart](docs/plugins/statechart.md) | `state_machine` | XState-like machines as statecharts, and a simulator that fires events, with a step log and Undo |
+| [Agent traces](docs/plugins/trace.md) | `agent_trace` | An agent run as a waterfall and a flow: LLM, tool and retrieval steps with tokens, cost, retries and the critical path |
 
 ```json
 {
