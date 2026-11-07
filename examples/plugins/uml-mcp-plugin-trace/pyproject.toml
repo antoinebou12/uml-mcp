@@ -1,0 +1,17 @@
+[project]
+name = "uml-mcp-plugin-trace"
+version = "0.1.0"
+description = "UML-MCP plugin: agent run traces as a waterfall and a flow, with tokens, cost, errors, retries and the critical path."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = ["uml-mcp>=1.4.0", "uml-mcp-plugin-d3>=0.1.0"]
+
+[project.entry-points."uml_mcp.renderers"]
+trace = "uml_mcp_plugin_trace:TraceRenderer"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/uml_mcp_plugin_trace"]
