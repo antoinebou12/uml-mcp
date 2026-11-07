@@ -28,6 +28,7 @@ GUIDE_TOPICS = (
     "deps",
     "statechart",
     "agent-trace",
+    "c4-model",
     "mermaid",
     "plantuml-c4",
     "batch",

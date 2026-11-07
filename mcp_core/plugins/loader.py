@@ -35,7 +35,7 @@ class PluginStatus:
 #: published by ``uml-mcp`` itself qualify, so another package cannot borrow a name,
 #: and only renderers: plugin tools add connect-time tokens, so they stay opt-in.
 BUNDLED_RENDERERS = frozenset(
-    {"d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps", "statechart", "trace"}
+    {"d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps", "statechart", "trace", "c4"}
 )
 BUNDLED_DISTRIBUTION = "uml-mcp"
 

@@ -161,6 +161,7 @@ nav:
       - Dependency graphs: plugins/deps.md
       - Statecharts: plugins/statechart.md
       - Agent traces: plugins/trace.md
+      - C4 model: plugins/c4.md
       - Architecture diagrams: plugins/architecture.md
   - Developers:
       - developers/index.md

@@ -65,6 +65,13 @@
       "sha256": "8a9dbcb342da813e7ba551d1cee7c37e3ec88b185e7f97fb475b3dd911e3357c"
     },
     {
+      "name": "c4_model",
+      "type": "context",
+      "description": "Writes valid c4_model JSON for uml-mcp (diagram_type=c4_model, bundled plugin c4). Use when the user asks for a C4 model to explore: system context, then containers, then components; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/c4_model/SKILL.md",
+      "sha256": "efc9c6af710413d7cad2d235b0a627053e71dad867299a97f8005e600d91d717"
+    },
+    {
       "name": "c4plantuml",
       "type": "context",
       "description": "Writes valid c4plantuml diagram source for uml-mcp (diagram_type=c4plantuml). C4 model diagrams using PlantUML Use when the user asks for c4plantuml or that notation; then call validate_uml / generate_uml / generate_uml_image.",
@@ -359,6 +366,13 @@
       "sha256": "af7223fc567c510d693c93a0b39c65df022c0428a124c002dca4fc449e1dd65f"
     },
     {
+      "name": "uml-mcp-c4-model",
+      "type": "context",
+      "description": "Draw a C4 model readers can drill into, from context to containers to components (c4_model).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-c4-model/SKILL.md",
+      "sha256": "e8c161da4653ada99b8d4ce24173a9c08665dd2a9841f3cec8a1d0e274fbe005"
+    },
+    {
       "name": "uml-mcp-d3-plugins",
       "type": "context",
       "description": "Discover installed D3 plugins and render architecture diagrams with cloud and AI logos in the MCP App.",
@@ -386,6 +400,7 @@
       "sha256": "0eac9e15ed2c7ac0ded7919754a3e5f481b8b54fe6ba0d5aa4f5373f3427e4be"
       "sha256": "dd1740a2895cfffd723ed90a19d1604343e0eea42406a1e48525943c5d59e914"
       "sha256": "8d5ea2b8f352bf90a88b90654cce41cf0fe4f19c562d0602bb58b723d6a24a4c"
+      "sha256": "d6d488e4e02cddf73100cdf08d3cd2223c742c7b33b0ca0dab9db471f261139b"
     },
     {
       "name": "uml-mcp-llm-visualizer",

@@ -98,6 +98,7 @@ page in the viewer and to a static SVG and PNG everywhere else.
 | [Dependency graphs](docs/plugins/deps.md) | `dependency_graph` | A project's dependency tree from `package.json`, `pyproject.toml`, `requirements.txt` or a lock file |
 | [Statechart](docs/plugins/statechart.md) | `state_machine` | XState-like machines as statecharts, and a simulator that fires events, with a step log and Undo |
 | [Agent traces](docs/plugins/trace.md) | `agent_trace` | An agent run as a waterfall and a flow: LLM, tool and retrieval steps with tokens, cost, retries and the critical path |
+| [C4 model](docs/plugins/c4.md) | `c4_model` | One model, three C4 levels: click a system to open its containers, a container for its components |
 
 ```json
 {

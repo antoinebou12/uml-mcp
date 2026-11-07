@@ -10,6 +10,7 @@ examples/plugins/*
 !examples/plugins/uml-mcp-plugin-schema/
 !examples/plugins/uml-mcp-plugin-statechart/
 !examples/plugins/uml-mcp-plugin-trace/
+!examples/plugins/uml-mcp-plugin-c4/
 docs/
 tests/
 .github/

@@ -40,6 +40,10 @@ tool and its renderer. The exception is the diagram renderers bundled with uml-m
 without listing them. Their extra tools still need `plugins.enabled`, and `bundled: false`
 restores a strict allow-list. The exception is the diagram renderers bundled with uml-mcp (`d3`,
 `stack-diagram`, `archify`, `llm-visualizer`, `statechart`): `plugins.bundled` (on by default) loads them
+`stack-diagram`, `archify`, `llm-visualizer`, `c4`): `plugins.bundled` (on by default) loads them
+without listing them. Their extra tools still need `plugins.enabled`, and `bundled: false`
+restores a strict allow-list. The exception is the diagram renderers bundled with uml-mcp (`d3`,
+`stack-diagram`, `archify`, `llm-visualizer`, `c4`): `plugins.bundled` (on by default) loads them
 without listing them. Their extra tools still need `plugins.enabled`, and `bundled: false`
 restores a strict allow-list.
 
@@ -64,6 +68,7 @@ for what the pages can do and a recording.
 
 All live under `examples/plugins`. The d3, stack-diagram, archify, llm-visualizer and statechart plugins ship
 All live under `examples/plugins`. The d3, stack-diagram, archify, llm-visualizer and trace plugins ship
+All live under `examples/plugins`. The d3, stack-diagram, archify, llm-visualizer and c4 plugins ship
 inside the `uml-mcp` package and are on by default (`plugins.bundled`); the hello example is
 installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugin-hello`.
 
@@ -78,6 +83,7 @@ installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugi
 | `uml-mcp-plugin-deps` | `deps` | `dependency_graph`: a project's dependency tree from `package.json`, `package-lock.json`, `pyproject.toml`, `requirements.txt` or `uv.lock` (HTML or SVG). See the [dependency graph plugin](deps.md) |
 | `uml-mcp-plugin-statechart` | `statechart` | The `state_machine` type: XState-like JSON drawn as a statechart, and an HTML simulator that fires events, highlights the active states and keeps an undoable step log. See the [statechart plugin](statechart.md) |
 | `uml-mcp-plugin-trace` | `trace` | The `agent_trace` type: an agent run as a waterfall of LLM, tool, retrieval and sub-agent steps with tokens, cost, errors and retries, plus a flow view and the critical path (HTML or SVG). See the [agent trace plugin](trace.md) |
+| `uml-mcp-plugin-c4` | `c4` | `c4_model`: one JSON model of people, systems, containers and components, drawn in C4 notation (SVG) or as a page that drills from context to containers to components (HTML). See the [C4 model plugin](c4.md) |
 | built in (`mcp_core.plugins.architecture`) | `architecture` | Experimental, off by default: tiles at explicit positions, exported as HTML or React TSX. See [architecture diagrams](architecture.md) |
 
 ## Shared options

@@ -1,0 +1,57 @@
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+:root.light{--bg:#f6f8fb;--panel:#ffffff;--ink:#1f2a37;--muted:#5b6675;--line:#d5dce5;--accent:#1168bd;--hover:#eef3f9}
+:root.dark{--bg:#0b1016;--panel:#121a23;--ink:#e6edf3;--muted:#9aa7b4;--line:#28333f;--accent:#58a6ff;--hover:#1a2430}
+body{display:flex;flex-direction:column;background:var(--bg);color:var(--ink);font:14px/1.4 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:8px 12px;border-bottom:1px solid var(--line);background:var(--panel)}
+h1{margin:0;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%}
+:root[data-embedded] h1{display:none}
+nav.crumbs{display:flex;flex-wrap:wrap;align-items:center;gap:2px;flex:1;min-width:0;font-size:13px}
+nav.crumbs button{border:0;background:none;color:var(--accent);padding:3px 6px;border-radius:6px;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+nav.crumbs button:hover{background:var(--hover)}
+nav.crumbs button[aria-current=page]{color:var(--ink);font-weight:700;cursor:default}
+nav.crumbs .sep{color:var(--muted)}
+.bar{display:flex;align-items:center;gap:4px;margin-left:auto}
+button{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:7px;padding:4px 10px;cursor:pointer}
+button:hover{border-color:var(--accent)}
+button:focus-visible,.c4 .el:focus-visible,.c4 .boundary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.45;cursor:default}
+details.menu{position:relative}
+details.menu summary{list-style:none;font-size:13px;border:1px solid var(--line);border-radius:7px;padding:4px 10px;cursor:pointer;background:var(--panel)}
+details.menu summary::-webkit-details-marker{display:none}
+details.menu .items{position:absolute;right:0;top:calc(100% + 4px);z-index:5;display:grid;gap:4px;padding:6px;border:1px solid var(--line);border-radius:9px;background:var(--panel);box-shadow:0 8px 24px rgba(0,0,0,.2)}
+details.menu .items button{white-space:nowrap;text-align:left}
+main{flex:1;min-height:0;position:relative;overflow:hidden;touch-action:none;cursor:grab}
+main.drag{cursor:grabbing}
+.view{position:absolute;inset:0;width:100%;height:100%;display:none;user-select:none;-webkit-user-select:none}
+.view.on{display:block}
+.c4 .el,.c4 .boundary,.c4 .rel{cursor:pointer}
+.c4 .el,.c4 .rel{transition:opacity .2s}
+.c4 .el.drillable:hover .shape{filter:brightness(1.12)}
+.c4 .el.sel .shape{stroke:#f59e0b;stroke-width:3}
+.c4 .boundary.sel .frame{stroke:#f59e0b;stroke-width:2.4}
+.c4 .rel.on .line{stroke:#f59e0b;stroke-width:2.4}
+.c4 .dim{opacity:.22}
+.details{position:absolute;right:12px;top:12px;width:300px;max-height:calc(100% - 24px);overflow:auto;padding:12px 14px;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:0 10px 30px rgba(0,0,0,.22);cursor:default}
+.details[hidden]{display:none}
+.details .close{float:right;padding:0 8px;margin-left:6px}
+.details .kind{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.details h2{margin:2px 0;font-size:16px}
+.details .sub{color:var(--muted);font-size:12px;margin:0 0 6px}
+.details p{margin:6px 0}
+.details .actions{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.details .actions .primary{border-color:var(--accent);color:var(--accent);font-weight:600}
+.details .h{margin-top:10px;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.details .links button{display:block;width:100%;text-align:left;border:0;padding:4px 6px;margin:1px 0;border-radius:6px;background:none}
+.details .links button:hover{background:var(--hover)}
+.details .via{color:var(--muted);font-size:12px}
+.hint{position:absolute;left:12px;bottom:8px;color:var(--muted);font-size:12px;pointer-events:none}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+@media (max-width:640px){
+h1{display:none}
+.hint{display:none}
+.details{left:8px;right:8px;top:auto;bottom:8px;width:auto;max-height:58%}
+nav.crumbs button{max-width:150px}
+}
+:root.light main{background:#ffffff}
+:root.dark main{background:#0e141b}

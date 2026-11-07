@@ -32,6 +32,7 @@ NON_TYPE_SKILLS = frozenset(
         "uml-mcp-deps",
         "uml-mcp-statechart",
         "uml-mcp-agent-trace",
+        "uml-mcp-c4-model",
     }
 )
 
@@ -51,6 +52,7 @@ PLUGIN_TYPE_SKILLS = frozenset(
         "dependency_graph",
         "state_machine",
         "agent_trace",
+        "c4_model",
     }
 )
 

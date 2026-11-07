@@ -25,6 +25,7 @@ Read the relevant guide through `resources/read` when needed:
 | Dependency graphs from package.json, pyproject.toml, requirements.txt and lock files | `skill://uml-mcp-guides/deps/SKILL.md` | `.skill/skills/uml-mcp-deps/SKILL.md` |
 | State machines and statecharts you can step through | `skill://uml-mcp-guides/statechart/SKILL.md` | `.skill/skills/uml-mcp-statechart/SKILL.md` |
 | Agent run traces: LLM, tool and retrieval timelines | `skill://uml-mcp-guides/agent-trace/SKILL.md` | `.skill/skills/uml-mcp-agent-trace/SKILL.md` |
+| C4 model you can drill into: context, containers, components | `skill://uml-mcp-guides/c4-model/SKILL.md` | `.skill/skills/uml-mcp-c4-model/SKILL.md` |
 | Complex Mermaid | `skill://uml-mcp-guides/mermaid/SKILL.md` | `.skill/skills/uml-mcp-mermaid/SKILL.md` |
 | PlantUML and C4 levels | `skill://uml-mcp-guides/plantuml-c4/SKILL.md` | `.skill/skills/uml-mcp-plantuml-c4/SKILL.md` |
 | Several views or format conversions | `skill://uml-mcp-guides/batch/SKILL.md` | `.skill/skills/uml-mcp-batch/SKILL.md` |
