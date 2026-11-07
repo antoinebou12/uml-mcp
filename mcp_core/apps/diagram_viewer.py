@@ -92,42 +92,40 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   :root {
     color-scheme: light dark;
     --bg: var(--color-background-primary, #ffffff);
-    --surface: var(--color-background-secondary, #f6f7f9);
-    --fg: var(--color-text-primary, #161a23);
-    --muted: var(--color-text-secondary, #5d6472);
-    --border: var(--color-border-primary, #e3e6eb);
-    --link: var(--color-text-link, #4f46e5);
-    --accent: #4f46e5;
+    --surface: var(--color-background-secondary, #f7f6f2);
+    --fg: var(--color-text-primary, #1d2633);
+    --muted: var(--color-text-secondary, #5a6372);
+    --border: var(--color-border-primary, #e4e1d9);
+    --link: var(--color-text-link, #2a5aa8);
+    --accent: #2a5aa8;
     --accent-fg: #ffffff;
     --danger: #c62828;
     --danger-bg: rgba(198, 40, 40, 0.07);
     --warn: #a15c00;
     --ok: #1b873f;
-    --dot: rgba(22, 26, 35, 0.09);
-    --glass: rgba(255, 255, 255, 0.82);
-    --shadow: 0 1px 2px rgba(16, 24, 40, 0.06), 0 6px 20px rgba(16, 24, 40, 0.08);
-    --radius: 12px;
+    --dot: rgba(42, 90, 168, 0.10);
+        --shadow: 0 0 0 1px rgba(29, 38, 51, 0.06), 0 1px 2px rgba(29, 38, 51, 0.06);
+    --radius: 8px;
     --frame-h: min(65vh, 560px);
     --font: var(--font-sans, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif);
     --mono: var(--font-mono, ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace);
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: var(--color-background-primary, #14161b);
-      --surface: var(--color-background-secondary, #1b1e25);
-      --fg: var(--color-text-primary, #e8eaef);
-      --muted: var(--color-text-secondary, #9aa1ae);
-      --border: var(--color-border-primary, #2c313b);
-      --link: var(--color-text-link, #a5b4fc);
-      --accent: #818cf8;
+      --bg: var(--color-background-primary, #141922);
+      --surface: var(--color-background-secondary, #1a202b);
+      --fg: var(--color-text-primary, #eceae4);
+      --muted: var(--color-text-secondary, #a1a9b6);
+      --border: var(--color-border-primary, #2a3240);
+      --link: var(--color-text-link, #93b5ea);
+      --accent: #8fb0e6;
       --accent-fg: #0f1115;
       --danger: #ff8a80;
       --danger-bg: rgba(255, 138, 128, 0.08);
       --warn: #f5b041;
       --ok: #6fdc8c;
-      --dot: rgba(232, 234, 239, 0.08);
-      --glass: rgba(27, 30, 37, 0.84);
-      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+      --dot: rgba(143, 176, 230, 0.09);
+      --shadow: 0 0 0 1px rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.3);
     }
   }
   * { box-sizing: border-box; }
@@ -146,12 +144,12 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   #header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 10px; }
   #brand { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
   #brandMark {
-    width: 24px; height: 24px; border-radius: 7px; flex: none;
+    width: 24px; height: 24px; border-radius: 6px; flex: none;
     display: grid; place-items: center; font-size: 13px; font-weight: 700;
-    color: var(--accent-fg); background: linear-gradient(135deg, var(--accent), #06b6d4);
+    color: var(--accent-fg); background: var(--accent);
   }
   #typeBadge {
-    font: 600 12px/1 var(--mono); padding: 5px 8px; border-radius: 999px;
+    font-size: 12px; font-weight: 600; line-height: 1; padding: 5px 8px; border-radius: 6px;
     background: var(--surface); border: 1px solid var(--border); white-space: nowrap;
   }
   #status {
@@ -171,29 +169,28 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
 
   .btn {
     appearance: none; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-    height: 30px; padding: 0 11px; border-radius: 8px;
+    height: 30px; padding: 0 11px; border-radius: 6px;
     border: 1px solid var(--border); background: var(--bg);
     cursor: pointer; text-decoration: none; white-space: nowrap;
-    transition: background-color .15s, border-color .15s, transform .05s;
+    transition: background-color .15s, border-color .15s;
   }
   .btn:hover { background: var(--surface); border-color: var(--muted); }
-  .btn:active { transform: translateY(1px); }
   .btn:disabled { opacity: .55; cursor: progress; }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); font-weight: 600; }
-  .btn.primary:hover { filter: brightness(1.08); background: var(--accent); }
+  .btn.primary:hover { filter: brightness(1.1); background: var(--accent); }
   .btn.icon { width: 30px; padding: 0; font-size: 15px; }
   .btn.sm { height: 26px; padding: 0 9px; font-size: 12px; }
 
   /* Batch gallery: one card per diagram. */
   #gallery { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 10px; scrollbar-width: thin; }
   .card {
-    flex: none; width: 132px; padding: 6px; border-radius: 10px; cursor: pointer; text-align: left;
+    flex: none; width: 132px; padding: 6px; border-radius: 8px; cursor: pointer; text-align: left;
     border: 1px solid var(--border); background: var(--bg); display: grid; gap: 6px;
   }
   .card:hover { border-color: var(--muted); }
-  .card[aria-selected="true"] { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .card[aria-selected="true"] { border-color: var(--accent); }
   .card .thumb {
-    height: 64px; border-radius: 6px; background: #ffffff; display: grid; place-items: center;
+    height: 64px; border-radius: 4px; background: #ffffff; display: grid; place-items: center;
     overflow: hidden; color: #5d6472; font-size: 11px;
   }
   .card .thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
@@ -234,13 +231,13 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
     flex: none; max-width: none; height: auto; display: block;
     transform-origin: center center;
     user-select: none; -webkit-user-drag: none;
-    padding: 14px; border-radius: 10px;
+    padding: 14px; border-radius: 4px;
     background: #ffffff; box-shadow: var(--shadow);
   }
   #frame.paper-dark > img, #frame.paper-dark > svg { background: #101217; }
   #frame iframe.plugin-frame { width:100%; height:var(--frame-h); border:0; flex:none; background:var(--surface); }
   #frame pre.ascii {
-    margin: 16px; padding: 14px; border-radius: 10px; background: #ffffff; color: #161a23;
+    margin: 16px; padding: 14px; border-radius: 4px; background: #ffffff; color: #1d2633;
     box-shadow: var(--shadow); font: 12px/1.35 var(--mono); white-space: pre; overflow: auto; max-width: 100%;
     font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0;
   }
@@ -248,9 +245,8 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
 
   .empty { display: grid; justify-items: center; gap: 10px; color: var(--muted); text-align: center; padding: 24px; }
   .skeleton {
-    width: min(320px, 70%); height: 120px; border-radius: 10px;
-    background: linear-gradient(90deg, var(--border) 0%, var(--bg) 50%, var(--border) 100%);
-    background-size: 200% 100%; animation: shimmer 1.4s linear infinite; opacity: .7;
+    width: min(320px, 70%); height: 120px; border-radius: 4px;
+    background: var(--bg); border: 1px dashed var(--border);
   }
   #streamPreview {
     margin: 0; max-width: min(520px, 90%); max-height: 70%; overflow: hidden; text-align: left;
@@ -261,15 +257,15 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
 
   /* Error / notice cards inside the canvas. */
   .notice {
-    margin: 16px; max-width: 560px; width: calc(100% - 32px); padding: 14px 16px; border-radius: 12px;
+    margin: 16px; max-width: 560px; width: calc(100% - 32px); padding: 14px 16px; border-radius: 8px;
     border: 1px solid var(--border); background: var(--bg); box-shadow: var(--shadow); cursor: default;
   }
-  .notice.error { border-color: var(--danger); background: linear-gradient(var(--danger-bg), var(--danger-bg)), var(--bg); }
+  .notice.error { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 6%, var(--bg)); }
   .notice h3 { margin: 0 0 6px; font-size: 14px; }
   .notice.error h3 { color: var(--danger); }
   .notice p { margin: 0 0 8px; overflow-wrap: anywhere; }
   .notice .where { font: 12px var(--mono); color: var(--muted); margin-bottom: 8px; }
-  .notice .tip { padding: 8px 10px; border-radius: 8px; background: var(--surface); margin-bottom: 10px; }
+  .notice .tip { padding: 8px 10px; border-radius: 6px; background: var(--surface); margin-bottom: 10px; }
   .notice .row-actions { display: flex; flex-wrap: wrap; gap: 6px; }
   .notice details { margin-bottom: 10px; color: var(--muted); font-size: 12px; }
   .notice details li { font-family: var(--mono); }
@@ -289,17 +285,16 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   #toolbar {
     position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%);
     display: flex; align-items: center; gap: 2px; padding: 4px;
-    border: 1px solid var(--border); border-radius: 999px;
-    background: var(--glass); box-shadow: var(--shadow);
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+    border: 1px solid var(--border); border-radius: 8px;
+    background: var(--bg); box-shadow: var(--shadow);
   }
   #toolbar button {
     appearance: none; border: 0; background: transparent; cursor: pointer;
-    height: 28px; min-width: 28px; padding: 0 10px; border-radius: 999px;
+    height: 28px; min-width: 28px; padding: 0 10px; border-radius: 5px;
   }
   #toolbar button:hover { background: var(--surface); }
   #toolbar .sep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; }
-  #zoomLabel { min-width: 3.4em; text-align: center; font: 600 12px/1 var(--mono); color: var(--muted); }
+  #zoomLabel { min-width: 3.4em; text-align: center; font-size: 12px; font-variant-numeric: tabular-nums; color: var(--muted); }
 
   /* Source editor. */
   #sourcePane { display: grid; gap: 8px; }
@@ -316,7 +311,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   #checks { display: grid; gap: 4px; }
   .check {
     display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 6px; align-items: start;
-    padding: 6px 8px; border-radius: 8px; background: var(--surface); font-size: 12px;
+    padding: 6px 8px; border-radius: 6px; background: var(--surface); font-size: 12px;
   }
   .check.err { color: var(--danger); }
   .check.warn { color: var(--warn); }
@@ -333,7 +328,7 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   #rerenderRow label { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
   #rerenderRow .grow { flex: 1; }
   select {
-    appearance: none; height: 30px; padding: 0 28px 0 10px; border-radius: 8px;
+    appearance: none; height: 30px; padding: 0 28px 0 10px; border-radius: 6px;
     border: 1px solid var(--border); background-color: var(--bg); color: var(--fg); cursor: pointer;
     background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
     background-position: right 13px top 13px, right 9px top 13px;
@@ -344,20 +339,19 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
   #meta { margin-top: 10px; display: grid; gap: 6px; }
   .row {
     display: grid; grid-template-columns: 84px minmax(0, 1fr) auto; align-items: center; gap: 8px;
-    padding: 6px 6px 6px 10px; border: 1px solid var(--border); border-radius: 10px; background: var(--bg);
+    padding: 6px 6px 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg);
   }
   .row .k { color: var(--muted); font-size: 12px; }
   .row a { color: var(--link); font: 12px/1.3 var(--mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-decoration: none; }
   .row a:hover { text-decoration: underline; }
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   .chip {
-    font-size: 11px; padding: 3px 8px; border-radius: 999px;
+    font-size: 11px; padding: 3px 7px; border-radius: 4px;
     border: 1px solid var(--border); color: var(--muted); background: var(--surface);
   }
 
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes pulse { 50% { opacity: .35; } }
-  @keyframes shimmer { to { background-position: -200% 0; } }
   @media (prefers-reduced-motion: reduce) {
     *, *::before { animation: none !important; transition: none !important; }
   }

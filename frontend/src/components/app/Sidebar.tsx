@@ -6,7 +6,7 @@ import { GROUPS, NAV } from "./nav";
 export function Brand() {
   return (
     <div className="flex items-center gap-2.5 px-2">
-      <div className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground shadow-sm">
+      <div className="grid size-8 place-items-center rounded-md bg-primary text-primary-foreground">
         <svg viewBox="0 0 24 24" className="size-5" fill="none" stroke="currentColor" strokeWidth="2">
           <rect x="3" y="3" width="7" height="7" rx="1.5" />
           <rect x="14" y="14" width="7" height="7" rx="1.5" />
@@ -27,7 +27,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
     <nav aria-label="Main" className="flex flex-col gap-5">
       {GROUPS.map((group) => (
         <div key={group}>
-          <div className="mb-1.5 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          <div className="mb-1 px-3 text-xs text-muted-foreground">
             {group}
           </div>
           <ul className="flex flex-col gap-0.5">
@@ -39,14 +39,14 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
                     onClick={onNavigate}
                     className={({ isActive }) =>
                       cn(
-                        "group flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-all duration-200",
+                        "group flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors",
                         isActive
-                          ? "bg-sidebar-accent font-medium text-sidebar-foreground shadow-xs"
+                          ? "bg-sidebar-accent font-medium text-sidebar-foreground [&_svg]:text-primary"
                           : "text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-foreground",
                       )
                     }
                   >
-                    <Icon className="size-4 transition-transform duration-200 group-hover:scale-110" />
+                    <Icon className="size-4" />
                     {label}
                   </NavLink>
                 </li>
