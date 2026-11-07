@@ -9,6 +9,15 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
 ### Added
 
+- Timeline plugin (`timeline`, bundled and on by default): project timelines and product
+  roadmaps from JSON lanes and items with ISO dates, months or quarters. The static SVG draws a
+  time axis with automatic ticks, labelled swimlanes, task bars with progress and status colour,
+  phases as translucent bands, milestone diamonds, release flags, dependency arrows from end to
+  start, a dashed today line and a legend. The page zooms between quarters, months, weeks and
+  days (wheel, pinch, buttons), pans, filters by lane, owner and status, opens a detail card
+  with the item's dependency chain highlighted and an **Open link** button, and exports SVG,
+  PNG or HTML. Validation names the item for bad dates, an end before its start, unknown lanes
+  or dependencies and cycles.
 - D3 plugin redesign. Boxes take the silhouette of their kind (database cylinders, queue pipes,
   slanted functions, chamfered gateways, security shields, user pills), the tile shows the
   service glyph or software logo, and the cloud provider is a corner logo badge (each logo written
