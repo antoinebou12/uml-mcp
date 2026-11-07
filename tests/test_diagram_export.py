@@ -217,3 +217,34 @@ def test_chunked_plugin_download_reuses_the_bounded_render_cache(
         )
     finally:
         cache.clear()
+
+
+def _download_all(diagram_type: str, code: str, fmt: str) -> bytes:
+    encoded, offset, digest = "", 0, None
+    while True:
+        part = download_diagram(diagram_type, code, fmt, offset=offset, sha256=digest)
+        assert "error" not in part, part
+        encoded += part["chunk"]
+        offset, digest = part["next_offset"], part["sha256"]
+        if offset >= part["total"]:
+            return base64.b64decode(encoded)
+
+
+def test_plugin_html_downloads_are_the_plugins_own_interactive_pages():
+    """The MCP App loads a page too big to send inline through download_diagram.
+
+    It must get the plugin's interactive page, not its SVG wrapped in HTML, for every
+    plugin type that renders HTML (D3 has its own path, with D3 inlined).
+    """
+    from mcp_core.plugins.loader import RENDERERS, load_plugins
+
+    load_plugins()
+    checked = 0
+    for diagram_type, renderer in sorted(RENDERERS.items()):
+        spec = renderer.diagram_types[diagram_type]
+        if "html" not in spec.formats or diagram_type.startswith("d3_"):
+            continue
+        native = renderer.render(diagram_type, spec.example, "html").content
+        assert _download_all(diagram_type, spec.example, "html") == native, diagram_type
+        checked += 1
+    assert checked >= 6

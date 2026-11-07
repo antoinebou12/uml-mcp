@@ -22,7 +22,18 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-for _name in ("d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps", "statechart", "trace", "c4", "timeline"):
+for _name in (
+    "d3",
+    "stack-diagram",
+    "archify",
+    "llm-visualizer",
+    "schema",
+    "deps",
+    "statechart",
+    "trace",
+    "c4",
+    "timeline",
+):
     _src = ROOT / "examples" / "plugins" / f"uml-mcp-plugin-{_name}" / "src"
     if str(_src) not in sys.path:
         sys.path.insert(0, str(_src))
@@ -48,8 +59,8 @@ def renderers() -> dict[str, Any]:
     from uml_mcp_plugin_schema import SchemaRenderer
     from uml_mcp_plugin_stack_diagram import StackDiagramRenderer
     from uml_mcp_plugin_statechart import StatechartRenderer
-    from uml_mcp_plugin_trace import TraceRenderer
     from uml_mcp_plugin_timeline import TimelineRenderer
+    from uml_mcp_plugin_trace import TraceRenderer
 
     return {
         "d3": D3Renderer(),

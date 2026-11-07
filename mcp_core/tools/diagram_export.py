@@ -23,6 +23,20 @@ class ExportChunk(BaseModel):
     filename: str
 
 
+def _native_html(diagram_type: str) -> bool:
+    """Whether a loaded plugin renders this type as its own HTML page."""
+    from mcp_core.core.config import MCP_SETTINGS
+    from mcp_core.plugins.loader import RENDERERS
+
+    info = MCP_SETTINGS.diagram_types.get(diagram_type)
+    return bool(
+        info is not None
+        and info.backend.startswith("plugin:")
+        and "html" in info.formats
+        and diagram_type in RENDERERS
+    )
+
+
 @mcp_tool(
     name="download_diagram",
     description="Download source, SVG, PNG, PDF or HTML chunks. Repeat sha256 on follow-ups.",
@@ -99,6 +113,16 @@ def download_diagram(
             raw, mime = renderer.render(diagram_type, code, "html").content, "text/html"
         except ValueError as exc:
             return {"error": str(exc)}
+    elif output_format == "html" and _native_html(diagram_type):
+        # A plugin's own interactive page (schema, timeline, c4...), not an SVG wrapped in
+        # HTML: this is what the MCP App loads when the page was too big to send inline.
+        from mcp_core.plugins.loader import RENDERERS
+
+        try:
+            out = RENDERERS[diagram_type].render(diagram_type, code, "html")
+        except ValueError as exc:
+            return {"error": str(exc)}
+        raw, mime = out.content, "text/html"
     else:
         from mcp_core.core.config import MCP_SETTINGS
 

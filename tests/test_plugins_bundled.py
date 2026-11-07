@@ -67,7 +67,18 @@ def discover(tmp_path, monkeypatch):
 
 def test_bundled_renderers_are_on_without_any_config(discover):
     got = discover(None)
-    for name in ("d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps", "statechart", "trace", "c4", "timeline"):
+    for name in (
+        "d3",
+        "stack-diagram",
+        "archify",
+        "llm-visualizer",
+        "schema",
+        "deps",
+        "statechart",
+        "trace",
+        "c4",
+        "timeline",
+    ):
         assert got[("renderers", name, "uml-mcp")] is True
     assert got[("tools", "d3", "uml-mcp")] is False  # tools add tokens: opt-in
     assert got[("renderers", "architecture", "uml-mcp")] is False

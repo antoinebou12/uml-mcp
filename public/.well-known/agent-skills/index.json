@@ -392,6 +392,8 @@
       "description": "Draw database schema (ER) diagrams from SQL DDL or JSON tables (db_schema).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-db-schema/SKILL.md",
       "sha256": "149ebf106b487f7453ed7af7a82917fd82d6626ab014f327d622a50dd5eed479"
+    },
+    {
       "name": "uml-mcp-deps",
       "type": "context",
       "description": "Draw dependency graphs from package.json, pyproject.toml, requirements.txt and lock files (dependency_graph).",
@@ -403,12 +405,7 @@
       "type": "context",
       "description": "Render and verify UML, C4, Mermaid, D2 and D3 diagrams.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "b9703c6f3ac076ba082d2cb2bb57f5aa1264194d6d70b4cb052edeb3083556e0"
-      "sha256": "0eac9e15ed2c7ac0ded7919754a3e5f481b8b54fe6ba0d5aa4f5373f3427e4be"
-      "sha256": "dd1740a2895cfffd723ed90a19d1604343e0eea42406a1e48525943c5d59e914"
-      "sha256": "8d5ea2b8f352bf90a88b90654cce41cf0fe4f19c562d0602bb58b723d6a24a4c"
-      "sha256": "d6d488e4e02cddf73100cdf08d3cd2223c742c7b33b0ca0dab9db471f261139b"
-      "sha256": "5dd96226fffce7a6a7aafcdc8d2b3486b8e6a2810860712e746fa526181f260b"
+      "sha256": "0876f0f0fd1b3ceff6227bd4f4cc3af0e8bcb0eb48484943cf87f94c9e2583e0"
     },
     {
       "name": "uml-mcp-llm-visualizer",
@@ -451,6 +448,8 @@
       "description": "Draw state machines as statecharts with a step-through simulator (state_machine).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-statechart/SKILL.md",
       "sha256": "f59bf3c26f428386faba10e146485bb7655357e5894e1c8e959c88c08e6c2fe9"
+    },
+    {
       "name": "uml-mcp-timeline",
       "type": "context",
       "description": "Draw project timelines and product roadmaps with swimlanes, phases, milestones, releases and dependencies (timeline).",
