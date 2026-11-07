@@ -157,6 +157,7 @@ nav:
       - Stack diagrams: plugins/stack-diagram.md
       - Archify diagrams: plugins/archify.md
       - LLM visualizer: plugins/llm-visualizer.md
+      - Dependency graphs: plugins/deps.md
       - Architecture diagrams: plugins/architecture.md
   - Developers:
       - developers/index.md
