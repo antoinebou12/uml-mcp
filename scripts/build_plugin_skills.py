@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-for _name in ("d3", "stack-diagram", "archify", "llm-visualizer"):
+for _name in ("d3", "stack-diagram", "archify", "llm-visualizer", "c4"):
     _src = ROOT / "examples" / "plugins" / f"uml-mcp-plugin-{_name}" / "src"
     if str(_src) not in sys.path:
         sys.path.insert(0, str(_src))
@@ -41,6 +41,7 @@ MAX_DESCRIPTION = 500
 
 def renderers() -> dict[str, Any]:
     from uml_mcp_plugin_archify import ArchifyRenderer
+    from uml_mcp_plugin_c4 import C4Renderer
     from uml_mcp_plugin_d3 import D3Renderer
     from uml_mcp_plugin_llm_visualizer import LLMVisualizerRenderer
     from uml_mcp_plugin_stack_diagram import StackDiagramRenderer
@@ -50,6 +51,7 @@ def renderers() -> dict[str, Any]:
         "stack-diagram": StackDiagramRenderer(),
         "archify": ArchifyRenderer(),
         "llm-visualizer": LLMVisualizerRenderer(),
+        "c4": C4Renderer(),
     }
 
 
@@ -162,6 +164,27 @@ TYPES: dict[str, tuple[str, str, str, str, str]] = {
             "- The static SVG/PNG is an oblique view with every label on one row under the solids."
         ),
     ),
+    "c4_model": (
+        "c4",
+        "c4-model",
+        "a C4 model to explore: system context, then containers, then components",
+        (
+            "C4 model of our e-commerce platform: shoppers, the storefront, order and payment "
+            "services, Postgres, a Kafka topic, Stripe. Let me click into each level."
+        ),
+        (
+            "- `people` (`id`, `name`, `description`, `external`) and `systems` (`id`, `name`, "
+            "`description`, `external`, `containers`).\n"
+            "- A container: `id`, `name`, `technology`, `description`, `kind` (`app`, `web`, `db`, "
+            "`queue`, `storage`, `function`), `service` (`aws:lambda`, `postgres`...) for its docs link, "
+            "and `components` (`id`, `name`, `technology`, `description`).\n"
+            "- `relations` (`from`, `to`, `label`, `technology`, `async`) may join elements at any level; "
+            "a relation between components shows as a line between their containers in the container view.\n"
+            "- Ids are unique across the whole model. `view` (`level`: `context`, `container`, `component`; "
+            "`focus`: a system or container id) picks the level the SVG shows and the page opens on.\n"
+            "- Use `c4plantuml` instead when you need PlantUML C4 macros or a deployment view."
+        ),
+    ),
 }
 
 #: topic -> (description, title, short intro). d3-plugins already exists; it is not generated.
@@ -180,6 +203,15 @@ GUIDES: dict[str, tuple[str, str, str]] = {
         (
             "Dashed, colour-coded containers, icon cards, a legend and three presets. The page lets "
             "readers click a node to focus it and shift-click another for the shortest path."
+        ),
+    ),
+    "c4-model": (
+        "Draw a C4 model readers can drill into, from context to containers to components (c4_model).",
+        "C4 model",
+        (
+            "One JSON model covers the three C4 levels. The SVG is the level you choose, in C4 "
+            "notation with a legend; the page starts there and opens a system into its containers "
+            "and a container into its components, with breadcrumbs back up."
         ),
     ),
     "llm-visualizer": (

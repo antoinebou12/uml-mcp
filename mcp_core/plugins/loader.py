@@ -34,7 +34,9 @@ class PluginStatus:
 #: ``plugins.bundled`` (the default) they load without being listed. Only entry points
 #: published by ``uml-mcp`` itself qualify, so another package cannot borrow a name,
 #: and only renderers: plugin tools add connect-time tokens, so they stay opt-in.
-BUNDLED_RENDERERS = frozenset({"d3", "stack-diagram", "archify", "llm-visualizer"})
+BUNDLED_RENDERERS = frozenset(
+    {"d3", "stack-diagram", "archify", "llm-visualizer", "c4"}
+)
 BUNDLED_DISTRIBUTION = "uml-mcp"
 
 #: Loaded renderers by diagram type, and the status of every discovered plugin.

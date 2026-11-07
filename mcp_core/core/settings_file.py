@@ -220,7 +220,7 @@ class PluginsConfig(_Model):
     bundled: bool = _f(
         True,
         "Load the diagram renderers that ship with uml-mcp (d3, stack-diagram, archify, "
-        "llm-visualizer) without listing them. Their extra tools still need `enabled`.",
+        "llm-visualizer, c4) without listing them. Their extra tools still need `enabled`.",
     )
     settings: dict[str, dict[str, Any]] = _f(
         description="Per-plugin settings by name.", default_factory=dict

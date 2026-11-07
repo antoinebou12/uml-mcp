@@ -9,6 +9,15 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
 ### Added
 
+- C4 model plugin (`c4`, bundled and on by default) with the `c4_model` type: one JSON model of
+  people, software systems, containers and components. The SVG draws the chosen level in C4
+  notation (person shapes, grey external systems, containers inside the system boundary,
+  database cylinders, queue pipes, labelled relations with their technology, a legend). The
+  HTML page drills from context to containers to components with breadcrumbs back up, lifts
+  relations to the level on screen and merges them, opens a detail card per element with
+  **Open documentation** for its `service`, picks a top-down or left-right layout to fit the
+  frame, and exports the current level as SVG, PNG or HTML. The Kroki `c4plantuml` type is
+  unchanged.
 - D3 plugin redesign. Boxes take the silhouette of their kind (database cylinders, queue pipes,
   slanted functions, chamfered gateways, security shields, user pills), the tile shows the
   service glyph or software logo, and the cloud provider is a corner logo badge (each logo written
