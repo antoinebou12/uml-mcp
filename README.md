@@ -93,6 +93,7 @@ page in the viewer and to a static SVG and PNG everywhere else.
 | [Stack diagram](docs/plugins/stack-diagram.md) | `stack_diagram` | Icon tiles, nested vendor and region groups, numbered request steps |
 | [Archify](docs/plugins/archify.md) | `archify_architecture` · `archify_workflow` · `archify_sequence` | Colour-coded groups, legend, three presets, click to focus and trace the shortest path |
 | [LLM visualizer](docs/plugins/llm-visualizer.md) | `llm_2d` · `llm_3d` | Layer maps, autoencoder and GAN shapes, `N×` blocks and a rotatable 3D scene |
+| [C4 model](docs/plugins/c4.md) | `c4_model` | One model, three C4 levels: click a system to open its containers, a container for its components |
 
 ```json
 {
