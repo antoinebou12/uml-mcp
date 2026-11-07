@@ -24,6 +24,7 @@ GUIDE_TOPICS = (
     "stack-diagram",
     "archify",
     "llm-visualizer",
+    "timeline",
     "mermaid",
     "plantuml-c4",
     "batch",

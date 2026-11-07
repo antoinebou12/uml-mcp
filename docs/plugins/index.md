@@ -73,6 +73,7 @@ installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugi
 | `uml-mcp-plugin-stack-diagram` | `stack-diagram` | The auto-laid-out `stack_diagram` type: icon tiles, nested groups, left-right or top-down, dark or light. See the [stack diagram plugin](stack-diagram.md) |
 | `uml-mcp-plugin-archify` | `archify` | `archify_architecture`, `archify_workflow` and `archify_sequence`: dashed colour-coded groups, icon cards, presets and click-to-focus pages, sharing the stack-diagram engine. See the [archify plugin](archify.md) |
 | `uml-mcp-plugin-llm-visualizer` | `llm-visualizer` | Interactive `llm_2d` and `llm_3d` LLM architecture diagrams (HTML or SVG). See the [LLM visualizer plugin](llm-visualizer.md) |
+| `uml-mcp-plugin-timeline` | `timeline` | The `timeline` type: swimlanes, task bars with progress and status, phases, milestones, releases and dependencies, on a page that zooms from quarters to days. See the [timeline plugin](timeline.md) |
 | built in (`mcp_core.plugins.architecture`) | `architecture` | Experimental, off by default: tiles at explicit positions, exported as HTML or React TSX. See [architecture diagrams](architecture.md) |
 
 ## Shared options

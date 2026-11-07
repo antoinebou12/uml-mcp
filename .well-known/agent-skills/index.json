@@ -303,6 +303,13 @@
       "sha256": "6abe6be0ed27888f5747d67faa1c363ef13d97c4a07ab9c573f36677c89d71d9"
     },
     {
+      "name": "timeline",
+      "type": "context",
+      "description": "Writes valid timeline JSON for uml-mcp (diagram_type=timeline, bundled plugin timeline). Use when the user asks for a project timeline, product roadmap or Gantt-style plan with swimlanes, milestones and dependencies; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/timeline/SKILL.md",
+      "sha256": "f06705c03ece6b8325e6e387a1a924aff9a3ace78454a543cc28caa519134dd7"
+    },
+    {
       "name": "uml-diagramming",
       "type": "context",
       "description": "Produces Mermaid or PlantUML diagram code from user specifications for UML, architecture, and flow diagrams. Use when the user asks for diagram code or output for the generate_uml / generate_uml_image MCP tools. Supports Kroki-renderable output.",
@@ -335,7 +342,7 @@
       "type": "context",
       "description": "Render and verify UML, C4, Mermaid, D2 and D3 diagrams.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "9a8784017e4ea7e8124144c1cd9baf7b8e50fc003f92c7c400a5cc1a36c3e2bd"
+      "sha256": "5dd96226fffce7a6a7aafcdc8d2b3486b8e6a2810860712e746fa526181f260b"
     },
     {
       "name": "uml-mcp-llm-visualizer",
@@ -371,6 +378,13 @@
       "description": "Draw auto-laid-out stack and cloud architecture diagrams with real logos (stack_diagram).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-stack-diagram/SKILL.md",
       "sha256": "16a7da925e7407f01b3f6a9a0a2a6227f496bba268561380a222ab7daf4e9540"
+    },
+    {
+      "name": "uml-mcp-timeline",
+      "type": "context",
+      "description": "Draw project timelines and product roadmaps with swimlanes, phases, milestones, releases and dependencies (timeline).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-timeline/SKILL.md",
+      "sha256": "882ef2401db4727abf15136cf6bc8dd7d72a3593e488cc20dff29614dfe90916"
     },
     {
       "name": "umlet",
