@@ -289,6 +289,13 @@
       "sha256": "6ec0d302a51b8bf9edec68ae51aeaa9dbe7345b19d385652baed57c15a7a56f7"
     },
     {
+      "name": "state_machine",
+      "type": "context",
+      "description": "Writes valid state_machine JSON for uml-mcp (diagram_type=state_machine, bundled plugin statechart). Use when the user asks for a state machine or statechart (order lifecycle, traffic light, UI flow) to read or step through; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/state_machine/SKILL.md",
+      "sha256": "489754314dd6333fb398462c435862e2188988f504a832032aa675c03e0d23e8"
+    },
+    {
       "name": "structurizr",
       "type": "context",
       "description": "Writes valid structurizr diagram source for uml-mcp (diagram_type=structurizr). Structurizr C4 and architecture DSL Use when the user asks for structurizr or that notation; then call validate_uml / generate_uml / generate_uml_image.",
@@ -363,6 +370,7 @@
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
       "sha256": "b9703c6f3ac076ba082d2cb2bb57f5aa1264194d6d70b4cb052edeb3083556e0"
       "sha256": "0eac9e15ed2c7ac0ded7919754a3e5f481b8b54fe6ba0d5aa4f5373f3427e4be"
+      "sha256": "dd1740a2895cfffd723ed90a19d1604343e0eea42406a1e48525943c5d59e914"
     },
     {
       "name": "uml-mcp-llm-visualizer",
@@ -398,6 +406,13 @@
       "description": "Draw auto-laid-out stack and cloud architecture diagrams with real logos (stack_diagram).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-stack-diagram/SKILL.md",
       "sha256": "16a7da925e7407f01b3f6a9a0a2a6227f496bba268561380a222ab7daf4e9540"
+    },
+    {
+      "name": "uml-mcp-statechart",
+      "type": "context",
+      "description": "Draw state machines as statecharts with a step-through simulator (state_machine).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-statechart/SKILL.md",
+      "sha256": "f59bf3c26f428386faba10e146485bb7655357e5894e1c8e959c88c08e6c2fe9"
     },
     {
       "name": "umlet",

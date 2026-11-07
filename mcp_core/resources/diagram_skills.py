@@ -26,6 +26,7 @@ GUIDE_TOPICS = (
     "llm-visualizer",
     "db-schema",
     "deps",
+    "statechart",
     "mermaid",
     "plantuml-c4",
     "batch",

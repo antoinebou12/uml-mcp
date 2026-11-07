@@ -30,6 +30,7 @@ NON_TYPE_SKILLS = frozenset(
         "uml-mcp-llm-visualizer",
         "uml-mcp-db-schema",
         "uml-mcp-deps",
+        "uml-mcp-statechart",
     }
 )
 
@@ -47,6 +48,7 @@ PLUGIN_TYPE_SKILLS = frozenset(
         "llm_3d",
         "db_schema",
         "dependency_graph",
+        "state_machine",
     }
 )
 

@@ -23,6 +23,7 @@ Read the relevant guide through `resources/read` when needed:
 | LLM and neural-network diagrams, 2D and 3D | `skill://uml-mcp-guides/llm-visualizer/SKILL.md` | `.skill/skills/uml-mcp-llm-visualizer/SKILL.md` |
 | Database schema (ER) diagrams from SQL DDL or JSON | `skill://uml-mcp-guides/db-schema/SKILL.md` | `.skill/skills/uml-mcp-db-schema/SKILL.md` |
 | Dependency graphs from package.json, pyproject.toml, requirements.txt and lock files | `skill://uml-mcp-guides/deps/SKILL.md` | `.skill/skills/uml-mcp-deps/SKILL.md` |
+| State machines and statecharts you can step through | `skill://uml-mcp-guides/statechart/SKILL.md` | `.skill/skills/uml-mcp-statechart/SKILL.md` |
 | Complex Mermaid | `skill://uml-mcp-guides/mermaid/SKILL.md` | `.skill/skills/uml-mcp-mermaid/SKILL.md` |
 | PlantUML and C4 levels | `skill://uml-mcp-guides/plantuml-c4/SKILL.md` | `.skill/skills/uml-mcp-plantuml-c4/SKILL.md` |
 | Several views or format conversions | `skill://uml-mcp-guides/batch/SKILL.md` | `.skill/skills/uml-mcp-batch/SKILL.md` |

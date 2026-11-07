@@ -159,6 +159,7 @@ nav:
       - LLM visualizer: plugins/llm-visualizer.md
       - Database schema: plugins/schema.md
       - Dependency graphs: plugins/deps.md
+      - Statecharts: plugins/statechart.md
       - Architecture diagrams: plugins/architecture.md
   - Developers:
       - developers/index.md

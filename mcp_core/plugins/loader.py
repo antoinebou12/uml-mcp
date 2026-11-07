@@ -35,7 +35,7 @@ class PluginStatus:
 #: published by ``uml-mcp`` itself qualify, so another package cannot borrow a name,
 #: and only renderers: plugin tools add connect-time tokens, so they stay opt-in.
 BUNDLED_RENDERERS = frozenset(
-    {"d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps"}
+    {"d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps", "statechart"}
 )
 BUNDLED_DISTRIBUTION = "uml-mcp"
 
@@ -169,6 +169,21 @@ def plugin_validate(diagram_type: str, code: str) -> list[str] | None:
             "Plugin renderer %s: validate() raised", renderer.name, exc_info=True
         )
         return None
+
+
+def plugin_warnings(diagram_type: str, code: str) -> list[str]:
+    """Problems that still render, from the renderer's optional ``warnings`` hook."""
+    renderer = RENDERERS.get(diagram_type)
+    check = getattr(renderer, "warnings", None)
+    if renderer is None or not callable(check):
+        return []
+    try:
+        return [str(message) for message in check(diagram_type, code)]
+    except Exception:
+        logger.warning(
+            "Plugin renderer %s: warnings() raised", renderer.name, exc_info=True
+        )
+        return []
 
 
 def render_with_plugin(
