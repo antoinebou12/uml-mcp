@@ -28,6 +28,7 @@ NON_TYPE_SKILLS = frozenset(
         "uml-mcp-stack-diagram",
         "uml-mcp-archify",
         "uml-mcp-llm-visualizer",
+        "uml-mcp-db-schema",
     }
 )
 
@@ -43,6 +44,7 @@ PLUGIN_TYPE_SKILLS = frozenset(
         "archify_sequence",
         "llm_2d",
         "llm_3d",
+        "db_schema",
     }
 )
 

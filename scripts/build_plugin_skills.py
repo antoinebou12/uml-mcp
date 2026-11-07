@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-for _name in ("d3", "stack-diagram", "archify", "llm-visualizer"):
+for _name in ("d3", "stack-diagram", "archify", "llm-visualizer", "schema"):
     _src = ROOT / "examples" / "plugins" / f"uml-mcp-plugin-{_name}" / "src"
     if str(_src) not in sys.path:
         sys.path.insert(0, str(_src))
@@ -43,6 +43,7 @@ def renderers() -> dict[str, Any]:
     from uml_mcp_plugin_archify import ArchifyRenderer
     from uml_mcp_plugin_d3 import D3Renderer
     from uml_mcp_plugin_llm_visualizer import LLMVisualizerRenderer
+    from uml_mcp_plugin_schema import SchemaRenderer
     from uml_mcp_plugin_stack_diagram import StackDiagramRenderer
 
     return {
@@ -50,6 +51,7 @@ def renderers() -> dict[str, Any]:
         "stack-diagram": StackDiagramRenderer(),
         "archify": ArchifyRenderer(),
         "llm-visualizer": LLMVisualizerRenderer(),
+        "schema": SchemaRenderer(),
     }
 
 
@@ -162,6 +164,23 @@ TYPES: dict[str, tuple[str, str, str, str, str]] = {
             "- The static SVG/PNG is an oblique view with every label on one row under the solids."
         ),
     ),
+    "db_schema": (
+        "schema",
+        "db-schema",
+        "a database schema or ER diagram from SQL DDL or a list of tables",
+        "Draw the schema of my shop database from this CREATE TABLE script.",
+        (
+            "- Paste SQL DDL as is: `CREATE TABLE` with `PRIMARY KEY`, `REFERENCES`, `FOREIGN KEY`, "
+            "`UNIQUE`, `NOT NULL`, `DEFAULT` (Postgres, MySQL, SQLite); other statements are skipped.\n"
+            "- Comment directives: `-- title: Shop`, `-- theme: dark`, `-- group: Billing` (tables below it "
+            "go in a tinted container; `-- group:` ends it).\n"
+            "- Or JSON: `tables` (`name`, `group`, `note`, `columns`: `name`, `type`, `pk`, `fk` "
+            '`{"table","column"}` or `"table.column"`, `nullable`, `unique`, `note`) and optional '
+            "`relations` (`from`, `to`, `kind`: `one-to-one`, `one-to-many`, `many-to-many`, `label`).\n"
+            "- A unique or primary-key foreign key draws one-to-one; a table keyed by two foreign keys "
+            "is marked as an M:N join table. `validate_uml` lists every bad reference with its line."
+        ),
+    ),
 }
 
 #: topic -> (description, title, short intro). d3-plugins already exists; it is not generated.
@@ -188,6 +207,15 @@ GUIDES: dict[str, tuple[str, str, str]] = {
         (
             "Layer maps, autoencoder and GAN shapes, grouped N× blocks, and a rotatable 3D scene from "
             "one JSON source."
+        ),
+    ),
+    "db-schema": (
+        "Draw database schema (ER) diagrams from SQL DDL or JSON tables (db_schema).",
+        "Database schema diagrams",
+        (
+            "Table cards with key, link, null and unique markers and crow's-foot relationships "
+            "attached at the column rows, laid out by foreign-key direction with groups as tinted "
+            "containers. The page focuses a table, traces a column's keys and searches."
         ),
     ),
 }
@@ -233,10 +261,22 @@ def _compact(source: str) -> str:
     return json.dumps(json.loads(source), separators=(",", ":"), ensure_ascii=False)
 
 
+def _is_json(source: str) -> bool:
+    return source.lstrip().startswith("{")
+
+
+def _example(source: str) -> str:
+    """A fenced block: compact JSON, or SQL DDL as written."""
+    if _is_json(source):
+        return f"```json\n{_compact(source)}\n```\n"
+    return f"```sql\n{source.strip()}\n```\n"
+
+
 def type_skill(name: str, spec: Any) -> str:
     plugin, topic, when, prompt, tips = TYPES[name]
+    language = "JSON" if _is_json(spec.example) else "SQL DDL or JSON"
     description = (
-        f"Writes valid {name} JSON for uml-mcp (diagram_type={name}, bundled plugin {plugin}). "
+        f"Writes valid {name} {language} for uml-mcp (diagram_type={name}, bundled plugin {plugin}). "
         f"Use when the user asks for {when}; then call validate_uml, then generate_uml_image "
         "(chat PNG) or generate_uml with output_format html (interactive MCP App page)."
     )
@@ -265,9 +305,7 @@ def type_skill(name: str, spec: Any) -> str:
         "or set it in the source. `auto` follows the reader's system in the HTML page and is dark "
         "in static SVG and PNG.\n\n"
         "## Example source\n\n"
-        "```json\n"
-        f"{_compact(spec.example)}\n"
-        "```\n"
+        f"{_example(spec.example)}"
     )
 
 
@@ -300,9 +338,7 @@ def guide(topic: str, specs: dict[str, Any]) -> str:
         "5. Pass `theme` (`auto`, `dark`, `light`) rather than editing colours.\n\n"
         f"{GUIDE_EXTRAS.get(topic, '')}"
         "## Example\n\n"
-        "```json\n"
-        f"{_compact(specs[first].example)}\n"
-        "```\n"
+        f"{_example(specs[first].example)}"
     )
 
 
