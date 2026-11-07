@@ -93,6 +93,7 @@ page in the viewer and to a static SVG and PNG everywhere else.
 | [Stack diagram](docs/plugins/stack-diagram.md) | `stack_diagram` | Icon tiles, nested vendor and region groups, numbered request steps |
 | [Archify](docs/plugins/archify.md) | `archify_architecture` · `archify_workflow` · `archify_sequence` | Colour-coded groups, legend, three presets, click to focus and trace the shortest path |
 | [LLM visualizer](docs/plugins/llm-visualizer.md) | `llm_2d` · `llm_3d` | Layer maps, autoencoder and GAN shapes, `N×` blocks and a rotatable 3D scene |
+| [Dependency graphs](docs/plugins/deps.md) | `dependency_graph` | A project's dependency tree from `package.json`, `pyproject.toml`, `requirements.txt` or a lock file |
 
 ```json
 {

@@ -54,6 +54,7 @@ d3 = "uml_mcp_plugin_d3:D3Renderer"
 stack-diagram = "uml_mcp_plugin_stack_diagram:StackDiagramRenderer"
 archify = "uml_mcp_plugin_archify:ArchifyRenderer"
 llm-visualizer = "uml_mcp_plugin_llm_visualizer:LLMVisualizerRenderer"
+deps = "uml_mcp_plugin_deps:DepsRenderer"
 
 [project.entry-points."uml_mcp.tools"]
 d3 = "uml_mcp_plugin_d3:register"
@@ -73,6 +74,7 @@ packages = [
     { include = "uml_mcp_plugin_stack_diagram", from = "examples/plugins/uml-mcp-plugin-stack-diagram/src" },
     { include = "uml_mcp_plugin_archify", from = "examples/plugins/uml-mcp-plugin-archify/src" },
     { include = "uml_mcp_plugin_llm_visualizer", from = "examples/plugins/uml-mcp-plugin-llm-visualizer/src" },
+    { include = "uml_mcp_plugin_deps", from = "examples/plugins/uml-mcp-plugin-deps/src" },
 ]
 
 [tool.pytest.ini_options]
@@ -106,6 +108,7 @@ extra-paths = [
     "examples/plugins/uml-mcp-plugin-llm-visualizer/src",
     "examples/plugins/uml-mcp-plugin-stack-diagram/src",
     "examples/plugins/uml-mcp-plugin-archify/src",
+    "examples/plugins/uml-mcp-plugin-deps/src",
 ]
 
 # FastMCP / Starlette typing is often stricter than runtime; relax in integration tests.

@@ -114,6 +114,13 @@
       "sha256": "b3a4f32a611c8f04d37808254a9ead1751a1bf4ede3c67bf6980c0c476c99ccf"
     },
     {
+      "name": "dependency_graph",
+      "type": "context",
+      "description": "Writes valid dependency_graph JSON for uml-mcp (diagram_type=dependency_graph, bundled plugin deps). Use when the user asks for the dependency tree of a project from its package.json, pyproject.toml, requirements.txt or a lock file; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/dependency_graph/SKILL.md",
+      "sha256": "a6dec26ebb289ba3dc4f587cd7c64625abc72539654498556cd615415219c1b9"
+    },
+    {
       "name": "deployment",
       "type": "context",
       "description": "Writes valid deployment diagram source for uml-mcp (diagram_type=deployment). Shows physical architecture of a system Use when the user asks for deployment or that notation; then call validate_uml / generate_uml / generate_uml_image.",
@@ -331,11 +338,18 @@
       "sha256": "8fc9a5ed21d20ba47a529ec962c72cf8db43c840bf7a93602f506a50e243cbb0"
     },
     {
+      "name": "uml-mcp-deps",
+      "type": "context",
+      "description": "Draw dependency graphs from package.json, pyproject.toml, requirements.txt and lock files (dependency_graph).",
+      "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-deps/SKILL.md",
+      "sha256": "c350d0eff6bb9e68c9e842b1f58a945be41bafefee5bb028966fd38d752438c5"
+    },
+    {
       "name": "uml-mcp-diagrams",
       "type": "context",
       "description": "Render and verify UML, C4, Mermaid, D2 and D3 diagrams.",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/uml-mcp-diagrams/SKILL.md",
-      "sha256": "9a8784017e4ea7e8124144c1cd9baf7b8e50fc003f92c7c400a5cc1a36c3e2bd"
+      "sha256": "0eac9e15ed2c7ac0ded7919754a3e5f481b8b54fe6ba0d5aa4f5373f3427e4be"
     },
     {
       "name": "uml-mcp-llm-visualizer",
