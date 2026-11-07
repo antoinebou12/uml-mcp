@@ -31,7 +31,8 @@
   nodeSel.classed('pinned', function (d) { return d.fx !== undefined && d.fx !== null; });
   // the opaque mask under each node keeps links from showing through its tinted fill
   var circles = [nodeSel.select('circle.f-mask'), nodeSel.select('circle.f-node')];
-  var captions = nodeSel.select('text');
+  var captions = nodeSel.select('text.t-flabel');
+  var icons = nodeSel.select('g.f-icon');
   var linkSel = vp.selectAll('line.f-link');
   var labelNodes = vp.selectAll('g.link-labels text').nodes();
   var labelLinks = links.filter(function (l) { return l.label; });
@@ -53,6 +54,7 @@
       c.attr('cx', function (d) { return d.x; }).attr('cy', function (d) { return d.y; });
     });
     captions.attr('x', function (d) { return d.x; }).attr('y', function (d) { return d.y + d.r + 13; });
+    icons.attr('transform', function (d) { return 'translate(' + d.x + ' ' + d.y + ')'; });
     linkSel.each(function (d, i) {
       var l = links[i], a = l.source, b = l.target;
       if (typeof a !== 'object') return;
@@ -139,6 +141,37 @@
     if (paused) sim.stop(); else sim.alpha(0.3).restart();
     this.textContent = paused ? 'Resume' : 'Pause';
   });
+
+  // ------------------------------------------------------- detail card
+  function neighbours(id) {
+    var out = [], inn = [];
+    links.forEach(function (l) {
+      var a = l.source.id || l.source, b = l.target.id || l.target;
+      if (a === id) out.push({id: b, label: (data.directed ? '→ ' : '') + byId[b].label, via: l.label});
+      else if (b === id) inn.push({id: a, label: (data.directed ? '← ' : '') + byId[a].label, via: l.label});
+    });
+    return data.directed
+      ? [{heading: 'Links to', items: out}, {heading: 'Linked from', items: inn}]
+      : [{heading: 'Connected to', items: out.concat(inn)}];
+  }
+  function showNode(id) {
+    var n = byId[id];
+    nodeSel.classed('selected', function (d) { return d.id === id; });
+    viewer.showDetails({
+      kind: n.group || 'node', title: n.label, sub: n.sub, note: n.note, docs: n.docs,
+      color: getComputedStyle(nodeSel.filter(function (d) { return d.id === id; }).select('circle.f-node').node()).stroke,
+      links: neighbours(id)
+    }, function (other) {
+      var o = byId[other];
+      viewer.fitTo({x: o.x - 160, y: o.y - 120, width: 320, height: 240});
+      showNode(other);
+    });
+  }
+  nodeSel.on('click', function (event, d) {
+    if (event.defaultPrevented) return;  // the end of a drag
+    event.stopPropagation(); showNode(d.id);
+  });
+  svg.on('click', function () { nodeSel.classed('selected', false); viewer.hideDetails(); });
 
   document.body.setAttribute('data-ready', 'force');
 })();

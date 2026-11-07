@@ -17,6 +17,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any
 
+from .docs import docs_url
 from .icons import resolve_service
 from .router import DIRS, Grid, Point, label_point, route
 from .spec import ArchGroup, ArchSpec, node_label
@@ -29,7 +30,7 @@ PORT_ROW = 20
 PORT_PAD = 10
 SLOT_SPACING = 20  # between two arrows meeting the same side
 SLOT_INSET = 20  # from a corner
-MIN_W = 140
+MIN_W = 170
 GROUP_PAD = 20
 GROUP_HEADER = 10  # the title sits on the border; this is the room it needs above
 #: Space kept between boxes, here and while dragging. Arrows keep GRID_MARGIN away from a
@@ -77,6 +78,7 @@ class Box:
     mono: str | None = None  # monogram of a software service
     color: str | None = None  # its tile colour
     logo: str | None = None  # the node's own logo, a data URI
+    docs: str | None = None  # documentation link for the detail panel
     w: int = 0
     h: int = 0
     x: float = 0.0
@@ -209,7 +211,8 @@ def group_rect(
 def box_size(box: Box, slots: int, lr: bool) -> tuple[int, int]:
     """Width and height of a card: its text and ports, and room for the arrows meeting it."""
     rows = max(len(box.inputs), len(box.outputs))
-    head_w = max(mono_width(box.label, TITLE_SIZE), mono_width(box.sub, SUB_SIZE)) + 44
+    # the icon tile on the left, the provider badge or docs hint on the right
+    head_w = max(mono_width(box.label, TITLE_SIZE), mono_width(box.sub, SUB_SIZE)) + 96
     port_w = (
         max([mono_width(p, SUB_SIZE) for p in box.inputs], default=0)
         + max([mono_width(p, SUB_SIZE) for p in box.outputs], default=0)
@@ -252,6 +255,7 @@ def build(spec: ArchSpec, diagram_type: str, default_direction: str) -> Layout:
             mono=r.mono,
             color=r.color,
             logo=node.logo,
+            docs=node.docs or docs_url(node.service, r.provider, r.name),
         )
     order = [n.id for n in spec.nodes]
     if spec.group_by == "category":

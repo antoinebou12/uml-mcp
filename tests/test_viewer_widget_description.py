@@ -56,3 +56,12 @@ def test_view_requests_no_nested_frame_domains():
     page = diagram_viewer_html()
     assert "pluginFrame.srcdoc" in page
     assert "pluginFrame.src =" not in page
+
+
+def test_plugin_pages_open_https_links_through_the_host():
+    """A plugin page posts uml-mcp/open-link; the viewer forwards only https URLs."""
+    from mcp_core.apps.diagram_viewer import diagram_viewer_html
+
+    page = diagram_viewer_html()
+    handler = page[page.index('packet.type === "uml-mcp/open-link"') :][:400]
+    assert "/^https:" in handler and "openLink(packet.url)" in handler

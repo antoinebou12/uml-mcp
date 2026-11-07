@@ -90,14 +90,14 @@
       "type": "context",
       "description": "Writes valid d3_architecture JSON for uml-mcp (diagram_type=d3_architecture, bundled plugin d3). Use when the user asks for a cloud or system architecture with provider and brand logos; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/d3_architecture/SKILL.md",
-      "sha256": "f75382490e631fb670b361b7ee4aeae4d6eb019bdc139dc4631602038def03d4"
+      "sha256": "14e542ae1735ff0632a6756febc4117f5f4fd27ac9d4c19e5b735e136aa59573"
     },
     {
       "name": "d3_force",
       "type": "context",
       "description": "Writes valid d3_force JSON for uml-mcp (diagram_type=d3_force, bundled plugin d3). Use when the user asks for a force-directed network or dependency graph; then call validate_uml, then generate_uml_image (chat PNG) or generate_uml with output_format html (interactive MCP App page).",
       "url": "https://raw.githubusercontent.com/antoinebou12/uml-mcp/main/.skill/skills/d3_force/SKILL.md",
-      "sha256": "97e4ef8fe6f1acb1ccbf11034cdc20fb835b48a9c62394f2cef864ed4fca6b47"
+      "sha256": "1cdef5fc3bfbb9132e25d3606dc822bc45c1d9edf7e346545c84c094a58f4b8e"
     },
     {
       "name": "d3_topology",

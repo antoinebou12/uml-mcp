@@ -10,6 +10,8 @@ var UmlViewer = (function () {
 
   var SVG_NS = 'http://www.w3.org/2000/svg';
   var hostBridge = false;
+  // inside the MCP App viewer (or any frame) the page drops its own title bar
+  if (window.self !== window.top) document.documentElement.setAttribute('data-embedded', '');
 
   function escapeJson(text) {
     // same escaping the server uses, so the data block can never close its own script element
@@ -41,6 +43,17 @@ var UmlViewer = (function () {
   }
 
   // dark when the page was told so, or when it follows the system and the system is dark
+  /* Open a documentation link: inside the MCP App the viewer asks the host
+   * (ui/open-link), because a sandboxed frame cannot open windows itself. */
+  function openLink(url) {
+    if (!/^https:\/\/[^\s"'<>]+$/.test(url || '')) return;
+    if (window.parent !== window) {
+      window.parent.postMessage({type: 'uml-mcp/open-link', url: url}, '*');
+      if (hostBridge) return;
+    }
+    window.open(url, '_blank', 'noopener,noreferrer');
+  }
+
   function isDark() {
     var cl = document.documentElement.classList;
     if (cl.contains('dark')) return true;
@@ -187,18 +200,20 @@ var UmlViewer = (function () {
       });
     svg.call(zoom).on('dblclick.zoom', null);
 
-    function fitTo(box) {
+    function fitTo(box, cap, instant) {
       var vb = svg.node().viewBox.baseVal;
       if (!box.width || !box.height) return;
       var low = (o.extent || [0.2, 6])[0];
-      var k = Math.min(4, Math.max(low, 0.94 * Math.min(vb.width / box.width, vb.height / box.height)));
+      var k = Math.min(cap || 4, Math.max(low, 0.94 * Math.min(vb.width / box.width, vb.height / box.height)));
       var t = d3.zoomIdentity
         .translate(vb.x + vb.width / 2 - k * (box.x + box.width / 2), vb.y + vb.height / 2 - k * (box.y + box.height / 2))
         .scale(k);
       var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      svg.transition().duration(reduced ? 0 : 250).call(zoom.transform, t);
+      if (reduced || instant === true) svg.call(zoom.transform, t);
+      else svg.transition().duration(250).call(zoom.transform, t);
     }
-    function fit() { fitTo(vp.node().getBBox()); }
+    // Fit (and the first view) never blows a small diagram up past o.maxFit; focus may.
+    function fit(instant) { fitTo(vp.node().getBBox(), o.maxFit, instant); }
 
     function button(id, fn) {
       var el = document.getElementById(id);
@@ -257,7 +272,46 @@ var UmlViewer = (function () {
       });
       window.parent.postMessage({type:'uml-mcp/plugin-ready', exports:['svg','png','html']}, '*');
     }
-    return { zoom: zoom, fit: fit, fitTo: fitTo, showTip: showTip, hideTip: hideTip, button: button };
+    // ------------------------------------------------------------ detail card
+    var card = document.getElementById('details');
+    function hideDetails() { if (card) card.hidden = true; }
+    /* info: {kind, title, sub, note, docs, color, links: [{heading, items: [{id, label, via}]}]}
+     * onPick(id) is called when a linked node in the card is clicked. */
+    function showDetails(info, onPick) {
+      if (!card) return;
+      document.getElementById('d-kind').textContent = info.kind || '';
+      document.getElementById('d-title').textContent = info.title || '';
+      document.getElementById('d-sub').textContent = info.sub || '';
+      document.getElementById('d-note').textContent = info.note || '';
+      document.getElementById('d-dot').style.background = info.color || '';
+      var links = document.getElementById('d-links');
+      links.textContent = '';
+      (info.links || []).forEach(function (section) {
+        if (!section.items.length) return;
+        var h = document.createElement('div'); h.className = 'h'; h.textContent = section.heading;
+        links.appendChild(h);
+        section.items.forEach(function (item) {
+          var b = document.createElement('button'); b.type = 'button';
+          b.textContent = item.label;
+          if (item.via) { var v = document.createElement('span'); v.className = 'via'; v.textContent = '  ' + item.via; b.appendChild(v); }
+          b.addEventListener('click', function (event) { event.stopPropagation(); if (onPick) onPick(item.id); });
+          links.appendChild(b);
+        });
+      });
+      var docs = document.getElementById('d-docs');
+      docs.hidden = !info.docs;
+      docs.onclick = function (event) { event.stopPropagation(); openLink(info.docs); };
+      card.hidden = false;
+    }
+    if (card) {
+      document.getElementById('details-close').addEventListener('click', function (event) {
+        event.stopPropagation(); hideDetails(); if (o.onCloseDetails) o.onCloseDetails();
+      });
+      card.addEventListener('click', function (event) { event.stopPropagation(); });
+      card.addEventListener('pointerdown', function (event) { event.stopPropagation(); });
+    }
+    return { zoom: zoom, fit: fit, fitTo: fitTo, showTip: showTip, hideTip: hideTip, button: button,
+      showDetails: showDetails, hideDetails: hideDetails };
   }
 
   return { init: init };

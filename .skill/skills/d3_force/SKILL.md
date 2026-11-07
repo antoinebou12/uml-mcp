@@ -20,8 +20,9 @@ Load the workflow skill [uml-mcp-diagrams](../uml-mcp-diagrams/SKILL.md) and the
 
 ## Notation tips
 
-- `nodes` (`id`, `label`, `group`) and `links` (`from`, `to`, `label`).
-- Keep it under a few hundred nodes; the page lets readers drag and pin them.
+- `nodes` (`id`, `label`, `group`, `service`, `docs`) and `links` (`source`, `target`, `label`).
+- `service` (`postgres`, `kafka`, `aws:lambda`, `database`) draws an icon in the circle and links its docs.
+- Keep it under a few hundred nodes; readers drag, pin, and click a node for its details.
 
 ## Styling
 
@@ -30,5 +31,5 @@ Pass **`theme`** (`auto`, `dark` or `light`) to `generate_uml` / `generate_uml_i
 ## Example source
 
 ```json
-{"title":"Service dependencies","directed":true,"nodes":[{"id":"web","label":"Web app","group":"frontend","size":1.4},{"id":"mobile","label":"Mobile app","group":"frontend"},{"id":"gateway","label":"API gateway","group":"edge","size":1.6},{"id":"auth","label":"Auth","group":"backend"},{"id":"orders","label":"Orders","group":"backend","size":1.3},{"id":"billing","label":"Billing","group":"backend"},{"id":"db","label":"Postgres","group":"data","size":1.4,"note":"primary + replica"},{"id":"queue","label":"Events","group":"data"}],"links":[{"source":"web","target":"gateway"},{"source":"mobile","target":"gateway"},{"source":"gateway","target":"auth"},{"source":"gateway","target":"orders","label":"REST"},{"source":"orders","target":"db"},{"source":"orders","target":"queue","label":"publishes"},{"source":"billing","target":"queue","label":"consumes"},{"source":"billing","target":"db"}]}
+{"title":"Service dependencies","directed":true,"nodes":[{"id":"web","label":"Web app","group":"frontend","service":"react","size":1.4},{"id":"mobile","label":"Mobile app","group":"frontend","service":"mobile"},{"id":"gateway","label":"API gateway","group":"edge","service":"nginx","size":1.6},{"id":"auth","label":"Auth","group":"backend","service":"keycloak"},{"id":"orders","label":"Orders","group":"backend","service":"nodejs","size":1.3},{"id":"billing","label":"Billing","group":"backend","service":"python"},{"id":"db","label":"Postgres","group":"data","service":"postgres","size":1.4,"note":"primary + replica"},{"id":"queue","label":"Events","group":"data","service":"kafka"}],"links":[{"source":"web","target":"gateway"},{"source":"mobile","target":"gateway"},{"source":"gateway","target":"auth"},{"source":"gateway","target":"orders","label":"REST"},{"source":"orders","target":"db"},{"source":"orders","target":"queue","label":"publishes"},{"source":"billing","target":"queue","label":"consumes"},{"source":"billing","target":"db"}]}
 ```

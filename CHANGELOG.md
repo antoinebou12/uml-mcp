@@ -9,6 +9,14 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
 ### Added
 
+- D3 plugin redesign. Boxes take the silhouette of their kind (database cylinders, queue pipes,
+  slanted functions, chamfered gateways, security shields, user pills), the tile shows the
+  service glyph or software logo, and the cloud provider is a corner logo badge (each logo written
+  once and reused). Clicking a box or force node opens a detail card with its connections and
+  **Open documentation**: a node's own `docs` link, or the official docs of its service (AWS,
+  Azure, Google Cloud, Kubernetes, common software), opened through the host (`ui/open-link`)
+  in the MCP App. Force nodes take a `service` for an icon in the circle. Pages open fitted to
+  their frame and drop their own title and zoom box inside the viewer.
 - LLM visualizer: the flow layout places each layer by its depth in the graph, so parallel
   branches share a column. A VAE's mean and log-variance heads now stack between the encoder
   and the sampled z, with curved edges fanning out and merging, in 2D, the static 3D SVG and the

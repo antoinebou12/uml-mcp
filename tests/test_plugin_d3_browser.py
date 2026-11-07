@@ -414,15 +414,16 @@ def test_wheel_zoom_and_background_drag_pan(open_page, dtype: str) -> None:
 @pytest.mark.parametrize("dtype", ALL)
 def test_toolbar_zoom_fit_and_keys(open_page, dtype: str) -> None:
     page, _ = open_page(f"{dtype}.html")
+    k0 = viewport_transform(page)[2]  # the page opens fitted to its frame
     page.click("#zin")
     page.wait_for_timeout(350)
-    assert viewport_transform(page)[2] > 1.2
+    assert viewport_transform(page)[2] > k0 * 1.2
     page.click("#zout")
     page.wait_for_timeout(350)
-    assert viewport_transform(page)[2] == pytest.approx(1.0, abs=0.05)
+    assert viewport_transform(page)[2] == pytest.approx(k0, abs=0.05)
     page.keyboard.press("+")
     page.wait_for_timeout(200)
-    assert viewport_transform(page)[2] > 1.2
+    assert viewport_transform(page)[2] > k0 * 1.2
     page.click("#fit")
     page.wait_for_timeout(500)
     _, _, fitted = viewport_transform(page)
@@ -916,13 +917,14 @@ def test_the_zoom_level_and_the_dotted_canvas_follow_the_zoom(
     open_page, dtype: str
 ) -> None:
     page, _ = open_page(f"{dtype}.html")
-    assert page.inner_text("#zlevel") == "100%"
+    k0 = viewport_transform(page)[2]  # the page opens fitted to its frame
+    assert page.inner_text("#zlevel") == f"{round(k0 * 100)}%"
     box = page.locator(SVG_SELECTOR[dtype]).bounding_box()
     page.mouse.move(box["x"] + box["width"] / 2, box["y"] + box["height"] / 2)
     page.mouse.wheel(0, -400)
     page.wait_for_timeout(300)
     _x, _y, k = viewport_transform(page)
-    assert page.inner_text("#zlevel") == f"{round(k * 100)}%" and k > 1
+    assert page.inner_text("#zlevel") == f"{round(k * 100)}%" and k > k0
     transform = page.get_attribute("g.viewport", "transform")
     assert (
         page.get_attribute("pattern#dots", "patternTransform") == transform
@@ -1007,3 +1009,60 @@ def test_logos_and_software_tiles_load_under_the_policy(browser, tmp_path) -> No
     assert page.locator("text.t-mono").text_content() == "Pg"
     assert problems == []  # the data: image is allowed, nothing else is requested
     context.close()
+
+
+# ------------------------------------------------------- detail card and docs
+def test_clicking_a_box_opens_its_card_and_docs(open_page) -> None:
+    page, _ = open_page("d3_architecture.html")
+    assert page.is_hidden("#details")
+    page.locator('g.node[data-id="orders"] rect.card').click()
+    assert page.is_visible("#details")
+    assert page.inner_text("#d-title") == "Orders"
+    links = page.inner_text("#d-links")
+    assert "Orders table" in links and "API" in links
+    with page.expect_popup() as popup:
+        page.click("#d-docs")
+    assert popup.value.url == "https://docs.aws.amazon.com/lambda/"
+    # a linked box in the card selects that box
+    page.locator("#d-links button", has_text="Orders table").click()
+    assert page.inner_text("#d-title") == "Orders table"
+    page.keyboard.press("Escape")
+    assert page.is_hidden("#details")
+
+
+def test_embedded_docs_link_asks_the_host(browser, tmp_path) -> None:
+    """Inside the MCP App the page posts uml-mcp/open-link instead of opening a window."""
+    from uml_mcp_plugin_d3 import D3Renderer
+    from uml_mcp_plugin_d3.samples import SAMPLES
+
+    renderer = D3Renderer()
+    renderer.configure({"d3_source": "inline"})
+    inner = renderer.render("d3_architecture", SAMPLES["d3_architecture"][0], "html")
+    (tmp_path / "inner.html").write_bytes(inner.content)
+    (tmp_path / "host.html").write_text(
+        "<!doctype html><body style='margin:0'><script>window.got=[];"
+        "addEventListener('message',e=>window.got.push(e.data))</script>"
+        "<iframe src='inner.html' sandbox='allow-scripts' style='width:900px;height:600px;border:0'>"
+        "</iframe></body>",
+        encoding="utf-8",
+    )
+    context = browser.new_context(viewport={"width": 920, "height": 620})
+    try:
+        page = context.new_page()
+        page.goto((tmp_path / "host.html").as_uri())
+        frame = page.frame_locator("iframe")
+        frame.locator("body[data-ready]").wait_for(state="attached")
+        assert frame.locator("header h1").is_hidden()  # the viewer shows the title
+        frame.locator('g.node[data-id="orders"] rect.card').click()
+        frame.locator("#d-docs").click()
+        page.wait_for_function(
+            "window.got.some(m => m && m.type === 'uml-mcp/open-link')"
+        )
+        sent = page.evaluate(
+            "window.got.filter(m => m && m.type === 'uml-mcp/open-link')"
+        )
+        assert sent == [
+            {"type": "uml-mcp/open-link", "url": "https://docs.aws.amazon.com/lambda/"}
+        ]
+    finally:
+        context.close()

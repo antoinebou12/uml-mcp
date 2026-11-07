@@ -1480,6 +1480,12 @@ _DIAGRAM_VIEWER_HTML = r"""<!DOCTYPE html>
         pluginFrame.dataset.exports = "ready";
         pluginFrame.contentWindow.postMessage({type:"uml-mcp/plugin-bridge-ready"}, "*");
       }
+      // a plugin page's documentation link: only https, opened by the host
+      if (packet.type === "uml-mcp/open-link" && typeof packet.url === "string" &&
+          packet.url.length <= 2048 && /^https:\/\/[^\s"'<>]+$/.test(packet.url)) {
+        openLink(packet.url);
+        setStatus("Opening documentation", "ok");
+      }
       if (packet.type === "uml-mcp/plugin-download" && typeof packet.blob === "string" &&
           packet.blob.length <= 11000000 && /^[-a-zA-Z0-9_.]+$/.test(packet.filename || "") &&
           ["image/svg+xml", "image/png", "text/html", "application/pdf"].indexOf(packet.mime_type) >= 0) {

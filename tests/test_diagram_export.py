@@ -99,7 +99,11 @@ def test_bundled_cloud_and_ai_logos_are_inline():
     )
     svg = D3Renderer().render("d3_architecture", code, "svg").content
     root = ET.fromstring(svg)
-    assert len(list(root.iter("{http://www.w3.org/2000/svg}svg"))) == 5
+    ns = "{http://www.w3.org/2000/svg}"
+    # each logo is embedded once as a <symbol> and drawn with <use>: nothing is fetched
+    assert len(list(root.iter(f"{ns}symbol"))) == 4
+    uses = [u.get("href") for u in root.iter(f"{ns}use")]
+    assert len(uses) == 4 and all(h and h.startswith("#logo-") for h in uses)
     assert b"https://cdn" not in svg
 
 

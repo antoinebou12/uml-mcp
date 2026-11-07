@@ -23,6 +23,7 @@ Load the workflow skill [uml-mcp-diagrams](../uml-mcp-diagrams/SKILL.md) and the
 - Node `service` keys draw real logos: `aws:s3`, `gcp:run`, `tech:claude`, `tech:github`, `tech:vercel`...
 - `groups` nest (`region` > `vpc` > `subnet`); `provider` is a top-level field, never a node field.
 - Call `d3_catalog` (when enabled) for every service key before writing source.
+- The `service` kind sets the shape (database cylinder, queue pipe, function slant, gateway chamfer) and the docs link a click opens; `docs` overrides it with your own `https://` page.
 
 ## Styling
 

@@ -33,7 +33,28 @@ class ForceModel:
 
 
 def _radius(size: float) -> float:
-    return 6 + 4 * size
+    # large enough to hold a service icon
+    return 12 + 6 * size
+
+
+def _service(node) -> dict:
+    """The icon and docs of a node: from its ``service``, or from its label when that
+    names known software ("Postgres", "Redis"). Unknown names get no icon."""
+    from .docs import docs_url
+    from .icons import resolve_service
+
+    probe = node.service or node.label or node.id
+    r = resolve_service(probe, None, "generic")
+    known = bool(node.service) or r.kind != "service" or r.provider == "tech"
+    if not known:
+        return {"kind": "", "provider": "", "sub": "", "docs": node.docs or ""}
+    return {
+        "kind": r.kind,
+        "provider": r.provider,
+        "sub": r.name if node.service else "",
+        "brand": r.name,
+        "docs": node.docs or docs_url(probe, r.provider, r.name) or "",
+    }
 
 
 def _simulate(
@@ -147,6 +168,7 @@ def build(spec: ForceSpec) -> ForceModel:
             "category": category.get(node.group or "", "external"),
             "r": round(radii[i], 1),
             "note": node.note or "",
+            **_service(node),
             "x": round(pos[i][0] + dx, 1),
             "y": round(pos[i][1] + dy, 1),
         }
@@ -165,6 +187,32 @@ def build(spec: ForceSpec) -> ForceModel:
     legend_w = LEGEND_W if legend else 0  # its own column, so it never covers a node
     return ForceModel(
         nodes, links, legend, x2 - x1 + 2 * MARGIN + legend_w, y2 - y1 + MARGIN + top
+    )
+
+
+def _node_icon(node: dict) -> str:
+    """A brand logo or service glyph centred in the circle (moved by the page's ticks)."""
+    from .brand_icons import brand_svg
+    from .icons import KINDS
+    from .svg import _place_svg
+
+    if not node.get("kind"):
+        return ""
+    s = round(node["r"] * 1.15, 1)
+    brand = (
+        brand_svg(node["provider"], node.get("brand", ""))
+        if node["provider"] == "tech"
+        else ""
+    )
+    inner = (
+        _place_svg(brand, -s / 2, -s / 2, s)
+        if brand
+        else f'<g class="glyph" transform="translate({-s / 2} {-s / 2}) scale({s / 24:.3f})">'
+        f"{KINDS.get(node['kind'], KINDS['service'])}</g>"
+    )
+    return (
+        f'<g class="f-icon" transform="translate({_fmt(node["x"])} {_fmt(node["y"])})">'
+        f"{inner}</g>"
     )
 
 
@@ -226,6 +274,7 @@ def force_svg(model: ForceModel, spec: ForceSpec, *, page: bool = False) -> str:
             f'r="{_fmt(node["r"])}"/>'
             f'<circle class="f-node" cx="{_fmt(node["x"])}" cy="{_fmt(node["y"])}" '
             f'r="{_fmt(node["r"])}"/>'
+            f"{_node_icon(node)}"
             f'<text class="t-flabel" x="{_fmt(node["x"])}" y="{_fmt(node["y"] + node["r"] + 14)}">'
             f"{escape(node['label'])}</text></g>"
         )
@@ -247,4 +296,6 @@ def force_svg(model: ForceModel, spec: ForceSpec, *, page: bool = False) -> str:
             )
         parts.append("</g>")
     parts.append("</g></svg>")
-    return "".join(parts)
+    from .svg import share_logos
+
+    return share_logos("".join(parts))

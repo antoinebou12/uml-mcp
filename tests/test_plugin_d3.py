@@ -733,7 +733,14 @@ def test_page_csp_pins_exactly_the_scripts_and_style_it_contains(
 def test_page_makes_no_requests_beyond_the_pinned_d3(dtype: str) -> None:
     text = page(dtype)
     urls = {u.rstrip(";") for u in re.findall(r"https?://[^\s\"'<>)]+", text)}
-    assert urls <= {html.D3_CDN_URL, "http://www.w3.org/2000/svg"}, urls
+    # documentation links in the spec are only opened when a reader clicks them
+    found = re.search(
+        r'<script type="application/json" id="spec">(.*?)</script>', text, re.DOTALL
+    )
+    assert found
+    docs = {n["docs"] for n in json.loads(found[1])["nodes"] if n.get("docs")}
+    assert all(u.startswith("https://") for u in docs)
+    assert urls - docs <= {html.D3_CDN_URL, "http://www.w3.org/2000/svg"}, urls - docs
     assert "style=" not in text.replace("<style>", "").replace("</style>", "")
 
 
@@ -1396,9 +1403,8 @@ def test_only_nodes_that_name_a_service_wear_a_provider_badge() -> None:
         .content.decode()
     )
     named = [n for n in example("d3_architecture")["nodes"] if n.get("service")]
-    assert (
-        svg.count('class="t-badge prov-aws"') == len(named) == 6
-    )  # the user box names none
+    # the AWS logo as a corner badge on each named node; the user box names none
+    assert svg.count('class="brand-logo badge-logo"') == len(named) == 6
     assert 'data-id="users"' in svg
 
 
@@ -1417,7 +1423,10 @@ def test_software_nodes_get_a_monogram_tile_and_cloud_nodes_a_glyph() -> None:
         and ">Pg</text>" in svg
         and 'fill="#336791"' in svg
     )
-    assert svg.count('class="brand-logo"') == 1
+    # SQS: a queue glyph in the tile and the AWS logo as its badge (not the AWS logo
+    # standing in for the service)
+    assert svg.count('class="brand-logo badge-logo"') == 1
+    assert svg.count('class="brand-logo"') == 0
 
 
 def test_the_legend_counts_what_is_drawn() -> None:
@@ -1753,3 +1762,85 @@ def test_a_label_in_a_random_diagram_avoids_boxes_whenever_it_can() -> None:
             box = (x - half, y - 8, e.label_width, 16)
             clear += not any(rect_overlap(box, b.rect()) for b in arranged.boxes)
     assert total > 100 and clear / total >= 0.97, (clear, total)
+
+
+# ------------------------------------------------- shapes, icons and documentation
+def test_docs_links_come_from_the_service_or_the_provider_search() -> None:
+    from uml_mcp_plugin_d3.docs import docs_url
+
+    assert (
+        docs_url("aws:lambda", "aws", "Lambda") == "https://docs.aws.amazon.com/lambda/"
+    )
+    assert (
+        docs_url("postgres", "tech", "PostgreSQL") == "https://www.postgresql.org/docs/"
+    )
+    assert (docs_url("aws:iotcore", "aws", "IoT Core") or "").startswith(
+        "https://docs.aws.amazon.com/search/"
+    )
+    assert docs_url("database", "generic", "Database") is None  # a kind, not a product
+    assert docs_url(None, "aws", "") is None
+
+
+def test_a_node_docs_link_overrides_and_must_be_https() -> None:
+    code = arch(
+        nodes=[{"id": "a", "service": "aws:s3", "docs": "https://example.com/runbook"}],
+        links=[],
+    )
+    built = build_layout("d3_architecture", code)
+    assert built.boxes[0].docs == "https://example.com/runbook"
+    problems = D3Renderer().validate(
+        "d3_architecture",
+        arch(nodes=[{"id": "a", "docs": "http://example.com"}], links=[]),
+    )
+    assert problems and "docs" in problems[0]
+
+
+def test_each_kind_draws_its_silhouette() -> None:
+    code = json.dumps(
+        {
+            "nodes": [
+                {"id": "db", "service": "aws:dynamodb"},
+                {"id": "q", "service": "aws:sqs"},
+                {"id": "fn", "service": "aws:lambda"},
+                {"id": "gw", "service": "aws:apigateway"},
+                {"id": "waf", "service": "aws:waf"},
+                {"id": "u", "kind": "user"},
+                {"id": "vm", "service": "aws:ec2"},
+            ]
+        }
+    )
+    svg = D3Renderer().render("d3_architecture", code, "svg").content.decode()
+    root = ET.fromstring(svg)
+    shapes = {
+        g.get("data-id"): next(
+            c for c in (g.get("class") or "").split() if c.startswith("shape-")
+        )
+        for g in root.iter("{http://www.w3.org/2000/svg}g")
+        if "node" in (g.get("class") or "").split()
+    }
+    assert shapes == {
+        "db": "shape-cylinder",
+        "q": "shape-pipe",
+        "fn": "shape-slant",
+        "gw": "shape-chamfer",
+        "waf": "shape-shield",
+        "u": "shape-pill",
+        "vm": "shape-card",
+    }
+    # the AWS mark is written once and reused by every AWS box
+    assert svg.count("<symbol") == 1 and svg.count('class="brand-logo badge-logo"') == 6
+    assert ".t-docs{display:none}" in svg  # the docs hint is only for the page
+
+
+def test_force_nodes_get_icons_and_docs() -> None:
+    parsed = spec.parse("d3_force", SAMPLES["d3_force"][0])
+    assert isinstance(parsed, spec.ForceSpec)
+    model = force.build(parsed)
+    nodes = {n["id"]: n for n in model.nodes}
+    assert nodes["db"]["kind"] == "database"
+    assert nodes["db"]["docs"] == "https://www.postgresql.org/docs/"
+    svg = (
+        D3Renderer().render("d3_force", SAMPLES["d3_force"][0], "svg").content.decode()
+    )
+    assert svg.count('class="f-icon"') == len(nodes)
+    ET.fromstring(svg)

@@ -65,8 +65,13 @@ class ForceNode(_Model):
     id: str
     label: str | None = Field(default=None, max_length=MAX_LABEL)
     group: str | None = Field(default=None, max_length=MAX_LABEL)
+    # the icon in the circle and the docs link: "aws:lambda", "postgres", "database"...
+    service: str | None = Field(default=None, max_length=64)
     size: float = Field(default=1.0, ge=0.5, le=4.0)
     note: str | None = Field(default=None, max_length=400)
+    docs: str | None = Field(
+        default=None, max_length=300, pattern=r"^https://[^\s\"'<>]+$"
+    )  # documentation link shown when the node is clicked
 
 
 class ForceLink(_Model):
@@ -116,6 +121,9 @@ class ArchNode(_Model):
     inputs: list[str] = []
     outputs: list[str] = []
     note: str | None = Field(default=None, max_length=400)
+    docs: str | None = Field(
+        default=None, max_length=300, pattern=r"^https://[^\s\"'<>]+$"
+    )  # documentation link shown when the node is clicked
 
 
 class ArchLink(_Model):

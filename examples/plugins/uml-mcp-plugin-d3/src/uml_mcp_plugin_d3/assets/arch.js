@@ -230,9 +230,31 @@
     document.getElementById('focus').disabled = !selected;
     var label = selected ? (kind === 'node' ? nodes[id].label : groupEls[id].select('text').text()) : '';
     document.getElementById('selection-status').textContent = selected ? label + ': ' + overlay.selectAll('path').size() + ' connections selected' : 'Selection cleared';
+    if (selected && kind === 'node') showNode(id); else viewer.hideDetails();
+  }
+  // The detail card of a node: what it is, what it talks to, and its documentation.
+  var CATEGORY_NAMES = {frontend: 'Edge', backend: 'Compute', database: 'Data', cloud: 'Cloud',
+    security: 'Security', messagebus: 'Messaging', external: 'External'};
+  function showNode(id) {
+    var n = nodes[id];
+    function peers(side) {
+      return edges.filter(function (e) { return (side === 'out' ? e.from : e.to) === id; }).map(function (e) {
+        var other = nodes[side === 'out' ? e.to : e.from];
+        var text = e.label.empty() ? '' : e.label.select('text').text();
+        return {id: other.id, label: (side === 'out' ? '→ ' : '← ') + other.label, via: text};
+      });
+    }
+    var stroke = getComputedStyle(nodeEls[id].select('.shape').node()).stroke;
+    viewer.showDetails({
+      kind: [CATEGORY_NAMES[n.category] || n.category, n.provider && n.provider !== 'generic' ? n.provider.toUpperCase() : '']
+        .filter(Boolean).join(' · '),
+      title: n.label, sub: n.sub, note: n.note, docs: n.docs, color: stroke,
+      links: [{heading: 'Sends to', items: peers('out')}, {heading: 'Receives from', items: peers('in')}]
+    }, function (other) { select('node', other, false); focusSelection(); });
   }
   function clearSelection() {
     selected = null;
+    if (viewer) viewer.hideDetails();
     vp.selectAll('g.node,g.group').classed('selected', false).attr('aria-pressed', 'false');
     highlight({}); updateOverlay();
     document.getElementById('focus').disabled = true;
@@ -295,6 +317,7 @@
   }
 
   var viewer = UmlViewer.init({
+    maxFit: 1.5,  // fitting never blows a small diagram up past 150%
     svg: svg, vp: vp, extent: [0.2, 6], title: data.title, name: 'diagram',
     // the spec as it is now: moved boxes and the arrows routed around them
     snapshot: function () {
@@ -400,5 +423,6 @@
       viewer.hideTip();
     });
 
+  viewer.fit(true);  // open fitted to the frame, without an animation
   document.body.setAttribute('data-ready', 'architecture');
 })();

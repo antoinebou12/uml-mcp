@@ -61,8 +61,9 @@ TYPES: dict[str, tuple[str, str, str, str, str]] = {
         "a force-directed network or dependency graph",
         "Show our microservices as a force graph, grouped by team.",
         (
-            "- `nodes` (`id`, `label`, `group`) and `links` (`from`, `to`, `label`).\n"
-            "- Keep it under a few hundred nodes; the page lets readers drag and pin them."
+            "- `nodes` (`id`, `label`, `group`, `service`, `docs`) and `links` (`source`, `target`, `label`).\n"
+            "- `service` (`postgres`, `kafka`, `aws:lambda`, `database`) draws an icon in the circle and links its docs.\n"
+            "- Keep it under a few hundred nodes; readers drag, pin, and click a node for its details."
         ),
     ),
     "d3_architecture": (
@@ -73,7 +74,9 @@ TYPES: dict[str, tuple[str, str, str, str, str]] = {
         (
             "- Node `service` keys draw real logos: `aws:s3`, `gcp:run`, `tech:claude`, `tech:github`, `tech:vercel`...\n"
             "- `groups` nest (`region` > `vpc` > `subnet`); `provider` is a top-level field, never a node field.\n"
-            "- Call `d3_catalog` (when enabled) for every service key before writing source."
+            "- Call `d3_catalog` (when enabled) for every service key before writing source.\n"
+            "- The `service` kind sets the shape (database cylinder, queue pipe, function slant, gateway chamfer) "
+            "and the docs link a click opens; `docs` overrides it with your own `https://` page."
         ),
     ),
     "d3_topology": (

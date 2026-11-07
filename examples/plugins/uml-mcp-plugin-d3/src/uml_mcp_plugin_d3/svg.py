@@ -9,10 +9,12 @@ page can switch theme), and everything else is a presentation attribute: there a
 
 from __future__ import annotations
 
+import re
 from html import escape
 
 from .icons import KINDS
 from .layout import (
+    BASE_H,
     GROUP_HEADER,
     MARGIN,
     Box,
@@ -118,28 +120,163 @@ def root_open(
     return "".join(parts)
 
 
+#: The silhouette of a node by kind, so a reader tells a database from a queue at a
+#: glance: databases are cylinders, queues and streams pipes, functions slanted cards,
+#: gateways and balancers chamfered, security controls shields, people and devices pills.
+SHAPES: dict[str, str] = {
+    **dict.fromkeys(
+        ("database", "storage", "backup", "cache", "search", "analytics", "document"),
+        "cylinder",
+    ),
+    **dict.fromkeys(("queue", "topic", "stream", "mail"), "pipe"),
+    **dict.fromkeys(("function", "batch", "workflow"), "slant"),
+    **dict.fromkeys(
+        ("gateway", "api", "loadbalancer", "cdn", "dns", "mesh"), "chamfer"
+    ),
+    **dict.fromkeys(("firewall", "identity", "secret", "lock"), "shield"),
+    **dict.fromkeys(("user", "mobile", "device", "internet", "iot"), "pill"),
+}
+ICON = 36  # the icon tile
+ICON_X = 10
+ICON_Y = 12  # centred in the 60px head
+TEXT_X = 56  # title and subtitle start right of the tile
+
+
+def shape_of(kind: str) -> str:
+    return SHAPES.get(kind, "card")
+
+
+def card_path(shape: str, w: float, h: float) -> tuple[str, str]:
+    """The outline of a node of ``w`` x ``h`` and an optional rim line (cylinder tops)."""
+    if shape == "cylinder":
+        e = 7
+        return (
+            f"M0 {e}A{w / 2} {e} 0 0 1 {w} {e}V{h - e}A{w / 2} {e} 0 0 1 0 {h - e}Z",
+            f"M0 {e}A{w / 2} {e} 0 0 0 {w} {e}",
+        )
+    if shape == "pipe":
+        r = min(12, w / 6)
+        return (
+            f"M{r} 0H{w - r}A{r} {h / 2} 0 0 1 {w - r} {h}H{r}A{r} {h / 2} 0 0 1 {r} 0Z",
+            f"M{w - r} 0A{r} {h / 2} 0 0 0 {w - r} {h}",
+        )
+    if shape == "slant":
+        s = 9
+        return f"M{s} 0H{w}L{w - s} {h}H0Z", ""
+    if shape == "chamfer":
+        c = min(12, h / 4)
+        return (
+            f"M{c} 0H{w - c}L{w} {c}V{h - c}L{w - c} {h}H{c}L0 {h - c}V{c}Z",
+            "",
+        )
+    if shape == "shield":
+        c = min(14, h / 3)
+        return f"M0 0H{w}V{h - c}Q{w / 2} {h + c / 2} 0 {h - c}Z", ""
+    return _rounded(w, h, min(h / 2, 30) if shape == "pill" else 10), ""
+
+
+def _rounded(w: float, h: float, r: float) -> str:
+    return (
+        f"M{r} 0H{w - r}A{r} {r} 0 0 1 {w} {r}V{h - r}A{r} {r} 0 0 1 {w - r} {h}"
+        f"H{r}A{r} {r} 0 0 1 0 {h - r}V{r}A{r} {r} 0 0 1 {r} 0Z"
+    )
+
+
+def _place_svg(markup: str, x: float, y: float, size: float) -> str:
+    """Move a bundled logo (drawn at 10,6 size 20) to ``x``, ``y`` at ``size``."""
+    return markup.replace(
+        'x="10" y="6" width="20" height="20"',
+        f'x="{_num(x)}" y="{_num(y)}" width="{_num(size)}" height="{_num(size)}"',
+        1,
+    )
+
+
+_LOGO = re.compile(
+    r'<svg class="(brand-logo[^"]*)" x="([-\d.]+)" y="([-\d.]+)" width="([\d.]+)" '
+    r'height="([\d.]+)"([^>]*)>(.*?)</svg>',
+    re.DOTALL,
+)
+
+
+def share_logos(svg: str) -> str:
+    """Write each distinct logo once as a ``<symbol>`` and draw it with ``<use>``.
+
+    Six AWS services would otherwise carry six copies of the AWS mark, which pushes a
+    diagram past the size a chat shows inline.
+    """
+    symbols: dict[str, str] = {}
+
+    def use(match: re.Match) -> str:
+        cls, x, y, w, h, attrs, inner = match.groups()
+        key = attrs + inner
+        if key not in symbols:
+            view = re.search(r'viewBox="([^"]+)"', attrs)
+            paint = " ".join(re.findall(r'(?:fill|fill-rule|stroke)="[^"]*"', attrs))
+            symbols[key] = (
+                f'<symbol id="logo-{len(symbols)}" '
+                f'viewBox="{view[1] if view else "0 0 24 24"}" {paint}>{inner}</symbol>'
+            )
+        ref = f"logo-{list(symbols).index(key)}"
+        return f'<use class="{cls}" href="#{ref}" x="{x}" y="{y}" width="{w}" height="{h}"/>'
+
+    body = _LOGO.sub(use, svg)
+    if not symbols:
+        return svg
+    return body.replace("</defs>", "".join(symbols.values()) + "</defs>", 1)
+
+
 def _glyph(kind: str) -> str:
     fragment = KINDS.get(kind, KINDS["service"])
-    return f'<g class="glyph" transform="translate(12 8) scale(0.667)">{fragment}</g>'
+    scale = (ICON - 10) / 24
+    return (
+        f'<g class="glyph" transform="translate({ICON_X + 5} {ICON_Y + 5}) '
+        f'scale({scale:.3f})">{fragment}</g>'
+    )
 
 
 def _icon(b: Box) -> str:
+    """The large mark in the tile: the node's own logo, a software brand, or the
+    service glyph (Lambda is a function, DynamoDB a database), never just the provider."""
     from .brand_icons import brand_svg
 
+    inner, at = ICON - 8, ICON_X + 4
     if b.logo:
         return (
-            f'<image class="logo" href="{_a(b.logo)}" x="10" y="6" width="20" height="20" '
-            'preserveAspectRatio="xMidYMid meet"/>'
+            f'<image class="logo" href="{_a(b.logo)}" x="{at}" y="{ICON_Y + 4}" '
+            f'width="{inner}" height="{inner}" preserveAspectRatio="xMidYMid meet"/>'
         )
-    brand = brand_svg(b.provider, b.sub or b.label)
-    if brand:
-        return brand
-    if b.mono and b.color:
-        return (
-            f'<rect x="10" y="8" width="26" height="16" rx="4" fill="{_a(b.color)}"/>'
-            f'<text class="t-mono" x="23" y="19.5">{escape(b.mono)}</text>'
-        )
+    if b.provider == "tech":
+        brand = brand_svg(b.provider, b.sub or b.label)
+        if brand:
+            return _place_svg(brand, at, ICON_Y + 4, inner)
+        if b.mono and b.color:
+            return (
+                f'<rect x="{ICON_X + 3}" y="{ICON_Y + 9}" width="{ICON - 6}" height="18" '
+                f'rx="5" fill="{_a(b.color)}"/>'
+                f'<text class="t-mono" x="{ICON_X + ICON / 2}" y="{ICON_Y + 21.5}">'
+                f"{escape(b.mono)}</text>"
+            )
     return _glyph(b.kind)
+
+
+def _badge(b: Box) -> str:
+    """The provider in the top-right corner: its logo when bundled, else its short name."""
+    from .brand_icons import brand_svg
+
+    if b.provider in ("tech", "generic"):
+        return ""
+    logo = brand_svg(b.provider, b.sub or b.label)
+    if logo:
+        return _place_svg(logo, b.w - 22, 6, 14).replace(
+            'class="brand-logo"', 'class="brand-logo badge-logo"', 1
+        )
+    badge = BADGES.get(b.provider)
+    if not badge:
+        return ""
+    return (
+        f'<text class="t-badge prov-{b.provider}" x="{b.w - 10}" y="16" '
+        f'text-anchor="end">{badge}</text>'
+    )
 
 
 def group_svg(g: GroupBox) -> str:
@@ -156,32 +293,37 @@ def group_svg(g: GroupBox) -> str:
 def node_svg(b: Box) -> str:
     out = [
         (
-            f'<g class="node cat-{b.category}" data-id="{_a(b.id)}" data-kind="{_a(b.kind)}" '
+            f'<g class="node cat-{b.category} shape-{shape_of(b.kind)}" '
+            f'data-id="{_a(b.id)}" data-kind="{_a(b.kind)}" '
             f'data-note="{_a(b.note)}" transform="translate({_num(b.x)} {_num(b.y)})">'
         ),
-        f'<rect class="card" width="{b.w}" height="{b.h}" rx="8" filter="url(#lift)"/>',
     ]
-    icon = _icon(b)
-    if "t-mono" not in icon:
-        # A small tile behind the mark keeps logos and glyphs legible on any card or theme.
-        out.append(
-            '<rect class="icon-tile" x="8" y="4" width="24" height="24" rx="6"/>'
-        )
-    out.append(icon)
-    badge = BADGES.get(b.provider)
-    if badge:
-        out.append(
-            f'<text class="t-badge prov-{b.provider}" x="{b.w - 10}" y="19" '
-            f'text-anchor="end">{badge}</text>'
-        )
+    outline, rim = card_path(shape_of(b.kind), b.w, b.h)
+    # rect.card is the node's box (what is dragged, measured and hit); the silhouette
+    # drawn over it is path.shape
+    out.append(f'<rect class="card" width="{b.w}" height="{b.h}" rx="10"/>')
+    out.append(f'<path class="shape" d="{outline}" filter="url(#lift)"/>')
+    if rim:
+        out.append(f'<path class="card-rim" d="{rim}"/>')
+    # a white tile keeps logos and glyphs legible on any card colour or theme
     out.append(
-        f'<text class="t-title" x="{_num(b.w / 2)}" y="{TITLE_Y}" text-anchor="middle">'
-        f"{escape(b.label)}</text>"
+        f'<rect class="icon-tile" x="{ICON_X}" y="{ICON_Y}" width="{ICON}" height="{ICON}" '
+        'rx="9"/>'
+    )
+    out.append(_icon(b))
+    out.append(_badge(b))
+    title_y, sub_y = (TITLE_Y - 8, SUB_Y - 6) if b.sub else (TITLE_Y - 3, 0)
+    out.append(
+        f'<text class="t-title" x="{TEXT_X}" y="{title_y}">{escape(b.label)}</text>'
     )
     if b.sub:
         out.append(
-            f'<text class="t-sub" x="{_num(b.w / 2)}" y="{SUB_Y}" text-anchor="middle">'
-            f"{escape(b.sub)}</text>"
+            f'<text class="t-sub" x="{TEXT_X}" y="{sub_y}">{escape(b.sub)}</text>'
+        )
+    if b.docs:
+        out.append(
+            f'<text class="t-docs" x="{b.w - 10}" y="{BASE_H - 9}" text-anchor="end">'
+            "docs ↗</text>"
         )
     for i, name in enumerate(b.inputs):
         y = b.port_y(i)
@@ -287,7 +429,7 @@ def architecture_svg(
     if layout.legend:
         parts.append(legend_svg(layout.legend, MARGIN, layout.legend_y))
     parts.append("</g></svg>")
-    return "".join(parts)
+    return share_logos("".join(parts))
 
 
 __all__ = [

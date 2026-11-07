@@ -129,7 +129,18 @@ def _page(
         '<div class="zoom bar"><button id="zout" type="button" title="Zoom out">−</button>'
         '<output id="zlevel">100%</output>'
         '<button id="zin" type="button" title="Zoom in">+</button></div>'
-        f'<div class="hint">{escape(hint)}</div></main>'
+        f'<div class="hint">{escape(hint)}</div>'
+        # the detail card a click opens; filled with textContent by common.js
+        '<aside id="details" class="details" hidden aria-live="polite">'
+        '<button id="details-close" type="button" class="close" aria-label="Close">×</button>'
+        '<div class="d-head"><span id="d-dot" class="d-dot"></span>'
+        '<div><div id="d-kind" class="d-kind"></div><h2 id="d-title"></h2>'
+        '<div id="d-sub" class="d-sub"></div></div></div>'
+        # the documentation link first, so a small frame never hides it below the fold
+        '<button id="d-docs" type="button" class="d-docs">Open documentation ↗</button>'
+        '<p id="d-note" class="d-note"></p>'
+        '<div id="d-links" class="d-links"></div>'
+        "</aside></main>"
         '<div id="tip" role="tooltip"></div>'
         '<output id="selection-status" class="sr-only" aria-live="polite"></output>'
         f'<script type="application/json" id="spec">{json_for_script(data)}</script>'
@@ -165,6 +176,10 @@ def architecture_page(layout: Layout, spec: ArchSpec, *, d3_source: str = "cdn")
                 "label": b.label,
                 "sub": b.sub,
                 "note": b.note,
+                "docs": b.docs,
+                "kind": b.kind,
+                "category": b.category,
+                "provider": b.provider,
             }
             for b in layout.boxes
         ],
