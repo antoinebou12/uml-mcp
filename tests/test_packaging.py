@@ -22,6 +22,7 @@ def test_poetry_packages_surface() -> None:
         "uml_mcp_plugin_statechart",
         "uml_mcp_plugin_trace",
         "uml_mcp_plugin_c4",
+        "uml_mcp_plugin_timeline",
     }
 
 

@@ -84,6 +84,7 @@ installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugi
 | `uml-mcp-plugin-statechart` | `statechart` | The `state_machine` type: XState-like JSON drawn as a statechart, and an HTML simulator that fires events, highlights the active states and keeps an undoable step log. See the [statechart plugin](statechart.md) |
 | `uml-mcp-plugin-trace` | `trace` | The `agent_trace` type: an agent run as a waterfall of LLM, tool, retrieval and sub-agent steps with tokens, cost, errors and retries, plus a flow view and the critical path (HTML or SVG). See the [agent trace plugin](trace.md) |
 | `uml-mcp-plugin-c4` | `c4` | `c4_model`: one JSON model of people, systems, containers and components, drawn in C4 notation (SVG) or as a page that drills from context to containers to components (HTML). See the [C4 model plugin](c4.md) |
+| `uml-mcp-plugin-timeline` | `timeline` | The `timeline` type: swimlanes, task bars with progress and status, phases, milestones, releases and dependencies, on a page that zooms from quarters to days. See the [timeline plugin](timeline.md) |
 | built in (`mcp_core.plugins.architecture`) | `architecture` | Experimental, off by default: tiles at explicit positions, exported as HTML or React TSX. See [architecture diagrams](architecture.md) |
 
 ## Shared options

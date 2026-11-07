@@ -162,6 +162,7 @@ nav:
       - Statecharts: plugins/statechart.md
       - Agent traces: plugins/trace.md
       - C4 model: plugins/c4.md
+      - Timelines: plugins/timeline.md
       - Architecture diagrams: plugins/architecture.md
   - Developers:
       - developers/index.md

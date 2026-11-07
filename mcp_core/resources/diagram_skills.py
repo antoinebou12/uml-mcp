@@ -29,6 +29,7 @@ GUIDE_TOPICS = (
     "statechart",
     "agent-trace",
     "c4-model",
+    "timeline",
     "mermaid",
     "plantuml-c4",
     "batch",

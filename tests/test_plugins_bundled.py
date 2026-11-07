@@ -38,6 +38,7 @@ FAKE = {
         ep("statechart", "uml-mcp"),
         ep("trace", "uml-mcp"),
         ep("c4", "uml-mcp"),
+        ep("timeline", "uml-mcp"),
         ep("architecture", "uml-mcp"),  # in uml-mcp, but not a bundled default
         ep("archify", "evil-package"),  # same name, other distribution
         ep("hello", "uml-mcp-plugin-hello"),
@@ -66,7 +67,7 @@ def discover(tmp_path, monkeypatch):
 
 def test_bundled_renderers_are_on_without_any_config(discover):
     got = discover(None)
-    for name in ("d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps", "statechart", "trace", "c4"):
+    for name in ("d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps", "statechart", "trace", "c4", "timeline"):
         assert got[("renderers", name, "uml-mcp")] is True
     assert got[("tools", "d3", "uml-mcp")] is False  # tools add tokens: opt-in
     assert got[("renderers", "architecture", "uml-mcp")] is False

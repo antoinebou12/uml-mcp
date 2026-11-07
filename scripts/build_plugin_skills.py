@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
-for _name in ("d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps", "statechart", "trace", "c4"):
+for _name in ("d3", "stack-diagram", "archify", "llm-visualizer", "schema", "deps", "statechart", "trace", "c4", "timeline"):
     _src = ROOT / "examples" / "plugins" / f"uml-mcp-plugin-{_name}" / "src"
     if str(_src) not in sys.path:
         sys.path.insert(0, str(_src))
@@ -49,6 +49,7 @@ def renderers() -> dict[str, Any]:
     from uml_mcp_plugin_stack_diagram import StackDiagramRenderer
     from uml_mcp_plugin_statechart import StatechartRenderer
     from uml_mcp_plugin_trace import TraceRenderer
+    from uml_mcp_plugin_timeline import TimelineRenderer
 
     return {
         "d3": D3Renderer(),
@@ -60,6 +61,7 @@ def renderers() -> dict[str, Any]:
         "statechart": StatechartRenderer(),
         "trace": TraceRenderer(),
         "c4": C4Renderer(),
+        "timeline": TimelineRenderer(),
     }
 
 
@@ -265,6 +267,25 @@ TYPES: dict[str, tuple[str, str, str, str, str]] = {
             "- Use `c4plantuml` instead when you need PlantUML C4 macros or a deployment view."
         ),
     ),
+    "timeline": (
+        "timeline",
+        "timeline",
+        "a project timeline, product roadmap or Gantt-style plan with swimlanes, milestones and dependencies",
+        "Show our product roadmap for the next three quarters: platform, product and go-to-market lanes, the beta phase, launch milestones and the 2.0 release.",
+        (
+            "- `lanes` (`id`, `name`, `color`) and `items` (`id`, `lane`, `name`, `start`, `end`, `kind`, "
+            "`status`, `owner`, `progress`, `depends_on`, `link`, `note`).\n"
+            "- Dates are `2026-11-07`, `2026-11` or `2026-Q3`; a month or quarter as `end` means its last day. "
+            "`end` is inclusive.\n"
+            "- `kind`: `task` (bar), `phase` (translucent band behind the lane), `milestone` (diamond), "
+            "`release` (flag). Milestones and releases take only `start`.\n"
+            "- `status`: `planned`, `active`, `done`, `blocked`, `at-risk`; `progress` is 0-100.\n"
+            "- `depends_on` lists item ids; arrows run from each dependency's end to the item's start. "
+            "Cycles and unknown ids are rejected by name.\n"
+            "- Optional `today` pins the dashed today line; `scale` (`day`, `week`, `month`, `quarter`) sets "
+            "the static SVG's zoom."
+        ),
+    ),
 }
 
 #: topic -> (description, title, short intro). d3-plugins already exists; it is not generated.
@@ -336,6 +357,16 @@ GUIDES: dict[str, tuple[str, str, str]] = {
         (
             "A waterfall of an agent run with tokens, cost, errors and retries, and an interactive "
             "page with a flow view, folding sub-agents, a detail card per step and the critical path."
+        ),
+    ),
+    "timeline": (
+        "Draw project timelines and product roadmaps with swimlanes, phases, milestones, releases and dependencies (timeline).",
+        "Timelines and roadmaps",
+        (
+            "Swimlanes of task bars with progress and status colour, phases as bands, milestone "
+            "diamonds, release flags, dependency arrows and a today line. The page zooms between "
+            "quarters, months, weeks and days, filters by lane, owner and status, and highlights a "
+            "clicked item's dependency chain."
         ),
     ),
 }

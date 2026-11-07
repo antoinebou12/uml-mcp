@@ -59,6 +59,7 @@ deps = "uml_mcp_plugin_deps:DepsRenderer"
 statechart = "uml_mcp_plugin_statechart:StatechartRenderer"
 trace = "uml_mcp_plugin_trace:TraceRenderer"
 c4 = "uml_mcp_plugin_c4:C4Renderer"
+timeline = "uml_mcp_plugin_timeline:TimelineRenderer"
 
 [project.entry-points."uml_mcp.tools"]
 d3 = "uml_mcp_plugin_d3:register"
@@ -83,6 +84,7 @@ packages = [
     { include = "uml_mcp_plugin_statechart", from = "examples/plugins/uml-mcp-plugin-statechart/src" },
     { include = "uml_mcp_plugin_trace", from = "examples/plugins/uml-mcp-plugin-trace/src" },
     { include = "uml_mcp_plugin_c4", from = "examples/plugins/uml-mcp-plugin-c4/src" },
+    { include = "uml_mcp_plugin_timeline", from = "examples/plugins/uml-mcp-plugin-timeline/src" },
 ]
 
 [tool.pytest.ini_options]
@@ -121,6 +123,7 @@ extra-paths = [
     "examples/plugins/uml-mcp-plugin-statechart/src",
     "examples/plugins/uml-mcp-plugin-trace/src",
     "examples/plugins/uml-mcp-plugin-c4/src",
+    "examples/plugins/uml-mcp-plugin-timeline/src",
 ]
 
 # FastMCP / Starlette typing is often stricter than runtime; relax in integration tests.

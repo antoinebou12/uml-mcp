@@ -25,6 +25,7 @@ examples/plugins/*
 !examples/plugins/uml-mcp-plugin-statechart/
 !examples/plugins/uml-mcp-plugin-trace/
 !examples/plugins/uml-mcp-plugin-c4/
+!examples/plugins/uml-mcp-plugin-timeline/
 tests
 deploy
 .env
