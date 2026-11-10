@@ -244,6 +244,7 @@ def test_plugin_html_downloads_are_the_plugins_own_interactive_pages():
         spec = renderer.diagram_types[diagram_type]
         if "html" not in spec.formats or diagram_type.startswith("d3_"):
             continue
+        assert spec.example is not None, diagram_type
         native = renderer.render(diagram_type, spec.example, "html").content
         assert _download_all(diagram_type, spec.example, "html") == native, diagram_type
         checked += 1

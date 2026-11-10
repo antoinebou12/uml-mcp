@@ -113,7 +113,7 @@ export function CopyButton({ text, label = "Copy" }: { text: string; label?: str
 export function CodeBlock({ code, className }: { code: string; className?: string }) {
   return (
     <div className={cn("relative", className)}>
-      <pre className="max-h-96 overflow-auto rounded-lg border bg-muted/50 p-4 text-xs leading-relaxed"><code>{code}</code></pre>
+      <pre tabIndex={0} className="max-h-96 overflow-auto rounded-lg border bg-muted/50 p-4 text-xs leading-relaxed focus-visible:outline-2 focus-visible:outline-ring focus-visible:outline-offset-2"><code>{code}</code></pre>
       <div className="absolute right-2 top-2"><CopyButton text={code} /></div>
     </div>
   );
