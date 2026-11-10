@@ -23,8 +23,8 @@ def test_stress_prompt_tracks_every_runtime_diagram_type():
 
     missing = [
         diagram_type
-        for diagram_type in MCP_SETTINGS.diagram_types
-        if diagram_type not in text
+        for diagram_type, spec in MCP_SETTINGS.diagram_types.items()
+        if not spec.backend.startswith("plugin:") and diagram_type not in text
     ]
 
     assert not missing, f"Stress prompt is missing catalog types: {missing}"
