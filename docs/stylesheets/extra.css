@@ -46,9 +46,9 @@
   margin-bottom: 0.35em;
 }
 
-/* Calmer link colour in dark mode (matches IPC's furo-like palette).     */
+/* Keep links readable against the dark documentation surfaces. */
 [data-md-color-scheme="slate"] {
-  --md-typeset-a-color: var(--md-primary-fg-color);
+  --md-typeset-a-color: #9fc8ff;
 }
 
 /* Mermaid block: center inside the article column for a cleaner look.    */
@@ -88,6 +88,10 @@
   height: 11rem;
   object-fit: contain;
   border-radius: 0.25rem;
+}
+
+.md-typeset .plugin-gallery a code {
+  color: inherit;
 }
 
 /* Admonition titles: subtle weight bump for legibility in long pages.    */
