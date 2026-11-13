@@ -8,9 +8,9 @@ import { defineConfig } from "vite";
 export default defineConfig({
   base: "/admin/",
   plugins: [react(), tailwindcss()],
-  resolve: { alias: { "@": path.resolve(__dirname, "src") } },
+  resolve: { alias: { "@": path.resolve(import.meta.dirname, "src") } },
   build: {
-    outDir: path.resolve(__dirname, "../mcp_core/admin_ui/dist"),
+    outDir: path.resolve(import.meta.dirname, "../mcp_core/admin_ui/dist"),
     emptyOutDir: true,
     assetsDir: "assets",
     chunkSizeWarningLimit: 1200,
