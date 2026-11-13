@@ -186,6 +186,9 @@ def start_stack(
         {
             "UML_MCP_CONFIG": str(cfg),
             "USE_REAL_FASTMCP": "1",
+            # The child is a real server: keep production caching enabled so
+            # nondeterministic renderer output remains stable across chunks.
+            "TESTING": "0",
             "MOCK_FASTMCP": "",
             "UML_MCP_ADMIN_TOKEN": TOKEN,
             "KROKI_SERVER": kroki_url,
