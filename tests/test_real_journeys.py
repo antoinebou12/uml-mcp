@@ -400,6 +400,7 @@ def _axe(page) -> list[dict[str, Any]]:
             "id": v["id"],
             "impact": v["impact"],
             "nodes": len(v["nodes"]),
+            "targets": [node["target"] for node in v["nodes"]],
             "help": v["help"],
         }
         for v in result["violations"]

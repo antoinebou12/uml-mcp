@@ -22,6 +22,7 @@ examples/plugins/*
 !examples/plugins/uml-mcp-plugin-archify/
 !examples/plugins/uml-mcp-plugin-llm-visualizer/
 !examples/plugins/uml-mcp-plugin-schema/
+!examples/plugins/uml-mcp-plugin-deps/
 !examples/plugins/uml-mcp-plugin-statechart/
 !examples/plugins/uml-mcp-plugin-trace/
 !examples/plugins/uml-mcp-plugin-c4/
