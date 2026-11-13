@@ -2,11 +2,13 @@
 
 > Human-oriented docs: https://antoinebou12.github.io/uml-mcp/ — repo: https://github.com/antoinebou12/uml-mcp
 
-UML-MCP is a Python MCP (Model Context Protocol) server that renders diagrams from text: PlantUML UML, Mermaid, D2, Graphviz, Kroki-backed types (30+ diagram kinds), with SVG/PNG/PDF/JPEG and base64 outputs. Pipeline: Kroki first, then PlantUML or Mermaid.ink fallbacks.
+UML-MCP is a Python MCP (Model Context Protocol) server that renders diagrams from text: PlantUML UML, Mermaid, D2, Graphviz, Kroki-backed types (30+ diagram kinds), with SVG/PNG/PDF/JPEG and base64 outputs. There are 52 diagram types: 37 Kroki-backed types and 15 interactive types from ten bundled plugins. Interactive types render locally to HTML/SVG, with PNG rasterization. Kroki types use Kroki first, then supported PlantUML or Mermaid.ink fallbacks.
 
 ## Endpoints
 
-- Public HTTP MCP: https://uml-mcp.vercel.app/mcp (path must be `/mcp`, not site root)
+- Hosted HTTP MCP: https://uml-mcp.vercel.app/mcp (path must be `/mcp`, not site root)
+
+- Mirror HTTP MCP: https://uml-mcp.antoineboucher.info/mcp
 
 ## MCP tools
 
@@ -46,6 +48,13 @@ Notable env vars: KROKI_SERVER, PLANTUML_SERVER, MCP_OUTPUT_DIR / UML_MCP_OUTPUT
 - HTTP: `python server.py --transport http --host 127.0.0.1 --port 8000` — MCP at http://127.0.0.1:8000/mcp
 - List tools: `python server.py --list-tools`
 
+## Interactive viewer and smoke tests
+
+- Browser preview: start `uv run uml-mcp --transport http --host 127.0.0.1 --port 8766`, then `uv run python scripts/run_local_viewer.py`; open http://127.0.0.1:8767/.
+- Example selection is in the viewer toolbar; it renders automatically. This is a local browser test host, separate from native chat integration.
+- Full prompt: tests/prompts/all_interactive_plugins_smoke_test.md covers all 15 interactive types.
+- Report tool rendering, browser interaction and host downloads separately; mark unavailable host checks unverified.
+
 ## Layout (repo)
 
 - server.py — MCP entry
@@ -57,5 +66,5 @@ Notable env vars: KROKI_SERVER, PLANTUML_SERVER, MCP_OUTPUT_DIR / UML_MCP_OUTPUT
 ## Meta
 
 - License: MIT
-- Python: >=3.12,<3.15 (see pyproject.toml)
+- Python: >=3.12,<3.16 (see pyproject.toml)
 - Maintainer: Antoine Boucher

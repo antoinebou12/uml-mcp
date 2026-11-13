@@ -1,6 +1,6 @@
 ---
 title: UML-MCP
-description: "Diagram generation via the Model Context Protocol: 46 diagram types, from UML, Mermaid, D2 and C4 to interactive architecture and LLM diagrams, shown inside the chat."
+description: "Diagram generation via the Model Context Protocol: 52 diagram types, from UML, Mermaid, D2 and C4 to interactive architecture and LLM diagrams, shown inside the chat."
 hide:
   - navigation
   - toc
@@ -8,7 +8,15 @@ hide:
 
 # UML-MCP
 
-UML-MCP gives AI assistants a dependable diagram tool. The assistant chooses the diagram, UML-MCP validates and renders the source, and the client gets back something it can actually show: an inline image, a URL, editable source, or a playground link. It supports 46 diagram types: UML, Mermaid, D2, TikZ, BPMN, C4, Graphviz and 30 more through [Kroki](https://kroki.io/), [PlantUML](https://plantuml.com/), [Mermaid](https://mermaid.js.org/) and [D2](https://d2lang.com/), plus 9 interactive types from the bundled plugins. In clients with MCP Apps, diagrams open in an interactive [viewer](integrations/mcp-app.md) inside the chat.
+UML-MCP renders diagrams from source supplied by an AI assistant. It supports 52 diagram
+types: 37 through Kroki and 15 interactive types from ten bundled plugins. Clients receive
+an inline image or a rendered file; clients with MCP Apps also open an interactive
+[viewer](integrations/mcp-app.md) inside the chat.
+
+The bundled plugins render locally. They cover architecture, workflows, LLM layers,
+database schemas, dependency graphs, statecharts, agent traces, C4 models and timelines.
+[Browse the illustrated plugin catalog](plugins/index.md#interactive-diagram-gallery) or
+[try the local viewer](integrations/mcp-app.md#local-viewer-preview).
 
 For product UIs, UML-MCP can stay focused on diagrams while the rest of the stack does its own job: **MCP** exposes tools to the agent, **AG-UI** streams agent events to the frontend, and **OpenUI** can turn model output into interactive components owned by your application.
 
@@ -37,7 +45,7 @@ sequenceDiagram
 [Get started in 5 minutes :material-rocket-launch:](tutorials/getting-started.md){ .md-button .md-button--primary }
 [Browse the API reference :material-book-open-variant:](reference/index.md){ .md-button }
 [Add to Cursor / Claude :material-puzzle:](deploy/index.md){ .md-button }
-[Build an agent UI :material-view-dashboard-outline:](integrations/openui.md){ .md-button }
+[Try the local viewer](integrations/mcp-app.md#local-viewer-preview){ .md-button }
 
 ---
 
@@ -45,7 +53,7 @@ sequenceDiagram
 
 <div class="grid cards" markdown>
 
--   :material-shape-plus:{ .lg .middle } **46 diagram types**
+-   :material-shape-plus:{ .lg .middle } **52 diagram types**
 
     ---
 
@@ -65,7 +73,7 @@ sequenceDiagram
 
     ---
 
-    Four bundled plugins, on by default: cloud and stack diagrams with 60 real logos, archify architecture, workflow and sequence diagrams with click-to-focus and path tracing, and 2D/3D LLM visualisations.
+    Ten bundled plugins, on by default: architecture and stack diagrams, LLM layers, database schemas, dependency graphs, statecharts, agent traces, C4 drill-down and timelines. Each type has an interactive HTML page and static SVG/PNG output.
 
     [:octicons-arrow-right-24: Plugins](plugins/index.md)
 
@@ -125,7 +133,7 @@ sequenceDiagram
 
 === ":material-web: Hosted HTTP (Vercel)"
 
-    Use the live deployment over Streamable HTTP:
+    Configure a hosted endpoint over Streamable HTTP:
 
     ```json
     {
@@ -142,7 +150,7 @@ sequenceDiagram
 
 === ":material-console: Local stdio"
 
-    Clone, install, run. Everything stays on your machine:
+    Clone, install and start the stdio server:
 
     ```bash
     git clone https://github.com/antoinebou12/uml-mcp.git
@@ -151,7 +159,8 @@ sequenceDiagram
     uv run python server.py
     ```
 
-    See [Installation](installation.md) for Poetry/pip variants.
+    The bundled interactive renderers run locally. Kroki-backed types use the configured
+    rendering service. See [Installation](installation.md) for other install methods.
 
 === ":material-docker: Docker"
 
@@ -166,13 +175,14 @@ sequenceDiagram
 
 ---
 
-## Limitations
+## Rendering and client requirements
 
-!!! note "What UML-MCP is not"
-
-    - **Not a graphics editor.** It renders diagrams from textual sources; it does not let you draw with a mouse or hand-edit the rendered SVG.
-    - **Not a Kroki/PlantUML replacement.** Rendering is delegated to Kroki, a PlantUML server, or Mermaid.ink. UML-MCP adds the MCP surface, validation, batching, and a fallback chain.
-    - **Vercel runtime is read-only.** The hosted endpoint cannot write files: responses include URL + base64 only. Use a local install when you need `output_dir`.
+- Interactive types use bundled renderers. The 37 Kroki types need a reachable Kroki
+  instance; some also support PlantUML or Mermaid fallbacks.
+- The local viewer preview is a browser test host. It can verify local rendering,
+  interactions and downloads; native chat widgets depend on the connected MCP client.
+- Hosted deployments may return compact previews or omit large HTML payloads initially.
+  The viewer fetches full assets on demand. Local installations can save files with `output_dir`.
 
 !!! tip "Need an end-to-end stack?"
 

@@ -83,6 +83,10 @@ uv tool install uml-mcp && uml-mcp setup
 
 The [installation guide](docs/installation.md) covers Docker, Helm and running from source.
 
+To explore all 15 interactive types from a checkout, use the
+[local viewer preview](docs/integrations/mcp-app.md#local-viewer-preview). Its compact
+example picker changes diagrams automatically and keeps export controls in the viewer.
+
 ## Interactive diagrams
 
 The plugins below ship with UML-MCP and are on by default. Each type renders to an interactive HTML
@@ -101,7 +105,8 @@ page in the viewer and to a static SVG and PNG everywhere else.
 | [C4 model](docs/plugins/c4.md) | `c4_model` | One model, three C4 levels: click a system to open its containers, a container for its components |
 | [Timeline](docs/plugins/timeline.md) | `timeline` | Roadmaps with swimlanes, phases, milestones, releases and dependency arrows; zoom from quarters to days |
 
-Each image links to the plugin guide.
+Each image links to the plugin guide. The [complete smoke-test prompt](tests/prompts/all_interactive_plugins_smoke_test.md)
+covers every type, both themes, browser interactions and file exports.
 
 | | | |
 | --- | --- | --- |

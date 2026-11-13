@@ -99,18 +99,30 @@ Snippets: [ERD](erd.md) · [DBML](dbml.md) · [BlockDiag](blockdiag.md) · [BPMN
 
 [:octicons-arrow-right-24: TikZ page](tikz.md) · [:octicons-arrow-right-24: Specialty types](specialty.md)
 
-## Plugin diagram types
+## Interactive diagram types
 
-These appear when the [D3 diagrams plugin](../plugins/d3.md) is installed and enabled. They render
-locally to an interactive page or a static picture.
+Ten bundled plugins provide these 15 types by default. They render locally to
+interactive HTML or static SVG; PNG is available through image generation and exports.
 
-| `diagram_type` | Description | Output formats |
+| `diagram_type` | What it draws | Guide |
 | --- | --- | --- |
-| `d3_force` | Force-directed graph with drag, pin, zoom and pan | `html`, `svg` |
-| `d3_architecture` | System or cloud architecture: nested groups, AWS/Azure/GCP/Kubernetes style icons, ports, A*-routed arrows | `html`, `svg` |
-| `d3_topology` | Deployment or network topology, flowing top to bottom | `html`, `svg` |
+| `d3_force` | Force graph | [Force graph](../plugins/d3.md) |
+| `d3_architecture` | Cloud architecture | [Cloud architecture](../plugins/d3.md) |
+| `d3_topology` | Network topology | [Network topology](../plugins/d3.md) |
+| `stack_diagram` | Stack diagram | [Stack diagram](../plugins/stack-diagram.md) |
+| `archify_architecture` | Architecture | [Architecture](../plugins/archify.md) |
+| `archify_workflow` | Workflow | [Workflow](../plugins/archify.md) |
+| `archify_sequence` | Sequence | [Sequence](../plugins/archify.md) |
+| `llm_2d` | LLM layers in 2D | [LLM layers in 2D](../plugins/llm-visualizer.md) |
+| `llm_3d` | LLM layers in 3D | [LLM layers in 3D](../plugins/llm-visualizer.md) |
+| `db_schema` | Database schema | [Database schema](../plugins/schema.md) |
+| `dependency_graph` | Dependencies | [Dependencies](../plugins/deps.md) |
+| `state_machine` | Statechart | [Statechart](../plugins/statechart.md) |
+| `agent_trace` | Agent trace | [Agent trace](../plugins/trace.md) |
+| `c4_model` | C4 model | [C4 model](../plugins/c4.md) |
+| `timeline` | Timeline | [Timeline](../plugins/timeline.md) |
 
-[:octicons-arrow-right-24: D3 plugin guide](../plugins/d3.md) · [:octicons-arrow-right-24: Cloud architecture diagrams](cloud-architecture.md)
+[See every rendered preview](../plugins/index.md#interactive-diagram-gallery) · [Try the local viewer](../integrations/mcp-app.md#local-viewer-preview)
 
 ---
 
@@ -123,9 +135,9 @@ flowchart TD
     Q1 -- no  --> Q2{Process or workflow?}
     Q2 -- yes --> Proc[Use activity, mermaid flowchart, bpmn, or blockdiag]
     Q2 -- no  --> Q3{Architecture / C4?}
-    Q3 -- yes --> Arch[Use c4plantuml, structurizr, the cloud icon libraries or d3_architecture]
+    Q3 -- yes --> Arch[Use c4_model, c4plantuml, structurizr or d3_architecture]
     Q3 -- no  --> Q4{Data / schema?}
-    Q4 -- yes --> Data[Use erd or dbml]
+    Q4 -- yes --> Data[Use db_schema, erd or dbml]
     Q4 -- no  --> Q5{Math / scientific?}
     Q5 -- yes --> Sci[Use tikz or graphviz]
     Q5 -- no  --> Other[Use mermaid for fallback or browse the catalog]

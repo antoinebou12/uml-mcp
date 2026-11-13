@@ -81,6 +81,15 @@
   align-items: center;
 }
 
+/* Keep the interactive previews comparable without cropping tall diagrams. */
+.md-typeset .plugin-gallery img {
+  display: block;
+  width: 100%;
+  height: 11rem;
+  object-fit: contain;
+  border-radius: 0.25rem;
+}
+
 /* Admonition titles: subtle weight bump for legibility in long pages.    */
 .md-typeset .admonition > .admonition-title,
 .md-typeset details > summary {

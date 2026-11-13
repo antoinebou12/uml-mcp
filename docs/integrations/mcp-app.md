@@ -25,7 +25,7 @@ re-rendered in another format (14 s).*
 | Edit | The Source tab shows the diagram source; edit it and re-render |
 | Re-render | Pick a theme and a format; for plugin types the theme is written into the source |
 | Export | SVG, PNG, HTML and, for types that render SVG, PDF, through the host's download bridge |
-| Interactive pages | Plugin types (D3, stack diagram, archify, LLM visualizer) open their HTML page in a sandboxed frame |
+| Interactive pages | All 15 types from the ten bundled plugins open their HTML page in a sandboxed frame |
 
 ## Interactive plugin pages
 
@@ -51,10 +51,17 @@ uv run uml-mcp --transport http --host 127.0.0.1 --port 8766
 uv run python scripts/run_local_viewer.py --mcp-url http://127.0.0.1:8766/mcp
 ```
 
-Open `http://127.0.0.1:8767/`. The example picker sits in the viewer toolbar and
-loads diagrams automatically. The preview uses real MCP tool calls and supports
+Open `http://127.0.0.1:8767/`. The viewer fills the page. Choose an example in its
+compact toolbar picker; changing the selection renders it automatically. There is
+no separate render button or setup header. The preview uses real MCP tool calls and supports
 SVG, PNG and HTML downloads through its browser host bridge. It binds to localhost;
-use `--port` to choose another port and `--output-dir` for the generated files.
+use the options below to change the defaults.
+
+| Launcher option | Default | Purpose |
+| --- | --- | --- |
+| `--mcp-url` | `http://127.0.0.1:8766/mcp` | Running UML-MCP server to call |
+| `--port` | `8767` | Local browser host port |
+| `--output-dir` | `.cache/local-viewer` in the checkout | Generated host and viewer HTML |
 
 This preview tests the viewer in a local browser host. Native chat integration
 still depends on the MCP client.
@@ -65,11 +72,32 @@ Nothing depends on the viewer. `generate_uml_image` returns an inline PNG (a com
 large diagrams), `generate_uml` returns SVG, and every result carries the rendered image's URL and,
 where the notation has one, an editable playground link.
 
-## Publishing readiness
+## Run the complete smoke prompt
+
+Use the [all-plugins smoke prompt](https://github.com/antoinebou12/uml-mcp/blob/main/tests/prompts/all_interactive_plugins_smoke_test.md)
+for discovery, validation, PNG generation, HTML pages, themes and SVG/PNG/HTML exports.
+The [host acceptance checklist](https://github.com/antoinebou12/uml-mcp/blob/main/tests/prompts/mcp_apps_plugin_acceptance_test.md)
+adds native MCP App checks.
+
+| Stage | Evidence to collect |
+| --- | --- |
+| Tool calls | Catalog contains every type, validation results, returned errors and files |
+| Full assets | Downloaded SVG parses, PNG decodes, HTML opens, checksums match |
+| Interaction | Visible labels and the plugin's actual controls work in the browser |
+| Host downloads | Clicking Download produces a real file through the host bridge |
+| Native chat | The connected client discovers the tools and opens the MCP App resource |
+
+Record PASS, FAIL, UNVERIFIED or UNAVAILABLE for each applicable stage. A
+successful render call does not establish browser interactions or native host
+support. For all previews and plugin-specific controls, see the
+[illustrated plugin catalog](../plugins/index.md#interactive-diagram-gallery).
+
+## Historical publishing check
 
 The mirror (`https://uml-mcp.antoineboucher.info/mcp`) was checked with the
 [Manufact](https://manufact.com) publishing checklist on October 30, 2026: **95/100**, 30 checks
-passed and 1 warning, ready for ChatGPT and Claude.
+passed and 1 warning. These results describe that check, rather than current
+deployment health or native client behavior.
 
 | Area | Result | What was checked |
 | --- | --- | --- |

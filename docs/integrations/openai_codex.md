@@ -41,26 +41,48 @@ Copy-paste template: [`config/codex_config.toml`](https://github.com/antoinebou1
 
 Diagram renders (especially Mermaid via Kroki then mermaid.ink) often exceed Codex’s default tool timeout. Keep `tool_timeout_sec` at **120** (or higher) for reliable chat images.
 
-## Local stdio MCP (optional)
+## Local stdio MCP
 
-Use [`config/codex_stdio.toml`](https://github.com/antoinebou12/uml-mcp/blob/main/config/codex_stdio.toml):
+From a checkout, install the current project and register its executable:
+
+```bash
+uv tool install .
+codex mcp add uml-mcp -- uml-mcp
+codex mcp get uml-mcp
+```
+
+The server entry should show `transport: stdio` and a command, with no hosted URL.
+If Codex cannot find `uml-mcp`, use the executable's absolute path; `uv tool dir --bin`
+shows its directory.
+
+The equivalent configuration is:
 
 ```toml
 [mcp_servers.uml-mcp]
-command = "uv"
-args = ["run", "python", "-u", "server.py"]
-cwd = "/absolute/path/to/uml-mcp"
+command = "uml-mcp"
+args = []
 enabled = true
-startup_timeout_sec = 30
+startup_timeout_sec = 60
 tool_timeout_sec = 120
-
-[mcp_servers.uml-mcp.env]
-KROKI_SERVER = "https://kroki.io"
-MCP_OUTPUT_DIR = "output"
-MCP_DIAGRAM_FALLBACK = "true"
 ```
 
-Set `cwd` to your clone. Env reference: [Configuration](../configuration.md).
+Check both the user configuration and the trusted project's `.codex/config.toml`.
+A project entry can override the user entry; replace its hosted `url` when switching
+to a local command. Keep exactly one transport per entry. Reconnect the server in
+Codex after changing its configuration, then verify discovery with `list_diagram_types`.
+A configured server is ready when its tools can be called successfully.
+
+For development from source, the [stdio template](https://github.com/antoinebou12/uml-mcp/blob/main/config/codex_stdio.toml)
+uses the checkout as its working directory. See [Configuration](../configuration.md)
+for renderer endpoints and output settings.
+
+## Preview before connecting a chat client
+
+The [local viewer preview](mcp-app.md#local-viewer-preview) opens all 15 interactive
+diagram types in a browser. It uses the actual MCP App resource, a compact example
+picker and real tool calls, with SVG, PNG and HTML downloads. Native in-chat tool
+loading and widgets still need a connected MCP client; a browser preview does not
+establish that connection.
 
 ## Showing diagrams in chat
 

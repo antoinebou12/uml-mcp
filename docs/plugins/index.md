@@ -33,19 +33,16 @@ uml-mcp plugins enable hello        # the tool plugin
 uml-mcp plugins enable ascii        # the renderer plugin
 ```
 
-Then restart the server. Installed plugins are **not** loaded until they are listed in
-`plugins.enabled`: an explicit allow-list. One name can serve both kinds: enabling `d3` loads its
-tool and its renderer. The exception is the diagram renderers bundled with uml-mcp (`d3`,
-`stack-diagram`, `archify`, `llm-visualizer`, `statechart`): `plugins.bundled` (on by default) loads them
-without listing them. Their extra tools still need `plugins.enabled`, and `bundled: false`
-restores a strict allow-list. The exception is the diagram renderers bundled with uml-mcp (`d3`,
-`stack-diagram`, `archify`, `llm-visualizer`, `statechart`): `plugins.bundled` (on by default) loads them
-`stack-diagram`, `archify`, `llm-visualizer`, `c4`): `plugins.bundled` (on by default) loads them
-without listing them. Their extra tools still need `plugins.enabled`, and `bundled: false`
-restores a strict allow-list. The exception is the diagram renderers bundled with uml-mcp (`d3`,
-`stack-diagram`, `archify`, `llm-visualizer`, `c4`): `plugins.bundled` (on by default) loads them
-without listing them. Their extra tools still need `plugins.enabled`, and `bundled: false`
-restores a strict allow-list.
+Restart the server after changing plugin configuration. Ten renderers ship with
+UML-MCP and load by default through `plugins.bundled: true`:
+
+`d3`, `stack-diagram`, `archify`, `llm-visualizer`, `schema`, `deps`, `statechart`,
+`trace`, `c4` and `timeline`.
+
+Extra plugin tools, such as `d3_catalog`, require an entry in `plugins.enabled`.
+Other installed plugins also require that allow-list. Setting `bundled: false`
+turns off automatic renderer loading; list every renderer you want to keep.
+One entry-point name can enable both tools and a renderer.
 
 ```yaml
 # uml-mcp.yaml
@@ -87,6 +84,78 @@ installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugi
 | `uml-mcp-plugin-timeline` | `timeline` | The `timeline` type: swimlanes, task bars with progress and status, phases, milestones, releases and dependencies, on a page that zooms from quarters to days. See the [timeline plugin](timeline.md) |
 | built in (`mcp_core.plugins.architecture`) | `architecture` | Experimental, off by default: tiles at explicit positions, exported as HTML or React TSX. See [architecture diagrams](architecture.md) |
 
+## Interactive diagram gallery
+
+All 15 types render to interactive HTML and static SVG. UML-MCP also rasterizes
+SVG to PNG for chat images and downloads. Each preview links to its plugin guide.
+
+[Open the local viewer instructions](../integrations/mcp-app.md#local-viewer-preview).
+The compact example picker switches diagrams automatically in the viewer toolbar.
+
+<div class="grid cards plugin-gallery" markdown>
+
+-   [![Force graph](../assets/interactive/d3_force.png)](d3.md)
+
+    [`d3_force`](d3.md)
+
+-   [![Cloud architecture](../assets/interactive/d3_architecture.png)](d3.md)
+
+    [`d3_architecture`](d3.md)
+
+-   [![Network topology](../assets/interactive/d3_topology.png)](d3.md)
+
+    [`d3_topology`](d3.md)
+
+-   [![Stack diagram](../assets/interactive/stack_diagram.png)](stack-diagram.md)
+
+    [`stack_diagram`](stack-diagram.md)
+
+-   [![Architecture](../assets/interactive/archify_architecture.png)](archify.md)
+
+    [`archify_architecture`](archify.md)
+
+-   [![Workflow](../assets/interactive/archify_workflow.png)](archify.md)
+
+    [`archify_workflow`](archify.md)
+
+-   [![Sequence](../assets/interactive/archify_sequence.png)](archify.md)
+
+    [`archify_sequence`](archify.md)
+
+-   [![LLM layers in 2D](../assets/interactive/llm_2d.png)](llm-visualizer.md)
+
+    [`llm_2d`](llm-visualizer.md)
+
+-   [![LLM layers in 3D](../assets/interactive/llm_3d.png)](llm-visualizer.md)
+
+    [`llm_3d`](llm-visualizer.md)
+
+-   [![Database schema](../assets/interactive/db_schema.png)](schema.md)
+
+    [`db_schema`](schema.md)
+
+-   [![Dependencies](../assets/interactive/dependency_graph.png)](deps.md)
+
+    [`dependency_graph`](deps.md)
+
+-   [![Statechart](../assets/interactive/state_machine.png)](statechart.md)
+
+    [`state_machine`](statechart.md)
+
+-   [![Agent trace](../assets/interactive/agent_trace.png)](trace.md)
+
+    [`agent_trace`](trace.md)
+
+-   [![C4 model](../assets/interactive/c4_model.png)](c4.md)
+
+    [`c4_model`](c4.md)
+
+-   [![Timeline](../assets/interactive/timeline.png)](timeline.md)
+
+    [`timeline`](timeline.md)
+
+</div>
+
 ## Shared options
 
 `stack-diagram` and `archify` share one auto-layout engine and source format:
@@ -116,8 +185,7 @@ installed from a checkout with `uv pip install -e examples/plugins/uml-mcp-plugi
 Each type also has an agent skill with a validated example, at
 `.skill/skills/<diagram_type>/SKILL.md`, and each plugin family a focused guide read over MCP from
 `skill://uml-mcp-guides/{topic}/SKILL.md`. To check a deployment end to end, paste the
-interactive-plugins prompt from
-[`tests/prompts/chatgpt_mcp_smoke_test.md`](https://github.com/antoinebou12/uml-mcp/blob/main/tests/prompts/chatgpt_mcp_smoke_test.md)
+complete [15-type smoke prompt](https://github.com/antoinebou12/uml-mcp/blob/main/tests/prompts/all_interactive_plugins_smoke_test.md)
 into any MCP client.
 
 ## Safety
@@ -132,9 +200,9 @@ into any MCP client.
 - **Output formats:** a type accepts only the formats it declares. `html` is accepted by
   plugin types that list it and refused for every built-in type.
 - **Cost:** every plugin tool and diagram type is part of what a client loads when it
-  connects, in every conversation. The D3 plugin adds about 250 tokens (4,131 to 4,380 in
-  `uml-mcp lint`), so enable only what you use. The CI token budget is checked without
-  plugins.
+  connects, in every conversation. Extra tools increase the connection-time catalog. Use `uml-mcp lint` with your
+  actual configuration to measure that cost. The default CI token budget checks the
+  bundled renderers with extra tools disabled.
 - **Lint:** `uml-mcp lint` reports PLG001 for an enabled plugin that isn't installed, and
   PLG002 for one that failed to load.
 - **Enterprise:** plugin tools without `readOnlyHint: true` need the **write** scope.

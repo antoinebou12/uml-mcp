@@ -121,7 +121,7 @@ calling them returns "unknown tool".
 
 | Key | Default | Meaning |
 | --- | --- | --- |
-| `bundled` | `true` | Load the diagram renderers that ship with uml-mcp (`d3`, `stack-diagram`, `archify`, `llm-visualizer`, `deps`, `statechart`, `trace`, `c4`) without listing them. Only entry points published by the `uml-mcp` distribution qualify, and only renderers: a plugin's extra tools (such as `d3_catalog`) still need `enabled`. Set `false` for a strict allow-list |
+| `bundled` | `true` | Load the diagram renderers that ship with uml-mcp (`d3`, `stack-diagram`, `archify`, `llm-visualizer`, `schema`, `deps`, `statechart`, `trace`, `c4`, `timeline`) without listing them. Only entry points published by the `uml-mcp` distribution qualify, and only renderers: a plugin's extra tools (such as `d3_catalog`) still need `enabled`. Set `false` for a strict allow-list |
 | `enabled` | `[]` | Installed plugins to load, by entry-point name. One name enables both a plugin's renderer and its tools |
 | `settings` | `{}` | Per-plugin settings, keyed by plugin name (for example `settings: {d3: {d3_source: inline}}`) |
 
