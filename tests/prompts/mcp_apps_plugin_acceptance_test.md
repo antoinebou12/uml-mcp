@@ -13,6 +13,10 @@ live host check. Do not rerun negative probes merely to compensate for missing U
 
 ## Required cases
 
+Run `tests/prompts/all_interactive_plugins_smoke_test.md` to cover all ten bundled
+interactive plugins and their 15 diagram types. Record its per-type results with
+the cases below.
+
 1. Inspect initialize metadata: title, description, website and icon. Inspect UI
    resource MIME, standard description and one exact HTTPS domain. Inspect the
    linked tools' invoking/invoked object. Report the legacy description checker

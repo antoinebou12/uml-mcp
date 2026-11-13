@@ -1,2 +1,3 @@
 plugins:
-  enabled: [d3, stack-diagram, archify, llm-visualizer, schema, trace, c4, timeline]
+  bundled: true
+  enabled: [d3, stack-diagram, archify, llm-visualizer, schema, deps, statechart, trace, c4, timeline]
