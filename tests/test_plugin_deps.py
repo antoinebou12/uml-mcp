@@ -510,6 +510,24 @@ def test_svg_themes(theme):
     assert f'class="deps-svg {theme}"' in text
 
 
+@pytest.mark.parametrize("theme", ["light", "dark"])
+def test_static_svg_rasterizes_with_visible_colours(theme):
+    from io import BytesIO
+
+    import resvg_py
+    from PIL import Image
+    from uml_mcp_plugin_deps.svg import PALETTES
+
+    data = json.loads(EXAMPLE)
+    data["theme"] = theme
+    text = _svg(json.dumps(data))
+    png = resvg_py.svg_to_bytes(svg_string=text)
+    image = Image.open(BytesIO(png)).convert("RGB")
+    expected = tuple(bytes.fromhex(PALETTES[theme]["bg"][1:]))
+    assert image.getpixel((0, 0)) == expected
+    assert image.convert("L").getextrema()[0] != image.convert("L").getextrema()[1]
+
+
 def test_cap_keeps_the_closest_packages_and_says_so():
     text = _svg(PACKAGE_LOCK, max_nodes=4)
     assert "Showing 3 of 9 packages" in text and "max_nodes" in text

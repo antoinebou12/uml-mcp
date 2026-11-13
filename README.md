@@ -84,7 +84,6 @@ The [installation guide](docs/installation.md) covers Docker, Helm and running f
 
 ## Interactive diagrams
 
-These plugins ship with UML-MCP and are on by default. Each type renders to an interactive HTML
 The plugins below ship with UML-MCP and are on by default. Each type renders to an interactive HTML
 page in the viewer and to a static SVG and PNG everywhere else.
 
@@ -100,6 +99,16 @@ page in the viewer and to a static SVG and PNG everywhere else.
 | [Agent traces](docs/plugins/trace.md) | `agent_trace` | An agent run as a waterfall and a flow: LLM, tool and retrieval steps with tokens, cost, retries and the critical path |
 | [C4 model](docs/plugins/c4.md) | `c4_model` | One model, three C4 levels: click a system to open its containers, a container for its components |
 | [Timeline](docs/plugins/timeline.md) | `timeline` | Roadmaps with swimlanes, phases, milestones, releases and dependency arrows; zoom from quarters to days |
+
+Each image links to the plugin guide.
+
+| | | |
+| --- | --- | --- |
+| [![D3 force graph](docs/assets/interactive/d3_force.png)](docs/plugins/d3.md)<br>`d3_force` | [![D3 cloud architecture](docs/assets/interactive/d3_architecture.png)](docs/plugins/d3.md)<br>`d3_architecture` | [![D3 network topology](docs/assets/interactive/d3_topology.png)](docs/plugins/d3.md)<br>`d3_topology` |
+| [![Stack diagram](docs/assets/interactive/stack_diagram.png)](docs/plugins/stack-diagram.md)<br>`stack_diagram` | [![Archify architecture](docs/assets/interactive/archify_architecture.png)](docs/plugins/archify.md)<br>`archify_architecture` | [![Archify workflow](docs/assets/interactive/archify_workflow.png)](docs/plugins/archify.md)<br>`archify_workflow` |
+| [![Archify sequence](docs/assets/interactive/archify_sequence.png)](docs/plugins/archify.md)<br>`archify_sequence` | [![LLM layer map in 2D](docs/assets/interactive/llm_2d.png)](docs/plugins/llm-visualizer.md)<br>`llm_2d` | [![LLM layers in 3D](docs/assets/interactive/llm_3d.png)](docs/plugins/llm-visualizer.md)<br>`llm_3d` |
+| [![Database schema](docs/assets/interactive/db_schema.png)](docs/plugins/schema.md)<br>`db_schema` | [![Project dependency graph](docs/assets/interactive/dependency_graph.png)](docs/plugins/deps.md)<br>`dependency_graph` | [![Statechart](docs/assets/interactive/state_machine.png)](docs/plugins/statechart.md)<br>`state_machine` |
+| [![Agent trace waterfall](docs/assets/interactive/agent_trace.png)](docs/plugins/trace.md)<br>`agent_trace` | [![C4 system context](docs/assets/interactive/c4_model.png)](docs/plugins/c4.md)<br>`c4_model` | [![Project timeline](docs/assets/interactive/timeline.png)](docs/plugins/timeline.md)<br>`timeline` |
 
 ```json
 {

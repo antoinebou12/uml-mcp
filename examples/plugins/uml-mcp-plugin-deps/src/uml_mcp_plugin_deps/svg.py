@@ -109,7 +109,12 @@ RULES = _rules()
 
 def css(theme: str) -> str:
     """A self-contained stylesheet for one theme (static SVG and exports)."""
-    return f".deps-svg{{{variables(theme)}}}{RULES}"
+    rules = RULES
+    # Standalone SVG rasterizers do not all support CSS custom properties.
+    # The interactive page uses RULES directly for live theme switching.
+    for name, colour in PALETTES[theme].items():
+        rules = rules.replace(f"var(--{name})", colour)
+    return rules
 
 
 def counts(tree: Tree) -> dict[str, int]:
