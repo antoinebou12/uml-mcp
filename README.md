@@ -45,9 +45,10 @@ as an inline PNG and SVG.
 
 ## Why UML-MCP
 
-- **46 diagram types.** 37 through [Kroki](https://kroki.io/) (UML, Mermaid, D2, Graphviz, C4, BPMN,
-  ERD, TikZ...) and 9 interactive ones: cloud and stack diagrams with real logos, archify-style
-  architecture, workflow and sequence diagrams, and 2D/3D LLM visualisations.
+- **52 diagram types.** 37 through [Kroki](https://kroki.io/) (UML, Mermaid, D2, Graphviz, C4, BPMN,
+  ERD, TikZ...) and 15 interactive ones, including cloud and stack diagrams with real logos,
+  architecture, workflow and sequence diagrams, 2D/3D LLM visualisations, database schemas,
+  dependency graphs, statecharts, agent traces, C4 models and timelines.
 - **Shows up in the chat.** Every client gets an inline image plus links to the rendered file and
   an editable playground. Clients with [MCP Apps](https://modelcontextprotocol.io/) also get an
   interactive viewer.
