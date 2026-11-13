@@ -41,6 +41,24 @@ pages you can:
   and its edge label;
 - switch the preset (archify), animate the edges with **Live**, and toggle light and dark.
 
+## Local viewer preview
+
+To try the viewer in a browser, start a local MCP server, then run the preview host
+in another terminal:
+
+```bash
+uv run uml-mcp --transport http --host 127.0.0.1 --port 8766
+uv run python scripts/run_local_viewer.py --mcp-url http://127.0.0.1:8766/mcp
+```
+
+Open `http://127.0.0.1:8767/`. The example picker sits in the viewer toolbar and
+loads diagrams automatically. The preview uses real MCP tool calls and supports
+SVG, PNG and HTML downloads through its browser host bridge. It binds to localhost;
+use `--port` to choose another port and `--output-dir` for the generated files.
+
+This preview tests the viewer in a local browser host. Native chat integration
+still depends on the MCP client.
+
 ## Clients without MCP Apps
 
 Nothing depends on the viewer. `generate_uml_image` returns an inline PNG (a compact preview for
