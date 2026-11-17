@@ -266,14 +266,19 @@ order1 --> customer: placed by
 }""",
             # RackDiag example
             "rackdiag": """rackdiag {
-  16U;
-  1: UPS [2U];
-  3: DB Server;
-  4: Web Server;
-  5: Web Server;
-  6: Web Server;
-  7: Load Balancer;
-  8: L3 Switch;
+  12U;
+  default_fontsize = 11;
+
+  1: UPS [2U, color = "#f4a261"];
+  3: DB Primary [color = "#2a9d8f"];
+  4: DB Replica [color = "#2a9d8f"];
+  5: Redis Cache [color = "#e9c46a"];
+  6: App Server [color = "#264653"];
+  7: App Server [color = "#264653"];
+  8: App Server [color = "#264653"];
+  9: Load Balancer [color = "#e76f51"];
+  10: L3 Switch [color = "#457b9d"];
+  11: Firewall [color = "#1d3557"];
 }""",
             # C4 diagram (PlantUML extension) example
             "c4plantuml": """!include <C4/C4_Context>
@@ -460,7 +465,42 @@ endmodule""",
             # Vega example
             "vega": """{"$schema":"https://vega.github.io/schema/vega/v5.json","width":200,"height":200,"data":[{"name":"table","values":[{"x":1,"y":2},{"x":2,"y":4}]}],"scales":[{"name":"x","type":"linear","range":"width","nice":true,"domain":{"data":"table","field":"x"}},{"name":"y","type":"linear","range":"height","nice":true,"domain":{"data":"table","field":"y"}}],"axes":[{"orient":"bottom","scale":"x","title":"x"},{"orient":"left","scale":"y","title":"y"}],"marks":[{"type":"symbol","from":{"data":"table"},"encode":{"enter":{"x":{"scale":"x","field":"x"},"y":{"scale":"y","field":"y"},"size":{"value":50}}}}]}""",
             # Vega-Lite example
-            "vegalite": """{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"a":1,"b":2},{"a":2,"b":4}]},"mark":"point","encoding":{"x":{"field":"a","type":"quantitative"},"y":{"field":"b","type":"quantitative"}}}""",
+            "vegalite": """{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "Monthly active users",
+  "width": 280,
+  "height": 180,
+  "data": {
+    "values": [
+      {"month": "Jan", "users": 120, "plan": "Free"},
+      {"month": "Jan", "users": 80, "plan": "Pro"},
+      {"month": "Feb", "users": 140, "plan": "Free"},
+      {"month": "Feb", "users": 110, "plan": "Pro"},
+      {"month": "Mar", "users": 160, "plan": "Free"},
+      {"month": "Mar", "users": 150, "plan": "Pro"},
+      {"month": "Apr", "users": 180, "plan": "Free"},
+      {"month": "Apr", "users": 190, "plan": "Pro"}
+    ]
+  },
+  "mark": {"type": "bar", "cornerRadiusTopLeft": 3, "cornerRadiusTopRight": 3},
+  "encoding": {
+    "x": {
+      "field": "month",
+      "type": "ordinal",
+      "title": "Month",
+      "sort": ["Jan", "Feb", "Mar", "Apr"],
+      "axis": {"labelAngle": 0}
+    },
+    "y": {"field": "users", "type": "quantitative", "title": "Users"},
+    "color": {
+      "field": "plan",
+      "type": "nominal",
+      "title": "Plan",
+      "scale": {"range": ["#94a3b8", "#0ea5e9"]}
+    },
+    "xOffset": {"field": "plan"}
+  }
+}""",
             # WaveDrom example
             "wavedrom": """{ "signal": [
   { "name": "clk", "wave": "p...." },
@@ -787,10 +827,12 @@ Rel(user, system, "Uses")""",
 }""",
             # RackDiag template
             "rackdiag": """rackdiag {
-  16U;
-  1: Server 1;
-  2: Server 2;
-  3: Switch;
+  8U;
+  1: UPS [2U, color = "#f4a261"];
+  3: DB [color = "#2a9d8f"];
+  4: App [color = "#264653"];
+  5: LB [color = "#e76f51"];
+  6: Switch [color = "#457b9d"];
 }""",
             # Ditaa template
             "ditaa": """+------+     +------+
@@ -884,7 +926,20 @@ endmodule""",
             # Vega template
             "vega": """{"$schema":"https://vega.github.io/schema/vega/v5.json","width":200,"height":200,"data":[{"name":"d","values":[{"v":1},{"v":2}]}],"marks":[{"type":"rect","from":{"data":"d"},"encode":{"enter":{"x":{"value":0},"y":{"scale":"y","field":"v"},"width":{"value":20},"height":{"scale":"y","band":1}}}}],"scales":[{"name":"y","type":"band","range":"height","domain":{"data":"d","field":"v"}}],"axes":[{"orient":"left","scale":"y","title":"v"}]}""",
             # Vega-Lite template
-            "vegalite": """{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"a":1},{"a":2}]},"mark":"bar","encoding":{"x":{"field":"a","type":"quantitative"}}}""",
+            "vegalite": """{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "Signups",
+  "data": {"values": [
+    {"month": "Jan", "n": 40},
+    {"month": "Feb", "n": 55},
+    {"month": "Mar", "n": 70}
+  ]},
+  "mark": "bar",
+  "encoding": {
+    "x": {"field": "month", "type": "ordinal", "title": "Month"},
+    "y": {"field": "n", "type": "quantitative", "title": "Users"}
+  }
+}""",
             # WaveDrom template
             "wavedrom": """{ "signal": [
   { "name": "clk", "wave": "p...." },

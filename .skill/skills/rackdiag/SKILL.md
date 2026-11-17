@@ -23,10 +23,12 @@ Load the workflow skill [uml-mcp-diagrams](../uml-mcp-diagrams/SKILL.md) for URL
 
 ```rackdiag
 rackdiag {
-  16U;
-  1: Server 1;
-  2: Server 2;
-  3: Switch;
+  8U;
+  1: UPS [2U, color = "#f4a261"];
+  3: DB [color = "#2a9d8f"];
+  4: App [color = "#264653"];
+  5: LB [color = "#e76f51"];
+  6: Switch [color = "#457b9d"];
 }
 ```
 
@@ -34,14 +36,19 @@ rackdiag {
 
 ```rackdiag
 rackdiag {
-  16U;
-  1: UPS [2U];
-  3: DB Server;
-  4: Web Server;
-  5: Web Server;
-  6: Web Server;
-  7: Load Balancer;
-  8: L3 Switch;
+  12U;
+  default_fontsize = 11;
+
+  1: UPS [2U, color = "#f4a261"];
+  3: DB Primary [color = "#2a9d8f"];
+  4: DB Replica [color = "#2a9d8f"];
+  5: Redis Cache [color = "#e9c46a"];
+  6: App Server [color = "#264653"];
+  7: App Server [color = "#264653"];
+  8: App Server [color = "#264653"];
+  9: Load Balancer [color = "#e76f51"];
+  10: L3 Switch [color = "#457b9d"];
+  11: Firewall [color = "#1d3557"];
 }
 ```
 
