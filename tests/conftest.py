@@ -50,6 +50,24 @@ def _fresh_kroki_engine_health():
     MERMAID_ENGINE.reset()
 
 
+# GitHub CI installs Chromium and must fail if it is missing; `act` and local
+# runs may lack the browser, so those browser tests skip instead.
+_BROWSER_OPTIONAL = bool(os.environ.get("ACT")) or not os.environ.get("GITHUB_ACTIONS")
+
+
+@pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_makereport(item, call):
+    outcome = yield
+    report = outcome.get_result()
+    if (
+        _BROWSER_OPTIONAL
+        and call.excinfo is not None
+        and "BrowserType.launch: Executable doesn't exist" in str(call.excinfo.value)
+    ):
+        report.outcome = "skipped"
+        report.longrepr = (str(item.path), item.location[1], "Chromium not installed")
+
+
 @pytest.fixture
 def reset_mcp_server_singleton():
     """Reset the MCP server singleton so create_mcp_server() runs fresh."""
