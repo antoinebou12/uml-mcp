@@ -35,6 +35,8 @@ ENV_MAP: dict[tuple[str, str], str] = {
     ("server", "openai_apps_challenge_token"): "OPENAI_APPS_CHALLENGE_TOKEN",
     ("rendering", "kroki_server"): "KROKI_SERVER",
     ("rendering", "plantuml_server"): "PLANTUML_SERVER",
+    ("rendering", "plantuml_jar_path"): "PLANTUML_JAR_PATH",
+    ("rendering", "java_path"): "JAVA_PATH",
     ("rendering", "use_local_kroki"): "USE_LOCAL_KROKI",
     ("rendering", "use_local_plantuml"): "USE_LOCAL_PLANTUML",
     ("rendering", "mermaid_ink_server"): "MERMAID_INK_SERVER",
@@ -258,6 +260,13 @@ class RenderingSettings(_Model):
 
     kroki_server: str | None = _f(None, "Kroki URL used for rendering.")
     plantuml_server: str | None = _f(None, "PlantUML server used as a fallback.")
+    plantuml_jar_path: str | None = _f(
+        None,
+        "Path to plantuml.jar for offline PlantUML fallback (empty = auto-detect).",
+    )
+    java_path: str | None = _f(
+        None, "Java executable for plantuml.jar (empty = JAVA_HOME / PATH)."
+    )
     use_local_kroki: bool | None = _f(
         None, "Use the Kroki container from docker compose."
     )

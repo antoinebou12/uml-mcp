@@ -1,12 +1,13 @@
 # Diagram rendering fallback
 
-UML-MCP tries **Kroki** first for rendering. If Kroki fails or is unreachable, the pipeline may fall back to a **PlantUML server** (for PlantUML-family diagrams) or **Mermaid.ink** (for Mermaid). Responses may include a `source` field (`kroki`, `plantuml_server`, or `mermaid_ink`) naming the backend that produced the image.
+UML-MCP tries **Kroki** first for rendering. If Kroki fails or is unreachable, the pipeline may fall back to **PlantUML** (for PlantUML-family diagrams) or **Mermaid.ink** (for Mermaid). PlantUML fallback prefers a local **`plantuml.jar`** when Java and the JAR are available, then an HTTP PlantUML server. Responses may include a `source` field (`kroki`, `plantuml_jar`, `plantuml_server`, or `mermaid_ink`) naming the backend that produced the image.
 
-All three backends can be self-hosted:
+Backends you can self-host or run offline:
 
 | Backend | Setting | Self-hosted with |
 | --- | --- | --- |
 | Kroki | `KROKI_SERVER` / `USE_LOCAL_KROKI` | Docker compose (default stack), Helm `kroki.enabled` |
+| PlantUML JAR | `PLANTUML_JAR_PATH` / `JAVA_PATH` | `uv run python scripts/download_plantuml_jar.py` + Java 11+ |
 | PlantUML server | `PLANTUML_SERVER` / `USE_LOCAL_PLANTUML` | Docker compose `--profile plantuml`, Helm `plantuml.enabled` |
 | mermaid.ink | `MERMAID_INK_SERVER` / `USE_LOCAL_MERMAID_INK` | Docker compose `--profile mermaid-ink`, Helm `mermaidInk.enabled` |
 

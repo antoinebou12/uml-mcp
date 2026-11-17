@@ -33,7 +33,9 @@ Claude Desktop shows three optional fields after install. All of them can stay e
 |---|---|---|
 | **Diagram output directory** | Diagrams come back as a render URL plus inline image data; nothing is written to disk | Diagrams are also saved as files in that folder, and the folder becomes the write sandbox (`MCP_OUTPUT_DIR` + `MCP_OUTPUT_ROOT`) |
 | **Kroki server URL** | `https://kroki.io` | Points rendering at your own Kroki instance, so diagram source never leaves your network |
-| **PlantUML server URL** | `https://www.plantuml.com/plantuml` | PlantUML fallback used when Kroki cannot render a PlantUML-family diagram |
+| **PlantUML server URL** | `https://www.plantuml.com/plantuml` | HTTP PlantUML fallback when Kroki fails and no local JAR is available |
+| **PlantUML JAR path** | Auto-detect `vendor/plantuml/plantuml.jar` if present | Offline PlantUML fallback via that JAR (requires Java) |
+| **Java executable** | `JAVA_HOME` or `java` on `PATH` | Explicit `java` used with the PlantUML JAR |
 
 Setting an output directory is what makes Claude Desktop's **Save** action useful — without it
 there is no local file to save. The directory doubles as the sandbox root, so the server will

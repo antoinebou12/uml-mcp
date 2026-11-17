@@ -93,6 +93,7 @@ These map one-to-one to existing env vars:
 | `server.stateless_http` | `FASTMCP_STATELESS_HTTP` |
 | `server.openai_apps_challenge_token` | `OPENAI_APPS_CHALLENGE_TOKEN` (served at `/.well-known/openai-apps-challenge`) |
 | `rendering.kroki_server` / `rendering.plantuml_server` | `KROKI_SERVER` / `PLANTUML_SERVER` |
+| `rendering.plantuml_jar_path` / `rendering.java_path` | `PLANTUML_JAR_PATH` / `JAVA_PATH` |
 | `rendering.use_local_kroki` / `rendering.use_local_plantuml` | `USE_LOCAL_KROKI` / `USE_LOCAL_PLANTUML` |
 | `rendering.mermaid_ink_server` / `rendering.use_local_mermaid_ink` | `MERMAID_INK_SERVER` / `USE_LOCAL_MERMAID_INK` |
 | `rendering.url_only` / `rendering.memory_only` / `rendering.read_only` | `MCP_URL_ONLY` / `MCP_MEMORY_ONLY` / `MCP_READ_ONLY` |

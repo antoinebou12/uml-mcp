@@ -28,7 +28,9 @@
         "MCP_OUTPUT_DIR": "${user_config.output_dir}",
         "MCP_OUTPUT_ROOT": "${user_config.output_dir}",
         "KROKI_SERVER": "${user_config.kroki_server}",
-        "PLANTUML_SERVER": "${user_config.plantuml_server}"
+        "PLANTUML_SERVER": "${user_config.plantuml_server}",
+        "PLANTUML_JAR_PATH": "${user_config.plantuml_jar_path}",
+        "JAVA_PATH": "${user_config.java_path}"
       }
     }
   },
@@ -72,8 +74,20 @@
     "plantuml_server": {
       "type": "string",
       "title": "PlantUML server URL",
-      "description": "PlantUML fallback used when Kroki cannot render a PlantUML-family diagram.",
+      "description": "PlantUML HTTP fallback used when Kroki cannot render a PlantUML-family diagram and no local JAR is available.",
       "default": "https://www.plantuml.com/plantuml",
+      "required": false
+    },
+    "plantuml_jar_path": {
+      "type": "string",
+      "title": "PlantUML JAR path",
+      "description": "Optional path to plantuml.jar for offline fallback when Kroki fails. Leave empty to auto-detect vendor/plantuml/plantuml.jar.",
+      "required": false
+    },
+    "java_path": {
+      "type": "string",
+      "title": "Java executable",
+      "description": "Optional path to java for the PlantUML JAR. Leave empty to use JAVA_HOME or PATH.",
       "required": false
     }
   },
