@@ -18,6 +18,7 @@ that turns a description or diagram source into a rendered diagram, inside the c
 
 [**Docs**](https://antoinebou12.github.io/uml-mcp/) ·
 [**Quick start**](#quick-start) ·
+[**Kroki diagrams**](#kroki-diagrams) ·
 [**Interactive diagrams**](#interactive-diagrams) ·
 [**Changelog**](CHANGELOG.md) ·
 [**Contributing**](CONTRIBUTING.md)
@@ -86,6 +87,30 @@ The [installation guide](docs/installation.md) covers Docker, Helm and running f
 To explore all 15 interactive types from a checkout, use the
 [local viewer preview](docs/integrations/mcp-app.md#local-viewer-preview). Its compact
 example picker changes diagrams automatically and keeps export controls in the viewer.
+
+## Kroki diagrams
+
+37 types through [Kroki](https://kroki.io/): UML (PlantUML), Mermaid, D2, Graphviz, C4, BPMN,
+ERD, TikZ and more. Call `generate_uml` / `generate_uml_image` with the `diagram_type` under
+each thumbnail. Source examples live in [`examples/`](examples/) and at `uml://examples`;
+notation guides are in [Diagram types](docs/diagrams/index.md). Regenerate this gallery with
+`uv run python scripts/build_kroki_gallery.py`.
+
+| | | |
+| --- | --- | --- |
+| [![class](docs/assets/kroki/class.png)](docs/diagrams/uml.md)<br>`class` | [![sequence](docs/assets/kroki/sequence.png)](docs/diagrams/uml.md)<br>`sequence` | [![activity](docs/assets/kroki/activity.png)](docs/diagrams/uml.md)<br>`activity` |
+| [![usecase](docs/assets/kroki/usecase.png)](docs/diagrams/uml.md)<br>`usecase` | [![state](docs/assets/kroki/state.png)](docs/diagrams/uml.md)<br>`state` | [![component](docs/assets/kroki/component.png)](docs/diagrams/uml.md)<br>`component` |
+| [![deployment](docs/assets/kroki/deployment.png)](docs/diagrams/uml.md)<br>`deployment` | [![object](docs/assets/kroki/object.png)](docs/diagrams/uml.md)<br>`object` | [![plantuml](docs/assets/kroki/plantuml.png)](docs/diagrams/uml.md)<br>`plantuml` |
+| [![mermaid](docs/assets/kroki/mermaid.png)](docs/diagrams/mermaid.md)<br>`mermaid` | [![d2](docs/assets/kroki/d2.png)](docs/diagrams/d2.md)<br>`d2` | [![graphviz](docs/assets/kroki/graphviz.png)](docs/diagrams/graphviz.md)<br>`graphviz` |
+| [![erd](docs/assets/kroki/erd.png)](docs/diagrams/erd.md)<br>`erd` | [![c4plantuml](docs/assets/kroki/c4plantuml.png)](docs/diagrams/c4plantuml.md)<br>`c4plantuml` | [![bpmn](docs/assets/kroki/bpmn.png)](docs/diagrams/bpmn.md)<br>`bpmn` |
+| [![blockdiag](docs/assets/kroki/blockdiag.png)](docs/diagrams/blockdiag.md)<br>`blockdiag` | [![seqdiag](docs/assets/kroki/seqdiag.png)](docs/diagrams/blockdiag.md)<br>`seqdiag` | [![actdiag](docs/assets/kroki/actdiag.png)](docs/diagrams/blockdiag.md)<br>`actdiag` |
+| [![nwdiag](docs/assets/kroki/nwdiag.png)](docs/diagrams/blockdiag.md)<br>`nwdiag` | [![packetdiag](docs/assets/kroki/packetdiag.png)](docs/diagrams/blockdiag.md)<br>`packetdiag` | [![rackdiag](docs/assets/kroki/rackdiag.png)](docs/diagrams/blockdiag.md)<br>`rackdiag` |
+| [![dbml](docs/assets/kroki/dbml.png)](docs/diagrams/dbml.md)<br>`dbml` | [![structurizr](docs/assets/kroki/structurizr.png)](docs/diagrams/structurizr.md)<br>`structurizr` | [![tikz](docs/assets/kroki/tikz.png)](docs/diagrams/tikz.md)<br>`tikz` |
+| [![ditaa](docs/assets/kroki/ditaa.png)](docs/diagrams/specialty.md)<br>`ditaa` | [![nomnoml](docs/assets/kroki/nomnoml.png)](docs/diagrams/specialty.md)<br>`nomnoml` | [![svgbob](docs/assets/kroki/svgbob.png)](docs/diagrams/specialty.md)<br>`svgbob` |
+| [![goat](docs/assets/kroki/goat.png)](docs/diagrams/specialty.md)<br>`goat` | [![pikchr](docs/assets/kroki/pikchr.png)](docs/diagrams/specialty.md)<br>`pikchr` | [![excalidraw](docs/assets/kroki/excalidraw.png)](docs/diagrams/specialty.md)<br>`excalidraw` |
+| [![bytefield](docs/assets/kroki/bytefield.png)](docs/diagrams/specialty.md)<br>`bytefield` | [![wavedrom](docs/assets/kroki/wavedrom.png)](docs/diagrams/specialty.md)<br>`wavedrom` | [![wireviz](docs/assets/kroki/wireviz.png)](docs/diagrams/specialty.md)<br>`wireviz` |
+| [![symbolator](docs/assets/kroki/symbolator.png)](docs/diagrams/specialty.md)<br>`symbolator` | [![umlet](docs/assets/kroki/umlet.png)](docs/diagrams/specialty.md)<br>`umlet` | [![vega](docs/assets/kroki/vega.png)](docs/diagrams/specialty.md)<br>`vega` |
+| [![vegalite](docs/assets/kroki/vegalite.png)](docs/diagrams/specialty.md)<br>`vegalite` | [![wireviz](docs/assets/kroki/wireviz.png)](docs/diagrams/specialty.md)<br>`wireviz` | |
 
 ## Interactive diagrams
 

@@ -16,7 +16,8 @@ UML-MCP exposes 30+ diagram types through a single tool surface. This page is th
 
 ## Sample renders
 
-A few catalog types rendered through `generate_uml` (PNG). The full type list follows below.
+Every Kroki catalog type is rendered in the [README Kroki gallery](../../README.md#kroki-diagrams)
+(`docs/assets/kroki/`). A few highlights:
 
 ![Class diagram](../assets/catalog/class.png){ width="280" }
 ![Sequence diagram](../assets/catalog/sequence.png){ width="280" }

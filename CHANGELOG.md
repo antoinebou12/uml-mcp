@@ -9,6 +9,8 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
 ### Added
 
+- README gallery of all 37 Kroki catalog types (`docs/assets/kroki/`), regenerated with
+  `uv run python scripts/build_kroki_gallery.py`.
 - Offline PlantUML fallback via local `plantuml.jar` (Java 11+): when Kroki fails for a
   PlantUML-family diagram, UML-MCP prefers a JAR on `PLANTUML_JAR_PATH` or
   `vendor/plantuml/plantuml.jar` before the HTTP PlantUML server. Download with
