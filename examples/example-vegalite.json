@@ -1,1 +1,36 @@
-{"$schema":"https://vega.github.io/schema/vega-lite/v5.json","data":{"values":[{"a":1,"b":2},{"a":2,"b":4}]},"mark":"point","encoding":{"x":{"field":"a","type":"quantitative"},"y":{"field":"b","type":"quantitative"}}}
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "title": "Monthly active users",
+  "width": 280,
+  "height": 180,
+  "data": {
+    "values": [
+      {"month": "Jan", "users": 120, "plan": "Free"},
+      {"month": "Jan", "users": 80, "plan": "Pro"},
+      {"month": "Feb", "users": 140, "plan": "Free"},
+      {"month": "Feb", "users": 110, "plan": "Pro"},
+      {"month": "Mar", "users": 160, "plan": "Free"},
+      {"month": "Mar", "users": 150, "plan": "Pro"},
+      {"month": "Apr", "users": 180, "plan": "Free"},
+      {"month": "Apr", "users": 190, "plan": "Pro"}
+    ]
+  },
+  "mark": {"type": "bar", "cornerRadiusTopLeft": 3, "cornerRadiusTopRight": 3},
+  "encoding": {
+    "x": {
+      "field": "month",
+      "type": "ordinal",
+      "title": "Month",
+      "sort": ["Jan", "Feb", "Mar", "Apr"],
+      "axis": {"labelAngle": 0}
+    },
+    "y": {"field": "users", "type": "quantitative", "title": "Users"},
+    "color": {
+      "field": "plan",
+      "type": "nominal",
+      "title": "Plan",
+      "scale": {"range": ["#94a3b8", "#0ea5e9"]}
+    },
+    "xOffset": {"field": "plan"}
+  }
+}
