@@ -31,7 +31,9 @@ Command-line options override values in `fastmcp.json` (e.g. `fastmcp run --port
 |----------|-------------|---------|
 | `MCP_OUTPUT_DIR` / `UML_MCP_OUTPUT_DIR` | Directory to save generated diagrams | `./output` |
 | `KROKI_SERVER` | URL of the Kroki server | `https://kroki.io` |
-| `PLANTUML_SERVER` | URL of the PlantUML server | `http://plantuml-server:8080` |
+| `PLANTUML_SERVER` | URL of the PlantUML HTTP server (used when no local JAR is available) | `http://plantuml-server:8080` |
+| `PLANTUML_JAR_PATH` | Path to `plantuml.jar` for offline PlantUML fallback; empty auto-detects `vendor/plantuml/plantuml.jar` | empty |
+| `JAVA_PATH` | Java executable for the PlantUML JAR; empty uses `JAVA_HOME` or `PATH` | empty |
 | `USE_LOCAL_KROKI` | Use local Kroki server (true/false) | `false` |
 | `USE_LOCAL_PLANTUML` | Use local PlantUML server (true/false) | `false` |
 | `MERMAID_INK_SERVER` | URL of the mermaid.ink server used for the Mermaid fallback (empty = public) | `https://mermaid.ink` |

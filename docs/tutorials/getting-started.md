@@ -283,7 +283,7 @@ flowchart LR
     Image --> Client
 ```
 
-Possible values: `"kroki"`, `"plantuml_server"`, `"mermaid_ink"`. See [Fallback strategy](../fallback-mechanism.md) and [Configuration](../configuration.md) for the env knobs that control it.
+Possible values: `"kroki"`, `"plantuml_jar"`, `"plantuml_server"`, `"mermaid_ink"`. See [Fallback strategy](../fallback-mechanism.md) and [Configuration](../configuration.md) for the env knobs that control it.
 
 ---
 

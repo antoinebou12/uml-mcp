@@ -15,8 +15,7 @@ This page lists the MCP tools, resources, and prompts for generating and reading
 
 ## Tools
 
-- **generate_uml**: Pass `diagram_type` (e.g. `class`, `sequence`, `mermaid`, `bpmn`) and `code`. Omit **`output_dir`** for URL / base64 only; set **`output_dir`** to save a file. **`generate_from_request`** in **`mcp_core/core/diagram_service.py`** calls **`generate_diagram`** in **`mcp_core/core/utils.py`**, then **`diagram_rendering.run_diagram_pipeline`** (Kroki first, optional fallbacks). Responses may include **`source`** (`kroki`, `plantuml_server`, or `mermaid_ink`).
-- **validate_uml**: Local validation of type, format, and light syntax before render (no network).
+- **generate_uml**: Pass `diagram_type` (e.g. `class`, `sequence`, `mermaid`, `bpmn`) and `code`. Omit **`output_dir`** for URL / base64 only; set **`output_dir`** to save a file. **`generate_from_request`** in **`mcp_core/core/diagram_service.py`** calls **`generate_diagram`** in **`mcp_core/core/utils.py`**, then **`diagram_rendering.run_diagram_pipeline`** (Kroki first, optional fallbacks). Responses may include **`source`** (`kroki`, `plantuml_jar`, `plantuml_server`, or `mermaid_ink`).- **validate_uml**: Local validation of type, format, and light syntax before render (no network).
 
 ## Resources
 

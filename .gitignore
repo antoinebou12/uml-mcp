@@ -102,6 +102,11 @@ Desktop.ini
 *.whl
 *.tar.gz
 
+# Downloaded PlantUML JAR (see scripts/download_plantuml_jar.py)
+vendor/plantuml/*.jar
+vendor/plantuml/*.jar.partial
+!vendor/plantuml/README.md
+
 # Local development
 local/
 tmp/

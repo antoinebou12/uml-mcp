@@ -155,6 +155,9 @@ class MCPSettings(BaseModel):
     plantuml_server: str = os.environ.get(
         "PLANTUML_SERVER", "http://plantuml-server:8080"
     )
+    # Empty string means "auto-detect vendor/plantuml/plantuml.jar and common paths".
+    plantuml_jar_path: str = os.environ.get("PLANTUML_JAR_PATH", "")
+    java_path: str = os.environ.get("JAVA_PATH", "")
     kroki_server: str = os.environ.get("KROKI_SERVER", "https://kroki.io")
     # Empty MERMAID_INK_SERVER (e.g. compose `${MERMAID_INK_SERVER:-}`) means public.
     mermaid_ink_server: str = (

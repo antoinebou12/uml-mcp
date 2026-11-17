@@ -9,6 +9,12 @@ No 1.1.x or 1.2.x versions were ever tagged: 1.0.1 was followed by 1.3.0.
 
 ### Added
 
+- Offline PlantUML fallback via local `plantuml.jar` (Java 11+): when Kroki fails for a
+  PlantUML-family diagram, UML-MCP prefers a JAR on `PLANTUML_JAR_PATH` or
+  `vendor/plantuml/plantuml.jar` before the HTTP PlantUML server. Download with
+  `uv run python scripts/download_plantuml_jar.py`. Responses report
+  `source: plantuml_jar`. Claude Desktop `.mcpb` exposes optional JAR and Java paths
+  (inspired by the ChistokhinSV fork).
 - Database schema plugin (`schema`, bundled and on by default): the `db_schema` type draws an
   ER diagram from SQL DDL (`CREATE TABLE` in Postgres, MySQL or SQLite dialects, read by a small
   dependency-free parser) or JSON tables. Table cards show keys, links, `null` and `UQ` badges;

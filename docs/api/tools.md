@@ -34,7 +34,7 @@ Optional reductions of the connect-time list: `tools.disabled` in [`uml-mcp.yaml
 
 ## Rendering fallback
 
-The server tries Kroki first. If Kroki fails or is unreachable, the pipeline can use a PlantUML server (see `PLANTUML_SERVER` and `USE_LOCAL_PLANTUML` in [Configuration](../configuration.md)) or Mermaid.ink for Mermaid diagrams. Successful responses may include a `source` field (`kroki`, `plantuml_server`, or `mermaid_ink`) naming the backend that produced the image.
+The server tries Kroki first. If Kroki fails or is unreachable, the pipeline can use a local `plantuml.jar` (see `PLANTUML_JAR_PATH` / `JAVA_PATH`), then a PlantUML HTTP server (`PLANTUML_SERVER` / `USE_LOCAL_PLANTUML`), or Mermaid.ink for Mermaid diagrams. Successful responses may include a `source` field (`kroki`, `plantuml_jar`, `plantuml_server`, or `mermaid_ink`) naming the backend that produced the image.
 
 ## `generate_uml`
 

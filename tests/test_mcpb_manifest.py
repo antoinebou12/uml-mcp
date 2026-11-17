@@ -104,7 +104,13 @@ def test_every_substituted_setting_is_declared(manifest: dict) -> None:
         for name in re.findall(r"\$\{user_config\.([a-z_]+)\}", value)
     }
     assert referenced <= set(manifest["user_config"])
-    assert referenced == {"output_dir", "kroki_server", "plantuml_server"}
+    assert referenced == {
+        "output_dir",
+        "kroki_server",
+        "plantuml_server",
+        "plantuml_jar_path",
+        "java_path",
+    }
 
 
 def test_server_url_settings_declare_defaults(manifest: dict) -> None:

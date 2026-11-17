@@ -298,6 +298,100 @@ def _handle_diagram_error(e: Exception, code: str) -> str:
     return f"Unexpected error generating diagram: {type(e).__name__}: {e!s}"
 
 
+def _plantuml_playground_for(code: str) -> tuple[str, str]:
+    """Return (encoded payload, public playground URL) for PlantUML source."""
+    from tools.kroki.plantuml import PlantUML
+
+    encoded = PlantUML(url="https://www.plantuml.com/plantuml").deflate_and_encode(code)
+    playground = (
+        "https://www.plantuml.com/plantuml/uml/"
+        f"{plantuml_playground_path_segment(encoded)}"
+    )
+    return encoded, playground
+
+
+def _save_plantuml_bytes(
+    content: bytes,
+    *,
+    diagram_type: str,
+    output_format: str,
+    output_dir: str | None,
+    label: str,
+) -> str | None:
+    if not output_dir:
+        return None
+    filename_prefix = (
+        f"{diagram_type}_{datetime.datetime.now(datetime.UTC).strftime('%Y%m%d%H%M%S')}"
+    )
+    out_dir = Path(output_dir)
+    try:
+        out_dir.mkdir(parents=True, exist_ok=True)
+        path = out_dir / f"{filename_prefix}.{output_format}"
+        path.write_bytes(content)
+        logger.info("Diagram saved to %s via %s", path, label)
+        return str(path)
+    except OSError as e:
+        logger.warning("Could not save diagram to %s (%s)", out_dir, e)
+        return None
+
+
+def _maybe_scale_svg(content: bytes, output_format: str, scale: float) -> bytes:
+    if (
+        output_format.lower() == "svg"
+        and scale is not None
+        and abs(scale - 1.0) >= 1e-9
+        and scale >= 0.1
+    ):
+        from tools.kroki.kroki import scale_svg
+
+        return scale_svg(content, scale)
+    return content
+
+
+def _generate_diagram_plantuml_jar(
+    diagram_type: str,
+    code: str,
+    output_format: str,
+    output_dir: str | None,
+    scale: float,
+) -> dict[str, Any]:
+    """Render with a local ``plantuml.jar`` (offline / privacy-friendly)."""
+    from tools.kroki.plantuml_jar import JAR_OUTPUT_FORMATS, render_plantuml_jar
+
+    fmt = output_format.lower()
+    if fmt not in JAR_OUTPUT_FORMATS:
+        raise ValueError(f"PlantUML JAR does not support format '{output_format}'")
+
+    logger.info("Using local PlantUML JAR fallback for %s", diagram_type)
+    content = render_plantuml_jar(
+        code,
+        fmt,
+        jar_path=MCP_SETTINGS.plantuml_jar_path or None,
+        java_path=MCP_SETTINGS.java_path or None,
+        timeout=float(MCP_SETTINGS.max_render_seconds),
+    )
+    content = _maybe_scale_svg(content, fmt, scale)
+    encoded, playground = _plantuml_playground_for(code)
+    local_path = _save_plantuml_bytes(
+        content,
+        diagram_type=diagram_type,
+        output_format=fmt,
+        output_dir=output_dir,
+        label="PlantUML JAR",
+    )
+    out: dict[str, Any] = {
+        "code": code,
+        "url": playground,
+        "playground": playground,
+        "local_path": local_path,
+        "source": "plantuml_jar",
+        "encoded": encoded,
+    }
+    if local_path is None and content:
+        out["content_base64"] = base64.b64encode(content).decode("ascii")
+    return out
+
+
 def _generate_diagram_plantuml_fallback(
     diagram_type: str,
     code: str,
@@ -307,8 +401,24 @@ def _generate_diagram_plantuml_fallback(
     *,
     force_fetch: bool = False,
 ) -> dict[str, Any]:
-    """Fallback to PlantUML server when Kroki fails."""
+    """Fallback when Kroki fails: prefer local JAR, then PlantUML HTTP server."""
     from tools.kroki.plantuml import PlantUML
+    from tools.kroki.plantuml_jar import jar_available
+
+    if jar_available(
+        jar_path=MCP_SETTINGS.plantuml_jar_path or None,
+        java_path=MCP_SETTINGS.java_path or None,
+    ):
+        try:
+            return _generate_diagram_plantuml_jar(
+                diagram_type, code, output_format, output_dir, scale
+            )
+        except Exception as jar_error:  # noqa: BLE001 - fall through to HTTP server
+            logger.warning(
+                "PlantUML JAR fallback failed for %s: %s; trying PlantUML server",
+                diagram_type,
+                jar_error,
+            )
 
     plantuml_server = MCP_SETTINGS.plantuml_server
     logger.info("Using PlantUML server fallback: %s", plantuml_server)
@@ -332,33 +442,17 @@ def _generate_diagram_plantuml_fallback(
 
     response = httpx.get(url, timeout=_http_timeout())
     response.raise_for_status()
-    content = response.content
+    content = _maybe_scale_svg(response.content, output_format, scale)
 
-    if (
-        output_format.lower() == "svg"
-        and scale is not None
-        and abs(scale - 1.0) >= 1e-9
-        and scale >= 0.1
-    ):
-        from tools.kroki.kroki import scale_svg
+    local_path = _save_plantuml_bytes(
+        content,
+        diagram_type=diagram_type,
+        output_format=output_format,
+        output_dir=output_dir,
+        label="PlantUML fallback",
+    )
 
-        content = scale_svg(content, scale)
-
-    local_path = None
-    if output_dir:
-        filename_prefix = f"{diagram_type}_{datetime.datetime.now(datetime.UTC).strftime('%Y%m%d%H%M%S')}"
-        out_dir = Path(output_dir)
-        try:
-            out_dir.mkdir(parents=True, exist_ok=True)
-            path = out_dir / f"{filename_prefix}.{output_format}"
-            path.write_bytes(content)
-            local_path = str(path)
-            logger.info("Diagram saved to %s via PlantUML fallback", local_path)
-        except OSError as e:
-            logger.warning("Could not save diagram to %s (%s)", out_dir, e)
-            local_path = None
-
-    out: dict[str, Any] = {
+    out = {
         "code": code,
         "url": url,
         "playground": playground,
@@ -571,8 +665,8 @@ def run_fallback_if_needed(
 
     if ctx.backend_type == "plantuml":
         try:
-            logger.info("Falling back to PlantUML server for %s", ctx.diagram_type)
-            return _generate_diagram_plantuml_fallback(
+            logger.info("Falling back to PlantUML for %s", ctx.diagram_type)
+            result = _generate_diagram_plantuml_fallback(
                 ctx.diagram_type,
                 ctx.prepared_code,
                 ctx.output_format,
@@ -580,6 +674,7 @@ def run_fallback_if_needed(
                 ctx.scale,
                 force_fetch=ctx.force_fetch,
             )
+            return result
         except Exception as fallback_error:  # noqa: BLE001 - aggregate any fallback failure into the error dict
             logger.error(
                 "Fallback also failed for %s: %s", ctx.diagram_type, str(fallback_error)
@@ -597,7 +692,7 @@ def run_fallback_if_needed(
                 "attempts": [
                     kroki_attempt,
                     {
-                        "backend": "plantuml_server",
+                        "backend": "plantuml",
                         "ok": False,
                         "error_summary": str(fallback_error),
                     },
