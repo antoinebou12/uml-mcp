@@ -270,19 +270,15 @@ _ERROR_DETAIL = (
     "Failed requests only: code, message, retryable, line, column, suggestion, "
     "diagram_type, backend."
 )
-_ATTEMPTS = (
-    "Renderers tried, in order: backend, ok, status, duration_ms, error_summary, "
-    "error_code, retry_count."
-)
+_ATTEMPTS = "Renderers tried, in order."
 _DIAGNOSTICS = "severity, code, message, line, column, suggestion."
 
 
+# The docstring is the outputSchema description repeated on every render tool,
+# so it stays one line. Inline content is bounded because structuredContent and
+# the MCP image block may each carry an encoded copy of the same diagram.
 class DiagramResult(BaseModel):
-    """Structured output for diagram generation tools.
-
-    The first MCP Apps response is bounded because structuredContent and the
-    MCP image block may each contain an encoded copy of the same diagram.
-    """
+    """Diagram render result."""
 
     code: str = Field(max_length=12_000)
     success: bool | None = None
@@ -294,7 +290,7 @@ class DiagramResult(BaseModel):
     content_base64: str | None = Field(
         default=None,
         max_length=48_000,
-        description="Bounded inline preview (max 48,000 base64 characters); larger images use a resized PNG preview when possible.",
+        description="Inline preview",
     )
     preview_resized: bool | None = None
     inline_omitted: bool | None = None

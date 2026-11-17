@@ -21,8 +21,8 @@ logger = logging.getLogger(__name__)
 
 DIAGRAM_VIEWER_URI = "ui://uml-mcp/diagram-viewer"
 DIAGRAM_VIEWER_DESCRIPTION = (
-    "Interactive UML-MCP viewer for SVG, PNG, JPEG and plugin HTML. Zoom, edit "
-    "source, switch themes and formats, and export source, SVG, PNG, HTML or supported PDF."
+    "Interactive diagram viewer: zoom, edit source, switch themes and export "
+    "SVG, PNG, HTML or PDF."
 )
 # All app views must agree on an exact HTTPS origin. The default is the Vercel
 # production host that also serves /mcp and the OpenAI Apps domain challenge.
