@@ -11,6 +11,17 @@ or UNVERIFIED and run the tool-only cases once. A local exported chat can be
 inspected with `scripts/replay_mcp_chat.py`; replay is recorded evidence, not a
 live host check. Do not rerun negative probes merely to compensate for missing UI access.
 
+Plugin coverage is a separate paste of
+`tests/prompts/all_interactive_plugins_smoke_test.md` (four batch calls, two
+`stack_diagram` theme images, one invalid source). This client cannot open that
+file. If this chat already has its table, copy the table into this report and do
+not call `list_diagram_types`, `d3_catalog`, `generate_uml`, `generate_uml_batch`,
+or `generate_uml_image` again for those 15 types. If the table is absent, mark
+plugin coverage `UNVERIFIED` and continue with the cases below. Do not start a
+second 15-type sweep inside this prompt.
+
+Call `list_diagram_types` at most once here, and skip it when this chat already returned a catalog.
+
 ## Required cases
 
 1. Inspect initialize metadata: title, description, website and icon. Inspect UI
@@ -61,7 +72,10 @@ live host check. Do not rerun negative probes merely to compensate for missing U
     and 10 labelled relationships. Drag a data node, check routes against cards
     and group titles, export HTML and reopen it offline. Verify the containers,
     labels and moved positions survive. Repeat with `group_by: "category"` and
-    no explicit groups; describe these as logical category containers.
+    no explicit groups; describe these as logical category containers. Submit
+    the inventory source once. The category variant is that same source with
+    `group_by` set to `category` on the render call. If the socket closes
+    (`ECONNRESET` or similar), record the exact error and do not retry.
 12. In D3 HTML, enable Physics and drag a card toward another container. Verify
     it stays inside its original container and the borders remain fixed. Wait
     for settling and check card collisions and routed connections. Click a card
@@ -69,14 +83,11 @@ live host check. Do not rerun negative probes merely to compensate for missing U
     Enter/Space activation and Escape. Export while selected, reopen HTML, and
     verify settled positions without selection overlays. Test reduced motion
     and a narrow toolbar. Physics must not start automatically on reopen.
-13. Render the sources from the interactive-plugins smoke prompt in
-    `tests/prompts/chatgpt_mcp_smoke_test.md` as HTML in the App: stack_diagram,
-    archify_architecture, archify_sequence, llm_2d and llm_3d. In archify, click a
-    node (detail panel), shift-click another (shortest path), press Escape, switch
-    the preset (classic, blueprint, flow) and toggle Live. In stack_diagram, check
-    the step badges and the GitHub and Vercel logos in both themes. In llm, switch
-    2D/3D and drag to orbit. Then change the App theme picker to light and dark and
-    re-render each one: the diagram itself must follow, not only the App chrome.
+13. Plugin HTML interactions (Archify focus, shortest path, presets; stack logos,
+    step badges and both themes; LLM 2D/3D orbit) belong to the plugin smoke
+    prompt. Without an open MCP App, this case is `UNAVAILABLE`. Do not re-render
+    `stack_diagram`, `archify_architecture`, `archify_sequence`, `llm_2d`, or
+    `llm_3d`.
 
 ## Report
 
