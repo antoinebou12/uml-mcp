@@ -16,8 +16,11 @@ Replay displays recorded bytes without executing recorded prompts or tools.
 Network access is blocked. Full-resolution recovery, omitted HTML, live host
 downloads and publishing checks remain unverified. Use the connected MCP App
 and the [acceptance prompt](https://github.com/antoinebou12/uml-mcp/blob/main/tests/prompts/mcp_apps_plugin_acceptance_test.md)
-for those checks. Do not interpret a successful backend render as a readable
-preview or a verified download.
+for those checks. The 15-type plugin sweep is
+[all interactive plugins](../tests/prompts/all_interactive_plugins_smoke_test.md):
+paste it alone (four batch calls, two stack theme images, one invalid source).
+Do not interpret a successful backend render as a readable preview or a verified
+download.
 
 ## How the suite is organized
 

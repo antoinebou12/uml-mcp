@@ -113,3 +113,8 @@ If any of those conditions fail, finish with:
 Run [MCP App and plugin acceptance](mcp_apps_plugin_acceptance_test.md) separately
 from the baseline tool-count phases. Tool success and valid SVG XML do not prove
 visible labels or working downloads. Uninspected cases remain UNVERIFIED.
+
+Paste that acceptance prompt in its own message. The 15-type plugin sweep is
+[all interactive plugins](all_interactive_plugins_smoke_test.md) and has its own
+eight-call plan. Do not run it inside the 28-call baseline, and do not paste it
+into the same message as this stress test.
