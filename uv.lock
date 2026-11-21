@@ -818,7 +818,7 @@ wheels = [
 
 [[package]]
 name = "fastmcp-slim"
-version = "4.2.1"
+version = "4.2.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mcp-types" },
@@ -829,9 +829,9 @@ dependencies = [
     { name = "rich" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/99/82/b215810ee1fac03983a7e098b9b63e77e36abf39828e4705ff4f83a25f1a/fastmcp_slim-4.2.1.tar.gz", hash = "sha256:bcbe48b0eeb8bb32b616d7b329832f5d03d16db02807a58457f5e2e44d1d0def", size = 808782, upload-time = "2026-11-17T19:13:14.046Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/80/a6/bcea2e1e7ca3e60030e6f23170e5013feb9b6c6a9f541316b8596b4eeb8a/fastmcp_slim-4.2.4.tar.gz", hash = "sha256:2aa508dace0e5d9176fe116077cdbf22a18c62f97ddd1decf5625b9f4faf55df", size = 812850, upload-time = "2026-11-21T05:28:25.868Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8c/5a/1555dc0df12bd6fbb93bfe0112335c78695191d29be558b5e13f39438f8f/fastmcp_slim-4.2.1-py3-none-any.whl", hash = "sha256:2523b2eec4886959426c9c6ca7d5f3ad978b9d7b037a2dabd912eb6f729cc429", size = 996658, upload-time = "2026-11-17T19:13:12.466Z" },
+    { url = "https://files.pythonhosted.org/packages/09/d0/186f85d2ab0c22c9a565faebfefa9d9294afbb114eee31e98b44d21725ae/fastmcp_slim-4.2.4-py3-none-any.whl", hash = "sha256:d8c4ecad3b7ad6cb4c0a26c0d05c66af74033753d39601bee5290a10cf102a24", size = 1000669, upload-time = "2026-11-21T05:28:24.188Z" },
 ]
 
 [package.optional-dependencies]
@@ -864,7 +864,7 @@ server = [
 
 [[package]]
 name = "fastmcp-tasks"
-version = "4.2.1"
+version = "4.2.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
@@ -872,9 +872,9 @@ dependencies = [
     { name = "pydocket" },
     { name = "redis" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/fe/9c/4c85bd4b47368f21cba4be419ad0be0de9f80ce10a1bf13aef3390678229/fastmcp_tasks-4.2.1.tar.gz", hash = "sha256:148b11ed45c6dd68221238078fbe75a4baa9ce8a9078293688b0c382fbbe0af3", size = 57723, upload-time = "2026-11-17T19:13:37.153Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/15/26/f56679c1f72c07bee138966ed7327a67a6c3fb91dbd65189e6935d0c6826/fastmcp_tasks-4.2.4.tar.gz", hash = "sha256:2e12276286e3d42f2e0631613e00c8602952694c0ac90cab2c2b0e6c189b7519", size = 57975, upload-time = "2026-11-21T05:28:52.227Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/fd/ae/8701ea49f82a28e2714ab0735f203bde426b8f259f303e09350be4bc1e3d/fastmcp_tasks-4.2.1-py3-none-any.whl", hash = "sha256:d7eb19e89bf2d027bf1c6736dcf032eea4e5f0e8a1e4f1e02f698fd8e4a111eb", size = 68825, upload-time = "2026-11-17T19:13:36.07Z" },
+    { url = "https://files.pythonhosted.org/packages/79/d5/07b56bd37cd02b3863054d3b5e47f616d7010deef6b9ca063f022308ba06/fastmcp_tasks-4.2.4-py3-none-any.whl", hash = "sha256:71c5cb3f4b714017aba32ecb754c3ac834d6b8ae234203b3ea615727f9c8e199", size = 69048, upload-time = "2026-11-21T05:28:51.226Z" },
 ]
 
 [[package]]
@@ -2180,7 +2180,7 @@ wheels = [
 
 [[package]]
 name = "pydocket"
-version = "0.27.0"
+version = "0.31.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "burner-redis" },
@@ -2197,9 +2197,9 @@ dependencies = [
     { name = "tzdata", marker = "sys_platform == 'win32'" },
     { name = "uncalled-for" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/75/42/9c3346650a2c1fcf74e717e94d68ef88e18d0a0a5159fb68ccc1b56e046e/pydocket-0.27.0.tar.gz", hash = "sha256:4969f6b22deaa72b1b8463e5efaaf0acfed538d007ab1ef8a4f997b61dbfe85b", size = 330815, upload-time = "2026-10-09T15:20:53.159Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/fd/d4/4ca2b1409ada51d114662bb93d78e2dc32e10b949713176185d63da4cc69/pydocket-0.31.0.tar.gz", hash = "sha256:d04b69370cd8986b97d1332ee859f8285ebfed61363ee49072542ec4e4758dfa", size = 348946, upload-time = "2026-11-20T21:07:00.638Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/d5/ac/19236a0ff84a0683d880290e5352a105e626f9510b3a80fcf6453f3e67e0/pydocket-0.27.0-py3-none-any.whl", hash = "sha256:49504936f568bc09861afe2c880e2ca1c0bc191898efc56eaf56e3f7e1ab6a85", size = 155557, upload-time = "2026-10-09T15:20:51.646Z" },
+    { url = "https://files.pythonhosted.org/packages/d2/e4/829e7938bf791dcded955b0edfa4375c8e09d84dfed1a2786b996c170a1d/pydocket-0.31.0-py3-none-any.whl", hash = "sha256:ff39d8b132091f5c8c831fd0cd94c93ee592049c8cd186bd6670520959c77a17", size = 159982, upload-time = "2026-11-20T21:06:59.393Z" },
 ]
 
 [[package]]
@@ -2999,7 +2999,7 @@ requires-dist = [
     { name = "click", specifier = "==8.5.1" },
     { name = "cryptography", specifier = ">=44.0.0,<51" },
     { name = "fastapi", specifier = ">=0.141.1,<0.200.0" },
-    { name = "fastmcp-slim", extras = ["server"], specifier = "==4.2.1" },
+    { name = "fastmcp-slim", extras = ["server"], specifier = "==4.2.4" },
     { name = "fastmcp-tasks", marker = "extra == 'tasks'", specifier = ">=4.1.4,<5" },
     { name = "graphviz", specifier = ">=0.21,<0.22" },
     { name = "httpx", specifier = ">=0.28.0,<0.29" },
