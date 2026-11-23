@@ -26,7 +26,7 @@ dependencies = [
     "aiofiles>=25,<26",
     "requests>=2.34.2,<3",
     "click==8.5.1",
-    "charset-normalizer==3.5.2",
+    "charset-normalizer==3.5.3",
     "python-dateutil>=4,<5",
     "graphviz>=0.21,<0.22",
     "pillow>=13,<14",
